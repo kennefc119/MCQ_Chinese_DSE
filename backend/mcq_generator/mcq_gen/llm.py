@@ -16,6 +16,21 @@ T = TypeVar("T", bound=BaseModel)
 
 _POE_BASE_URL = "https://api.poe.com/bot/"
 
+# ─── Trace Capture ───────────────────────────────────────────────────────────
+# Module-level list — reset before each pipeline run, read afterwards for dashboard.
+
+_traces: list[dict] = []
+
+
+def reset_traces() -> None:
+    """Clear all captured LLM call traces (call before each run)."""
+    _traces.clear()
+
+
+def get_traces() -> list[dict]:
+    """Return a copy of captured traces since last reset_traces() call."""
+    return list(_traces)
+
 
 def _read_poe_stream(response: httpx.Response) -> str:
     """Parse Poe SSE response and concatenate all text-event chunks."""
@@ -92,6 +107,14 @@ def chat_structured(
             raw = _read_poe_stream(response)
 
     log.debug("poe_raw_response", length=len(raw))
+
+    # Capture trace for dashboard visibility
+    _traces.append({
+        "agent": schema.__name__,
+        "bot": bot_name,
+        "merged_prompt": merged,
+        "raw_response": raw,
+    })
 
     if not raw:
         raise ValueError("Poe API 回傳空白回應")

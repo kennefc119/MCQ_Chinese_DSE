@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCQ 出題系統 Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d1117;
+      --surface:  #161b22;
+      --surface2: #21262d;
+      --surface3: #30363d;
+      --border:   #30363d;
+      --text:     #e6edf3;
+      --muted:    #8b949e;
+      --dim:      #6e7681;
+      --accent:   #58a6ff;
+      --accent2:  #79b8ff;
+      --green:    #3fb950;
+      --yellow:   #d29922;
+      --orange:   #fb8f44;
+      --red:      #f85149;
+      --purple:   #bc8cff;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────────────────────── */
+    .sidebar {
+      width: 290px;
+      min-width: 290px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .sidebar-logo {
+      padding: 18px 16px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo h1 { font-size: 15px; font-weight: 700; }
+    .sidebar-logo .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .conn-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      margin-top: 8px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      background: var(--surface2);
+      color: var(--muted);
+    }
+    .conn-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--dim); }
+    .conn-pill.ok .conn-dot  { background: var(--green); }
+    .conn-pill.ok            { color: var(--green); }
+    .conn-pill.err .conn-dot { background: var(--red); }
+    .conn-pill.err           { color: var(--red); }
+
+    .s-section {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .s-section h3 {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-group { margin-bottom: 10px; }
+    .form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+
+    select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 7px 9px;
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+    }
+    select:focus { border-color: var(--accent); }
+
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text);
+    }
+    .toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: var(--surface3);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .slider::before {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      left: 3px;
+      top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform .2s;
+    }
+    .toggle input:checked + .slider { background: var(--accent); }
+    .toggle input:checked + .slider::before { transform: translateX(16px); }
+
+    .hint { font-size: 10px; color: var(--yellow); margin-top: 4px; }
+
+    .btn-gen {
+      width: 100%;
+      padding: 11px;
+      background: var(--accent);
+      color: #0d1117;
+      font-weight: 700;
+      font-size: 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: background .15s, opacity .15s;
+      margin-top: 4px;
+    }
+    .btn-gen:hover:not(:disabled) { background: var(--accent2); }
+    .btn-gen:disabled { opacity: .5; cursor: not-allowed; }
+
+    .spin {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(0,0,0,.25);
+      border-top-color: #0d1117;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Stats */
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+    .stat-box { background: var(--surface2); border-radius: 6px; padding: 8px; text-align: center; }
+    .stat-val { font-size: 22px; font-weight: 700; line-height: 1; }
+    .stat-lbl { font-size: 10px; color: var(--muted); margin-top: 3px; }
+    .stat-rows { font-size: 11px; }
+    .stat-row { display: flex; justify-content: space-between; padding: 2px 0; color: var(--muted); }
+    .stat-row .v { color: var(--text); font-weight: 500; }
+
+    .btn-sm {
+      padding: 3px 8px;
+      font-size: 11px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .btn-sm:hover { color: var(--text); }
+
+    /* ── Main ────────────────────────────────────────────────────────────── */
+    .main { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+    .main-hdr {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .main-hdr h2 { font-size: 16px; font-weight: 600; }
+
+    .badge { background: var(--surface2); color: var(--muted); font-size: 11px; padding: 2px 9px; border-radius: 20px; }
+
+    .err-banner {
+      background: rgba(248,81,73,.1);
+      border: 1px solid rgba(248,81,73,.3);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--red);
+      font-size: 13px;
+      margin-bottom: 14px;
+      display: none;
+    }
+
+    /* Loading pulse */
+    .loading-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .loading-card .steps { display: flex; justify-content: center; gap: 6px; margin: 16px 0 8px; }
+    .step-pill {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: var(--surface2);
+      color: var(--dim);
+      transition: background .4s, color .4s;
+    }
+    .step-pill.active { background: rgba(88,166,255,.2); color: var(--accent); }
+    .loading-bar { height: 3px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+    .loading-fill { height: 100%; background: var(--accent); width: 30%; border-radius: 2px; animation: lslide 1.4s ease-in-out infinite; }
+    @keyframes lslide { 0% { margin-left:-30%; } 100% { margin-left:100%; } }
+
+    /* Empty */
+    .empty {
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 60px 40px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .empty .ico { font-size: 40px; margin-bottom: 12px; }
+    .empty p { font-size: 13px; line-height: 1.8; }
+    .empty code { background: var(--surface2); padding: 1px 6px; border-radius: 3px; color: var(--accent); font-size: 12px; }
+
+    /* ── Run Card ─────────────────────────────────────────────────────────── */
+    .run-card { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
+
+    .run-hdr {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px;
+      padding: 11px 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .run-n { font-size: 12px; font-weight: 700; color: var(--accent); }
+    .ts { margin-left: auto; font-size: 11px; color: var(--dim); }
+
+    /* Chips */
+    .chip {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .c-blue   { background: rgba(88,166,255,.15);  color: #58a6ff; }
+    .c-green  { background: rgba(63,185,80,.15);   color: #3fb950; }
+    .c-yellow { background: rgba(210,153,34,.15);  color: #d29922; }
+    .c-orange { background: rgba(251,143,68,.15);  color: #fb8f44; }
+    .c-red    { background: rgba(248,81,73,.15);   color: #f85149; }
+    .c-purple { background: rgba(188,140,255,.15); color: #bc8cff; }
+    .c-dim    { background: var(--surface2);       color: var(--dim); }
+
+    /* Tabs */
+    .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
+    .tab {
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .12s, border-color .12s;
+      user-select: none;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-panel { display: none; padding: 16px; }
+    .tab-panel.on { display: block; }
+
+    /* MC Question */
+    .mc-q { max-width: 680px; }
+    .mc-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .mc-stem {
+      font-size: 14px;
+      line-height: 1.75;
+      background: var(--surface2);
+      padding: 14px;
+      border-radius: 8px;
+      border-left: 3px solid var(--accent);
+      margin-bottom: 14px;
+    }
+    .mc-opts { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .mc-opt {
+      display: flex;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .mc-opt.correct { border-color: var(--green); background: rgba(63,185,80,.07); }
+    .opt-lbl { font-weight: 700; color: var(--muted); min-width: 16px; }
+    .mc-opt.correct .opt-lbl { color: var(--green); }
+    .opt-tick { margin-left: auto; font-size: 11px; color: var(--green); }
+    .mc-expl {
+      background: var(--surface2);
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .mc-expl strong { color: var(--text); }
+
+    /* Spec */
+    .spec-box {
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+    .spec-row { display: flex; gap: 8px; margin-bottom: 4px; }
+    .sk { color: var(--dim); min-width: 76px; }
+    .sv { color: var(--text); }
+    .reasoning-text { font-size: 12px; color: var(--text); line-height: 1.65; }
+
+    /* LLM Calls */
+    .llm-calls { display: flex; flex-direction: column; gap: 8px; }
+    .llm-card { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .llm-hdr {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      background: var(--surface2);
+      cursor: pointer;
+      user-select: none;
+    }
+    .llm-hdr:hover { background: var(--surface3); }
+    .agent-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+    .ab-Spec     { background: rgba(88,166,255,.2);  color: #58a6ff; }
+    .ab-Draft    { background: rgba(188,140,255,.2); color: #bc8cff; }
+    .ab-Critique { background: rgba(210,153,34,.2);  color: #d29922; }
+    .llm-meta { font-size: 11px; color: var(--dim); }
+    .expand-ico { margin-left: auto; color: var(--dim); font-size: 14px; transition: transform .2s; }
+    .llm-card.open .expand-ico { transform: rotate(180deg); }
+
+    .llm-body { display: none; padding: 12px; }
+    .llm-card.open .llm-body { display: block; }
+
+    .p-section { margin-bottom: 12px; }
+    .p-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .p-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .btn-copy {
+      font-size: 10px;
+      padding: 2px 8px;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .btn-copy:hover { color: var(--text); }
+
+    pre.ptext {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--muted);
+      overflow-x: auto;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ────────────────────────────────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>🧠 MCQ 出題系統</h1>
+    <div class="sub">DSE 中文 Agentic Pipeline</div>
+    <div class="conn-pill" id="conn">
+      <span class="conn-dot"></span>
+      <span id="connTxt">連接中...</span>
+    </div>
+  </div>
+
+  <div class="s-section">
+    <h3>生成設定</h3>
+
+    <div class="form-group">
+      <label>篇章選擇</label>
+      <select id="passageSel">
+        <option value="">⚙ 策略師自動選擇</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <div class="toggle-row">
+        <span>Dry Run（不寫入 DB）</span>
+        <label class="toggle">
+          <input type="checkbox" id="dryRun" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="hint" id="dryHint">⚠ 已開啟：題目不會寫入 Supabase</div>
+    </div>
+
+    <button class="btn-gen" id="genBtn" onclick="generate()">
+      <span id="genIco">⚡</span>
+      <span id="genTxt">開始生成題目</span>
+    </button>
+  </div>
+
+  <div class="s-section">
+    <h3>
+      題庫統計
+      <button class="btn-sm" onclick="loadStats()">🔄</button>
+    </h3>
+    <div id="statsArea"><div style="color:var(--dim);font-size:11px;">載入中...</div></div>
+  </div>
+
+  <div class="s-section" style="border-bottom:none;flex:1;">
+    <h3>使用說明</h3>
+    <div style="font-size:11px;color:var(--muted);line-height:1.7;">
+      1. 先啟動伺服器：<br>
+      <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--accent);">mcq-gen serve</code><br><br>
+      2. 確認 <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--accent);">.env</code> 含有效金鑰<br><br>
+      3. Dry Run 先測試正確性<br><br>
+      4. 關閉 Dry Run 後正式寫入 DB
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ───────────────────────────────────────────────────────────────── -->
+<main class="main">
+  <div class="main-hdr">
+    <h2>生成歷史</h2>
+    <span class="badge" id="countBadge">0 次</span>
+  </div>
+
+  <div class="err-banner" id="errBanner"></div>
+
+  <div class="loading-card" id="loadCard">
+    <div style="font-size:26px;">🤖</div>
+    <div style="font-size:14px;color:var(--muted);margin-top:8px;">Agents 正在運行中，請稍候...</div>
+    <div class="steps">
+      <span class="step-pill" id="sp1">🎯 策略師</span>
+      <span style="color:var(--dim);align-self:center;">→</span>
+      <span class="step-pill" id="sp2">✏️ 出題員</span>
+      <span style="color:var(--dim);align-self:center;">→</span>
+      <span class="step-pill" id="sp3">🔍 審題主任</span>
+    </div>
+    <div class="loading-bar"><div class="loading-fill"></div></div>
+    <div style="font-size:11px;color:var(--dim);margin-top:8px;">約需 30–90 秒，視乎網絡及 LLM 回應速度</div>
+  </div>
+
+  <div class="empty" id="emptyState">
+    <div class="ico">📖</div>
+    <p>
+      尚未生成任何題目<br>
+      點擊「開始生成題目」即可啟動三 Agent Pipeline<br>
+      （請確保 <code>mcq-gen serve</code> 已在另一終端視窗運行）
+    </p>
+  </div>
+
+  <div id="results"></div>
+</main>
+
+<script>
+const API = 'http://127.0.0.1:8765';
+let runCount = 0;
+
+const AGENTS = {
+  Spec:     { lbl: '策略師',   em: '🎯', cls: 'ab-Spec'     },
+  Draft:    { lbl: '出題員',   em: '✏️', cls: 'ab-Draft'    },
+  Critique: { lbl: '審題主任', em: '🔍', cls: 'ab-Critique' },
+};
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+async function init() {
+  await Promise.all([loadPassages(), loadStats()]);
+}
+
+async function loadPassages() {
+  try {
+    const r = await fetch(`${API}/api/passages`);
+    const list = await r.json();
+    const sel = document.getElementById('passageSel');
+    list.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.id;
+      o.textContent = `${p.id}  ${p.title || ''}`;
+      sel.appendChild(o);
+    });
+    setConn('ok', `已連接（${list.length} 篇課文）`);
+  } catch {
+    setConn('err', '無法連接本地伺服器');
+  }
+}
+
+async function loadStats() {
+  try {
+    const r = await fetch(`${API}/api/stats`);
+    const s = await r.json();
+    renderStats(s);
+  } catch {
+    document.getElementById('statsArea').innerHTML =
+      '<div style="color:var(--dim);font-size:11px;">無法載入統計</div>';
+  }
+}
+
+function renderStats(s) {
+  const diffLabels = {'1':'淺①','2':'淺②','3':'中③','4':'深④','5':'深⑤'};
+  let h = `
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-val">${s.total}</div><div class="stat-lbl">總題數</div></div>
+      <div class="stat-box"><div class="stat-val">${s.cross_passage_count}</div><div class="stat-lbl">跨篇章</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:var(--yellow)">${s.needs_review_count}</div><div class="stat-lbl">待審核</div></div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:4px;">難度分佈</div>
+    <div class="stat-rows">
+  `;
+  Object.entries(s.by_difficulty || {}).sort().forEach(([d,n]) =>
+    h += `<div class="stat-row"><span>${diffLabels[d]||d}</span><span class="v">${n}</span></div>`
+  );
+  h += `</div><div style="font-size:10px;color:var(--muted);font-weight:600;margin:8px 0 4px;">考核能力</div><div class="stat-rows">`;
+  Object.entries(s.by_skill || {}).forEach(([sk,n]) =>
+    h += `<div class="stat-row"><span>${sk}</span><span class="v">${n}</span></div>`
+  );
+  h += `</div>`;
+  document.getElementById('statsArea').innerHTML = h;
+}
+
+// ── Generate ──────────────────────────────────────────────────────────────────
+async function generate() {
+  const passage = document.getElementById('passageSel').value || null;
+  const dryRun  = document.getElementById('dryRun').checked;
+
+  setBusy(true);
+  showErr(null);
+
+  // Animate steps
+  const steps = ['sp1','sp2','sp3'];
+  let si = 0;
+  const stepTimer = setInterval(() => {
+    steps.forEach((id, i) => {
+      document.getElementById(id).classList.toggle('active', i <= si);
+    });
+    si = (si + 1) % 3;
+  }, 1800);
+
+  try {
+    const r = await fetch(`${API}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ passage_id: passage, dry_run: dryRun }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || `HTTP ${r.status}`);
+    addResult(data, dryRun);
+    if (!dryRun) loadStats();
+  } catch(e) {
+    showErr(`生成失敗：${e.message}`);
+  } finally {
+    clearInterval(stepTimer);
+    steps.forEach(id => document.getElementById(id).classList.remove('active'));
+    setBusy(false);
+  }
+}
+
+// ── UI helpers ────────────────────────────────────────────────────────────────
+function setBusy(on) {
+  document.getElementById('genBtn').disabled = on;
+  document.getElementById('genIco').innerHTML = on ? '<div class="spin"></div>' : '⚡';
+  document.getElementById('genTxt').textContent = on ? '生成中...' : '開始生成題目';
+  document.getElementById('loadCard').style.display = on ? 'block' : 'none';
+}
+
+function showErr(msg) {
+  const el = document.getElementById('errBanner');
+  if (msg) { el.textContent = msg; el.style.display = 'block'; }
+  else el.style.display = 'none';
+}
+
+function setConn(state, text) {
+  const el = document.getElementById('conn');
+  el.className = `conn-pill ${state}`;
+  document.getElementById('connTxt').textContent = text;
+}
+
+document.getElementById('dryRun').addEventListener('change', function() {
+  document.getElementById('dryHint').style.display = this.checked ? '' : 'none';
+});
+
+// ── Add result card ───────────────────────────────────────────────────────────
+function addResult(data, dryRun) {
+  runCount++;
+  document.getElementById('countBadge').textContent = `${runCount} 次`;
+  document.getElementById('emptyState').style.display = 'none';
+
+  const q  = data.question;
+  const tr = data.traces || [];
+  const ts = new Date().toLocaleTimeString('zh-HK');
+  const id = `rc${runCount}`;
+
+  const diffN = q.difficulty;
+  const dChip = diffN <= 2 ? 'c-green' : diffN === 3 ? 'c-yellow' : 'c-orange';
+  const sChip = q.critique_score >= 8 ? 'c-green' : q.critique_score >= 6 ? 'c-yellow' : 'c-red';
+  const pChip = q.is_active ? 'c-green' : dryRun ? 'c-dim' : 'c-orange';
+  const pLbl  = q.is_active ? '✓ PASS' : dryRun ? 'DRY RUN' : '⚠ 待審核';
+
+  const div = document.createElement('div');
+  div.className = 'run-card';
+  div.id = id;
+  div.innerHTML = `
+    <div class="run-hdr">
+      <span class="run-n">#${runCount}</span>
+      <span class="chip c-blue">${q.passage_id}</span>
+      <span class="chip ${dChip}">${q.difficulty_label} ${diffN}</span>
+      <span class="chip c-purple">${q.skill}</span>
+      <span class="chip ${sChip}">🏆 ${q.critique_score}/10</span>
+      <span class="chip ${pChip}">${pLbl}</span>
+      <span class="ts">${ts}</span>
+    </div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('${id}','q',this)">📝 MC 題目</div>
+      <div class="tab" onclick="switchTab('${id}','llm',this)">🔍 LLM 呼叫（${tr.length}）</div>
+      <div class="tab" onclick="switchTab('${id}','spec',this)">📋 策略規格</div>
+    </div>
+    <div class="tab-panel on" id="${id}-q">${renderQ(q)}</div>
+    <div class="tab-panel"   id="${id}-llm">${renderLLM(tr)}</div>
+    <div class="tab-panel"   id="${id}-spec">${renderSpec(q.spec)}</div>
+  `;
+
+  const area = document.getElementById('results');
+  area.insertBefore(div, area.firstChild);
+}
+
+function switchTab(id, tab, el) {
+  const card = document.getElementById(id);
+  card.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  card.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('on'));
+  el.classList.add('active');
+  document.getElementById(`${id}-${tab}`).classList.add('on');
+}
+
+// ── MC Question ───────────────────────────────────────────────────────────────
+function renderQ(q) {
+  const opts = q.options;
+  const ok   = q.correct_answer;
+  return `
+    <div class="mc-q">
+      <div class="mc-meta">
+        <span class="chip c-dim">${esc(q.question_id)}</span>
+        <span class="chip c-dim">source: ${esc(q.source)}</span>
+      </div>
+      <div class="mc-stem">${esc(q.stem)}</div>
+      <div class="mc-opts">
+        ${['A','B','C','D'].map(k => `
+          <div class="mc-opt ${k===ok?'correct':''}">
+            <span class="opt-lbl">${k}</span>
+            <span>${esc(opts[k])}</span>
+            ${k===ok ? '<span class="opt-tick">✓ 正確</span>' : ''}
+          </div>
+        `).join('')}
+      </div>
+      <div class="mc-expl"><strong>解析：</strong>${esc(q.explanation)}</div>
+    </div>
+  `;
+}
+
+// ── Spec ──────────────────────────────────────────────────────────────────────
+function renderSpec(spec) {
+  if (!spec) return '<div style="color:var(--dim);font-size:12px;">無規格資料</div>';
+  return `
+    <div class="spec-box">
+      <div class="spec-row"><span class="sk">主篇章</span><span class="sv">${esc(spec.passage)}</span></div>
+      ${spec.cross_passage ? `<div class="spec-row"><span class="sk">跨篇章</span><span class="sv">${esc(spec.cross_passage)}</span></div>` : ''}
+      <div class="spec-row"><span class="sk">難度</span><span class="sv">${esc(spec.difficulty)}</span></div>
+      <div class="spec-row"><span class="sk">考核能力</span><span class="sv">${esc(spec.skill_tested)}</span></div>
+      ${spec.special_notes ? `<div class="spec-row"><span class="sk">特別備注</span><span class="sv">${esc(spec.special_notes)}</span></div>` : ''}
+    </div>
+    <div class="spec-box">
+      <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:6px;">策略師推理過程</div>
+      <div class="reasoning-text">${esc(spec.reasoning)}</div>
+    </div>
+  `;
+}
+
+// ── LLM Calls ─────────────────────────────────────────────────────────────────
+function renderLLM(traces) {
+  if (!traces.length) return '<div style="color:var(--dim);font-size:12px;">無 LLM 追蹤記錄</div>';
+
+  const counts = {};
+  return `<div class="llm-calls">${traces.map((t, i) => {
+    const m  = AGENTS[t.agent] || { lbl: t.agent, em: '🤖', cls: '' };
+    counts[t.agent] = (counts[t.agent] || 0) + 1;
+    const rev = counts[t.agent] > 1;
+    const cid = `lc_${Date.now()}_${i}`;
+
+    let rawFmt = t.raw_response || '';
+    try { rawFmt = JSON.stringify(JSON.parse(t.raw_response), null, 2); } catch(_) {}
+
+    return `
+      <div class="llm-card" id="${cid}">
+        <div class="llm-hdr" onclick="toggleLLM('${cid}')">
+          <span class="agent-badge ${m.cls}">${m.em} ${m.lbl}</span>
+          ${rev ? '<span class="chip c-orange" style="font-size:10px;">修訂 #' + counts[t.agent] + '</span>' : ''}
+          <span class="llm-meta">Bot: ${esc(t.bot||'—')} · 第 ${i+1} 次呼叫</span>
+          <span class="expand-ico">▾</span>
+        </div>
+        <div class="llm-body">
+          <div class="p-section">
+            <div class="p-hdr">
+              <span class="p-title">📤 發送的完整 Prompt</span>
+              <button class="btn-copy" onclick="copyEl(event,'${cid}-p')">複製</button>
+            </div>
+            <pre class="ptext" id="${cid}-p">${esc(t.merged_prompt||'')}</pre>
+          </div>
+          <div class="p-section">
+            <div class="p-hdr">
+              <span class="p-title">📥 LLM 原始回應</span>
+              <button class="btn-copy" onclick="copyEl(event,'${cid}-r')">複製</button>
+            </div>
+            <pre class="ptext" id="${cid}-r">${esc(rawFmt)}</pre>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('')}</div>`;
+}
+
+function toggleLLM(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+function copyEl(e, id) {
+  e.stopPropagation();
+  navigator.clipboard.writeText(document.getElementById(id).textContent).catch(()=>{});
+  const btn = e.target;
+  btn.textContent = '✓ 已複製';
+  setTimeout(() => btn.textContent = '複製', 1500);
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+init();
+</script>
+</body>
+</html>

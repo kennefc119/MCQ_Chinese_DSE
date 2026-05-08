@@ -182,5 +182,20 @@ def fetch_passages() -> None:
     console.print(f"[green]✅ 已快取 {len(passages)} 篇課文到 data/passages.json[/green]\n")
 
 
+@app.command()
+def serve(
+    port: int = typer.Option(8765, "--port", "-p", help="本地 HTTP port"),
+    reload: bool = typer.Option(False, "--reload", help="開發模式 auto-reload"),
+) -> None:
+    """啟動本地 dashboard API server。開啟 dashboard.html 即可使用視覺化介面。"""
+    from .server import start_server
+
+    console.print(f"\n[bold green]🚀 MCQ Dashboard 伺服器啟動中...[/bold green]")
+    console.print(f"   API:       [cyan]http://127.0.0.1:{port}/docs[/cyan]")
+    console.print(f"   Dashboard: [cyan]開啟 backend/mcq_generator/dashboard.html[/cyan]")
+    console.print("[dim]   按 Ctrl+C 停止[/dim]\n")
+    start_server(port=port, reload=reload)
+
+
 if __name__ == "__main__":
     app()
