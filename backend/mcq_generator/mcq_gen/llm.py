@@ -1,10 +1,8 @@
-"""Poe HTTP API wrapper — SSE stream + JSON extraction + Pydantic validation."""
+"""Poe API wrapper — OpenAI-compatible endpoint at https://api.poe.com/v1"""
 from __future__ import annotations
 
 import json
-import uuid
 from typing import TypeVar
-from urllib.parse import quote
 
 import httpx
 import structlog
@@ -16,10 +14,9 @@ log = structlog.get_logger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
 
-_POE_BASE_URL = "https://api.poe.com/bot/"
+_POE_BASE_URL = "https://api.poe.com/v1/chat/completions"
 
 # ─── Trace Capture ───────────────────────────────────────────────────────────
-# Module-level list — reset before each pipeline run, read afterwards for dashboard.
 
 _traces: list[dict] = []
 
@@ -34,33 +31,6 @@ def get_traces() -> list[dict]:
     return list(_traces)
 
 
-def _read_poe_stream(response: httpx.Response) -> str:
-    """Parse Poe SSE response and concatenate all text-event chunks."""
-    reply = ""
-    current_event = ""
-
-    for line in response.iter_lines():
-        line = line.strip()
-        if not line:
-            # Empty line = event separator
-            current_event = ""
-            continue
-        if line.startswith("event:"):
-            current_event = line[6:].strip()
-        elif line.startswith("data:"):
-            data_str = line[5:].strip()
-            if current_event == "text":
-                try:
-                    data = json.loads(data_str)
-                    reply += data.get("text", "")
-                except json.JSONDecodeError:
-                    pass
-            elif current_event == "done":
-                return reply
-
-    return reply
-
-
 def chat_structured(
     system_prompt: str,
     user_message: str,
@@ -70,48 +40,43 @@ def chat_structured(
     model: str | None = None,
 ) -> T:
     """
-    呼叫 Poe HTTP API，收集 SSE stream，然後用 Pydantic 解析 JSON 回傳值。
+    呼叫 Poe OpenAI-compatible API，解析 JSON 回傳值為 Pydantic model。
 
-    若 Poe 回傳非 JSON 或解析失敗會 raise ValueError。
+    Poe bots ignore the system role — merge system prompt + user message
+    into a single user turn (same pattern as fortune-teller in table_for_6).
     """
     bot_name = model or settings.poe_bot_name
 
-    # Poe bots don't reliably honour a separate system role —
-    # merge system prompt + user message into a single user turn.
+    # Merge system prompt into user message — Poe bots ignore the system role
     merged = f"{system_prompt.strip()}\n\n---\n\n{user_message.strip()}"
 
     payload = {
-        "version": "1.0",
-        "type": "query",
-        "query": [
+        "model": bot_name,
+        "messages": [
             {"role": "user", "content": merged},
         ],
-        # Required by Poe protocol — can be synthetic UUIDs for non-persistent sessions
-        "user_id": "mcq-gen",
-        "conversation_id": str(uuid.uuid4()),
-        "message_id": str(uuid.uuid4()),
+        "temperature": temperature,
     }
 
-    url = f"{_POE_BASE_URL}{quote(bot_name, safe='')}"
-    log.debug("poe_call", bot=bot_name, url=url, schema=schema.__name__)
+    log.debug("poe_call", bot=bot_name, schema=schema.__name__)
 
     with httpx.Client(timeout=180.0) as client:
-        with client.stream(
-            "POST",
-            url,
+        response = client.post(
+            _POE_BASE_URL,
             headers={
                 "Authorization": f"Bearer {settings.poe_api_key}",
                 "Content-Type": "application/json",
-                "Accept": "text/event-stream",
             },
             json=payload,
-        ) as response:
-            if response.status_code != 200:
-                error_body = response.read().decode()
-                raise RuntimeError(
-                    f"Poe API error {response.status_code}: {error_body[:500]}"
-                )
-            raw = _read_poe_stream(response)
+        )
+
+    if response.status_code != 200:
+        raise RuntimeError(
+            f"Poe API error {response.status_code}: {response.text[:500]}"
+        )
+
+    data = response.json()
+    raw = data["choices"][0]["message"]["content"]
 
     log.debug("poe_raw_response", length=len(raw))
 
@@ -126,7 +91,7 @@ def chat_structured(
     if not raw:
         raise ValueError("Poe API 回傳空白回應")
 
-    # Strip markdown code fences if present (some bots add them despite instructions)
+    # Strip markdown code fences if present
     stripped = raw.strip()
     if stripped.startswith("```"):
         lines = stripped.splitlines()
