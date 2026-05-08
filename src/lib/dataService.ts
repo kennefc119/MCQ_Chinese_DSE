@@ -18,9 +18,20 @@ export const localStore = memory;
 
 // ── Public API (works in both demo + Supabase mode) ─────────────────────
 export async function listQuizzes(): Promise<Quiz[]> {
-  if (!isSupabaseConfigured) return SEED_QUIZZES;
-  const { data, error } = await supabase.from("dsemcq_quizzes").select("*").eq("is_published", true).order("order_no", { nullsFirst: false });
-  if (error) console.warn("[dsemcq] listQuizzes error:", error.message);
+  if (!isSupabaseConfigured) {
+    console.warn("[dsemcq] listQuizzes: Supabase not configured — returning seed data");
+    return SEED_QUIZZES;
+  }
+  const { data, error } = await supabase
+    .from("dsemcq_quizzes")
+    .select("*")
+    .eq("is_published", true)
+    .order("order_no", { nullsFirst: false });
+  if (error) {
+    console.warn("[dsemcq] listQuizzes error:", error.message, "| code:", error.code, "| details:", JSON.stringify(error));
+    return [];
+  }
+  console.warn(`[dsemcq] listQuizzes: returned ${data?.length ?? 0} rows`);
   return (data as Quiz[]) ?? [];
 }
 
