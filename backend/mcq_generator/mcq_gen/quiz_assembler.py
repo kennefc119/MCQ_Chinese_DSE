@@ -76,7 +76,7 @@ def assemble_quizzes(dry_run: bool = False) -> dict[str, Any]:
 
     if not rows:
         log.warning("assemble_no_active_questions")
-        return {"exercises": 0, "quizzes": 0, "exams": 0, "skipped": 0, "total_new": 0}
+        return {"exercises": 0, "quizzes": 0, "exams": 0, "updated": 0, "total_new": 0, "dry_run": dry_run}
 
     def _score(r: dict) -> int:
         """Return critique_score; treat NULL (manual questions) as 7."""

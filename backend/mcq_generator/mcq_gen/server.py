@@ -109,6 +109,40 @@ def generate(req: GenerateRequest) -> dict[str, Any]:
     }
 
 
+@app.get("/api/db-check")
+def db_check() -> dict[str, Any]:
+    """
+    Diagnose Supabase table status: existence, row counts, active question count.
+    Returns per-table status so the dashboard can show clear guidance.
+    """
+    from .db.client import get_supabase
+    sb = get_supabase()
+    result: dict[str, Any] = {}
+
+    tables = [
+        ("dsemcq_questions", "questions"),
+        ("dsemcq_quizzes",   "quizzes"),
+        ("dsemcq_passages",  "passages"),
+    ]
+    for table, key in tables:
+        try:
+            resp = sb.table(table).select("id", count="exact").limit(1).execute()
+            count = resp.count if resp.count is not None else len(resp.data or [])
+            result[key] = {"exists": True, "count": count}
+        except Exception as exc:
+            result[key] = {"exists": False, "error": str(exc)}
+
+    # Active question count specifically (needed for assembler)
+    try:
+        resp = sb.table("dsemcq_questions").select("id", count="exact").eq("is_active", True).limit(1).execute()
+        active = resp.count if resp.count is not None else len(resp.data or [])
+        result["active_questions"] = active
+    except Exception:
+        result["active_questions"] = 0
+
+    return result
+
+
 @app.post("/api/assemble")
 def assemble(req: AssembleRequest) -> dict[str, Any]:
     """

@@ -459,6 +459,16 @@
   </div>
 
   <div class="s-section">
+    <h3>DB 診斷</h3>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">
+      確認 Supabase 表格是否存在、題目數量是否足夠組合
+    </div>
+    <button class="btn-sm" id="dbCheckBtn" onclick="dbCheck()" style="margin-bottom:8px;">🔍 檢查 DB 狀態</button>
+    <div id="dbCheckResult" style="display:none;font-size:11px;background:var(--surface2);
+      border-radius:6px;padding:10px;line-height:1.8;"></div>
+  </div>
+
+  <div class="s-section">
     <h3>測驗組合</h3>
     <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:8px;">
       將現有題目自動組合為練習題（5條）、測驗（10條）、模擬考試（20條）
@@ -740,6 +750,52 @@ function showBatchSummary(questions, dryRun) {
   `;
 }
 
+// ── DB Check ──────────────────────────────────────────────────────────────────
+async function dbCheck() {
+  const btn = document.getElementById('dbCheckBtn');
+  const el  = document.getElementById('dbCheckResult');
+  btn.disabled = true;
+  btn.textContent = '⏳ 檢查中...';
+  el.style.display = 'none';
+
+  try {
+    const r = await fetch(`${API}/api/db-check`);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+
+    const statusIcon = (t) => t.exists
+      ? `<span style="color:var(--green)">✓ 存在</span> (${t.count} 行)`
+      : `<span style="color:var(--red)">✗ 不存在</span>${t.error ? ` — ${t.error}` : ''}`;
+
+    const activeOk = d.active_questions >= 5;
+    const migMsg = (!d.questions?.exists || !d.quizzes?.exists)
+      ? `<br><span style="color:var(--yellow)">⚠ 表格不存在 — 請先在 Supabase Studio SQL 編輯器中執行 migrations/ 下的 .sql 檔案</span>`
+      : '';
+    const qMsg = d.questions?.exists && d.active_questions === 0
+      ? `<br><span style="color:var(--yellow)">⚠ 沒有 is_active=true 的題目 — 請先生成題目，再執行組合</span>`
+      : '';
+    const enoughMsg = d.active_questions > 0 && d.active_questions < 5
+      ? `<br><span style="color:var(--yellow)">⚠ 題目數量不足（需 ≥5 條才能組合練習題）</span>`
+      : '';
+
+    el.innerHTML = `
+      📋 dsemcq_questions：${statusIcon(d.questions || {})}<br>
+      🗂 dsemcq_quizzes：${statusIcon(d.quizzes || {})}<br>
+      📖 dsemcq_passages：${statusIcon(d.passages || {})}<br>
+      ✅ is_active=true 題目：<b style="color:${activeOk ? 'var(--green)' : 'var(--red)'}">${d.active_questions}</b> 條
+      ${migMsg}${qMsg}${enoughMsg}
+    `;
+    el.style.display = 'block';
+  } catch(e) {
+    el.innerHTML = `<span style="color:var(--red)">❌ 連線失敗：${e.message}</span><br>
+      <span style="color:var(--muted)">請確認後端伺服器已啟動（mcq-gen serve）</span>`;
+    el.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔍 檢查 DB 狀態';
+  }
+}
+
 // ── Assemble ──────────────────────────────────────────────────────────────────
 async function assemble() {
   const dryRun = document.getElementById('assembleDry').checked;
@@ -760,12 +816,18 @@ async function assemble() {
 
     const el = document.getElementById('assembleResult');
     el.style.display = 'block';
+    const total = (d.exercises || 0) + (d.quizzes || 0) + (d.exams || 0);
+    const updated = d.updated ?? 0;
+    const nothingMsg = (!dryRun && total === 0 && updated === 0)
+      ? `<br><span style="color:var(--yellow)">⚠ 沒有足夠的 is_active=true 題目可組合 — 請先生成題目，或點擊「檢查 DB 狀態」診斷</span>`
+      : '';
     el.innerHTML = `
       ${dryRun ? '<span style="color:var(--yellow)">⚠ Dry Run — 未寫入</span><br>' : '<span style="color:var(--green)">✓ 已寫入 Supabase</span><br>'}
       🏋 練習題：<b>${d.exercises}</b> 個新建<br>
       📝 測驗：<b>${d.quizzes}</b> 個新建<br>
       🎓 模擬考試：<b>${d.exams}</b> 個新建<br>
-      🔄 更新（已存在，重新組合）：<b>${d.updated ?? 0}</b>
+      🔄 更新（已存在，重新組合）：<b>${updated}</b>
+      ${nothingMsg}
     `;
     if (!dryRun) loadStats();
   } catch(e) {
