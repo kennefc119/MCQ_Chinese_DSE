@@ -1002,8 +1002,8 @@ function switchTab(id, tab, el) {
 
 // ── MC Question ───────────────────────────────────────────────────────────────
 function renderQ(q) {
-  const opts = q.options;
-  const ok   = q.correct_answer;
+  const opts   = Array.isArray(q.options) ? q.options : [];
+  const labels = ['A','B','C','D'];
   return `
     <div class="mc-q">
       <div class="mc-meta">
@@ -1012,15 +1012,15 @@ function renderQ(q) {
       </div>
       <div class="mc-stem">${esc(q.stem)}</div>
       <div class="mc-opts">
-        ${['A','B','C','D'].map(k => `
-          <div class="mc-opt ${k===ok?'correct':''}">
-            <span class="opt-lbl">${k}</span>
-            <span>${esc(opts[k])}</span>
-            ${k===ok ? '<span class="opt-tick">✓ 正確</span>' : ''}
+        ${opts.map((opt, i) => `
+          <div class="mc-opt ${opt.is_correct ? 'correct' : ''}">
+            <span class="opt-lbl">${labels[i] ?? i}</span>
+            <span>${esc(opt.text ?? '')}</span>
+            ${opt.is_correct ? '<span class="opt-tick">✓ 正確</span>' : ''}
+            ${opt.explanation ? `<div class="mc-expl" style="margin-top:4px;font-size:12px;color:var(--muted);">${esc(opt.explanation)}</div>` : ''}
           </div>
         `).join('')}
       </div>
-      <div class="mc-expl"><strong>解析：</strong>${esc(q.explanation)}</div>
     </div>
   `;
 }

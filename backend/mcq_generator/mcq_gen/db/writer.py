@@ -73,9 +73,15 @@ def write_question(q: SavedQuestion) -> bool:
         }
         for i, opt in enumerate(q.options)
     ]
-    sb.table("dsemcq_question_options").upsert(
-        option_rows, on_conflict="id", ignore_duplicates=True
-    ).execute()
+    opt_result = (
+        sb.table("dsemcq_question_options").upsert(
+            option_rows, on_conflict="id", ignore_duplicates=True
+        ).execute()
+    )
+    if not opt_result.data:
+        log.warning("options_skipped_or_failed", question_id=q.question_id, expected=len(option_rows))
+    else:
+        log.info("options_written", question_id=q.question_id, count=len(opt_result.data))
 
     # ── 3. dsemcq_question_tags ────────────────────────────────────────────
     tag_id = _SKILL_TO_TAG.get(q.skill.value)

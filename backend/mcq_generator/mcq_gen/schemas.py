@@ -54,7 +54,7 @@ class DraftOption(BaseModel):
 
     text: str
     is_correct: bool  # 四個選項中恰好一個為 True
-    explanation: str  # 此選項為何正確／錯誤（1-3 句，直接引用選項文字及篇章原文）
+    explanation: str = ""  # 此選項為何正確／錯誤（1-3 句，直接引用選項文字及篇章原文）；LLM 有時省略時預設空字串
 
 
 class Draft(BaseModel):
