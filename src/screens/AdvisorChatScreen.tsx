@@ -47,7 +47,13 @@ export default function AdvisorChatScreen() {
         const { data, error } = await supabase.functions.invoke("dsemcq-advisor-chat", {
           body: { message: text, system: SYSTEM_PROMPT, history: messages.slice(-6) },
         });
-        reply = error ? "（無法連接顧問服務，請稍後再試）" : (data?.reply ?? "（無回覆）");
+        if (error || data?.error) {
+          const errMsg = data?.error ?? error?.message ?? "未知錯誤";
+          console.log("[AdvisorChat] error:", error, "data.error:", data?.error);
+          reply = `（顧問服務異常：${errMsg}）`;
+        } else {
+          reply = data?.reply ?? "（無回覆）";
+        }
       }
       setMessages((p) => [...p, { id: `a-${Date.now()}`, role: "assistant", text: reply }]);
     } finally {

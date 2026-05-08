@@ -80,9 +80,12 @@ Deno.serve(async (req: Request) => {
   poeMessages.push({ role: "user", content: userMessage });
 
   const poePayload = {
-    version: "1.0",
-    type:    "query",
-    query:   poeMessages,
+    version:         "1.0",
+    type:            "query",
+    query:           poeMessages,
+    user_id:         userId,
+    conversation_id: `conv-${userId}-${Date.now()}`,
+    message_id:      `msg-${userId}-${Date.now()}`,
   };
 
   // ── 4. Call Poe HTTP API ───────────────────────────────────────────────
