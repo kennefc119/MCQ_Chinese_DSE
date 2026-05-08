@@ -5,7 +5,7 @@ import { useNavigation, useRoute, RouteProp, CommonActions } from "@react-naviga
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, spacing, typography } from "../theme";
 import { Quiz, Question, Attempt } from "../types/database";
-import { getQuiz, getQuestionsForQuiz, listUserAttempts } from "../lib/dataService";
+import { getQuiz, getQuestionsForResult, listUserAttempts } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import Button from "../components/Button";
 import LoadingScreen from "../components/LoadingScreen";
@@ -27,7 +27,7 @@ export default function QuizResultScreen() {
       const q = await getQuiz(quizId);
       if (!q) return;
       setQuiz(q);
-      setQuestions(await getQuestionsForQuiz(q));
+      setQuestions(await getQuestionsForResult(q));
       if (user) {
         const all = await listUserAttempts(user.id);
         setAttempt(all.find((a) => a.id === attemptId) || null);
@@ -60,17 +60,17 @@ export default function QuizResultScreen() {
         {questions.map((q, i) => {
           const sel = attempt.answers[q.id];
           const correctOpt = q.options.find((o) => o.is_correct);
-          const selOpt = q.options.find((o) => o.id === sel);
-          const isCorrect = selOpt?.is_correct ?? false;
+          const isCorrect = sel != null && sel === correctOpt?.id;
+          const isWrong = sel != null && sel !== correctOpt?.id;
           return (
             <View key={q.id} style={styles.qBlock}>
               <Text style={styles.qHeader}>
-                第 {i + 1} 題　{isCorrect ? "✅" : selOpt ? "❌" : "—"}
+                第 {i + 1} 題　{isCorrect ? "✅" : isWrong ? "❌" : "—"}
               </Text>
               <Text style={styles.qStem}>{q.stem}</Text>
               {q.options.map((o) => {
                 const isSel = o.id === sel;
-                const isAns = o.is_correct;
+                const isAns = o.id === correctOpt?.id;
                 return (
                   <View
                     key={o.id}

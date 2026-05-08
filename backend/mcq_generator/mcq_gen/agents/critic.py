@@ -11,6 +11,7 @@ import structlog
 
 from ..llm import chat_structured
 from ..schemas import Critique, Draft, Spec
+from ..school_ws_loader import format_school_ws_block
 
 log = structlog.get_logger(__name__)
 
@@ -36,6 +37,11 @@ def _build_user_message(spec: Spec, draft: Draft, cross_text: str | None, passag
     ]
     if cross_text:
         parts += ["", "## 跨篇章原文（第二篇）", cross_text]
+
+    # Inject school worksheet summary + relevant teacher worksheets
+    school_ws_block = format_school_ws_block(spec.passage, spec.cross_passage)
+    if school_ws_block:
+        parts += ["", school_ws_block]
 
     parts += [
         "",

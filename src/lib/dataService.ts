@@ -51,6 +51,42 @@ export async function getQuestionsForQuiz(quiz: Quiz): Promise<Question[]> {
   return (data as Question[]) ?? [];
 }
 
+// Returns questions with REAL is_correct values by querying tables directly (bypasses the
+// anti-cheat RPC that hides is_correct=false during the quiz).
+export async function getQuestionsForResult(quiz: Quiz): Promise<Question[]> {
+  if (!isSupabaseConfigured) {
+    return quiz.question_ids.map((qid) => SEED_QUESTIONS.find((q) => q.id === qid)!).filter(Boolean);
+  }
+
+  const ids = quiz.question_ids;
+  if (ids.length === 0) return [];
+
+  // Query questions and options in parallel
+  const [{ data: qRows, error: qErr }, { data: optRows, error: optErr }] = await Promise.all([
+    supabase.from("dsemcq_questions").select("*").in("id", ids),
+    supabase
+      .from("dsemcq_question_options")
+      .select("id, question_id, label, text, is_correct")
+      .in("question_id", ids)
+      .order("label"),
+  ]);
+
+  if (qErr) console.warn("[dsemcq] getQuestionsForResult questions error:", qErr.message);
+  if (optErr) console.warn("[dsemcq] getQuestionsForResult options error:", optErr.message);
+
+  const optsByQ: Record<string, typeof optRows> = {};
+  for (const o of optRows ?? []) {
+    if (!optsByQ[o.question_id]) optsByQ[o.question_id] = [];
+    optsByQ[o.question_id]!.push(o);
+  }
+
+  // Preserve the quiz's question order
+  return ids
+    .map((id) => (qRows ?? []).find((q) => q.id === id))
+    .filter((q): q is NonNullable<typeof q> => q != null)
+    .map((q) => ({ ...q, options: optsByQ[q.id] ?? [] } as Question));
+}
+
 export async function listPassages(): Promise<Passage[]> {
   if (!isSupabaseConfigured) return SEED_PASSAGES;
   const { data } = await supabase.from("dsemcq_passages").select("*").order("order_no");
@@ -194,14 +230,45 @@ export async function submitAttempt(
   questions: Question[],
   timeSpent: number,
 ): Promise<Attempt> {
+  // Demo mode: calculate score locally (seed questions have correct is_correct values)
+  if (!isSupabaseConfigured) {
+    let correct = 0;
+    for (const q of questions) {
+      const sel = answers[q.id];
+      if (sel) {
+        const opt = q.options.find((o) => o.id === sel);
+        if (opt?.is_correct) correct++;
+      }
+    }
+    const update = {
+      submitted_at: new Date().toISOString(),
+      score: correct,
+      total: questions.length,
+      time_spent_seconds: timeSpent,
+      status: "submitted" as const,
+      answers,
+    };
+    const a = memory.attempts.find((x) => x.id === attemptId);
+    if (a) Object.assign(a, update);
+    return { ...(a as Attempt), ...update };
+  }
+
+  // Supabase mode: query dsemcq_question_options directly to get real is_correct values.
+  // The quiz RPC hides is_correct during play (anti-cheat), so we must look up the DB table.
   let correct = 0;
-  for (const q of questions) {
-    const sel = answers[q.id];
-    if (sel) {
-      const opt = q.options.find((o) => o.id === sel);
-      if (opt?.is_correct) correct++;
+  const selectedOptionIds = Object.values(answers).filter(Boolean);
+  if (selectedOptionIds.length > 0) {
+    const { data: opts, error: optsError } = await supabase
+      .from("dsemcq_question_options")
+      .select("id, is_correct")
+      .in("id", selectedOptionIds);
+    if (optsError) {
+      console.warn("[dsemcq] submitAttempt: failed to fetch option correctness:", optsError.message);
+    } else {
+      correct = (opts ?? []).filter((o) => o.is_correct).length;
     }
   }
+
   const update = {
     submitted_at: new Date().toISOString(),
     score: correct,
@@ -210,21 +277,15 @@ export async function submitAttempt(
     status: "submitted" as const,
     answers,
   };
-  if (!isSupabaseConfigured) {
-    const a = memory.attempts.find((x) => x.id === attemptId);
-    if (a) Object.assign(a, update);
-    return { ...(a as Attempt), ...update };
-  }
+
   const answerRows = questions
     .filter((q) => answers[q.id])
     .map((q) => {
       const selectedOptionId = answers[q.id];
-      const opt = q.options.find((o) => o.id === selectedOptionId);
       return {
         attempt_id: attemptId,
         question_id: q.id,
         selected_option_id: selectedOptionId,
-        is_correct: Boolean(opt?.is_correct),
         answered_at: new Date().toISOString(),
       };
     });

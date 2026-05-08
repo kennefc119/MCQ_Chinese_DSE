@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     max_cycles_per_run: int = Field(50, ge=1, le=500)
     max_revise_iterations: int = Field(3, ge=1, le=5)
     sleep_between_cycles_seconds: float = Field(1.0, ge=0)
-    default_source_tag: str = Field("agent-v1")
+    default_source_tag: str = Field("agent-v2")
 
 
 # 全域單例
