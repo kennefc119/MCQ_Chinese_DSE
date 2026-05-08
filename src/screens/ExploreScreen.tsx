@@ -201,8 +201,11 @@ export default function ExploreScreen() {
   const [feedVisible, setFeedVisible] = useState(false);
   const [feedIndex, setFeedIndex] = useState(0);
   const feedRef = useRef<FlatList<FeedItem>>(null);
+  const { loading: authLoading } = useAuth();
 
   useEffect(() => {
+    // Re-run whenever auth finishes loading (covers the session-restoration timing gap)
+    if (authLoading) return;
     let mounted = true;
     const load = async () => {
       const [quizzes, tips] = await Promise.all([listQuizzes(), listTipCards()]);
@@ -213,7 +216,7 @@ export default function ExploreScreen() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [authLoading]);
 
   const openFeed = (index: number) => {
     setFeedIndex(index);
