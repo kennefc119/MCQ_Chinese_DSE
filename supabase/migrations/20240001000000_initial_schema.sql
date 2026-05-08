@@ -119,7 +119,7 @@ create table if not exists dsemcq_quizzes (
 -- 6. dsemcq_user_quiz_signups  (calendar)
 -- ────────────────────────────────────────────────────────────
 create table if not exists dsemcq_user_quiz_signups (
-  id           uuid primary key default uuid_generate_v4(),
+  id           uuid primary key default gen_random_uuid(),
   user_id      uuid not null references dsemcq_profiles(id) on delete cascade,
   quiz_id      text not null references dsemcq_quizzes(id)  on delete cascade,
   signed_up_at timestamptz not null default now(),
@@ -132,7 +132,7 @@ create table if not exists dsemcq_user_quiz_signups (
 do $$ begin create type dsemcq_attempt_status as enum ('in_progress', 'submitted', 'expired'); exception when duplicate_object then null; end $$;
 
 create table if not exists dsemcq_attempts (
-  id                 uuid primary key default uuid_generate_v4(),
+  id                 uuid primary key default gen_random_uuid(),
   user_id            uuid not null references dsemcq_profiles(id) on delete cascade,
   quiz_id            text not null references dsemcq_quizzes(id)  on delete cascade,
   started_at         timestamptz not null default now(),
@@ -146,7 +146,7 @@ create table if not exists dsemcq_attempts (
 );
 
 create table if not exists dsemcq_attempt_answers (
-  id                 uuid primary key default uuid_generate_v4(),
+  id                 uuid primary key default gen_random_uuid(),
   attempt_id         uuid not null references dsemcq_attempts(id) on delete cascade,
   question_id        text not null references dsemcq_questions(id) on delete cascade,
   selected_option_id text references dsemcq_question_options(id) on delete set null,
@@ -196,7 +196,7 @@ create table if not exists dsemcq_psych_tests (
 );
 
 create table if not exists dsemcq_psych_user_results (
-  id           uuid primary key default uuid_generate_v4(),
+  id           uuid primary key default gen_random_uuid(),
   user_id      uuid not null references dsemcq_profiles(id) on delete cascade,
   test_id      text not null references dsemcq_psych_tests(id) on delete cascade,
   result_code  text not null,
@@ -210,7 +210,7 @@ create table if not exists dsemcq_psych_user_results (
 do $$ begin create type dsemcq_inbox_type as enum ('info', 'warning', 'success'); exception when duplicate_object then null; end $$;
 
 create table if not exists dsemcq_inbox (
-  id         uuid primary key default uuid_generate_v4(),
+  id         uuid primary key default gen_random_uuid(),
   user_id    uuid references dsemcq_profiles(id) on delete cascade,  -- null = broadcast
   title      text not null,
   body       text not null,
@@ -223,7 +223,7 @@ create table if not exists dsemcq_inbox (
 -- 11. dsemcq_advisor_messages
 -- ────────────────────────────────────────────────────────────
 create table if not exists dsemcq_advisor_messages (
-  id         uuid primary key default uuid_generate_v4(),
+  id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null references dsemcq_profiles(id) on delete cascade,
   user_text  text not null,
   bot_reply  text not null,
