@@ -43,7 +43,7 @@ class Spec(BaseModel):
     difficulty: Difficulty
     skill_tested: Skill
     special_notes: str = Field("", description="給出題員的補充提示（可為空）")
-    reasoning: str = Field(..., description="策略師解釋為何選此維度（引用分佈數字）")
+    reasoning: str = Field("", description="策略師解釋為何選此維度（引用分佈數字）")
 
 
 # ─── Agent 2 輸出 ────────────────────────────────────────────────────────────
