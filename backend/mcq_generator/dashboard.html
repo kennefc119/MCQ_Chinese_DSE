@@ -230,6 +230,21 @@
     .loading-fill { height: 100%; background: var(--accent); width: 30%; border-radius: 2px; animation: lslide 1.4s ease-in-out infinite; }
     @keyframes lslide { 0% { margin-left:-30%; } 100% { margin-left:100%; } }
 
+    /* Batch progress */
+    .progress-wrap { margin-bottom: 14px; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+    .progress-meta { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 7px; }
+    .progress-track { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+    .progress-fill  { height: 100%; background: var(--accent); width: 0%; border-radius: 4px; transition: width .35s ease; }
+
+    /* Batch summary */
+    .batch-summary { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
+    .batch-summary table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .batch-summary th, .batch-summary td { padding: 7px 12px; text-align: left; }
+    .batch-summary thead tr { background: var(--surface2); }
+    .batch-summary th { color: var(--muted); font-weight: 600; }
+    .batch-summary tbody tr { border-top: 1px solid var(--border); }
+    .batch-summary tbody tr:hover { background: var(--surface2); }
+
     /* Empty */
     .empty {
       border: 1px dashed var(--border);
@@ -518,6 +533,19 @@
     </p>
   </div>
 
+  <div id="progressWrap" class="progress-wrap" style="display:none;">
+    <div class="progress-meta">
+      <span id="progressLabel" style="color:var(--text);font-weight:600;">0 / 0 已完成</span>
+      <span id="progressPct" style="color:var(--accent);font-weight:700;">0%</span>
+    </div>
+    <div class="progress-track">
+      <div id="progressFill" class="progress-fill"></div>
+    </div>
+    <div style="font-size:11px;color:var(--dim);margin-top:5px;" id="progressSub">正在生成...</div>
+  </div>
+
+  <div id="batchSummary" class="batch-summary" style="display:none;"></div>
+
   <div id="results"></div>
 </main>
 
@@ -594,6 +622,10 @@ async function generate() {
 
   setBusy(true);
   showErr(null);
+  hideBatchSummary();
+
+  const showProgress = count > 1;
+  if (showProgress) setProgress(0, count, '準備中...');
 
   // Animate steps
   const steps = ['sp1','sp2','sp3'];
@@ -605,27 +637,33 @@ async function generate() {
     si = (si + 1) % 3;
   }, 1800);
 
+  const batchResults = [];
+
   try {
-    const r = await fetch(`${API}/api/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ passage_id: passage, dry_run: dryRun, count }),
-    });
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || `HTTP ${r.status}`);
+    for (let i = 0; i < count; i++) {
+      if (showProgress) setProgress(i, count, `正在生成第 ${i + 1} / ${count} 題...`);
 
-    // New response: {questions:[...], traces:[...], total_tokens:N}
-    const questions = data.questions || (data.question ? [data.question] : []);
-    const allTraces = data.traces || [];
-    const totalTok  = data.total_tokens || 0;
+      const r = await fetch(`${API}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passage_id: passage, dry_run: dryRun, count: 1 }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || `HTTP ${r.status}`);
 
-    // Split traces per question (they arrive interleaved 3 per question)
-    const tracesPerQ = Math.ceil(allTraces.length / questions.length);
-    questions.forEach((q, i) => {
-      const qTraces = allTraces.slice(i * tracesPerQ, (i + 1) * tracesPerQ);
-      addResult({ question: q, traces: qTraces, total_tokens: totalTok }, dryRun, i + 1, questions.length);
-    });
+      const questions = data.questions || (data.question ? [data.question] : []);
+      const allTraces = data.traces || [];
+      const totalTok  = data.total_tokens || 0;
 
+      questions.forEach(q => {
+        addResult({ question: q, traces: allTraces, total_tokens: totalTok }, dryRun, i + 1, count);
+        batchResults.push(q);
+      });
+
+      if (showProgress) setProgress(i + 1, count, `已完成 ${i + 1} / ${count} 題`);
+    }
+
+    if (showProgress && batchResults.length > 0) showBatchSummary(batchResults, dryRun);
     if (!dryRun) loadStats();
   } catch(e) {
     showErr(`生成失敗：${e.message}`);
@@ -633,7 +671,73 @@ async function generate() {
     clearInterval(stepTimer);
     steps.forEach(id => document.getElementById(id).classList.remove('active'));
     setBusy(false);
+    if (showProgress) hideProgress();
   }
+}
+
+// ── Progress helpers ──────────────────────────────────────────────────────────
+function setProgress(done, total, subText) {
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  document.getElementById('progressWrap').style.display = '';
+  document.getElementById('progressLabel').textContent = `${done} / ${total} 已完成`;
+  document.getElementById('progressPct').textContent   = `${pct}%`;
+  document.getElementById('progressFill').style.width  = `${pct}%`;
+  if (subText !== undefined) document.getElementById('progressSub').textContent = subText;
+}
+
+function hideProgress() {
+  document.getElementById('progressWrap').style.display = 'none';
+}
+
+function hideBatchSummary() {
+  const el = document.getElementById('batchSummary');
+  el.style.display = 'none';
+  el.innerHTML = '';
+}
+
+function showBatchSummary(questions, dryRun) {
+  const diffLabels = {'1':'淺①','2':'淺②','3':'中③','4':'深④','5':'深⑤'};
+  const passCount = questions.filter(q => q.is_active).length;
+  const avgScore  = questions.length
+    ? (questions.reduce((s, q) => s + (q.critique_score || 0), 0) / questions.length).toFixed(1)
+    : '—';
+
+  const rows = questions.map((q, i) => {
+    const sColor = q.critique_score >= 8 ? 'var(--green)' : q.critique_score >= 6 ? 'var(--yellow)' : 'var(--red)';
+    const status = q.is_active ? '✓ PASS' : dryRun ? 'DRY RUN' : '⚠ 待審核';
+    const statusColor = q.is_active ? 'var(--green)' : dryRun ? 'var(--dim)' : 'var(--yellow)';
+    const stem = esc(q.stem || '');
+    const stemPreview = stem.length > 28 ? stem.substring(0, 28) + '…' : stem;
+    return `<tr>
+      <td style="color:var(--accent);font-weight:700;">${i + 1}</td>
+      <td><span class="chip c-blue" style="font-size:10px;">${esc(q.passage_id)}</span></td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);">${stemPreview}</td>
+      <td><span style="color:${sColor};font-weight:700;">🏆 ${q.critique_score}/10</span></td>
+      <td style="color:var(--text);">${diffLabels[String(q.difficulty)] || q.difficulty}</td>
+      <td style="color:${statusColor};">${status}</td>
+    </tr>`;
+  }).join('');
+
+  const el = document.getElementById('batchSummary');
+  el.style.display = '';
+  el.innerHTML = `
+    <div style="padding:12px 14px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
+      <span style="font-size:13px;font-weight:600;">📊 批量摘要</span>
+      <span class="chip c-dim" style="font-size:10px;">${questions.length} 題</span>
+      <span class="chip c-green" style="font-size:10px;">✓ ${passCount} PASS</span>
+      <span class="chip c-yellow" style="font-size:10px;">平均分 ${avgScore}</span>
+      ${dryRun ? '<span class="chip c-dim" style="font-size:10px;">⚠ DRY RUN</span>'
+               : '<span class="chip c-blue" style="font-size:10px;">✓ 已寫入 DB</span>'}
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr>
+          <th>#</th><th>篇章</th><th>題幹預覽</th><th>評分</th><th>難度</th><th>狀態</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
 }
 
 // ── Assemble ──────────────────────────────────────────────────────────────────

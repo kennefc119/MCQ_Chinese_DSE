@@ -9,6 +9,7 @@ from pathlib import Path
 
 import structlog
 
+from ..dse_reference import format_reference_block
 from ..llm import chat_structured
 from ..schemas import Critique, Draft, Spec
 
@@ -48,6 +49,15 @@ def _build_user_message(
     ]
     if cross_text:
         parts += ["", "## 跨篇章原文（第二篇）", cross_text]
+
+    # Inject past DSE reference questions for style/difficulty calibration
+    reference_block = format_reference_block(spec.passage)
+    if reference_block:
+        parts += ["", reference_block]
+    if spec.cross_passage:
+        cross_ref = format_reference_block(spec.cross_passage)
+        if cross_ref:
+            parts += ["", f"### 跨篇章參考（{spec.cross_passage}）", cross_ref]
 
     if prev_draft and critique:
         parts += [

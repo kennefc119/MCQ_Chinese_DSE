@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import time
 from typing import TypeVar
 
 import httpx
@@ -67,17 +68,34 @@ def chat_structured(
 
     log.debug("poe_call", bot=bot_name, schema=schema.__name__)
 
-    with httpx.Client(timeout=180.0) as client:
-        response = client.post(
-            _POE_BASE_URL,
-            headers={
-                "Authorization": f"Bearer {settings.poe_api_key}",
-                "Content-Type": "application/json",
-            },
-            json=payload,
-        )
+    _MAX_RETRIES = 5
+    response = None
+    for attempt in range(1, _MAX_RETRIES + 1):
+        with httpx.Client(timeout=180.0) as client:
+            response = client.post(
+                _POE_BASE_URL,
+                headers={
+                    "Authorization": f"Bearer {settings.poe_api_key}",
+                    "Content-Type": "application/json",
+                },
+                json=payload,
+            )
 
-    if response.status_code != 200:
+        if response.status_code == 200:
+            break
+
+        if response.status_code >= 500 and attempt < _MAX_RETRIES:
+            delay = 2 * attempt
+            log.warning(
+                "poe_retry",
+                attempt=attempt,
+                max=_MAX_RETRIES,
+                status=response.status_code,
+                delay_s=delay,
+            )
+            time.sleep(delay)
+            continue
+
         raise RuntimeError(
             f"Poe API error {response.status_code}: {response.text[:500]}"
         )

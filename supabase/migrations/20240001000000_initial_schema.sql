@@ -255,11 +255,12 @@ create index if not exists idx_advisor_user            on dsemcq_advisor_message
 -- ── Profiles ─────────────────────────────────────────────────
 alter table dsemcq_profiles enable row level security;
 drop policy if exists "profiles: owner read"   on dsemcq_profiles;
+drop policy if exists "profiles: owner insert" on dsemcq_profiles;
 drop policy if exists "profiles: owner update" on dsemcq_profiles;
 drop policy if exists "profiles: admin read"   on dsemcq_profiles;
+create policy "profiles: owner insert" on dsemcq_profiles for insert with check (auth.uid() = id);
 create policy "profiles: owner read"   on dsemcq_profiles for select using (auth.uid() = id);
 create policy "profiles: owner update" on dsemcq_profiles for update using (auth.uid() = id);
--- insert is handled by registerProfile via service-role; block direct public inserts
 -- Admins can see all profiles
 create policy "profiles: admin read" on dsemcq_profiles for select
   using (exists (select 1 from dsemcq_profiles p where p.id = auth.uid() and p.role = 'admin'));
