@@ -95,20 +95,21 @@ def assemble_quizzes(dry_run: bool = False) -> dict[str, Any]:
     quiz_pool = _by_passage(QUIZ_MIN_SCORE)
     exam_pool = _by_passage(EXAM_MIN_SCORE)
 
-    # 3. Existing quiz keys → avoid duplicates
+    # 3. Existing quizzes — load id + key so we can update in-place
     existing = (
         sb.table("dsemcq_quizzes")
-        .select("title,passage_id,type")
+        .select("id,title,passage_id,type")
         .execute()
         .data or []
     )
-    existing_keys = {
-        (e.get("passage_id"), e.get("type"), e.get("title"))
+    # key → existing id (so we reuse the same id on update)
+    existing_id_map: dict[tuple, str] = {
+        (e.get("passage_id"), e.get("type"), e.get("title")): e["id"]
         for e in existing
     }
 
-    summary = {"exercises": 0, "quizzes": 0, "exams": 0, "skipped": 0}
-    to_insert: list[dict] = []
+    summary = {"exercises": 0, "quizzes": 0, "exams": 0, "updated": 0}
+    to_upsert: list[dict] = []
 
     # 4. Per-passage: exercise + quiz
     for pid in sorted(set(list(ex_pool.keys()) + list(quiz_pool.keys()))):
@@ -118,53 +119,59 @@ def assemble_quizzes(dry_run: bool = False) -> dict[str, Any]:
 
         if len(ex_qids) >= EXERCISE_Q:
             title = f"{label} 練習題"
-            if (pid, "exercise", title) not in existing_keys:
-                to_insert.append({
-                    "id": _new_quiz_id(),
-                    "type": "exercise",
-                    "title": title,
-                    "description": (
-                        f"精選 {EXERCISE_Q} 條關於{label}的基礎練習題"
-                        f"（評分 ≥ {EXERCISE_MIN_SCORE}/10）"
-                    ),
-                    "passage_id": pid,
-                    "difficulty": 2,
-                    "duration_seconds": None,
-                    "max_attempts": None,
-                    "pass_score": 60,
-                    "points_reward": 5,
-                    "min_points_required": 0,
-                    "is_published": True,
-                    "question_ids": ex_qids[:EXERCISE_Q],
-                })
-                summary["exercises"] += 1
+            key = (pid, "exercise", title)
+            existing_id = existing_id_map.get(key)
+            record = {
+                "id": existing_id or _new_quiz_id(),
+                "type": "exercise",
+                "title": title,
+                "description": (
+                    f"精選 {EXERCISE_Q} 條關於{label}的基礎練習題"
+                    f"（評分 ≥ {EXERCISE_MIN_SCORE}/10）"
+                ),
+                "passage_id": pid,
+                "difficulty": 2,
+                "duration_seconds": None,
+                "max_attempts": None,
+                "pass_score": 60,
+                "points_reward": 5,
+                "min_points_required": 0,
+                "is_published": True,
+                "question_ids": ex_qids[:EXERCISE_Q],
+            }
+            to_upsert.append(record)
+            if existing_id:
+                summary["updated"] += 1
             else:
-                summary["skipped"] += 1
+                summary["exercises"] += 1
 
         if len(quiz_qids) >= QUIZ_Q:
             title = f"{label} 綜合測驗"
-            if (pid, "quiz", title) not in existing_keys:
-                to_insert.append({
-                    "id": _new_quiz_id(),
-                    "type": "quiz",
-                    "title": title,
-                    "description": (
-                        f"共 {QUIZ_Q} 條{label}綜合測驗，限時 20 分鐘"
-                        f"（評分 ≥ {QUIZ_MIN_SCORE}/10）"
-                    ),
-                    "passage_id": pid,
-                    "difficulty": 3,
-                    "duration_seconds": QUIZ_DURATION_S,
-                    "max_attempts": 3,
-                    "pass_score": 70,
-                    "points_reward": 15,
-                    "min_points_required": 10,
-                    "is_published": True,
-                    "question_ids": quiz_qids[:QUIZ_Q],
-                })
-                summary["quizzes"] += 1
+            key = (pid, "quiz", title)
+            existing_id = existing_id_map.get(key)
+            record = {
+                "id": existing_id or _new_quiz_id(),
+                "type": "quiz",
+                "title": title,
+                "description": (
+                    f"共 {QUIZ_Q} 條{label}綜合測驗，限時 20 分鐘"
+                    f"（評分 ≥ {QUIZ_MIN_SCORE}/10）"
+                ),
+                "passage_id": pid,
+                "difficulty": 3,
+                "duration_seconds": QUIZ_DURATION_S,
+                "max_attempts": 3,
+                "pass_score": 70,
+                "points_reward": 15,
+                "min_points_required": 10,
+                "is_published": True,
+                "question_ids": quiz_qids[:QUIZ_Q],
+            }
+            to_upsert.append(record)
+            if existing_id:
+                summary["updated"] += 1
             else:
-                summary["skipped"] += 1
+                summary["quizzes"] += 1
 
     # 5. Exam — needs ≥3 passages each with ≥5 high-quality Qs
     exam_candidates = [
@@ -184,37 +191,41 @@ def assemble_quizzes(dry_run: bool = False) -> dict[str, Any]:
         exam_qids = exam_qids[:EXAM_Q]
         n_passages = len(exam_candidates)
         exam_title = "DSE 中文 模擬考試"
+        key = (None, "exam", exam_title)
+        existing_id = existing_id_map.get(key)
 
-        if (None, "exam", exam_title) not in existing_keys:
-            to_insert.append({
-                "id": _new_quiz_id(),
-                "type": "exam",
-                "title": exam_title,
-                "description": (
-                    f"涵蓋 {n_passages} 篇課文，共 {len(exam_qids)} 條模擬 DSE 閱讀理解題，"
-                    f"限時 45 分鐘，滿分率 60% 合格（評分 ≥ {EXAM_MIN_SCORE}/10）"
-                ),
-                "passage_id": None,
-                "difficulty": 4,
-                "duration_seconds": EXAM_DURATION_S,
-                "max_attempts": 2,
-                "pass_score": 60,
-                "points_reward": 50,
-                "min_points_required": 50,
-                "is_published": True,
-                "question_ids": exam_qids,
-            })
-            summary["exams"] += 1
+        record = {
+            "id": existing_id or _new_quiz_id(),
+            "type": "exam",
+            "title": exam_title,
+            "description": (
+                f"涵蓋 {n_passages} 篇課文，共 {len(exam_qids)} 條模擬 DSE 閱讀理解題，"
+                f"限時 45 分鐘，滿分率 60% 合格（評分 ≥ {EXAM_MIN_SCORE}/10）"
+            ),
+            "passage_id": None,
+            "difficulty": 4,
+            "duration_seconds": EXAM_DURATION_S,
+            "max_attempts": 2,
+            "pass_score": 60,
+            "points_reward": 50,
+            "min_points_required": 50,
+            "is_published": True,
+            "question_ids": exam_qids,
+        }
+        to_upsert.append(record)
+        if existing_id:
+            summary["updated"] += 1
         else:
-            summary["skipped"] += 1
+            summary["exams"] += 1
 
     # 6. Write or dry-run
-    if not dry_run and to_insert:
+    if not dry_run and to_upsert:
         sb.table("dsemcq_quizzes").upsert(
-            to_insert, on_conflict="id", ignore_duplicates=True
+            to_upsert, on_conflict="id"
         ).execute()
         log.info("quizzes_assembled", **summary)
     else:
-        log.info("assemble_dry_run", to_insert=len(to_insert), **summary)
+        log.info("assemble_dry_run", to_upsert=len(to_upsert), **summary)
 
-    return {**summary, "total_new": len(to_insert), "dry_run": dry_run}
+    return {**summary, "total_new": summary["exercises"] + summary["quizzes"] + summary["exams"],
+            "dry_run": dry_run}

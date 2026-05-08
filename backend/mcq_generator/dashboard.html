@@ -765,7 +765,7 @@ async function assemble() {
       🏋 練習題：<b>${d.exercises}</b> 個新建<br>
       📝 測驗：<b>${d.quizzes}</b> 個新建<br>
       🎓 模擬考試：<b>${d.exams}</b> 個新建<br>
-      ⏭ 跳過（已存在）：<b>${d.skipped}</b>
+      🔄 更新（已存在，重新組合）：<b>${d.updated ?? 0}</b>
     `;
     if (!dryRun) loadStats();
   } catch(e) {
