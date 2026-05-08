@@ -125,11 +125,16 @@ export async function signUpForQuiz(userId: string, quizId: string) {
     memory.signups.push(signup);
     return signup;
   }
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("dsemcq_user_quiz_signups")
     .upsert(signup, { onConflict: "user_id,quiz_id" })
     .select()
     .single();
+  if (error) {
+    console.warn("[dsemcq] signUpForQuiz error (using local):", error.message);
+    memory.signups.push(signup);
+    return signup;
+  }
   return data as QuizSignup;
 }
 
@@ -151,7 +156,12 @@ export async function startAttempt(userId: string, quiz: Quiz): Promise<Attempt>
     memory.attempts.push(attempt);
     return attempt;
   }
-  const { data } = await supabase.from("dsemcq_attempts").insert(attempt).select().single();
+  const { data, error } = await supabase.from("dsemcq_attempts").insert(attempt).select().single();
+  if (error) {
+    console.warn("[dsemcq] startAttempt error (using local):", error.message);
+    memory.attempts.push(attempt);
+    return attempt;
+  }
   return data as Attempt;
 }
 

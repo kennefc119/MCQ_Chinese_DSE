@@ -66,6 +66,8 @@ export default function QuizDetailScreen() {
               if (!signedUp) await signUpForQuiz(user.id, quiz.id);
               const attempt = await startAttempt(user.id, quiz);
               nav.replace("QuizRunner", { quizId: quiz.id, attemptId: attempt.id });
+            } catch (err: any) {
+              Alert.alert("無法開始", err?.message ?? "請稍後再試");
             } finally {
               setLoading(false);
             }
