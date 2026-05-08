@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ─── 共用列舉 ───────────────────────────────────────────────────────────────
@@ -77,6 +77,14 @@ class Critique(BaseModel):
     revision_instructions: str = Field(
         "", description="REVISE 時必須提供可執行指示；PASS 時可為空"
     )
+
+    @field_validator("revision_instructions", "comments", mode="before")
+    @classmethod
+    def coerce_list_to_str(cls, v: Any) -> str:
+        """LLM occasionally returns a list instead of a string — join it."""
+        if isinstance(v, list):
+            return "\n".join(str(item) for item in v)
+        return v if v is not None else ""
 
 
 # ─── DB Stats（Agent 1 讀取用）───────────────────────────────────────────────
