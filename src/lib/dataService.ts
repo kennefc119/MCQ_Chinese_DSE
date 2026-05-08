@@ -221,21 +221,35 @@ export async function submitAttempt(
     await supabase.from("dsemcq_attempt_answers").upsert(answerRows);
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("dsemcq_attempts")
     .update(update)
     .eq("id", attemptId)
     .select()
     .single();
+
+  if (error || !data) {
+    // Attempt was stored locally (e.g. FK constraint prevented DB insert), update memory
+    console.warn("[dsemcq] submitAttempt DB update failed (using local):", error?.message);
+    const a = memory.attempts.find((x) => x.id === attemptId);
+    if (a) Object.assign(a, update);
+    const base = a ?? ({ id: attemptId, user_id: "", quiz_id: "", started_at: new Date().toISOString() } as any);
+    return { ...base, ...update } as Attempt;
+  }
   return data as Attempt;
 }
 
 export async function listUserAttempts(userId: string): Promise<Attempt[]> {
-  if (!isSupabaseConfigured) return memory.attempts.filter((a) => a.user_id === userId);
-  const { data } = await supabase
+  const local = memory.attempts.filter((a) => a.user_id === userId);
+  if (!isSupabaseConfigured) return local;
+  const { data, error } = await supabase
     .from("dsemcq_attempts")
     .select("*")
     .eq("user_id", userId)
     .order("started_at", { ascending: false });
-  return (data as Attempt[]) ?? [];
+  if (error) console.warn("[dsemcq] listUserAttempts error:", error.message);
+  const remote = (data as Attempt[]) ?? [];
+  // Merge: remote first, then any local-only attempts not yet persisted
+  const remoteIds = new Set(remote.map((a) => a.id));
+  return [...remote, ...local.filter((a) => !remoteIds.has(a.id))];
 }
