@@ -482,6 +482,18 @@
         </label>
       </div>
     </div>
+    <div style="font-size:11px;color:var(--muted);margin:6px 0 4px;">組合策略：</div>
+    <div style="font-size:11px;display:flex;flex-direction:column;gap:4px;margin-bottom:8px;">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+        <input type="checkbox" id="stratPassage" checked> 📖 按篇章（同篇章題目）
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+        <input type="checkbox" id="stratSkill" checked> 🎯 按技能（內容理解、修辭手法等）
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+        <input type="checkbox" id="stratDifficulty" checked> 📊 按難度（跨篇章同難度）
+      </label>
+    </div>
     <button class="btn-gen" id="assembleBtn" onclick="assemble()"
       style="background:var(--purple);color:#0d1117;">
       <span id="assembleIco">🗂</span>
@@ -857,6 +869,12 @@ async function assemblePreview() {
 
 async function assemble() {
   const dryRun = document.getElementById('assembleDry').checked;
+  const strategies = [];
+  if (document.getElementById('stratPassage').checked)   strategies.push('passage');
+  if (document.getElementById('stratSkill').checked)     strategies.push('skill');
+  if (document.getElementById('stratDifficulty').checked) strategies.push('difficulty');
+  if (strategies.length === 0) { showErr('請至少選擇一種組合策略'); return; }
+
   const btn = document.getElementById('assembleBtn');
   btn.disabled = true;
   document.getElementById('assembleIco').textContent = '⏳';
@@ -867,7 +885,7 @@ async function assemble() {
     const r = await fetch(`${API}/api/assemble`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dry_run: dryRun }),
+      body: JSON.stringify({ dry_run: dryRun, strategies }),
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
@@ -877,10 +895,12 @@ async function assemble() {
     const total = (d.exercises || 0) + (d.quizzes || 0) + (d.exams || 0);
     const updated = d.updated ?? 0;
     const nothingMsg = (!dryRun && total === 0 && updated === 0)
-      ? `<br><span style="color:var(--yellow)">⚠ 沒有足夠的 is_active=true 題目可組合 — 請先生成題目，或點擊「檢查 DB 狀態」診斷</span>`
+      ? `<br><span style="color:var(--yellow)">⚠ 沒有足夠的 is_active=true 題目可組合 — 請先生成題目，或點擊「🔬 預覽」診斷</span>`
       : '';
+    const stratLabel = (d.strategies || strategies).join(' + ');
     el.innerHTML = `
       ${dryRun ? '<span style="color:var(--yellow)">⚠ Dry Run — 未寫入</span><br>' : '<span style="color:var(--green)">✓ 已寫入 Supabase</span><br>'}
+      策略：${stratLabel}<br>
       🏋 練習題：<b>${d.exercises}</b> 個新建<br>
       📝 測驗：<b>${d.quizzes}</b> 個新建<br>
       🎓 模擬考試：<b>${d.exams}</b> 個新建<br>

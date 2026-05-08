@@ -48,6 +48,7 @@ class GenerateRequest(BaseModel):
 
 class AssembleRequest(BaseModel):
     dry_run: bool = True
+    strategies: list[str] = ["passage", "skill", "difficulty"]
 
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
@@ -237,7 +238,7 @@ def assemble(req: AssembleRequest) -> dict[str, Any]:
     """
     log.info("assemble_start", dry_run=req.dry_run)
     try:
-        summary = assemble_quizzes(dry_run=req.dry_run)
+        summary = assemble_quizzes(dry_run=req.dry_run, strategies=req.strategies)
     except Exception as exc:
         log.error("assemble_error", error=str(exc))
         raise HTTPException(status_code=500, detail=str(exc)) from exc
