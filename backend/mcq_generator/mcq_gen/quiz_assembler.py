@@ -57,6 +57,42 @@ TAG_LABEL: dict[str, str] = {
 
 DIFF_LABEL: dict[int, str] = {1: "一", 2: "二", 3: "三", 4: "四", 5: "五"}
 
+# ── Metadata tables ────────────────────────────────────────────────────────────
+
+# Card accent colours — match the seed palette
+COLOR_HEX: dict[str, str] = {
+    "exercise": "#E8D5B7",   # warm beige
+    "quiz":     "#B5D5C5",   # soft green
+    "exam":     "#C9B1D9",   # soft purple
+}
+
+# Subject area label per passage (DSE 12 prescribed texts + fallback)
+PASSAGE_SUBJECT: dict[str, str] = {
+    "p01": "先秦哲學",   # 論語     春秋
+    "p02": "先秦哲學",   # 孟子     戰國
+    "p03": "先秦哲學",   # 莊子     戰國
+    "p04": "先秦哲學",   # 荀子     戰國
+    "p05": "史傳文學",   # 廉頗藺相如 西漢
+    "p06": "史傳文學",   # 出師表    三國
+    "p07": "唐宋散文",   # 師說     唐
+    "p08": "唐宋散文",   # 始得西山  唐
+    "p09": "唐宋散文",   # 岳陽樓記  北宋
+    "p10": "唐宋散文",   # 六國論    北宋
+    "p11": "詩詞",       # 唐詩三首
+    "p12": "詩詞",       # 宋詞三首
+}
+
+# Human-readable duration per quiz type
+EST_LABEL: dict[str, str] = {
+    "exercise": "約 5 分鐘",
+    "quiz":     "20 分鐘",
+    "exam":     "45 分鐘",
+}
+
+
+def _cover_url(seed: str) -> str:
+    return f"https://picsum.photos/seed/{seed}/600/400"
+
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -102,25 +138,35 @@ def _make_record(
     pass_score: int,
     points_reward: int,
     min_points_required: int,
+    cover_image_url: str,
+    color_hex: str,
+    estimated_duration_label: str,
+    subject_area: str,
     existing_id_map: dict[tuple, str],
     summary: dict[str, int],
 ) -> dict:
     key = (passage_id, quiz_type, title)
     existing_id = existing_id_map.get(key)
     record = {
-        "id":                   existing_id or _new_quiz_id(),
-        "type":                 quiz_type,
-        "title":                title,
-        "description":          description,
-        "passage_id":           passage_id,
-        "difficulty":           difficulty,
-        "duration_seconds":     duration_seconds,
-        "max_attempts":         max_attempts,
-        "pass_score":           pass_score,
-        "points_reward":        points_reward,
-        "min_points_required":  min_points_required,
-        "is_published":         True,
-        "question_ids":         question_ids,
+        "id":                       existing_id or _new_quiz_id(),
+        "type":                     quiz_type,
+        "title":                    title,
+        "description":              description,
+        "cover_image_url":          cover_image_url,
+        "passage_id":               passage_id,
+        "difficulty":               difficulty,
+        "duration_seconds":         duration_seconds,
+        "max_attempts":             max_attempts,
+        "pass_score":               pass_score,
+        "points_reward":            points_reward,
+        "min_points_required":      min_points_required,
+        "color_hex":                color_hex,
+        "estimated_duration_label": estimated_duration_label,
+        "subject_area":             subject_area,
+        "is_published":             True,
+        "question_ids":             question_ids,
+        # scheduled_start / scheduled_end: left NULL (manually-scheduled exams only)
+        # prerequisite_quiz_id: left NULL (optional game mechanic, managed separately)
     }
     if existing_id:
         summary["updated"] += 1
@@ -206,6 +252,7 @@ def assemble_quizzes(
 
         for pid in sorted(set(list(ex_pool) + list(quiz_pool))):
             label = _passage_label(pid)
+            subj  = PASSAGE_SUBJECT.get(pid, "文言文")
 
             if len(ex_pool.get(pid, [])) >= EXERCISE_Q:
                 to_upsert.append(_make_record(
@@ -219,6 +266,10 @@ def assemble_quizzes(
                     question_ids=ex_pool[pid][:EXERCISE_Q],
                     duration_seconds=None, max_attempts=None,
                     pass_score=60, points_reward=5, min_points_required=0,
+                    cover_image_url=_cover_url(f"passage_{pid}_ex"),
+                    color_hex=COLOR_HEX["exercise"],
+                    estimated_duration_label=EST_LABEL["exercise"],
+                    subject_area=subj,
                     existing_id_map=existing_id_map, summary=summary,
                 ))
 
@@ -234,6 +285,10 @@ def assemble_quizzes(
                     question_ids=quiz_pool[pid][:QUIZ_Q],
                     duration_seconds=QUIZ_DURATION_S, max_attempts=3,
                     pass_score=70, points_reward=15, min_points_required=10,
+                    cover_image_url=_cover_url(f"passage_{pid}_quiz"),
+                    color_hex=COLOR_HEX["quiz"],
+                    estimated_duration_label=EST_LABEL["quiz"],
+                    subject_area=subj,
                     existing_id_map=existing_id_map, summary=summary,
                 ))
 
@@ -246,6 +301,8 @@ def assemble_quizzes(
 
         for tag_id in sorted(set(list(skill_ex_pool) + list(skill_quiz_pool))):
             label = TAG_LABEL.get(tag_id, tag_id)
+            # Normalise tag to a short slug for the image seed (strip "t-")
+            img_slug = tag_id.replace("t-", "skill_")
 
             if len(skill_ex_pool.get(tag_id, [])) >= EXERCISE_Q:
                 to_upsert.append(_make_record(
@@ -259,6 +316,10 @@ def assemble_quizzes(
                     question_ids=skill_ex_pool[tag_id][:EXERCISE_Q],
                     duration_seconds=None, max_attempts=None,
                     pass_score=60, points_reward=5, min_points_required=0,
+                    cover_image_url=_cover_url(f"{img_slug}_ex"),
+                    color_hex=COLOR_HEX["exercise"],
+                    estimated_duration_label=EST_LABEL["exercise"],
+                    subject_area=label,
                     existing_id_map=existing_id_map, summary=summary,
                 ))
 
@@ -274,6 +335,10 @@ def assemble_quizzes(
                     question_ids=skill_quiz_pool[tag_id][:QUIZ_Q],
                     duration_seconds=QUIZ_DURATION_S, max_attempts=3,
                     pass_score=70, points_reward=15, min_points_required=10,
+                    cover_image_url=_cover_url(f"{img_slug}_quiz"),
+                    color_hex=COLOR_HEX["quiz"],
+                    estimated_duration_label=EST_LABEL["quiz"],
+                    subject_area=label,
                     existing_id_map=existing_id_map, summary=summary,
                 ))
 
@@ -300,6 +365,10 @@ def assemble_quizzes(
                     question_ids=diff_ex_pool[d_str][:EXERCISE_Q],
                     duration_seconds=None, max_attempts=None,
                     pass_score=60, points_reward=5, min_points_required=0,
+                    cover_image_url=_cover_url(f"diff_{d_str}_ex"),
+                    color_hex=COLOR_HEX["exercise"],
+                    estimated_duration_label=EST_LABEL["exercise"],
+                    subject_area="文言文",
                     existing_id_map=existing_id_map, summary=summary,
                 ))
 
@@ -315,6 +384,10 @@ def assemble_quizzes(
                     question_ids=diff_quiz_pool[d_str][:QUIZ_Q],
                     duration_seconds=QUIZ_DURATION_S, max_attempts=3,
                     pass_score=70, points_reward=15, min_points_required=10,
+                    cover_image_url=_cover_url(f"diff_{d_str}_quiz"),
+                    color_hex=COLOR_HEX["quiz"],
+                    estimated_duration_label=EST_LABEL["quiz"],
+                    subject_area="文言文",
                     existing_id_map=existing_id_map, summary=summary,
                 ))
 
@@ -345,6 +418,10 @@ def assemble_quizzes(
             question_ids=exam_qids,
             duration_seconds=EXAM_DURATION_S, max_attempts=2,
             pass_score=60, points_reward=50, min_points_required=50,
+            cover_image_url=_cover_url("exam_mock_dse"),
+            color_hex=COLOR_HEX["exam"],
+            estimated_duration_label=EST_LABEL["exam"],
+            subject_area="全卷",
             existing_id_map=existing_id_map, summary=summary,
         ))
 
