@@ -88,7 +88,6 @@ def _build_saved_question(
         question_id=state["question_id"],
         passage_id=spec.passage,
         stem=draft.question_stem,
-        explanation=draft.explanation,
         difficulty=_DIFF_TO_INT[spec.difficulty],
         difficulty_label=spec.difficulty,
         skill=spec.skill_tested,

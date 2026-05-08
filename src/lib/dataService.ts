@@ -66,7 +66,7 @@ export async function getQuestionsForResult(quiz: Quiz): Promise<Question[]> {
     supabase.from("dsemcq_questions").select("*").in("id", ids),
     supabase
       .from("dsemcq_question_options")
-      .select("id, question_id, label, text, is_correct")
+      .select("id, question_id, label, text, is_correct, explanation")
       .in("question_id", ids)
       .order("id"),
   ]);

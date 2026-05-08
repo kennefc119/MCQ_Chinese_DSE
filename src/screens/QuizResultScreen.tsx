@@ -73,22 +73,33 @@ export default function QuizResultScreen() {
                 const isSel = o.id === sel;
                 const isAns = o.id === correctOpt?.id;
                 return (
-                  <View
-                    key={o.id}
-                    style={[
-                      styles.optRow,
-                      isAns && styles.optCorrect,
-                      isSel && !isAns && styles.optWrong,
-                    ]}
-                  >
-                    <Text style={styles.optLabel}>{displayLabel}.</Text>
-                    <Text style={styles.optText}>{o.text}</Text>
-                    {isAns && <Text style={styles.optTag}>正確</Text>}
-                    {isSel && !isAns && <Text style={[styles.optTag, { color: colors.danger }]}>你選</Text>}
+                  <View key={o.id}>
+                    <View
+                      style={[
+                        styles.optRow,
+                        isAns && styles.optCorrect,
+                        isSel && !isAns && styles.optWrong,
+                      ]}
+                    >
+                      <Text style={styles.optLabel}>{displayLabel}.</Text>
+                      <Text style={styles.optText}>{o.text}</Text>
+                      {isAns && <Text style={styles.optTag}>正確</Text>}
+                      {isSel && !isAns && <Text style={[styles.optTag, { color: colors.danger }]}>你選</Text>}
+                    </View>
+                    {o.explanation ? (
+                      <View style={[
+                        styles.optExplainBox,
+                        isAns && styles.optExplainCorrect,
+                        isSel && !isAns && styles.optExplainWrong,
+                      ]}>
+                        <Text style={styles.optExplainText}>{o.explanation}</Text>
+                      </View>
+                    ) : null}
                   </View>
                 );
               })}
-              {q.explanation && (
+              {/* Legacy question-level explanation fallback (for older questions without per-option explanations) */}
+              {q.explanation && q.options.every((o) => !o.explanation) && (
                 <View style={styles.explainBox}>
                   <Text style={styles.explainTitle}>解析</Text>
                   <Text style={styles.explainText}>{q.explanation}</Text>
@@ -123,6 +134,10 @@ const styles = StyleSheet.create({
   optLabel: { color: colors.textSecondary, fontWeight: "700", marginRight: spacing.sm, width: 20 },
   optText: { flex: 1, color: colors.textPrimary },
   optTag: { color: colors.success, fontSize: 12, fontWeight: "700", marginLeft: spacing.sm },
+  optExplainBox: { marginLeft: 28, marginBottom: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: colors.surfaceAlt },
+  optExplainCorrect: { borderLeftWidth: 2, borderLeftColor: colors.success },
+  optExplainWrong: { borderLeftWidth: 2, borderLeftColor: colors.danger },
+  optExplainText: { color: colors.textSecondary, fontSize: 12, lineHeight: 18 },
   explainBox: { marginTop: spacing.sm, padding: spacing.sm, backgroundColor: colors.surfaceAlt, borderRadius: 8 },
   explainTitle: { color: colors.accent, fontWeight: "700", marginBottom: 4 },
   explainText: { color: colors.textSecondary, lineHeight: 20 },

@@ -54,6 +54,7 @@ class DraftOption(BaseModel):
 
     text: str
     is_correct: bool  # 四個選項中恰好一個為 True
+    explanation: str  # 此選項為何正確／錯誤（1-3 句，直接引用選項文字及篇章原文）
 
 
 class Draft(BaseModel):
@@ -61,7 +62,6 @@ class Draft(BaseModel):
 
     question_stem: str
     options: list[DraftOption]  # 恰好 4 個；恰好一個 is_correct=True
-    explanation: str
     mapped_spec: Spec
 
 
@@ -102,11 +102,10 @@ class SavedQuestion(BaseModel):
     question_id: str
     passage_id: str
     stem: str
-    explanation: str
     difficulty: int  # 1–5 整數
     difficulty_label: Difficulty
     skill: Skill
-    options: list[DraftOption]  # 恰好 4 個；恰好一個 is_correct=True
+    options: list[DraftOption]  # 恰好 4 個；恰好一個 is_correct=True，每個帶 explanation
     source: str
     is_active: bool
     spec: Spec

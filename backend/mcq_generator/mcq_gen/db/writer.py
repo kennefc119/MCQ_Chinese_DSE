@@ -46,7 +46,7 @@ def write_question(q: SavedQuestion) -> bool:
         "id": q.question_id,
         "passage_id": q.passage_id,
         "stem": q.stem,
-        "explanation": q.explanation,
+        # explanation intentionally omitted — each option now carries its own explanation
         "difficulty": _DIFF_TO_INT[q.difficulty_label],
         "source": q.source,
         "is_active": q.is_active,
@@ -68,6 +68,7 @@ def write_question(q: SavedQuestion) -> bool:
             "question_id": q.question_id,
             "text": opt.text,
             "is_correct": opt.is_correct,
+            "explanation": opt.explanation,
             # label intentionally omitted — app assigns A/B/C/D at runtime
         }
         for i, opt in enumerate(q.options)

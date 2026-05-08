@@ -52,6 +52,7 @@ export interface QuestionOption {
   label: string | null; // null for new label-free questions; app assigns A/B/C/D at runtime
   text: string;
   is_correct: boolean;
+  explanation?: string | null; // per-option explanation (why correct or why wrong)
 }
 
 export interface Quiz {
