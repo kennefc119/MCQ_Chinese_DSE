@@ -49,19 +49,18 @@ class Spec(BaseModel):
 # ─── Agent 2 輸出 ────────────────────────────────────────────────────────────
 
 
-class DraftOptions(BaseModel):
-    A: str
-    B: str
-    C: str
-    D: str
+class DraftOption(BaseModel):
+    """一個 MC 選項（無 A/B/C/D 標籤，由應用程式在執行時分配）。"""
+
+    text: str
+    is_correct: bool  # 四個選項中恰好一個為 True
 
 
 class Draft(BaseModel):
     """出題員輸出的完整 MC 草稿。"""
 
     question_stem: str
-    options: DraftOptions
-    correct_answer: Literal["A", "B", "C", "D"]
+    options: list[DraftOption]  # 恰好 4 個；恰好一個 is_correct=True
     explanation: str
     mapped_spec: Spec
 
@@ -107,8 +106,7 @@ class SavedQuestion(BaseModel):
     difficulty: int  # 1–5 整數
     difficulty_label: Difficulty
     skill: Skill
-    options: DraftOptions
-    correct_answer: Literal["A", "B", "C", "D"]
+    options: list[DraftOption]  # 恰好 4 個；恰好一個 is_correct=True
     source: str
     is_active: bool
     spec: Spec

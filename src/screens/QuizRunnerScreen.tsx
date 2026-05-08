@@ -16,6 +16,23 @@ import { AppStackParamList } from "../navigation/types";
 type Nav = NativeStackNavigationProp<AppStackParamList, "QuizRunner">;
 type Rt = RouteProp<AppStackParamList, "QuizRunner">;
 
+const OPTION_LABELS = ["A", "B", "C", "D"] as const;
+
+/** Fisher-Yates shuffle + re-label A/B/C/D. Called once per quiz load. */
+function shuffleOptionsForDisplay(questions: Question[]): Question[] {
+  return questions.map((q) => {
+    const opts = [...q.options];
+    for (let i = opts.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [opts[i], opts[j]] = [opts[j], opts[i]];
+    }
+    return {
+      ...q,
+      options: opts.map((opt, idx) => ({ ...opt, label: OPTION_LABELS[idx] ?? opt.label })),
+    };
+  });
+}
+
 export default function QuizRunnerScreen() {
   const nav = useNavigation<Nav>();
   const { quizId, attemptId } = useRoute<Rt>().params;
@@ -32,6 +49,14 @@ export default function QuizRunnerScreen() {
   const startedAt = useRef(Date.now());
 
   const [loading, setLoading] = useState(true);
+
+  // Shuffled display order: computed once when questions load, stable for the whole quiz.
+  // Answers are stored by option.id (not label), so scoring is unaffected by shuffling.
+  const displayQuestions = useMemo(
+    () => (questions.length === 0 ? [] : shuffleOptionsForDisplay(questions)),
+    [questions],
+  );
+
   useEffect(() => {
     (async () => {
       try {
@@ -84,9 +109,9 @@ export default function QuizRunnerScreen() {
     ]);
   };
 
-  if (!quiz || questions.length === 0) return <LoadingScreen />;
+  if (!quiz || displayQuestions.length === 0) return <LoadingScreen />;
 
-  const cur = questions[idx];
+  const cur = displayQuestions[idx];
 
   const onChoose = (optionId: string) => {
     setAnswers((p) => ({ ...p, [cur.id]: optionId }));
@@ -94,7 +119,7 @@ export default function QuizRunnerScreen() {
   };
 
   const onSubmit = async (auto = false) => {
-    const unanswered = questions.filter((q) => !answers[q.id]).length;
+    const unanswered = displayQuestions.filter((q) => !answers[q.id]).length;
     if (unanswered > 0 && !auto) {
       Alert.alert("尚有未作答題目", `仍有 ${unanswered} 題未作答，是否提交？`, [
         { text: "繼續作答", style: "cancel" },
@@ -130,7 +155,7 @@ export default function QuizRunnerScreen() {
           <Text style={styles.headerBtnText}>✕</Text>
         </TouchableOpacity>
         <View style={styles.progressWrap}>
-          <Text style={styles.progressText}>{idx + 1} / {questions.length}</Text>
+          <Text style={styles.progressText}>{idx + 1} / {displayQuestions.length}</Text>
           <Text style={styles.answeredText}>已答 {Object.keys(answers).length}</Text>
         </View>
         {secondsLeft !== null ? (
@@ -180,8 +205,8 @@ export default function QuizRunnerScreen() {
           onPress={() => setIdx((i) => Math.max(0, i - 1))}
           disabled={idx === 0}
         />
-        {idx < questions.length - 1 ? (
-          <Button title="下一題" onPress={() => setIdx((i) => Math.min(questions.length - 1, i + 1))} />
+        {idx < displayQuestions.length - 1 ? (
+          <Button title="下一題" onPress={() => setIdx((i) => Math.min(displayQuestions.length - 1, i + 1))} />
         ) : (
           <Button title="檢查並提交" onPress={() => setShowReview(true)} />
         )}
@@ -193,7 +218,7 @@ export default function QuizRunnerScreen() {
           <View style={styles.sheet}>
             <Text style={styles.sheetTitle}>題目導覽</Text>
             <FlatList
-              data={questions}
+              data={displayQuestions}
               numColumns={5}
               keyExtractor={(q) => q.id}
               renderItem={({ item, index }) => {
@@ -223,7 +248,7 @@ export default function QuizRunnerScreen() {
           <View style={{ padding: spacing.md, flex: 1 }}>
             <Text style={[typography.title, { color: colors.primary, marginBottom: spacing.md }]}>檢查答案</Text>
             <ScrollView>
-              {questions.map((q, i) => {
+              {displayQuestions.map((q, i) => {
                 const sel = answers[q.id];
                 const opt = q.options.find((o) => o.id === sel);
                 return (
@@ -239,7 +264,7 @@ export default function QuizRunnerScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.reviewStem} numberOfLines={2}>{q.stem}</Text>
                       <Text style={[styles.reviewAns, !opt && { color: colors.danger }]}>
-                        {opt ? `${opt.label}. ${opt.text}` : "未作答"}
+                        {opt ? `${opt.label ?? "?"}. ${opt.text}` : "未作答"}
                       </Text>
                     </View>
                   </TouchableOpacity>

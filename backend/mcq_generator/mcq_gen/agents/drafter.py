@@ -116,7 +116,7 @@ def run_drafter(
     log.info(
         "drafter_done",
         passage=spec.passage,
-        correct_answer=draft.correct_answer,
+        correct_idx=next((i for i, o in enumerate(draft.options) if o.is_correct), -1),
         stem_preview=draft.question_stem[:60],
     )
     return draft

@@ -49,7 +49,7 @@ export interface Question {
 export interface QuestionOption {
   id: string;
   question_id: string;
-  label: string; // A/B/C/D
+  label: string | null; // null for new label-free questions; app assigns A/B/C/D at runtime
   text: string;
   is_correct: boolean;
 }

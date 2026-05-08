@@ -68,7 +68,8 @@ export default function QuizResultScreen() {
                 第 {i + 1} 題　{isCorrect ? "✅" : isWrong ? "❌" : "—"}
               </Text>
               <Text style={styles.qStem}>{q.stem}</Text>
-              {q.options.map((o) => {
+              {q.options.map((o, optIdx) => {
+                const displayLabel = ["A", "B", "C", "D"][optIdx] ?? String(optIdx + 1);
                 const isSel = o.id === sel;
                 const isAns = o.id === correctOpt?.id;
                 return (
@@ -80,7 +81,7 @@ export default function QuizResultScreen() {
                       isSel && !isAns && styles.optWrong,
                     ]}
                   >
-                    <Text style={styles.optLabel}>{o.label}.</Text>
+                    <Text style={styles.optLabel}>{displayLabel}.</Text>
                     <Text style={styles.optText}>{o.text}</Text>
                     {isAns && <Text style={styles.optTag}>正確</Text>}
                     {isSel && !isAns && <Text style={[styles.optTag, { color: colors.danger }]}>你選</Text>}

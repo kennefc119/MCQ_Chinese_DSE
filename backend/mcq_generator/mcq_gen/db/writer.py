@@ -9,7 +9,7 @@ from __future__ import annotations
 import structlog
 
 from ..config import settings
-from ..schemas import Difficulty, SavedQuestion
+from ..schemas import Difficulty, DraftOption, SavedQuestion
 from .client import get_supabase
 
 log = structlog.get_logger(__name__)
@@ -62,16 +62,15 @@ def write_question(q: SavedQuestion) -> bool:
         return False
 
     # ── 2. dsemcq_question_options ─────────────────────────────────────────
-    opts = q.options.model_dump()  # {"A": ..., "B": ..., "C": ..., "D": ...}
     option_rows = [
         {
-            "id": f"{q.question_id}-{label.lower()}",
+            "id": f"{q.question_id}-opt{i}",
             "question_id": q.question_id,
-            "label": label,
-            "text": text,
-            "is_correct": (label == q.correct_answer),
+            "text": opt.text,
+            "is_correct": opt.is_correct,
+            # label intentionally omitted — app assigns A/B/C/D at runtime
         }
-        for label, text in opts.items()
+        for i, opt in enumerate(q.options)
     ]
     sb.table("dsemcq_question_options").upsert(
         option_rows, on_conflict="id", ignore_duplicates=True

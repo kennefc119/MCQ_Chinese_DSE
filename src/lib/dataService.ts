@@ -68,7 +68,7 @@ export async function getQuestionsForResult(quiz: Quiz): Promise<Question[]> {
       .from("dsemcq_question_options")
       .select("id, question_id, label, text, is_correct")
       .in("question_id", ids)
-      .order("label"),
+      .order("id"),
   ]);
 
   if (qErr) console.warn("[dsemcq] getQuestionsForResult questions error:", qErr.message);

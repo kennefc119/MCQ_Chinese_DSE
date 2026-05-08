@@ -21,12 +21,12 @@ const PSYCH_ICON_MAP: Record<string, React.ComponentProps<typeof Ionicons>["name
   "graduationcap.fill": "school",
 };
 
-// Short 2–3 char display labels for the 12 passages in radar chart
+// Short display labels for the 12 passages in radar chart (matching official DSE passage names)
 const PASSAGE_SHORT: Record<string, string> = {
-  p01: "論語", p02: "魚所欲", p03: "逍遙遊",
-  p04: "勸學",  p05: "廉藺傳", p06: "出師表",
-  p07: "師說",  p08: "西山記", p09: "岳陽樓",
-  p10: "六國論", p11: "唐詩", p12: "宋詞",
+  p01: "論仁孝君子", p02: "魚我所欲", p03: "逍遙遊",
+  p04: "勸學",      p05: "廉頗列傳", p06: "出師表",
+  p07: "師說",      p08: "西山宴遊", p09: "岳陽樓記",
+  p10: "六國論",    p11: "唐詩三首", p12: "宋詞三首",
 };
 
 const SKILL_TAGS = [

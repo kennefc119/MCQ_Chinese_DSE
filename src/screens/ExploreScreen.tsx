@@ -356,8 +356,15 @@ export default function ExploreScreen() {
 
   const closeFeed = () => setFeedVisible(false);
 
+  const getPassageName = (passageId?: string | null): string | undefined => {
+    const title = passageId ? passageMap[passageId]?.title : undefined;
+    if (!title) return undefined;
+    // Strip any leading "p01" / "p12 -" style numeric prefix from passage titles
+    return title.replace(/^p\d+\s*[-—–：:·\s]*/i, "").trim() || title;
+  };
+
   const renderGridItem = ({ item, index }: { item: FeedItem; index: number }) => {
-    const passageName = item.kind === "quiz" ? passageMap[(item.data as any).passage_id]?.title : undefined;
+    const passageName = item.kind === "quiz" ? getPassageName((item.data as any).passage_id) : undefined;
     if (item.kind === "quiz") {
       return <QuizTile item={item.data} onPress={() => openFeed(index)} passageName={passageName} />;
     }
@@ -365,7 +372,7 @@ export default function ExploreScreen() {
   };
 
   const renderFeedPage = ({ item }: { item: FeedItem }) => {
-    const passageName = item.kind === "quiz" ? passageMap[(item.data as any).passage_id]?.title : undefined;
+    const passageName = item.kind === "quiz" ? getPassageName((item.data as any).passage_id) : undefined;
     if (item.kind === "quiz") return <QuizFeedPage item={item.data} onClose={closeFeed} passageName={passageName} />;
     return <TipFeedPage item={item.data} />;
   };
@@ -397,7 +404,7 @@ export default function ExploreScreen() {
           </TouchableOpacity>
         ))}
         <TouchableOpacity style={[styles.filterChip, filterExpanded && styles.filterChipActive]} onPress={() => setFilterExpanded((v) => !v)}>
-          <Ionicons name={filterExpanded ? "chevron-up" : "chevron-down"} size={13} color={filterExpanded ? colors.background : colors.textSecondary} />
+          <Ionicons name={filterExpanded ? "chevron-up" : "chevron-down"} size={10} color={filterExpanded ? colors.background : colors.textSecondary} />
           <Text style={[styles.filterChipText, filterExpanded && styles.filterChipTextActive]}> 篩選</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -430,7 +437,7 @@ export default function ExploreScreen() {
                 </TouchableOpacity>
                 {passages.map((p) => (
                   <TouchableOpacity key={p.id} style={[styles.filterChip, filterPassageId === p.id && styles.filterChipActive]} onPress={() => setFilterPassageId(filterPassageId === p.id ? null : p.id)}>
-                    <Text style={[styles.filterChipText, filterPassageId === p.id && styles.filterChipTextActive]} numberOfLines={1}>{p.title}</Text>
+                    <Text style={[styles.filterChipText, filterPassageId === p.id && styles.filterChipTextActive]} numberOfLines={1}>{p.title.replace(/^p\d+\s*[-—–：:·\s]*/i, "").trim() || p.title}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -629,6 +636,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
+    marginTop: 20,
     backgroundColor: "rgba(0,0,0,0.45)",
   },
   feedBtn: {
@@ -643,19 +651,19 @@ const styles = StyleSheet.create({
 
   // filter bar
   filterRow: { flexGrow: 0 },
-  filterRowContent: { flexDirection: "row", paddingHorizontal: GRID_PADDING, paddingVertical: 6, gap: 6 },
+  filterRowContent: { flexDirection: "row", paddingHorizontal: GRID_PADDING, paddingVertical: 4, gap: 4 },
   filterChip: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 15,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
   filterChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  filterChipText: { color: colors.textSecondary, fontSize: 14 },
+  filterChipText: { color: colors.textSecondary, fontSize: 10 },
   filterChipTextActive: { color: colors.background, fontWeight: "700" },
   filterExpanded: {
     paddingHorizontal: GRID_PADDING,
@@ -664,5 +672,5 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: colors.border,
   },
-  filterLabel: { color: colors.textMuted, fontSize: 10, fontWeight: "600", marginTop: 8, marginBottom: 4 },
+  filterLabel: { color: colors.textMuted, fontSize: 8, fontWeight: "600", marginTop: 8, marginBottom: 4 },
 });
