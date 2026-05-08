@@ -8,6 +8,7 @@ import {
   Dimensions,
   Modal,
   ScrollView,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -170,6 +171,8 @@ function QuizFeedPage({ item, onClose }: { item: Quiz; onClose: () => void }) {
     );
   };
 
+  const difficultyLabel = ["", "基礎", "初階", "中等", "進階", "挑戰"][item.difficulty] ?? "—";
+
   return (
     <View style={styles.feedPage}>
       <View style={styles.feedImageWrap}>
@@ -186,11 +189,58 @@ function QuizFeedPage({ item, onClose }: { item: Quiz; onClose: () => void }) {
         </View>
         <Text style={styles.feedTitle}>{item.title}</Text>
         {item.description ? <Text style={styles.feedDesc}>{item.description}</Text> : null}
-        <View style={styles.feedMeta}>
-          <Text style={styles.feedMetaText}>{"★".repeat(item.difficulty)}{"☆".repeat(5 - item.difficulty)}</Text>
-          {durationMins ? <Text style={styles.feedMetaText}>⏱ {durationMins} 分鐘</Text> : null}
-          <Text style={styles.feedMetaText}>🏆 +{item.points_reward} 點</Text>
+
+        {/* Stats row */}
+        <View style={styles.feedStatsRow}>
+          <View style={styles.feedStatBox}>
+            <Text style={styles.feedStatNum}>{item.question_ids.length}</Text>
+            <Text style={styles.feedStatLabel}>題目</Text>
+          </View>
+          <View style={styles.feedStatBox}>
+            <Text style={styles.feedStatNum}>{durationMins ?? "∞"}</Text>
+            <Text style={styles.feedStatLabel}>分鐘</Text>
+          </View>
+          <View style={styles.feedStatBox}>
+            <Text style={styles.feedStatNum}>{item.pass_score}%</Text>
+            <Text style={styles.feedStatLabel}>合格線</Text>
+          </View>
+          <View style={styles.feedStatBox}>
+            <Text style={styles.feedStatNum}>+{item.points_reward}</Text>
+            <Text style={styles.feedStatLabel}>文淵點</Text>
+          </View>
         </View>
+
+        {/* Detail rows */}
+        <View style={styles.feedDetailList}>
+          <View style={styles.feedDetailRow}>
+            <Ionicons name="bar-chart-outline" size={14} color={colors.muted} />
+            <Text style={styles.feedDetailText}>
+              難度：{"★".repeat(item.difficulty)}{"☆".repeat(5 - item.difficulty)}　{difficultyLabel}
+            </Text>
+          </View>
+          <View style={styles.feedDetailRow}>
+            <Ionicons name="refresh-outline" size={14} color={colors.muted} />
+            <Text style={styles.feedDetailText}>
+              嘗試次數：{item.max_attempts ? `最多 ${item.max_attempts} 次` : "不限"}
+            </Text>
+          </View>
+          <View style={styles.feedDetailRow}>
+            <Ionicons name="lock-open-outline" size={14} color={colors.muted} />
+            <Text style={styles.feedDetailText}>
+              解鎖要求：{item.min_points_required > 0 ? `${item.min_points_required} 文淵點` : "免費開放"}
+            </Text>
+          </View>
+          {item.scheduled_start ? (
+            <View style={styles.feedDetailRow}>
+              <Ionicons name="calendar-outline" size={14} color={colors.muted} />
+              <Text style={styles.feedDetailText}>
+                開放日期：{new Date(item.scheduled_start).toLocaleDateString("zh-HK")}
+                {item.scheduled_end ? ` — ${new Date(item.scheduled_end).toLocaleDateString("zh-HK")}` : ""}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+
         {locked ? (
           <View style={styles.feedLockPanel}>
             <Ionicons name="lock-closed" size={20} color={colors.primary} />
@@ -205,7 +255,7 @@ function QuizFeedPage({ item, onClose }: { item: Quiz; onClose: () => void }) {
             onPress={onJoin}
             disabled={loading}
           >
-            <Text style={styles.feedActionText}>{loading ? "開始中…" : "查看詳情並加入"}</Text>
+            <Text style={styles.feedActionText}>{loading ? "開始中…" : "立即參加"}</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -422,6 +472,25 @@ const styles = StyleSheet.create({
   feedDesc: { color: colors.textSecondary, lineHeight: 22, marginBottom: spacing.md },
   feedMeta: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: spacing.md },
   feedMetaText: { color: colors.textMuted, fontSize: 13 },
+  feedStatsRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: spacing.md,
+  },
+  feedStatBox: {
+    flex: 1,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 8,
+    paddingVertical: spacing.sm,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  feedStatNum: { color: colors.primary, fontSize: 16, fontWeight: "700" },
+  feedStatLabel: { color: colors.textMuted, fontSize: 10, marginTop: 2 },
+  feedDetailList: { marginBottom: spacing.md, gap: 8 },
+  feedDetailRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  feedDetailText: { color: colors.textSecondary, fontSize: 13, flex: 1 },
   feedLockPanel: {
     flexDirection: "row",
     alignItems: "flex-start",

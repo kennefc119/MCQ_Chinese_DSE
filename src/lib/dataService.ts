@@ -46,7 +46,7 @@ export async function getQuestionsForQuiz(quiz: Quiz): Promise<Question[]> {
   if (!isSupabaseConfigured) {
     return quiz.question_ids.map((qid) => SEED_QUESTIONS.find((q) => q.id === qid)!).filter(Boolean);
   }
-  const { data, error } = await supabase.rpc("get_quiz_for_attempt", { quiz_id: quiz.id });
+  const { data, error } = await supabase.rpc("get_quiz_for_attempt", { p_quiz_id: quiz.id });
   if (error) console.warn("[dsemcq] getQuestionsForQuiz error:", error.message);
   return (data as Question[]) ?? [];
 }
@@ -115,32 +115,34 @@ export async function listSignups(userId: string): Promise<QuizSignup[]> {
 }
 
 export async function signUpForQuiz(userId: string, quizId: string) {
-  const signup: QuizSignup = {
-    id: `signup-${Date.now()}`,
-    user_id: userId,
-    quiz_id: quizId,
-    signed_up_at: new Date().toISOString(),
-  };
   if (!isSupabaseConfigured) {
+    const signup: QuizSignup = {
+      id: `signup-${Date.now()}`,
+      user_id: userId,
+      quiz_id: quizId,
+      signed_up_at: new Date().toISOString(),
+    };
     memory.signups.push(signup);
     return signup;
   }
   const { data, error } = await supabase
     .from("dsemcq_user_quiz_signups")
-    .upsert(signup, { onConflict: "user_id,quiz_id" })
+    .upsert(
+      { user_id: userId, quiz_id: quizId, signed_up_at: new Date().toISOString() },
+      { onConflict: "user_id,quiz_id" }
+    )
     .select()
     .single();
   if (error) {
-    console.warn("[dsemcq] signUpForQuiz error (using local):", error.message);
-    memory.signups.push(signup);
-    return signup;
+    console.warn("[dsemcq] signUpForQuiz error:", error.message);
+    return { id: "", user_id: userId, quiz_id: quizId, signed_up_at: new Date().toISOString() } as QuizSignup;
   }
   return data as QuizSignup;
 }
 
 // ── Attempts ─────────────────────────────────────────────
 export async function startAttempt(userId: string, quiz: Quiz): Promise<Attempt> {
-  const attempt: Attempt = {
+  const localAttempt: Attempt = {
     id: `attempt-${Date.now()}`,
     user_id: userId,
     quiz_id: quiz.id,
@@ -153,14 +155,24 @@ export async function startAttempt(userId: string, quiz: Quiz): Promise<Attempt>
     answers: {},
   };
   if (!isSupabaseConfigured) {
-    memory.attempts.push(attempt);
-    return attempt;
+    memory.attempts.push(localAttempt);
+    return localAttempt;
   }
-  const { data, error } = await supabase.from("dsemcq_attempts").insert(attempt).select().single();
+  const { data, error } = await supabase
+    .from("dsemcq_attempts")
+    .insert({
+      user_id: userId,
+      quiz_id: quiz.id,
+      total: quiz.question_ids.length,
+      status: "in_progress",
+      answers: {},
+    })
+    .select()
+    .single();
   if (error) {
-    console.warn("[dsemcq] startAttempt error (using local):", error.message);
-    memory.attempts.push(attempt);
-    return attempt;
+    console.warn("[dsemcq] startAttempt error:", error.message);
+    memory.attempts.push(localAttempt);
+    return localAttempt;
   }
   return data as Attempt;
 }
