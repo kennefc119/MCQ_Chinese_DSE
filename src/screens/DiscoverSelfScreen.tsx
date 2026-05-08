@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, typography, QUIZ_TYPE_LABEL } from "../theme";
-import { PsychTest, Attempt, Quiz } from "../types/database";
-import { listPsychTests, listUserAttempts, listQuizzes } from "../lib/dataService";
+import { colors, spacing, typography } from "../theme";
+import { PsychTest, Attempt, Quiz, Passage } from "../types/database";
+import { listPsychTests, listUserAttempts, listQuizzes, listPassages } from "../lib/dataService";
+import { SEED_QUESTIONS } from "../data/seedQuestions";
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
 import RadarChart from "../components/RadarChart";
@@ -20,14 +21,44 @@ const PSYCH_ICON_MAP: Record<string, React.ComponentProps<typeof Ionicons>["name
   "graduationcap.fill": "school",
 };
 
+// Short 2–3 char display labels for the 12 passages in radar chart
+const PASSAGE_SHORT: Record<string, string> = {
+  p01: "論語", p02: "魚所欲", p03: "逍遙遊",
+  p04: "勸學",  p05: "廉藺傳", p06: "出師表",
+  p07: "師說",  p08: "西山記", p09: "岳陽樓",
+  p10: "六國論", p11: "唐詩", p12: "宋詞",
+};
+
+const SKILL_TAGS = [
+  { id: "t-meaning",      label: "字詞解釋" },
+  { id: "t-comprehension",label: "內容理解" },
+  { id: "t-theme",        label: "主旨歸納" },
+  { id: "t-rhetoric",     label: "修辭手法" },
+  { id: "t-character",    label: "人物分析" },
+  { id: "t-grammar",      label: "句式語法" },
+  { id: "t-context",      label: "背景知識" },
+  { id: "t-comparison",   label: "跨篇章比較" },
+] as const;
+
+// Seed question lookup for per-tag accuracy analysis
+const SEED_Q_MAP = Object.fromEntries(SEED_QUESTIONS.map((q) => [q.id, q]));
+
 export default function DiscoverSelfScreen() {
   const nav = useNavigation<Nav>();
   const { user } = useAuth();
-  const [tests, setTests] = useState<PsychTest[]>([]);
-  const [attempts, setAttempts] = useState<Attempt[]>([]);
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const { width: screenWidth } = useWindowDimensions();
+  // Available width inside analyticsCard (FlatList padding + card padding = 4×spacing.md)
+  const CHART_W = screenWidth - spacing.md * 4;
 
-  useEffect(() => { listPsychTests().then(setTests); }, []);
+  const [tests, setTests]       = useState<PsychTest[]>([]);
+  const [attempts, setAttempts] = useState<Attempt[]>([]);
+  const [quizzes, setQuizzes]   = useState<Quiz[]>([]);
+  const [passages, setPassages] = useState<Passage[]>([]);
+
+  useEffect(() => {
+    listPsychTests().then(setTests);
+    listPassages().then(setPassages);
+  }, []);
 
   useFocusEffect(useCallback(() => {
     if (!user) return;
@@ -42,30 +73,44 @@ export default function DiscoverSelfScreen() {
     [quizzes],
   );
 
-  const typeKeys = useMemo(() => Object.keys(QUIZ_TYPE_LABEL), []);
-  const typeAxes = useMemo(() => typeKeys.map((k) => QUIZ_TYPE_LABEL[k]), [typeKeys]);
-  const typeValues = useMemo(
-    () =>
-      typeKeys.map((t) => {
-        const ta = attempts.filter((a) => quizMap[a.quiz_id]?.type === t);
-        if (ta.length === 0) return 0;
-        const avg = ta.reduce((s, a) => s + (a.score ?? 0) / Math.max(1, a.total), 0) / ta.length;
-        return Math.round(avg * 100);
-      }),
-    [attempts, quizMap, typeKeys],
-  );
+  // ── Passage radar (12 axes) ──────────────────────────────────────────
+  const { passageAxes, passageValues } = useMemo(() => {
+    const axes = passages.map((p) => PASSAGE_SHORT[p.id] ?? p.title.slice(0, 3));
+    const values = passages.map((p) => {
+      const pa = attempts.filter((a) => quizMap[a.quiz_id]?.passage_id === p.id);
+      if (pa.length === 0) return 0;
+      const avg = pa.reduce((s, a) => s + (a.score ?? 0) / Math.max(1, a.total), 0) / pa.length;
+      return Math.round(avg * 100);
+    });
+    return { passageAxes: axes, passageValues: values };
+  }, [passages, attempts, quizMap]);
 
-  const diffAxes = ["★", "★★", "★★★", "★★★★", "★★★★★"];
-  const diffValues = useMemo(
-    () =>
-      [1, 2, 3, 4, 5].map((d) => {
-        const da = attempts.filter((a) => quizMap[a.quiz_id]?.difficulty === d);
-        if (da.length === 0) return 0;
-        const avg = da.reduce((s, a) => s + (a.score ?? 0) / Math.max(1, a.total), 0) / da.length;
-        return Math.round(avg * 100);
-      }),
-    [attempts, quizMap],
-  );
+  // ── Skills radar (8 axes) via per-question answer analysis ───────────
+  const { skillAxes, skillValues } = useMemo(() => {
+    const correct: Record<string, number> = {};
+    const total:   Record<string, number> = {};
+
+    for (const attempt of attempts) {
+      for (const [questionId, selectedOptionId] of Object.entries(attempt.answers ?? {})) {
+        const q = SEED_Q_MAP[questionId];
+        if (!q) continue;
+        const correctOpt = q.options.find((o) => o.is_correct);
+        const isCorrect = correctOpt?.id === selectedOptionId;
+        for (const tagId of q.tag_ids ?? []) {
+          correct[tagId] = (correct[tagId] ?? 0) + (isCorrect ? 1 : 0);
+          total[tagId]   = (total[tagId]   ?? 0) + 1;
+        }
+      }
+    }
+
+    const axes   = SKILL_TAGS.map((t) => t.label);
+    const values = SKILL_TAGS.map((t) => {
+      const tot = total[t.id] ?? 0;
+      if (tot === 0) return 0;
+      return Math.round((correct[t.id] ?? 0) / tot * 100);
+    });
+    return { skillAxes: axes, skillValues: values };
+  }, [attempts]);
 
   const hasData = attempts.length >= 3;
 
@@ -76,28 +121,49 @@ export default function DiscoverSelfScreen() {
         <Text style={styles.subtitle}>輕鬆小測驗　・　了解學習風格與職涯傾向</Text>
       </View>
 
-      {/* Radar charts — only shown once student has ≥3 completed attempts */}
-      {hasData && (
-        <View style={styles.analyticsCard}>
-          <Text style={styles.analyticsTitle}>📊 學習表現分析</Text>
-          <Text style={styles.analyticsHint}>根據你已完成的練習自動計算</Text>
-          <View style={styles.chartsRow}>
-            <View style={styles.chartBlock}>
-              <Text style={styles.chartLabel}>各題型得分率</Text>
-              <RadarChart axes={typeAxes} values={typeValues} color={colors.primary} size={150} />
-            </View>
-            <View style={styles.chartBlock}>
-              <Text style={styles.chartLabel}>各難度得分率</Text>
-              <RadarChart axes={diffAxes} values={diffValues} color={colors.accent} size={150} />
-            </View>
+      {/* ── Passage radar ─────────────────────────── */}
+      <View style={styles.analyticsCard}>
+        <Text style={styles.analyticsTitle}>📚 篇章掌握度</Text>
+        <Text style={styles.analyticsHint}>各篇章答題平均得分率（完成 3 次以上練習後更新）</Text>
+        {hasData && passages.length === 12 ? (
+          <View style={styles.chartCenter}>
+            <RadarChart
+              axes={passageAxes}
+              values={passageValues}
+              color={colors.primary}
+              width={CHART_W}
+              height={CHART_W}
+            />
           </View>
-        </View>
-      )}
-      {!hasData && (
-        <View style={styles.analyticsPlaceholder}>
-          <Text style={styles.analyticsPlaceholderText}>📈 完成 3 次以上練習後，這裡將顯示你的學習表現雷達圖</Text>
-        </View>
-      )}
+        ) : (
+          <View style={styles.placeholder}>
+            <Text style={styles.placeholderText}>
+              {passages.length < 12 ? "載入篇章中…" : "完成 3 次以上練習後顯示篇章雷達圖"}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* ── Skills radar ──────────────────────────── */}
+      <View style={styles.analyticsCard}>
+        <Text style={styles.analyticsTitle}>🎯 能力分析</Text>
+        <Text style={styles.analyticsHint}>各語文能力答題正確率（基於種子題庫）</Text>
+        {hasData ? (
+          <View style={styles.chartCenter}>
+            <RadarChart
+              axes={skillAxes}
+              values={skillValues}
+              color={colors.accent}
+              width={CHART_W}
+              height={Math.round(CHART_W * 0.85)}
+            />
+          </View>
+        ) : (
+          <View style={styles.placeholder}>
+            <Text style={styles.placeholderText}>完成 3 次以上練習後顯示能力雷達圖</Text>
+          </View>
+        )}
+      </View>
 
       <Text style={styles.sectionLabel}>心理小測驗</Text>
     </View>
@@ -140,16 +206,44 @@ const styles = StyleSheet.create({
   header: { marginBottom: spacing.md },
   title: { ...typography.title, color: colors.primary },
   subtitle: { ...typography.caption, color: colors.textSecondary, marginTop: 4 },
-  analyticsCard: { backgroundColor: colors.surface, borderRadius: 16, padding: spacing.md, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border },
+  analyticsCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
   analyticsTitle: { color: colors.textPrimary, fontWeight: "700", fontSize: 15, marginBottom: 2 },
   analyticsHint: { color: colors.textMuted, fontSize: 11, marginBottom: spacing.sm },
-  chartsRow: { flexDirection: "row", justifyContent: "space-around" },
-  chartBlock: { alignItems: "center" },
-  chartLabel: { color: colors.textMuted, fontSize: 11, marginBottom: 6 },
-  analyticsPlaceholder: { backgroundColor: colors.surface, borderRadius: 12, padding: spacing.md, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border, borderStyle: "dashed" },
-  analyticsPlaceholderText: { color: colors.textMuted, fontSize: 13, textAlign: "center", lineHeight: 20 },
-  sectionLabel: { color: colors.textSecondary, fontSize: 12, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase", marginBottom: spacing.sm },
-  card: { flexDirection: "row", padding: spacing.md, backgroundColor: colors.surface, borderRadius: 12, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.border },
+  chartCenter: { alignItems: "center" },
+  placeholder: {
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 12,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: "dashed",
+    alignItems: "center",
+  },
+  placeholderText: { color: colors.textMuted, fontSize: 13, textAlign: "center", lineHeight: 20 },
+  sectionLabel: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    marginBottom: spacing.sm,
+  },
+  card: {
+    flexDirection: "row",
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
   iconWrap: {
     width: 48,
     height: 48,
@@ -163,3 +257,4 @@ const styles = StyleSheet.create({
   cardDesc: { color: colors.textSecondary, marginTop: 4, lineHeight: 20 },
   cardMeta: { color: colors.textMuted, fontSize: 12, marginTop: 6 },
 });
+

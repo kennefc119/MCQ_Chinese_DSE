@@ -6,17 +6,24 @@ interface Props {
   axes: string[];
   values: number[]; // 0–100
   color: string;
-  size?: number;
+  size?: number;    // kept for backwards compat (square charts)
+  width?: number;   // override size for width
+  height?: number;  // override size for height
 }
 
-export default function RadarChart({ axes, values, color, size = 200 }: Props) {
+export default function RadarChart({ axes, values, color, size = 200, width, height }: Props) {
   const n = axes.length;
   if (n < 3 || values.length < n) return null;
 
-  const cx = size / 2;
-  const cy = size / 2;
-  const radius = size * 0.36;
-  const labelRadius = size * 0.47;
+  const w = width ?? size;
+  const h = height ?? size;
+  const cx = w / 2;
+  const cy = h / 2;
+  const minDim = Math.min(w, h);
+  // For dense charts (12 axes) use tighter proportions so labels fit within bounds
+  const radius = n > 8 ? minDim * 0.30 : minDim * 0.36;
+  const labelRadius = n > 8 ? minDim * 0.42 : minDim * 0.47;
+  const fontSize = n > 8 ? 8 : 9;
   const levels = 4;
 
   const angle = (i: number) => (Math.PI * 2 * i) / n - Math.PI / 2;
@@ -34,8 +41,8 @@ export default function RadarChart({ axes, values, color, size = 200 }: Props) {
   }).join(" ");
 
   return (
-    <View style={{ width: size, height: size }}>
-      <Svg width={size} height={size}>
+    <View style={{ width: w, height: h }}>
+      <Svg width={w} height={h}>
         {gridPolygons.map((pts, lvl) => (
           <Polygon key={lvl} points={pts} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
         ))}
@@ -51,7 +58,7 @@ export default function RadarChart({ axes, values, color, size = 200 }: Props) {
               key={i}
               x={px(labelRadius, i)}
               y={py(labelRadius, i)}
-              fontSize={9}
+              fontSize={fontSize}
               fill="rgba(255,255,255,0.7)"
               textAnchor={anchor}
               alignmentBaseline="middle"
