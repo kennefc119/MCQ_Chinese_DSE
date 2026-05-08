@@ -59,12 +59,15 @@ def chat_structured(
     """
     bot_name = model or settings.poe_bot_name
 
+    # Poe bots don't reliably honour a separate system role —
+    # merge system prompt + user message into a single user turn.
+    merged = f"{system_prompt.strip()}\n\n---\n\n{user_message.strip()}"
+
     payload = {
         "version": "1.0",
         "type": "query",
         "query": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user",   "content": user_message},
+            {"role": "user", "content": merged},
         ],
     }
 
