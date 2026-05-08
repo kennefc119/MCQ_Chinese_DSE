@@ -647,15 +647,15 @@ const styles = StyleSheet.create({
   filterChip: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
   filterChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  filterChipText: { color: colors.textSecondary, fontSize: 12 },
+  filterChipText: { color: colors.textSecondary, fontSize: 14 },
   filterChipTextActive: { color: colors.background, fontWeight: "700" },
   filterExpanded: {
     paddingHorizontal: GRID_PADDING,

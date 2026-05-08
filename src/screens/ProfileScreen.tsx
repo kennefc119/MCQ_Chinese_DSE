@@ -3,14 +3,13 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from "rea
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { colors, spacing, typography, QUIZ_TYPE_LABEL } from "../theme";
+import { colors, spacing, typography } from "../theme";
 import { useAuth } from "../context/AuthContext";
 import Button from "../components/Button";
 import { AppStackParamList } from "../navigation/types";
 import { useFocusEffect } from "@react-navigation/native";
 import { Attempt, Quiz } from "../types/database";
 import { listUserAttempts, listQuizzes } from "../lib/dataService";
-import RadarChart from "../components/RadarChart";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
@@ -38,31 +37,6 @@ export default function ProfileScreen() {
   const quizMap = useMemo(
     () => quizzes.reduce<Record<string, Quiz>>((m, q) => ({ ...m, [q.id]: q }), {}),
     [quizzes],
-  );
-
-  const typeKeys = useMemo(() => Object.keys(QUIZ_TYPE_LABEL), []);
-  const typeAxes = useMemo(() => typeKeys.map((k) => QUIZ_TYPE_LABEL[k]), [typeKeys]);
-  const typeValues = useMemo(
-    () =>
-      typeKeys.map((t) => {
-        const ta = attempts.filter((a) => quizMap[a.quiz_id]?.type === t);
-        if (ta.length === 0) return 0;
-        const avg = ta.reduce((s, a) => s + (a.score ?? 0) / Math.max(1, a.total), 0) / ta.length;
-        return Math.round(avg * 100);
-      }),
-    [attempts, quizMap, typeKeys],
-  );
-
-  const diffAxes = ["★", "★★", "★★★", "★★★★", "★★★★★"];
-  const diffValues = useMemo(
-    () =>
-      [1, 2, 3, 4, 5].map((d) => {
-        const da = attempts.filter((a) => quizMap[a.quiz_id]?.difficulty === d);
-        if (da.length === 0) return 0;
-        const avg = da.reduce((s, a) => s + (a.score ?? 0) / Math.max(1, a.total), 0) / da.length;
-        return Math.round(avg * 100);
-      }),
-    [attempts, quizMap],
   );
 
   const getPointsEarned = useCallback(
@@ -128,24 +102,6 @@ export default function ProfileScreen() {
         <View style={{ height: spacing.lg }} />
         <Button title="登出" variant="ghost" onPress={onSignOut} />
 
-        {/* Analytics */}
-        {attempts.length >= 3 && (
-          <>
-            <View style={{ height: spacing.lg }} />
-            <Text style={styles.sectionTitle}>學習能力分析</Text>
-            <View style={styles.chartsRow}>
-              <View style={styles.chartBlock}>
-                <Text style={styles.chartLabel}>各題型得分率</Text>
-                <RadarChart axes={typeAxes} values={typeValues} color={colors.primary} size={160} />
-              </View>
-              <View style={styles.chartBlock}>
-                <Text style={styles.chartLabel}>各難度得分率</Text>
-                <RadarChart axes={diffAxes} values={diffValues} color={colors.accent} size={160} />
-              </View>
-            </View>
-          </>
-        )}
-
         {/* Attempt history */}
         {attempts.length > 0 && (
           <>
@@ -207,9 +163,6 @@ const styles = StyleSheet.create({
   menuLabel: { color: colors.textPrimary, fontSize: 16 },
   menuArrow: { color: colors.textMuted, fontSize: 22 },
   sectionTitle: { ...typography.heading, color: colors.primary, marginBottom: spacing.sm },
-  chartsRow: { flexDirection: "row", justifyContent: "space-around", backgroundColor: colors.surface, borderRadius: 16, padding: spacing.md, borderWidth: 1, borderColor: colors.border },
-  chartBlock: { alignItems: "center" },
-  chartLabel: { color: colors.textMuted, fontSize: 11, marginBottom: 6 },
   historyCard: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, padding: spacing.md, borderRadius: 10, marginBottom: spacing.xs, borderWidth: 1, borderColor: colors.border },
   historyTitle: { color: colors.textPrimary, fontWeight: "600", fontSize: 13 },
   historyDate: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
