@@ -487,6 +487,8 @@
       <span id="assembleIco">🗂</span>
       <span id="assembleTxt">自動組合測驗</span>
     </button>
+    <button class="btn-sm" id="previewBtn" onclick="assemblePreview()"
+      style="margin-top:6px;">🔬 預覽（診斷題目分佈）</button>
     <div id="assembleResult" style="display:none;margin-top:10px;font-size:12px;
       background:var(--surface2);border-radius:6px;padding:10px;line-height:1.8;"></div>
   </div>
@@ -797,6 +799,62 @@ async function dbCheck() {
 }
 
 // ── Assemble ──────────────────────────────────────────────────────────────────
+async function assemblePreview() {
+  const btn = document.getElementById('previewBtn');
+  const el  = document.getElementById('assembleResult');
+  btn.disabled = true;
+  btn.textContent = '⏳ 分析中...';
+  el.style.display = 'none';
+
+  try {
+    const r = await fetch(`${API}/api/assemble-preview`);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+
+    const passageRows = (d.passages || []).map(p => {
+      const eOk = p.would_make_exercise;
+      const qOk = p.would_make_quiz;
+      const keys = Object.keys(p).filter(k => k.startsWith('exercise_pool') || k.startsWith('quiz_pool') || k.startsWith('exam_pool'));
+      const counts = keys.map(k => `${k}: ${p[k]}`).join(' | ');
+      return `<tr>
+        <td>${p.label} (${p.passage_id})</td>
+        <td>${counts}</td>
+        <td>${eOk ? '<span style="color:var(--green)">✓ 練習</span>' : '<span style="color:var(--red)">✗ 練習</span>'}
+            ${qOk ? ' <span style="color:var(--green)">✓ 測驗</span>' : ' <span style="color:var(--red)">✗ 測驗</span>'}</td>
+      </tr>`;
+    }).join('');
+
+    const scoreDist = Object.entries(d.score_distribution || {})
+      .map(([s, c]) => `評分${s}: ${c}條`).join(' | ');
+
+    el.innerHTML = `
+      <b>📊 題目概覽</b><br>
+      總題數：${d.total_questions} ｜ is_active=true：<b>${d.active_questions}</b> ｜ 停用：${d.inactive_questions}<br>
+      評分分佈：${scoreDist || '(無)'}
+      <br><br>
+      <b>📋 門檻要求</b><br>
+      ${Object.entries(d.thresholds || {}).map(([k,v]) => `${k}：${v}`).join('<br>')}
+      <br><br>
+      <b>📖 各篇章池（${d.passages?.length || 0} 篇）</b><br>
+      ${d.passages?.length > 0 ? `<table style="font-size:10px;border-collapse:collapse;width:100%">
+        <tr style="color:var(--muted)"><th align="left">篇章</th><th align="left">題數</th><th align="left">可組合</th></tr>
+        ${passageRows}
+      </table>` : '<span style="color:var(--red)">⚠ 沒有任何篇章符合條件</span>'}
+      <br>
+      🎓 模擬考試：${d.would_make_exam
+        ? `<span style="color:var(--green)">✓ 可組合（${d.exam_eligible_passages?.length} 篇符合）</span>`
+        : `<span style="color:var(--red)">✗ 需要 ≥3 篇各有 ≥5 條評分≥8 題目（目前 ${d.exam_eligible_passages?.length || 0} 篇符合）</span>`}
+    `;
+    el.style.display = 'block';
+  } catch(e) {
+    el.innerHTML = `<span style="color:var(--red)">❌ 預覽失敗：${e.message}</span>`;
+    el.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔬 預覽（診斷題目分佈）';
+  }
+}
+
 async function assemble() {
   const dryRun = document.getElementById('assembleDry').checked;
   const btn = document.getElementById('assembleBtn');

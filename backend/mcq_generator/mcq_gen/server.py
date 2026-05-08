@@ -109,6 +109,92 @@ def generate(req: GenerateRequest) -> dict[str, Any]:
     }
 
 
+@app.get("/api/assemble-preview")
+def assemble_preview() -> dict[str, Any]:
+    """
+    Show a dry-run breakdown of what the assembler sees:
+    total active questions, per-passage counts per pool, and what would be assembled.
+    Does NOT write to the database.
+    """
+    from .db.client import get_supabase
+    from .quiz_assembler import (
+        EXERCISE_MIN_SCORE, EXERCISE_Q,
+        QUIZ_MIN_SCORE, QUIZ_Q,
+        EXAM_MIN_SCORE, EXAM_Q,
+        _passage_label,
+    )
+    from collections import defaultdict
+
+    sb = get_supabase()
+    rows = (
+        sb.table("dsemcq_questions")
+        .select("id,passage_id,difficulty,critique_score,is_active")
+        .execute()
+        .data or []
+    )
+
+    total = len(rows)
+    active = [r for r in rows if r.get("is_active")]
+    inactive = total - len(active)
+
+    def _score(r):
+        return r.get("critique_score") or 7  # NULL treated as 7
+
+    def _pool(min_score):
+        p = defaultdict(list)
+        for r in active:
+            if _score(r) >= min_score:
+                pid = r.get("passage_id") or "unknown"
+                p[pid].append(r["id"])
+        return p
+
+    ex_pool   = _pool(EXERCISE_MIN_SCORE)
+    quiz_pool = _pool(QUIZ_MIN_SCORE)
+    exam_pool = _pool(EXAM_MIN_SCORE)
+
+    # Per-passage summary
+    all_pids = sorted(set(
+        list(ex_pool.keys()) + list(quiz_pool.keys()) + list(exam_pool.keys())
+    ))
+    passages = []
+    for pid in all_pids:
+        ec = len(ex_pool.get(pid, []))
+        qc = len(quiz_pool.get(pid, []))
+        xc = len(exam_pool.get(pid, []))
+        passages.append({
+            "passage_id": pid,
+            "label": _passage_label(pid),
+            f"exercise_pool (need {EXERCISE_Q})": ec,
+            f"quiz_pool (need {QUIZ_Q})": qc,
+            f"exam_pool (need 5)": xc,
+            "would_make_exercise": ec >= EXERCISE_Q,
+            "would_make_quiz": qc >= QUIZ_Q,
+        })
+
+    exam_eligible = [pid for pid, qids in exam_pool.items() if len(qids) >= 5]
+    would_make_exam = len(exam_eligible) >= 3
+
+    score_dist: dict[str, int] = {}
+    for r in active:
+        s = str(_score(r))
+        score_dist[s] = score_dist.get(s, 0) + 1
+
+    return {
+        "total_questions": total,
+        "active_questions": len(active),
+        "inactive_questions": inactive,
+        "score_distribution": dict(sorted(score_dist.items())),
+        "passages": passages,
+        "would_make_exam": would_make_exam,
+        "exam_eligible_passages": exam_eligible,
+        "thresholds": {
+            "exercise": f"≥{EXERCISE_Q} questions with score≥{EXERCISE_MIN_SCORE} per passage",
+            "quiz":     f"≥{QUIZ_Q} questions with score≥{QUIZ_MIN_SCORE} per passage",
+            "exam":     f"≥3 passages each with ≥5 questions at score≥{EXAM_MIN_SCORE}",
+        },
+    }
+
+
 @app.get("/api/db-check")
 def db_check() -> dict[str, Any]:
     """
