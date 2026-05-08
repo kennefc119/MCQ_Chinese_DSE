@@ -1,18 +1,18 @@
 // Supabase Edge Function: dsemcq-advisor-chat
-// Calls the Poe HTTP API, collects the SSE stream, returns { reply: string }.
+// Calls the Poe OpenAI-compatible API, returns { reply: string }.
 // Persists each exchange to dsemcq_advisor_messages via service-role key.
 //
 // Required env vars (set in Supabase Dashboard → Edge Functions → Secrets):
 //   POE_API_KEY       — Poe API key (poe.com/api_key)
-//   POE_BOT_NAME      — Poe bot name to target, e.g. "Claude-3-Sonnet" (default)
+//   POE_BOT_NAME      — Poe bot name to target, e.g. "GPT-4o-Mini" (default)
 //   SUPABASE_URL      — auto-injected by Supabase
 //   SUPABASE_SERVICE_ROLE_KEY — auto-injected by Supabase
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const POE_BASE_URL = "https://api.poe.com/bot/";
-const DEFAULT_BOT  = "Claude-3-Sonnet";
-const MAX_REPLY_CHARS = 1200; // hard-cap to stay within 200 Chinese chars ≈ 600 bytes
+const POE_CHAT_URL  = "https://api.poe.com/v1/chat/completions";
+const DEFAULT_BOT   = "GPT-4o-Mini";
+const MAX_REPLY_CHARS = 1200; // hard-cap to stay within ~200 Chinese chars
 
 // ── CORS headers for Expo / React Native fetch ────────────────────────────
 const CORS = {
@@ -60,53 +60,48 @@ Deno.serve(async (req: Request) => {
   const systemPrompt = body.system ?? "";
   const history      = Array.isArray(body.history) ? body.history : [];
 
-  // ── 3. Build Poe protocol query ────────────────────────────────────────
-  // Poe roles: "user" | "bot" | "system"
-  const poeMessages: Array<{ role: string; content: string }> = [];
+  // ── 3. Build OpenAI-compatible messages array ──────────────────────────
+  // Poe's OpenAI-compatible endpoint accepts: system / user / assistant roles
+  const messages: Array<{ role: string; content: string }> = [];
 
   if (systemPrompt) {
-    poeMessages.push({ role: "system", content: systemPrompt });
+    // Poe ignores system role on most bots — merge into first user message
+    messages.push({ role: "user", content: `[System]\n${systemPrompt}` });
+    messages.push({ role: "assistant", content: "明白。" });
   }
 
-  // Append conversation history (last 6 messages, mapped to Poe roles)
+  // Conversation history
   for (const m of history) {
-    poeMessages.push({
-      role:    m.role === "assistant" ? "bot" : "user",
+    messages.push({
+      role:    m.role === "assistant" ? "assistant" : "user",
       content: m.text,
     });
   }
 
   // Current user turn
-  poeMessages.push({ role: "user", content: userMessage });
+  messages.push({ role: "user", content: userMessage });
 
-  const poePayload = {
-    version:         "1.0",
-    type:            "query",
-    query:           poeMessages,
-    user_id:         userId,
-    conversation_id: `conv-${userId}-${Date.now()}`,
-    message_id:      `msg-${userId}-${Date.now()}`,
-  };
-
-  // ── 4. Call Poe HTTP API ───────────────────────────────────────────────
+  // ── 4. Call Poe OpenAI-compatible API ─────────────────────────────────
   const poeApiKey = Deno.env.get("POE_API_KEY") ?? "";
   const botName   = Deno.env.get("POE_BOT_NAME") ?? DEFAULT_BOT;
 
   if (!poeApiKey) {
     console.error("POE_API_KEY not set");
-    return json({ error: "AI service not configured" }, 503);
+    return json({ error: "AI service not configured — POE_API_KEY missing" }, 503);
   }
 
   let poeResp: Response;
   try {
-    poeResp = await fetch(`${POE_BASE_URL}${encodeURIComponent(botName)}`, {
+    poeResp = await fetch(POE_CHAT_URL, {
       method:  "POST",
       headers: {
         "Authorization": `Bearer ${poeApiKey}`,
         "Content-Type":  "application/json",
-        "Accept":        "text/event-stream",
       },
-      body: JSON.stringify(poePayload),
+      body: JSON.stringify({
+        model:    botName,
+        messages: messages,
+      }),
     });
   } catch (e) {
     console.error("Poe fetch error:", e);
@@ -116,11 +111,18 @@ Deno.serve(async (req: Request) => {
   if (!poeResp.ok) {
     const errText = await poeResp.text().catch(() => "");
     console.error(`Poe API error ${poeResp.status}:`, errText);
-    return json({ error: `AI service error (${poeResp.status})` }, 502);
+    return json({ error: `AI service error (${poeResp.status}): ${errText.slice(0, 200)}` }, 502);
   }
 
-  // ── 5. Read SSE stream, accumulate text chunks ─────────────────────────
-  const reply = await readPoeStream(poeResp);
+  // ── 5. Parse JSON response ─────────────────────────────────────────────
+  let poeJson: { choices?: Array<{ message?: { content?: string } }> };
+  try {
+    poeJson = await poeResp.json();
+  } catch {
+    return json({ error: "Invalid JSON from AI service" }, 502);
+  }
+
+  const reply = (poeJson.choices?.[0]?.message?.content ?? "").slice(0, MAX_REPLY_CHARS);
 
   if (!reply) {
     return json({ error: "Empty reply from AI service" }, 502);
@@ -134,7 +136,6 @@ Deno.serve(async (req: Request) => {
   });
 
   if (dbErr) {
-    // Non-fatal: log and continue — client still gets the reply
     console.error("DB insert error:", dbErr.message);
   }
 
@@ -151,50 +152,3 @@ function json(data: unknown, status = 200): Response {
   });
 }
 
-/**
- * Reads a Poe SSE response body and concatenates all `text` event chunks.
- * Poe SSE format:
- *   event: text\n
- *   data: {"text":"chunk"}\n\n
- *   event: done\n
- *   data: {}\n\n
- */
-async function readPoeStream(resp: Response): Promise<string> {
-  const reader  = resp.body?.getReader();
-  if (!reader) return "";
-
-  const decoder = new TextDecoder();
-  let   buffer  = "";
-  let   reply   = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    // Keep the last (possibly incomplete) line in the buffer
-    buffer = lines.pop() ?? "";
-
-    let currentEvent = "";
-    for (const line of lines) {
-      if (line.startsWith("event:")) {
-        currentEvent = line.slice(6).trim();
-      } else if (line.startsWith("data:") && currentEvent === "text") {
-        try {
-          const parsed = JSON.parse(line.slice(5).trim()) as { text?: string };
-          if (parsed.text) reply += parsed.text;
-        } catch {
-          // malformed chunk — skip
-        }
-        currentEvent = "";
-      } else if (line.startsWith("data:") && currentEvent === "done") {
-        // Stream finished
-        reader.cancel();
-        return reply.slice(0, MAX_REPLY_CHARS);
-      }
-    }
-  }
-
-  return reply.slice(0, MAX_REPLY_CHARS);
-}
