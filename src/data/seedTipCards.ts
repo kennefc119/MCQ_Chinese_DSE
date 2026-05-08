@@ -1,0 +1,58 @@
+import { TipCard } from "../types/database";
+
+export const SEED_TIP_CARDS: TipCard[] = [
+  {
+    id: "tip-1",
+    title: "📝 默書三步法",
+    body: "1) 先朗讀全文三遍\n2) 逐句默寫，遇錯即時查證\n3) 隔日重默，鞏固記憶。",
+    image_url: "https://picsum.photos/seed/dsemcq-tip-1/900/1400",
+    category: "study",
+    position: 1,
+    is_active: true,
+  },
+  {
+    id: "tip-2",
+    title: "🧘 考前焦慮怎麼辦？",
+    body: "深呼吸 4-7-8：吸 4 秒、屏 7 秒、呼 8 秒。連續做 3 輪，可以快速降低心率。",
+    image_url: "https://picsum.photos/seed/dsemcq-tip-2/900/1400",
+    category: "wellness",
+    position: 2,
+    is_active: true,
+  },
+  {
+    id: "tip-3",
+    title: "📚 答題策略：先易後難",
+    body: "DSE 文言文選擇題建議先掃讀篇章，再逐題作答。遇到不懂的字詞，先做下一題，最後回頭重看。",
+    image_url: "https://picsum.photos/seed/dsemcq-tip-3/900/1400",
+    category: "exam_tip",
+    position: 3,
+    is_active: true,
+  },
+  {
+    id: "tip-4",
+    title: "💤 睡眠勝過熬夜",
+    body: "考試前一晚睡足 7 小時，比熬夜多看一篇文章更有效。記憶會在睡眠中鞏固。",
+    image_url: "https://picsum.photos/seed/dsemcq-tip-4/900/1400",
+    category: "rest",
+    position: 4,
+    is_active: true,
+  },
+  {
+    id: "tip-5",
+    title: "🎯 主旨歸納法",
+    body: "讀畢一篇文言文，試用一句話概括其中心思想。若做不到，代表還沒讀通。",
+    image_url: "https://picsum.photos/seed/dsemcq-tip-5/900/1400",
+    category: "study",
+    position: 5,
+    is_active: true,
+  },
+  {
+    id: "tip-6",
+    title: "⏰ 番茄鐘學習法",
+    body: "專注 25 分鐘，休息 5 分鐘。每四個番茄鐘長休 15 分鐘。比馬拉松式溫習更有效率。",
+    image_url: "https://picsum.photos/seed/dsemcq-tip-6/900/1400",
+    category: "study",
+    position: 6,
+    is_active: true,
+  },
+];

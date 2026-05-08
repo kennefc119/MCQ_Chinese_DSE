@@ -1,0 +1,283 @@
+{
+"exam_metadata": {
+"year": 2016,
+"paper_source": "2016-DSE 中國語文 試卷一 閱讀能力"
+},
+"general_marking_guidelines": {
+"description": "一般原則",
+"general_notes": [
+"錯別字不扣分：",
+"1. 本組考題答案的錯別字不扣分。",
+"2. 如錯別字過多或於關鍵處寫錯別字而影響文意者，視為文句不通處理。",
+"文句不通：",
+"1. 文句不通而嚴重影響答案的準確度，可扣1分。",
+"2. 行文紊亂欠通順而不影響文意者，不必扣分。",
+"冗餘答案：",
+"1. 冗文與答案相干冗文，而嚴重影響答案的準確度，扣1分；如答案不相干冗文，而嚴重影響答案的準確度，扣1分。",
+"2. 除正確答案外，尚列舉其他不相干冗文，而嚴重影響答案的準確度，扣1分。",
+"3. 冗文若與答案相包容，不必扣分。",
+"上述文句不通及冗餘答案，每道分題最多只扣1分：請以單橫線標示扣分文句。"
+],
+"rubric_tables": []
+},
+"designated_passages_data": [],
+"unseen_passages_data": [
+{
+"passage_id": "P1",
+"passage_title": "紅心番薯（節錄）",
+"author": "林清玄",
+"text_content": null,
+"questions": [
+{
+"question_number": "1",
+"question_text": "第一篇共有 21 個段落，按內容大意可分成四個部分，試指出各部分由哪些段落組成（4分），然後概述第三部分的內容大意，並把答案填寫在下表內。（2分）\n\n部分　段落　內容大意\n第一部分\n(i)：\n第 1 段至第____段　記述父親從家鄉帶來番薯，描寫父親的心情。\n\n第二部分\n(ii)：\n第一____段至第一____段　憶述往事，描寫父親對番薯的感情。\n\n第三部分\n(iii)：\n第____段至第____段\n(v)：\n\n第四部分\n(iv)：\n第____段至第 21 段　描寫種在花盆中的番薯，抒發作者的感受。",
+"score": 6,
+"question_type": "Short/Long",
+"marking_scheme_data": {
+"official_answer_key": null,
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": true
+}
+},
+{
+"question_number": "2",
+"question_text": "在文章開首，作者通過語言描寫，刻畫了父親因作者住在「無土」的房子而生的失望。除了語言描寫外，作者還通過哪方面的描寫刻畫父親的失望？試舉一例略加說明。(1分、2分)\n\n(i) 描寫（答案須是兩個字）\n\n(ii) 例子：",
+"score": 3,
+"question_type": "Short/Long",
+"marking_scheme_data": {
+"official_answer_key": null,
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": true
+}
+},
+{
+"question_number": "3",
+"question_text": "在第 6 段，作者刻畫父親在番薯田裏的表現。當中父親流露了怎樣的心情？(2分)\n\n(1) 緊張\n(2) 欣慰\n(3) 驚訝\n(4) 自豪\n\nA. (1)、(3)\nB. (2)、(4)\nC. (1)、(2)、(4)\nD. (2)、(3)、(4)",
+"score": 2,
+"question_type": "MC",
+"marking_scheme_data": {
+"official_answer_key": "B",
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": false
+}
+},
+{
+"question_number": "4",
+"question_text": "在第 7 至 9 段，作者與父親談及「番薯」和「老芋」。根據文意，判斷以下兩項陳述。(4分)\n\n(i) 父親的回應令作者認識到北方故鄉與紅心番薯的連繫。\n\n(ii) 作者藉記述幼年時的一些往事，表現對父親日漸衰老而生的憐憫之情。\n\n（正確／錯誤／無從判斷）",
+"score": 4,
+"question_type": "True/False",
+"marking_scheme_data": {
+"official_answer_key": "（i）正確；（ii）錯誤",
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": false
+}
+},
+{
+"question_number": "5",
+"question_text": "根據第 11 至 13 段，試概述在不同時期，番薯對父親的意義。(6分)\n\n時期　番薯對父親的意義\n在家鄉躲警報　父親與兄弟姊妹抱着番薯直奔防空壕，在壕內吃番薯，番薯滿足了父親的果腹之需。\n在南洋參戰\n(i)：\n戰後在家鄉\n(ii)：",
+"score": 6,
+"question_type": "Short/Long",
+"marking_scheme_data": {
+"official_answer_key": null,
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": true
+}
+},
+{
+"question_number": "6",
+"question_text": "在第 14 段，作者認為「父親的愛愈想來愈若一個神話」，原因是：(2分)\n\nA. 父親的想法是杞人憂天。\nB. 父親的經歷充滿傳奇色彩。\nC. 作者這一代人沒有經歷苦難。\nD. 作者這一代人不會居安思危。",
+"score": 2,
+"question_type": "MC",
+"marking_scheme_data": {
+"official_answer_key": "C",
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": false
+}
+},
+{
+"question_number": "7",
+"question_text": "作者曾描寫薯莨花、野草和牽牛花。描寫這些植物在文中有什麼作用？試根據文意加以分析，以完成下表。(8分)\n\n植物　在文中的作用\n薯莨花\n(i)：\n\n野草　以野草的強悍，吞滅其他植物，只有番薯能與野草爭着方式，襯托番薯的頑強生命力。\n\n牽牛花\n(ii)：",
+"score": 8,
+"question_type": "Short/Long",
+"marking_scheme_data": {
+"official_answer_key": null,
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": true
+}
+},
+{
+"question_number": "8",
+"question_text": "在第 20 段，作者寫到「（我們）有了失去泥土的悲哀」。試綜合全文，回答以下問題。\n\n(i) 「泥土」象徵什麼？(2分)\nA. 承傳家族傳統的想法\nB. 孕育故鄉情懷的條件\nC. 追求安穩生活的動力\nD. 走過烽火歲月的經歷\n\n(ii) 承上題，按泥土的象徵意義，試說明「（我們）有了失去泥土的悲哀」的原因。(4分)",
+"score": 6,
+"question_type": "Mixed (MC + Short/Long)",
+"marking_scheme_data": {
+"official_answer_key": "（i）B",
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": false
+}
+},
+{
+"question_number": "9",
+"question_text": "你認為作者的父親期望兒子在家中種植番薯的原因是什麼？試綜合全文，加以說明。(4分)",
+"score": 4,
+"question_type": "Short/Long",
+"marking_scheme_data": {
+"official_answer_key": null,
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": true
+}
+},
+{
+"question_number": "10",
+"question_text": "本文以番薯喻人。試綜合全文，指出以下番薯比喻具備哪些特點的人。(4分)\n\n番薯　人物\n與野草爭着方式的番薯（第 16 段）　在惡劣環境中仍具頑強生命力的人\n心還紅着的番薯（第 19 段）\n(i)：　　　　　　　　　　　　的人\n埋在建築工地的番薯（第 20 段）\n(ii)：　　　　　　　　　　　　的人",
+"score": 4,
+"question_type": "Short/Long",
+"marking_scheme_data": {
+"official_answer_key": null,
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": true
+}
+},
+{
+"question_number": "11",
+"question_text": "作者以番薯喻人，也比喻父親。試綜合全文，指出番薯與父親的一個共同特點，並以父親的經歷或行事為例，加以說明。(4分)",
+"score": 4,
+"question_type": "Short/Long",
+"marking_scheme_data": {
+"official_answer_key": null,
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": true
+}
+},
+{
+"question_number": "12",
+"question_text": "以下哪項正確描述本文的布局？(2分)\n\n(1) 以「無土」引入，「失去泥土」作結，前後呼應。\n(2) 由土地裏的番薯寫到花盆中的番薯，層層深入。\n(3) 結合父親的經歷和作者的處境，以兩條線索組織全文。\n(4) 以花盆中的紅心番薯引發聯想，收結全文。\n\nA. (1)、(3)\nB. (2)、(4)\nC. (1)、(3)、(4)\nD. (1)、(2)、(3)、(4)",
+"score": 2,
+"question_type": "MC",
+"marking_scheme_data": {
+"official_answer_key": "C",
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": false
+}
+}
+]
+},
+{
+"passage_id": "P2",
+"passage_title": "吾廬記",
+"author": "魏禧",
+"text_content": null,
+"questions": [
+{
+"question_number": "13",
+"question_text": "試解釋以下文句中的粗體字，並把答案寫在橫線上。(10分)\n\n(i) 方季子之南遊也，驅車痙癘之鄉。\n方：\n\n(ii) 獨身無所事事而之瓊海。\n之：\n\n(iii) 家人聞之，益憂恐，而季子竟至燕。\n益：\n\n(iv) 客有諫余者曰。\n諫：\n\n(v) 四方之士聞者，咸以詩來會。\n咸：",
+"score": 10,
+"question_type": "Short/Long",
+"marking_scheme_data": {
+"official_answer_key": null,
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": true
+}
+},
+{
+"question_number": "14",
+"question_text": "試根據文意把以下文句譯為白話文。(3分)\n\n子之兄弟一身矣，又唯子言之從。",
+"score": 3,
+"question_type": "Short/Long",
+"marking_scheme_data": {
+"official_answer_key": null,
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": true
+}
+},
+{
+"question_number": "15",
+"question_text": "作者所描寫的「吾廬」，四周環境如何？(2分)\n\n(1) 山勢險要\n(2) 花木繁茂\n(3) 溪流縈繞\n(4) 鳥鳴山間\n\nA. (1)、(2)\nB. (3)、(4)\nC. (1)、(2)、(4)\nD. (2)、(3)、(4)",
+"score": 2,
+"question_type": "MC",
+"marking_scheme_data": {
+"official_answer_key": "B",
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": false
+}
+},
+{
+"question_number": "16",
+"question_text": "季子禮在外遊歷時，遇到什麼危險？(2分)\n\n(1) 洪水為患\n(2) 饑荒食人\n(3) 強風毀屋\n(4) 兵變殺人\n\nA. (1)、(4)\nB. (1)、(2)、(3)\nC. (2)、(3)、(4)\nD. (1)、(2)、(3)、(4)",
+"score": 2,
+"question_type": "MC",
+"marking_scheme_data": {
+"official_answer_key": "C",
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": false
+}
+},
+{
+"question_number": "17",
+"question_text": "對於季子禮的行為，作者記述了客人的評價和家人的反應。根據有關內容，回答以下問題：\n\n(i) 根據文意，判斷以下兩項陳述。(4分)\n① 客人認為季子禮學偉節廬，終能覓得樓身之所，讓家人安心。\n② 家人得知季子禮遊於危險之地，十分恐惶，憂愁下淚。\n（正確／錯誤／無從判斷）\n\n(ii) 作者記述客人的評價和家人的反應，有什麼作用？(2分)\nA. 交代當時的背景\nB. 凸顯客人的形象\nC. 諷刺家人的不智\nD. 帶出作者的觀點",
+"score": 6,
+"question_type": "Mixed (True/False + MC)",
+"marking_scheme_data": {
+"official_answer_key": "（i）① 正確；② 錯誤；（ii）D",
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": false
+}
+},
+{
+"question_number": "18",
+"question_text": "在第 5 段，作者運用了什麼手法說明「人各以得行其志為適」的看法？(2分)\n\n(1) 設例\n(2) 語例\n(3) 層遞\n(4) 襯托\n\nA. (1)、(2)\nB. (3)、(4)\nC. (1)、(2)、(4)\nD. (2)、(3)、(4)",
+"score": 2,
+"question_type": "MC",
+"marking_scheme_data": {
+"official_answer_key": "A",
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": false
+}
+},
+{
+"question_number": "19",
+"question_text": "季子禮的行事如何體現「人各以得行其志為適」？試舉一例加以說明。(4分)",
+"score": 4,
+"question_type": "Short/Long",
+"marking_scheme_data": {
+"official_answer_key": null,
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": true
+}
+},
+{
+"question_number": "20",
+"question_text": "作者認為「人各以得行其志為適」，你同意嗎？試舉生活例子，說明你的看法。(4分)",
+"score": 4,
+"question_type": "Short/Long",
+"marking_scheme_data": {
+"official_answer_key": null,
+"suggested_answer_text": null,
+"specific_marking_notes": null,
+"relies_on_general_rubric": true
+}
+}
+]
+}
+]
+}
+

@@ -34,21 +34,24 @@ create table dsemcq_profiles (
 -- 2. dsemcq_passages  (文言文指定篇章)
 -- ────────────────────────────────────────────────────────────
 create table dsemcq_passages (
-  id        uuid primary key default uuid_generate_v4(),
-  slug      text not null unique,
-  order_no  int  not null,
-  title     text not null,
-  dynasty   text,
-  author    text,
-  body      text not null,
-  summary   text
+  id         text primary key,            -- e.g. "p01"
+  slug       text not null unique,
+  order_no   int  not null,
+  title      text not null,
+  dynasty    text,
+  author     text,
+  body       text not null,
+  summary    text,
+  genre      text,                        -- 散文/議論文/史傳/詩/詞
+  themes     text[] not null default '{}',
+  difficulty int  not null default 2 check (difficulty between 1 and 5)
 );
 
 -- ────────────────────────────────────────────────────────────
 -- 3. dsemcq_tags
 -- ────────────────────────────────────────────────────────────
 create table dsemcq_tags (
-  id    uuid primary key default uuid_generate_v4(),
+  id    text primary key,              -- e.g. "t-meaning"
   slug  text not null unique,
   label text not null
 );
@@ -57,8 +60,8 @@ create table dsemcq_tags (
 -- 4. dsemcq_questions + options
 -- ────────────────────────────────────────────────────────────
 create table dsemcq_questions (
-  id          uuid primary key default uuid_generate_v4(),
-  passage_id  uuid references dsemcq_passages(id) on delete set null,
+  id          text primary key,            -- e.g. "q-p01-1"
+  passage_id  text references dsemcq_passages(id) on delete set null,
   stem        text not null,
   explanation text,
   difficulty  int  not null default 1 check (difficulty between 1 and 5),
@@ -67,8 +70,8 @@ create table dsemcq_questions (
 );
 
 create table dsemcq_question_options (
-  id          uuid primary key default uuid_generate_v4(),
-  question_id uuid not null references dsemcq_questions(id) on delete cascade,
+  id          text primary key,            -- e.g. "q-p01-1-a"
+  question_id text not null references dsemcq_questions(id) on delete cascade,
   label       text not null,           -- A / B / C / D
   text        text not null,
   is_correct  boolean not null default false
@@ -76,8 +79,8 @@ create table dsemcq_question_options (
 
 -- Many-to-many: question ↔ tag
 create table dsemcq_question_tags (
-  question_id uuid not null references dsemcq_questions(id) on delete cascade,
-  tag_id      uuid not null references dsemcq_tags(id)      on delete cascade,
+  question_id text not null references dsemcq_questions(id) on delete cascade,
+  tag_id      text not null references dsemcq_tags(id)      on delete cascade,
   primary key (question_id, tag_id)
 );
 
@@ -87,24 +90,29 @@ create table dsemcq_question_tags (
 create type dsemcq_quiz_type as enum ('exercise', 'quiz', 'exam');
 
 create table dsemcq_quizzes (
-  id                  uuid primary key default uuid_generate_v4(),
-  type                dsemcq_quiz_type not null default 'quiz',
-  title               text not null,
-  description         text,
-  cover_image_url     text,
-  passage_id          uuid references dsemcq_passages(id) on delete set null,
-  difficulty          int  not null default 1 check (difficulty between 1 and 5),
-  duration_seconds    int,          -- null = untimed
-  max_attempts        int,          -- null = unlimited
-  pass_score          int  not null default 60 check (pass_score between 0 and 100),
-  points_reward       int  not null default 0  check (points_reward >= 0),
-  min_points_required int  not null default 0  check (min_points_required >= 0),
-  scheduled_start     timestamptz,
-  scheduled_end       timestamptz,
-  is_published        boolean not null default false,
-  -- ordered list of question UUIDs (preserves attempt ordering without a join table)
-  question_ids        uuid[] not null default '{}',
-  created_at          timestamptz not null default now()
+  id                       text primary key,       -- e.g. "quiz-exercise-lunyu"
+  type                     dsemcq_quiz_type not null default 'quiz',
+  title                    text not null,
+  description              text,
+  cover_image_url          text,
+  passage_id               text references dsemcq_passages(id) on delete set null,
+  difficulty               int  not null default 1 check (difficulty between 1 and 5),
+  duration_seconds         int,
+  max_attempts             int,
+  pass_score               int  not null default 60 check (pass_score between 0 and 100),
+  points_reward            int  not null default 0  check (points_reward >= 0),
+  min_points_required      int  not null default 0  check (min_points_required >= 0),
+  scheduled_start          timestamptz,
+  scheduled_end            timestamptz,
+  is_published             boolean not null default false,
+  question_ids             text[] not null default '{}',
+  featured                 boolean not null default false,
+  order_no                 int  not null default 0,
+  color_hex                text,
+  estimated_duration_label text,
+  subject_area             text,
+  prerequisite_quiz_id     text references dsemcq_quizzes(id) on delete set null,
+  created_at               timestamptz not null default now()
 );
 
 -- ────────────────────────────────────────────────────────────
@@ -113,7 +121,7 @@ create table dsemcq_quizzes (
 create table dsemcq_user_quiz_signups (
   id           uuid primary key default uuid_generate_v4(),
   user_id      uuid not null references dsemcq_profiles(id) on delete cascade,
-  quiz_id      uuid not null references dsemcq_quizzes(id)  on delete cascade,
+  quiz_id      text not null references dsemcq_quizzes(id)  on delete cascade,
   signed_up_at timestamptz not null default now(),
   unique (user_id, quiz_id)
 );
@@ -126,7 +134,7 @@ create type dsemcq_attempt_status as enum ('in_progress', 'submitted', 'expired'
 create table dsemcq_attempts (
   id                 uuid primary key default uuid_generate_v4(),
   user_id            uuid not null references dsemcq_profiles(id) on delete cascade,
-  quiz_id            uuid not null references dsemcq_quizzes(id)  on delete cascade,
+  quiz_id            text not null references dsemcq_quizzes(id)  on delete cascade,
   started_at         timestamptz not null default now(),
   submitted_at       timestamptz,
   score              int,          -- # correct
@@ -140,8 +148,8 @@ create table dsemcq_attempts (
 create table dsemcq_attempt_answers (
   id                 uuid primary key default uuid_generate_v4(),
   attempt_id         uuid not null references dsemcq_attempts(id) on delete cascade,
-  question_id        uuid not null references dsemcq_questions(id) on delete cascade,
-  selected_option_id uuid references dsemcq_question_options(id) on delete set null,
+  question_id        text not null references dsemcq_questions(id) on delete cascade,
+  selected_option_id text references dsemcq_question_options(id) on delete set null,
   is_correct         boolean,
   answered_at        timestamptz not null default now(),
   unique (attempt_id, question_id)
@@ -153,37 +161,44 @@ create table dsemcq_attempt_answers (
 create type dsemcq_tip_category as enum ('exam_tip', 'rest', 'study', 'wellness');
 
 create table dsemcq_tip_cards (
-  id        uuid primary key default uuid_generate_v4(),
-  title     text not null,
-  body      text not null,
-  image_url text,
-  category  dsemcq_tip_category not null default 'study',
-  position  int not null default 0,
-  is_active boolean not null default true
+  id                  text primary key,       -- e.g. "tip-1"
+  title               text not null,
+  subtitle            text,
+  body                text not null,
+  image_url           text,
+  category            dsemcq_tip_category not null default 'study',
+  position            int  not null default 0,
+  is_active           boolean not null default true,
+  read_time_minutes   int  not null default 1,
+  related_passage_ids text[] not null default '{}',
+  author              text,
+  cta_label           text
 );
 
 -- ────────────────────────────────────────────────────────────
 -- 9. dsemcq_psych_tests + dsemcq_psych_user_results
 -- ────────────────────────────────────────────────────────────
 create table dsemcq_psych_tests (
-  id                 uuid primary key default uuid_generate_v4(),
+  id                 text primary key,       -- e.g. "psy-character-match"
   slug               text not null unique,
   title              text not null,
   description        text not null default '',
   icon_name          text not null default 'help-circle',
   question_count     int  not null default 0,
   estimated_minutes  int  not null default 5,
-  -- full question + result data stored as JSONB for simplicity
   questions          jsonb not null default '[]',
   results            jsonb not null default '[]',
   is_active          boolean not null default true,
-  position           int not null default 0
+  position           int  not null default 0,
+  cover_image_url    text,
+  color_hex          text,
+  featured           boolean not null default false
 );
 
 create table dsemcq_psych_user_results (
   id           uuid primary key default uuid_generate_v4(),
   user_id      uuid not null references dsemcq_profiles(id) on delete cascade,
-  test_id      uuid not null references dsemcq_psych_tests(id) on delete cascade,
+  test_id      text not null references dsemcq_psych_tests(id) on delete cascade,
   result_code  text not null,
   completed_at timestamptz not null default now(),
   unique (user_id, test_id)   -- one result per user per test (upsert-safe)
@@ -218,8 +233,11 @@ create table dsemcq_advisor_messages (
 -- ────────────────────────────────────────────────────────────
 -- 12. Indexes
 -- ────────────────────────────────────────────────────────────
+create index idx_passages_order          on dsemcq_passages(order_no);
+create index idx_questions_passage       on dsemcq_questions(passage_id);
 create index idx_quizzes_published       on dsemcq_quizzes(is_published) where is_published = true;
 create index idx_quizzes_scheduled       on dsemcq_quizzes(scheduled_start, scheduled_end);
+create index idx_quizzes_order           on dsemcq_quizzes(order_no);
 create index idx_attempts_user           on dsemcq_attempts(user_id, started_at desc);
 create index idx_attempts_quiz           on dsemcq_attempts(quiz_id);
 create index idx_attempt_answers_attempt on dsemcq_attempt_answers(attempt_id);
@@ -316,7 +334,7 @@ create policy "advisor: owner insert" on dsemcq_advisor_messages for insert with
 --     Returns questions + options for a quiz, excluding is_correct
 --     (prevents cheating — correct answer only revealed post-submit)
 -- ────────────────────────────────────────────────────────────
-create or replace function get_quiz_for_attempt(quiz_id uuid)
+create or replace function get_quiz_for_attempt(p_quiz_id text)
 returns jsonb
 language plpgsql
 security definer
@@ -326,7 +344,7 @@ declare
   v_quiz   dsemcq_quizzes%rowtype;
   v_result jsonb;
 begin
-  select * into v_quiz from dsemcq_quizzes where id = quiz_id and is_published = true;
+  select * into v_quiz from dsemcq_quizzes where id = p_quiz_id and is_published = true;
   if not found then
     return '[]'::jsonb;
   end if;
@@ -368,4 +386,4 @@ end;
 $$;
 
 -- Grant execute to authenticated users
-grant execute on function get_quiz_for_attempt(uuid) to authenticated;
+grant execute on function get_quiz_for_attempt(text) to authenticated;
