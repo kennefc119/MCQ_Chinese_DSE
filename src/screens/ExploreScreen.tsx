@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -17,8 +17,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, spacing, typography, QUIZ_TYPE_COLORS, QUIZ_TYPE_LABEL } from "../theme";
-import { Quiz, TipCard } from "../types/database";
-import { listQuizzes, listTipCards, signUpForQuiz, startAttempt } from "../lib/dataService";
+import { Quiz, TipCard, Passage } from "../types/database";
+import { listQuizzes, listTipCards, listPassages, signUpForQuiz, startAttempt } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
 
@@ -61,7 +61,7 @@ function interleave(quizzes: Quiz[], tips: TipCard[]): FeedItem[] {
   return out;
 }
 
-function QuizTile({ item, onPress }: { item: Quiz; onPress: () => void }) {
+function QuizTile({ item, onPress, passageName }: { item: Quiz; onPress: () => void; passageName?: string }) {
   const { user } = useAuth();
   const locked = item.min_points_required > (user?.wenyuan_points ?? 0);
   const badgeColor = QUIZ_TYPE_COLORS[item.type] ?? colors.primary;
@@ -90,6 +90,8 @@ function QuizTile({ item, onPress }: { item: Quiz; onPress: () => void }) {
         </View>
       )}
       <Text style={styles.tileTitle} numberOfLines={2}>{item.title}</Text>
+      <Text style={styles.tileStars}>{"★".repeat(item.difficulty)}{"☆".repeat(5 - item.difficulty)}</Text>
+      {passageName ? <Text style={styles.tilePassage} numberOfLines={1}>{passageName}</Text> : null}
     </TouchableOpacity>
   );
 }
@@ -120,7 +122,7 @@ function TipTile({ item, onPress }: { item: TipCard; onPress: () => void }) {
   );
 }
 
-function QuizFeedPage({ item, onClose }: { item: Quiz; onClose: () => void }) {
+function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () => void; passageName?: string }) {
   const { user } = useAuth();
   const nav = useNavigation<Nav>();
   const locked = item.min_points_required > (user?.wenyuan_points ?? 0);
@@ -239,6 +241,12 @@ function QuizFeedPage({ item, onClose }: { item: Quiz; onClose: () => void }) {
               </Text>
             </View>
           ) : null}
+          {passageName ? (
+            <View style={styles.feedDetailRow}>
+              <Ionicons name="document-text-outline" size={14} color={colors.muted} />
+              <Text style={styles.feedDetailText}>篇章：{passageName}</Text>
+            </View>
+          ) : null}
         </View>
 
         {locked ? (
@@ -293,47 +301,77 @@ function TipFeedPage({ item }: { item: TipCard }) {
 
 export default function ExploreScreen() {
   const [items, setItems] = useState<FeedItem[]>([]);
+  const [passages, setPassages] = useState<Passage[]>([]);
   const [feedVisible, setFeedVisible] = useState(false);
   const [feedIndex, setFeedIndex] = useState(0);
   const feedRef = useRef<FlatList<FeedItem>>(null);
   const { loading: authLoading } = useAuth();
 
+  // Filter states
+  const [filterType, setFilterType] = useState<string>("all");
+  const [filterDifficulty, setFilterDifficulty] = useState<number | null>(null);
+  const [filterPassageId, setFilterPassageId] = useState<string | null>(null);
+  const [filterMinPoints, setFilterMinPoints] = useState<number | null>(null);
+  const [filterExpanded, setFilterExpanded] = useState(false);
+
   useEffect(() => {
-    // Re-run whenever auth finishes loading (covers the session-restoration timing gap)
     if (authLoading) return;
     let mounted = true;
     const load = async () => {
-      const [quizzes, tips] = await Promise.all([listQuizzes(), listTipCards()]);
+      const [quizzes, tips, passageList] = await Promise.all([listQuizzes(), listTipCards(), listPassages()]);
       if (!mounted) return;
       setItems(interleave(quizzes, tips));
+      setPassages(passageList);
     };
     load();
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [authLoading]);
 
-  const openFeed = (index: number) => {
-    setFeedIndex(index);
+  const passageMap = useMemo(
+    () => passages.reduce<Record<string, Passage>>((m, p) => ({ ...m, [p.id]: p }), {}),
+    [passages],
+  );
+
+  const allFiltersCleared = filterType === "all" && filterDifficulty === null && filterPassageId === null && filterMinPoints === null;
+
+  const filteredItems = useMemo<FeedItem[]>(() => {
+    return items.filter((item) => {
+      if (item.kind === "tip") return allFiltersCleared;
+      const q = item.data;
+      if (filterType !== "all" && q.type !== filterType) return false;
+      if (filterDifficulty !== null && q.difficulty !== filterDifficulty) return false;
+      if (filterPassageId !== null && (q as any).passage_id !== filterPassageId) return false;
+      if (filterMinPoints !== null && q.min_points_required > filterMinPoints) return false;
+      return true;
+    });
+  }, [items, filterType, filterDifficulty, filterPassageId, filterMinPoints, allFiltersCleared]);
+
+  const openFeed = (indexInFiltered: number) => {
+    setFeedIndex(indexInFiltered);
     setFeedVisible(true);
     setTimeout(() => {
-      feedRef.current?.scrollToIndex({ index, animated: false });
+      feedRef.current?.scrollToIndex({ index: indexInFiltered, animated: false });
     }, 60);
   };
 
   const closeFeed = () => setFeedVisible(false);
 
   const renderGridItem = ({ item, index }: { item: FeedItem; index: number }) => {
+    const passageName = item.kind === "quiz" ? passageMap[(item.data as any).passage_id]?.title : undefined;
     if (item.kind === "quiz") {
-      return <QuizTile item={item.data} onPress={() => openFeed(index)} />;
+      return <QuizTile item={item.data} onPress={() => openFeed(index)} passageName={passageName} />;
     }
     return <TipTile item={item.data} onPress={() => openFeed(index)} />;
   };
 
   const renderFeedPage = ({ item }: { item: FeedItem }) => {
-    if (item.kind === "quiz") return <QuizFeedPage item={item.data} onClose={closeFeed} />;
+    const passageName = item.kind === "quiz" ? passageMap[(item.data as any).passage_id]?.title : undefined;
+    if (item.kind === "quiz") return <QuizFeedPage item={item.data} onClose={closeFeed} passageName={passageName} />;
     return <TipFeedPage item={item.data} />;
   };
+
+  const typeKeys = Object.keys(QUIZ_TYPE_LABEL);
+  const minPointsOptions = [null, 0, 100, 200] as const;
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -347,8 +385,77 @@ export default function ExploreScreen() {
           <Text style={styles.switchBtnText}>≡</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Filter row 1: type chips */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={styles.filterRowContent}>
+        <TouchableOpacity style={[styles.filterChip, filterType === "all" && styles.filterChipActive]} onPress={() => setFilterType("all")}>
+          <Text style={[styles.filterChipText, filterType === "all" && styles.filterChipTextActive]}>全部</Text>
+        </TouchableOpacity>
+        {typeKeys.map((k) => (
+          <TouchableOpacity key={k} style={[styles.filterChip, filterType === k && styles.filterChipActive, { backgroundColor: filterType === k ? (QUIZ_TYPE_COLORS[k] ?? colors.primary) : undefined }]} onPress={() => setFilterType(filterType === k ? "all" : k)}>
+            <Text style={[styles.filterChipText, filterType === k && styles.filterChipTextActive]}>{QUIZ_TYPE_LABEL[k]}</Text>
+          </TouchableOpacity>
+        ))}
+        <TouchableOpacity style={[styles.filterChip, filterExpanded && styles.filterChipActive]} onPress={() => setFilterExpanded((v) => !v)}>
+          <Ionicons name={filterExpanded ? "chevron-up" : "chevron-down"} size={13} color={filterExpanded ? colors.background : colors.textSecondary} />
+          <Text style={[styles.filterChipText, filterExpanded && styles.filterChipTextActive]}> 篩選</Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      {/* Filter row 2: expanded difficulty / passage / min points */}
+      {filterExpanded && (
+        <View style={styles.filterExpanded}>
+          {/* Difficulty */}
+          <Text style={styles.filterLabel}>難度</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row", gap: 6, paddingBottom: 4 }}>
+            {[null, 1, 2, 3, 4, 5].map((d) => (
+              <TouchableOpacity
+                key={d ?? "all"}
+                style={[styles.filterChip, filterDifficulty === d && styles.filterChipActive]}
+                onPress={() => setFilterDifficulty(filterDifficulty === d ? null : d)}
+              >
+                <Text style={[styles.filterChipText, filterDifficulty === d && styles.filterChipTextActive]}>
+                  {d === null ? "全部" : "★".repeat(d)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          {/* Passage */}
+          {passages.length > 0 && (
+            <>
+              <Text style={styles.filterLabel}>篇章</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row", gap: 6, paddingBottom: 4 }}>
+                <TouchableOpacity style={[styles.filterChip, filterPassageId === null && styles.filterChipActive]} onPress={() => setFilterPassageId(null)}>
+                  <Text style={[styles.filterChipText, filterPassageId === null && styles.filterChipTextActive]}>全部</Text>
+                </TouchableOpacity>
+                {passages.map((p) => (
+                  <TouchableOpacity key={p.id} style={[styles.filterChip, filterPassageId === p.id && styles.filterChipActive]} onPress={() => setFilterPassageId(filterPassageId === p.id ? null : p.id)}>
+                    <Text style={[styles.filterChipText, filterPassageId === p.id && styles.filterChipTextActive]} numberOfLines={1}>{p.title}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </>
+          )}
+          {/* Min points unlock */}
+          <Text style={styles.filterLabel}>最高解鎖要求</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row", gap: 6, paddingBottom: 4 }}>
+            {minPointsOptions.map((v) => (
+              <TouchableOpacity
+                key={v ?? "all"}
+                style={[styles.filterChip, filterMinPoints === v && styles.filterChipActive]}
+                onPress={() => setFilterMinPoints(filterMinPoints === v ? null : v)}
+              >
+                <Text style={[styles.filterChipText, filterMinPoints === v && styles.filterChipTextActive]}>
+                  {v === null ? "全部" : v === 0 ? "免費" : `≤${v}點`}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
       <FlatList
-        data={items}
+        data={filteredItems}
         keyExtractor={(it) => `${it.kind}:${it.data.id}`}
         numColumns={GRID_COLS}
         contentContainerStyle={styles.gridContent}
@@ -365,7 +472,7 @@ export default function ExploreScreen() {
         <View style={styles.feedContainer}>
           <FlatList
             ref={feedRef}
-            data={items}
+            data={filteredItems}
             keyExtractor={(it) => `feed:${it.kind}:${it.data.id}`}
             pagingEnabled
             showsVerticalScrollIndicator={false}
@@ -388,7 +495,7 @@ export default function ExploreScreen() {
                   <Ionicons name="close" size={22} color={colors.ink} />
                 </TouchableOpacity>
                 <Text style={styles.feedCounter}>
-                  {feedIndex + 1} / {items.length}
+                  {feedIndex + 1} / {filteredItems.length}
                 </Text>
                 <TouchableOpacity style={styles.feedBtn} activeOpacity={0.7} onPress={closeFeed}>
                   <Ionicons name="grid" size={20} color={colors.ink} />
@@ -462,6 +569,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     lineHeight: 14,
   },
+  tileStars: { color: colors.primary, fontSize: 8, marginTop: 2 },
+  tilePassage: { color: "rgba(255,255,255,0.6)", fontSize: 8, marginTop: 1 },
 
   // feed modal
   feedContainer: { flex: 1, backgroundColor: colors.background },
@@ -531,4 +640,29 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
   },
   feedCounter: { color: colors.ink, fontSize: 14, fontWeight: "600" },
+
+  // filter bar
+  filterRow: { flexGrow: 0 },
+  filterRowContent: { flexDirection: "row", paddingHorizontal: GRID_PADDING, paddingVertical: 6, gap: 6 },
+  filterChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  filterChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  filterChipText: { color: colors.textSecondary, fontSize: 12 },
+  filterChipTextActive: { color: colors.background, fontWeight: "700" },
+  filterExpanded: {
+    paddingHorizontal: GRID_PADDING,
+    paddingBottom: 8,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderColor: colors.border,
+  },
+  filterLabel: { color: colors.textMuted, fontSize: 10, fontWeight: "600", marginTop: 8, marginBottom: 4 },
 });
