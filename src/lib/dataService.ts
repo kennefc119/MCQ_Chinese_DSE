@@ -19,8 +19,14 @@ export const localStore = memory;
 // ── Public API (works in both demo + Supabase mode) ─────────────────────
 export async function listQuizzes(): Promise<Quiz[]> {
   if (!isSupabaseConfigured) return SEED_QUIZZES;
-  const { data } = await supabase.from("dsemcq_quizzes").select("*").eq("is_published", true);
-  return (data as Quiz[]) ?? [];
+  const { data, error } = await supabase.from("dsemcq_quizzes").select("*").eq("is_published", true).order("order_no", { nullsFirst: false });
+  if (error) {
+    console.warn("[dsemcq] listQuizzes error — falling back to seed:", error.message);
+    return SEED_QUIZZES;
+  }
+  // Fall back to seed quizzes if the table is empty (not yet seeded)
+  if (!data || data.length === 0) return SEED_QUIZZES;
+  return data as Quiz[];
 }
 
 export async function getQuiz(id: string): Promise<Quiz | null> {
@@ -45,8 +51,13 @@ export async function listPassages(): Promise<Passage[]> {
 
 export async function listTipCards(): Promise<TipCard[]> {
   if (!isSupabaseConfigured) return SEED_TIP_CARDS;
-  const { data } = await supabase.from("dsemcq_tip_cards").select("*").eq("is_active", true).order("position");
-  return (data as TipCard[]) ?? SEED_TIP_CARDS;
+  const { data, error } = await supabase.from("dsemcq_tip_cards").select("*").eq("is_active", true).order("position");
+  if (error) {
+    console.warn("[dsemcq] listTipCards error — falling back to seed:", error.message);
+    return SEED_TIP_CARDS;
+  }
+  if (!data || data.length === 0) return SEED_TIP_CARDS;
+  return data as TipCard[];
 }
 
 export async function listPsychTests(): Promise<PsychTest[]> {
