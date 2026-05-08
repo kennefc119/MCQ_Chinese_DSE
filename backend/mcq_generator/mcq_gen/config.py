@@ -16,9 +16,9 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # LLM
-    openai_api_key: str = Field(..., description="OpenAI API key")
-    openai_model: str = Field("gpt-4o", description="OpenAI model name")
+    # Poe API  (poe.com → Settings → API Key)
+    poe_api_key: str = Field(..., description="Poe API key")
+    poe_bot_name: str = Field("Claude-3.7-Sonnet", description="Poe bot name")
 
     # Supabase
     supabase_url: str = Field(..., description="Supabase project URL")

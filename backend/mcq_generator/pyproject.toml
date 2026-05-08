@@ -5,8 +5,7 @@ description = "HK DSE Chinese MC question agentic generator (3-agent pipeline)"
 requires-python = ">=3.11"
 dependencies = [
     "langgraph>=0.2.50",
-    "langchain-openai>=0.2.0",
-    "openai>=1.50.0",
+    "httpx>=0.27.0",
     "supabase>=2.7.0",
     "pydantic>=2.8.0",
     "pydantic-settings>=2.4.0",

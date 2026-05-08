@@ -1,11 +1,11 @@
-"""OpenAI 呼叫 wrapper — structured output + 統一錯誤處理。"""
+"""Poe HTTP API wrapper — SSE stream + JSON extraction + Pydantic validation."""
 from __future__ import annotations
 
 import json
 from typing import TypeVar
 
+import httpx
 import structlog
-from openai import OpenAI
 from pydantic import BaseModel
 
 from .config import settings
@@ -14,14 +14,34 @@ log = structlog.get_logger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
 
-_client: OpenAI | None = None
+_POE_BASE_URL = "https://api.poe.com/bot/"
 
 
-def get_client() -> OpenAI:
-    global _client
-    if _client is None:
-        _client = OpenAI(api_key=settings.openai_api_key)
-    return _client
+def _read_poe_stream(response: httpx.Response) -> str:
+    """Parse Poe SSE response and concatenate all text-event chunks."""
+    reply = ""
+    current_event = ""
+
+    for line in response.iter_lines():
+        line = line.strip()
+        if not line:
+            # Empty line = event separator
+            current_event = ""
+            continue
+        if line.startswith("event:"):
+            current_event = line[6:].strip()
+        elif line.startswith("data:"):
+            data_str = line[5:].strip()
+            if current_event == "text":
+                try:
+                    data = json.loads(data_str)
+                    reply += data.get("text", "")
+                except json.JSONDecodeError:
+                    pass
+            elif current_event == "done":
+                return reply
+
+    return reply
 
 
 def chat_structured(
@@ -33,41 +53,63 @@ def chat_structured(
     model: str | None = None,
 ) -> T:
     """
-    呼叫 OpenAI，要求回傳嚴格 JSON，然後用 Pydantic 解析驗證。
+    呼叫 Poe HTTP API，收集 SSE stream，然後用 Pydantic 解析 JSON 回傳值。
 
-    若解析失敗會 raise ValueError。
+    若 Poe 回傳非 JSON 或解析失敗會 raise ValueError。
     """
-    chosen_model = model or settings.openai_model
-    client = get_client()
+    bot_name = model or settings.poe_bot_name
 
-    log.debug("llm_call", model=chosen_model, schema=schema.__name__)
-
-    response = client.chat.completions.create(
-        model=chosen_model,
-        temperature=temperature,
-        response_format={"type": "json_object"},
-        messages=[
+    payload = {
+        "version": "1.0",
+        "type": "query",
+        "query": [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_message},
+            {"role": "user",   "content": user_message},
         ],
-    )
+    }
 
-    raw = response.choices[0].message.content or ""
-    log.debug("llm_raw_response", length=len(raw))
+    log.debug("poe_call", bot=bot_name, schema=schema.__name__)
 
+    with httpx.Client(timeout=180.0) as client:
+        with client.stream(
+            "POST",
+            f"{_POE_BASE_URL}{bot_name}",
+            headers={
+                "Authorization": f"Bearer {settings.poe_api_key}",
+                "Content-Type": "application/json",
+                "Accept": "text/event-stream",
+            },
+            json=payload,
+        ) as response:
+            if response.status_code != 200:
+                error_body = response.read().decode()
+                raise RuntimeError(
+                    f"Poe API error {response.status_code}: {error_body[:300]}"
+                )
+            raw = _read_poe_stream(response)
+
+    log.debug("poe_raw_response", length=len(raw))
+
+    if not raw:
+        raise ValueError("Poe API 回傳空白回應")
+
+    # Strip markdown code fences if present (some bots add them despite instructions)
+    stripped = raw.strip()
+    if stripped.startswith("```"):
+        lines = stripped.splitlines()
+        stripped = "\n".join(l for l in lines if not l.startswith("```")).strip()
+
+    # Try direct parse first
     try:
-        parsed = schema.model_validate_json(raw)
+        return schema.model_validate_json(stripped)
     except Exception as exc:
-        log.error("llm_parse_error", raw=raw[:500], error=str(exc))
-        # 嘗試修復：有時模型會用 markdown code block 包住 JSON
-        stripped = raw.strip()
-        if stripped.startswith("```"):
-            lines = stripped.splitlines()
-            inner = "\n".join(
-                l for l in lines if not l.startswith("```")
-            )
-            parsed = schema.model_validate(json.loads(inner))
-        else:
-            raise ValueError(f"LLM JSON 解析失敗: {exc}") from exc
-
-    return parsed
+        # Fall back: extract outermost JSON object
+        start = stripped.find("{")
+        end = stripped.rfind("}") + 1
+        if start >= 0 and end > start:
+            try:
+                return schema.model_validate_json(stripped[start:end])
+            except Exception:
+                pass
+        log.error("poe_parse_error", raw=stripped[:500], error=str(exc))
+        raise ValueError(f"JSON 解析失敗: {exc}") from exc

@@ -66,7 +66,8 @@ create table if not exists dsemcq_questions (
   explanation text,
   difficulty  int  not null default 1 check (difficulty between 1 and 5),
   source      text,
-  is_active   boolean not null default true
+  is_active   boolean not null default true,
+  created_at  timestamptz not null default now()
 );
 
 create table if not exists dsemcq_question_options (
