@@ -7,8 +7,13 @@ Assembly rules
   quiz     : 10 questions · same passage · 20-min limit  · needs 10 pts
   exam     : 20 questions · 3+ passages  · 45-min limit  · needs 50 pts
 
+Quality filtering by critique_score (1–10):
+  exercise  : score >= 6  (accessible, decent quality)
+  quiz      : score >= 7  (solid quality for scored tests)
+  exam      : score >= 8  (only best questions for mock exam)
+
 A new record is only created when:
-  · enough active questions exist (see thresholds above)
+  · enough qualifying questions exist (after score filter)
   · a quiz with the same (passage_id, type, title) doesn't already exist
 """
 from __future__ import annotations
@@ -28,6 +33,11 @@ log = structlog.get_logger(__name__)
 EXERCISE_Q = 5
 QUIZ_Q = 10
 EXAM_Q = 20
+
+# Minimum critique_score to qualify for each quiz type
+EXERCISE_MIN_SCORE = 6
+QUIZ_MIN_SCORE     = 7
+EXAM_MIN_SCORE     = 8
 
 QUIZ_DURATION_S = 20 * 60   # 20 min
 EXAM_DURATION_S = 45 * 60   # 45 min
@@ -55,10 +65,10 @@ def assemble_quizzes(dry_run: bool = False) -> dict[str, Any]:
     """
     sb = get_supabase()
 
-    # 1. All active questions
+    # 1. All active questions with their critique_score
     rows = (
         sb.table("dsemcq_questions")
-        .select("id,passage_id,difficulty")
+        .select("id,passage_id,difficulty,critique_score")
         .eq("is_active", True)
         .execute()
         .data or []
@@ -68,11 +78,22 @@ def assemble_quizzes(dry_run: bool = False) -> dict[str, Any]:
         log.warning("assemble_no_active_questions")
         return {"exercises": 0, "quizzes": 0, "exams": 0, "skipped": 0, "total_new": 0}
 
-    # 2. Group question IDs by passage
-    by_passage: dict[str, list[str]] = defaultdict(list)
-    for r in rows:
-        pid = r.get("passage_id") or "unknown"
-        by_passage[pid].append(r["id"])
+    def _score(r: dict) -> int:
+        """Return critique_score; treat NULL (manual questions) as 7."""
+        return r.get("critique_score") or 7
+
+    # 2. Three score-filtered pools, each grouped by passage
+    def _by_passage(min_score: int) -> dict[str, list[str]]:
+        pool: dict[str, list[str]] = defaultdict(list)
+        for r in rows:
+            if _score(r) >= min_score:
+                pid = r.get("passage_id") or "unknown"
+                pool[pid].append(r["id"])
+        return pool
+
+    ex_pool   = _by_passage(EXERCISE_MIN_SCORE)
+    quiz_pool = _by_passage(QUIZ_MIN_SCORE)
+    exam_pool = _by_passage(EXAM_MIN_SCORE)
 
     # 3. Existing quiz keys → avoid duplicates
     existing = (
@@ -90,17 +111,22 @@ def assemble_quizzes(dry_run: bool = False) -> dict[str, Any]:
     to_insert: list[dict] = []
 
     # 4. Per-passage: exercise + quiz
-    for pid, qids in sorted(by_passage.items()):
+    for pid in sorted(set(list(ex_pool.keys()) + list(quiz_pool.keys()))):
         label = _passage_label(pid)
+        ex_qids   = ex_pool.get(pid, [])
+        quiz_qids = quiz_pool.get(pid, [])
 
-        if len(qids) >= EXERCISE_Q:
+        if len(ex_qids) >= EXERCISE_Q:
             title = f"{label} 練習題"
             if (pid, "exercise", title) not in existing_keys:
                 to_insert.append({
                     "id": _new_quiz_id(),
                     "type": "exercise",
                     "title": title,
-                    "description": f"精選 {EXERCISE_Q} 條關於{label}的基礎練習題",
+                    "description": (
+                        f"精選 {EXERCISE_Q} 條關於{label}的基礎練習題"
+                        f"（評分 ≥ {EXERCISE_MIN_SCORE}/10）"
+                    ),
                     "passage_id": pid,
                     "difficulty": 2,
                     "duration_seconds": None,
@@ -109,20 +135,23 @@ def assemble_quizzes(dry_run: bool = False) -> dict[str, Any]:
                     "points_reward": 5,
                     "min_points_required": 0,
                     "is_published": True,
-                    "question_ids": qids[:EXERCISE_Q],
+                    "question_ids": ex_qids[:EXERCISE_Q],
                 })
                 summary["exercises"] += 1
             else:
                 summary["skipped"] += 1
 
-        if len(qids) >= QUIZ_Q:
+        if len(quiz_qids) >= QUIZ_Q:
             title = f"{label} 綜合測驗"
             if (pid, "quiz", title) not in existing_keys:
                 to_insert.append({
                     "id": _new_quiz_id(),
                     "type": "quiz",
                     "title": title,
-                    "description": f"共 {QUIZ_Q} 條{label}綜合測驗，限時 20 分鐘",
+                    "description": (
+                        f"共 {QUIZ_Q} 條{label}綜合測驗，限時 20 分鐘"
+                        f"（評分 ≥ {QUIZ_MIN_SCORE}/10）"
+                    ),
                     "passage_id": pid,
                     "difficulty": 3,
                     "duration_seconds": QUIZ_DURATION_S,
@@ -131,14 +160,16 @@ def assemble_quizzes(dry_run: bool = False) -> dict[str, Any]:
                     "points_reward": 15,
                     "min_points_required": 10,
                     "is_published": True,
-                    "question_ids": qids[:QUIZ_Q],
+                    "question_ids": quiz_qids[:QUIZ_Q],
                 })
                 summary["quizzes"] += 1
             else:
                 summary["skipped"] += 1
 
-    # 5. Exam — needs ≥3 passages each with ≥5 Qs
-    exam_candidates = [(pid, qids) for pid, qids in sorted(by_passage.items()) if len(qids) >= 5]
+    # 5. Exam — needs ≥3 passages each with ≥5 high-quality Qs
+    exam_candidates = [
+        (pid, qids) for pid, qids in sorted(exam_pool.items()) if len(qids) >= 5
+    ]
     if len(exam_candidates) >= 3:
         exam_qids: list[str] = []
         per_p = EXAM_Q // len(exam_candidates)
@@ -161,7 +192,7 @@ def assemble_quizzes(dry_run: bool = False) -> dict[str, Any]:
                 "title": exam_title,
                 "description": (
                     f"涵蓋 {n_passages} 篇課文，共 {len(exam_qids)} 條模擬 DSE 閱讀理解題，"
-                    "限時 45 分鐘，滿分率 60% 合格"
+                    f"限時 45 分鐘，滿分率 60% 合格（評分 ≥ {EXAM_MIN_SCORE}/10）"
                 ),
                 "passage_id": None,
                 "difficulty": 4,

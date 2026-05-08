@@ -50,6 +50,7 @@ def write_question(q: SavedQuestion) -> bool:
         "difficulty": _DIFF_TO_INT[q.difficulty_label],
         "source": q.source,
         "is_active": q.is_active,
+        "critique_score": q.critique_score,  # 1-10 quality score from critic agent
     }
     result = (
         sb.table("dsemcq_questions")
