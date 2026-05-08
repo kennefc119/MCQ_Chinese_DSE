@@ -20,6 +20,7 @@ from pydantic import BaseModel
 from .db.stats import fetch_db_stats
 from .graph import run_pipeline
 from .llm import get_traces, reset_traces
+from .quiz_assembler import assemble_quizzes
 
 log = structlog.get_logger(__name__)
 
@@ -41,6 +42,11 @@ _PASSAGES_FILE = Path(__file__).parent.parent / "data" / "passages.json"
 
 class GenerateRequest(BaseModel):
     passage_id: str | None = None
+    dry_run: bool = True
+    count: int = 1   # 1–20 questions per batch
+
+
+class AssembleRequest(BaseModel):
     dry_run: bool = True
 
 
@@ -77,27 +83,45 @@ def get_stats() -> dict[str, Any]:
 @app.post("/api/generate")
 def generate(req: GenerateRequest) -> dict[str, Any]:
     """
-    Run one pipeline cycle (1 question).
-    Returns the saved question + full LLM call traces.
+    Run N pipeline cycles (1–20 questions).
+    Returns all saved questions + full LLM call traces for each.
     """
+    count = max(1, min(20, req.count))
     reset_traces()
-    log.info("generate_start", passage=req.passage_id, dry_run=req.dry_run)
+    log.info("generate_start", passage=req.passage_id, dry_run=req.dry_run, count=count)
 
     try:
-        results = run_pipeline(count=1, passage=req.passage_id, dry_run=req.dry_run)
+        results = run_pipeline(count=count, passage=req.passage_id, dry_run=req.dry_run)
     except Exception as exc:
         log.error("generate_error", error=str(exc))
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     traces = get_traces()
+    total_tokens = sum(t.get("total_tokens", 0) for t in traces)
 
     if not results:
         raise HTTPException(status_code=500, detail="Pipeline 未產生任何結果")
 
     return {
-        "question": results[0].model_dump(),
+        "questions": [q.model_dump() for q in results],
         "traces": traces,
+        "total_tokens": total_tokens,
     }
+
+
+@app.post("/api/assemble")
+def assemble(req: AssembleRequest) -> dict[str, Any]:
+    """
+    Auto-assemble quizzes/exams/exercises from all active questions.
+    Applies passage-grouping rules and creates dsemcq_quizzes rows.
+    """
+    log.info("assemble_start", dry_run=req.dry_run)
+    try:
+        summary = assemble_quizzes(dry_run=req.dry_run)
+    except Exception as exc:
+        log.error("assemble_error", error=str(exc))
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return summary
 
 
 # ─── Entry point ──────────────────────────────────────────────────────────────

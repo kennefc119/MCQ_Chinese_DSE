@@ -16,6 +16,13 @@ T = TypeVar("T", bound=BaseModel)
 
 _POE_BASE_URL = "https://api.poe.com/v1/chat/completions"
 
+
+def _estimate_tokens(text: str) -> int:
+    """Rough token estimate: Chinese ~1.5 chars/token, English ~4 chars/token.
+    Conservative average of ~2 chars/token."""
+    return max(1, len(text) // 2)
+
+
 # ─── Trace Capture ───────────────────────────────────────────────────────────
 
 _traces: list[dict] = []
@@ -81,11 +88,16 @@ def chat_structured(
     log.debug("poe_raw_response", length=len(raw))
 
     # Capture trace for dashboard visibility
+    prompt_tokens   = _estimate_tokens(merged)
+    response_tokens = _estimate_tokens(raw)
     _traces.append({
         "agent": schema.__name__,
         "bot": bot_name,
         "merged_prompt": merged,
         "raw_response": raw,
+        "prompt_tokens": prompt_tokens,
+        "response_tokens": response_tokens,
+        "total_tokens": prompt_tokens + response_tokens,
     })
 
     if not raw:

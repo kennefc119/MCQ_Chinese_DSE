@@ -418,6 +418,15 @@
     </div>
 
     <div class="form-group">
+      <label>批量生成數量</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="number" id="batchCount" min="1" max="20" value="1"
+          style="width:70px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:7px 9px;font-size:13px;outline:none;">
+        <span style="font-size:11px;color:var(--muted);">題（最多 20）</span>
+      </div>
+    </div>
+
+    <div class="form-group">
       <div class="toggle-row">
         <span>Dry Run（不寫入 DB）</span>
         <label class="toggle">
@@ -432,6 +441,29 @@
       <span id="genIco">⚡</span>
       <span id="genTxt">開始生成題目</span>
     </button>
+  </div>
+
+  <div class="s-section">
+    <h3>測驗組合</h3>
+    <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:8px;">
+      將現有題目自動組合為練習題（5條）、測驗（10條）、模擬考試（20條）
+    </div>
+    <div class="form-group">
+      <div class="toggle-row">
+        <span>Dry Run（不寫入 DB）</span>
+        <label class="toggle">
+          <input type="checkbox" id="assembleDry" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+    <button class="btn-gen" id="assembleBtn" onclick="assemble()"
+      style="background:var(--purple);color:#0d1117;">
+      <span id="assembleIco">🗂</span>
+      <span id="assembleTxt">自動組合測驗</span>
+    </button>
+    <div id="assembleResult" style="display:none;margin-top:10px;font-size:12px;
+      background:var(--surface2);border-radius:6px;padding:10px;line-height:1.8;"></div>
   </div>
 
   <div class="s-section">
@@ -558,6 +590,7 @@ function renderStats(s) {
 async function generate() {
   const passage = document.getElementById('passageSel').value || null;
   const dryRun  = document.getElementById('dryRun').checked;
+  const count   = parseInt(document.getElementById('batchCount').value, 10) || 1;
 
   setBusy(true);
   showErr(null);
@@ -576,11 +609,23 @@ async function generate() {
     const r = await fetch(`${API}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ passage_id: passage, dry_run: dryRun }),
+      body: JSON.stringify({ passage_id: passage, dry_run: dryRun, count }),
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.detail || `HTTP ${r.status}`);
-    addResult(data, dryRun);
+
+    // New response: {questions:[...], traces:[...], total_tokens:N}
+    const questions = data.questions || (data.question ? [data.question] : []);
+    const allTraces = data.traces || [];
+    const totalTok  = data.total_tokens || 0;
+
+    // Split traces per question (they arrive interleaved 3 per question)
+    const tracesPerQ = Math.ceil(allTraces.length / questions.length);
+    questions.forEach((q, i) => {
+      const qTraces = allTraces.slice(i * tracesPerQ, (i + 1) * tracesPerQ);
+      addResult({ question: q, traces: qTraces, total_tokens: totalTok }, dryRun, i + 1, questions.length);
+    });
+
     if (!dryRun) loadStats();
   } catch(e) {
     showErr(`生成失敗：${e.message}`);
@@ -591,11 +636,49 @@ async function generate() {
   }
 }
 
+// ── Assemble ──────────────────────────────────────────────────────────────────
+async function assemble() {
+  const dryRun = document.getElementById('assembleDry').checked;
+  const btn = document.getElementById('assembleBtn');
+  btn.disabled = true;
+  document.getElementById('assembleIco').textContent = '⏳';
+  document.getElementById('assembleTxt').textContent = '組合中...';
+  document.getElementById('assembleResult').style.display = 'none';
+
+  try {
+    const r = await fetch(`${API}/api/assemble`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dry_run: dryRun }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+
+    const el = document.getElementById('assembleResult');
+    el.style.display = 'block';
+    el.innerHTML = `
+      ${dryRun ? '<span style="color:var(--yellow)">⚠ Dry Run — 未寫入</span><br>' : '<span style="color:var(--green)">✓ 已寫入 Supabase</span><br>'}
+      🏋 練習題：<b>${d.exercises}</b> 個新建<br>
+      📝 測驗：<b>${d.quizzes}</b> 個新建<br>
+      🎓 模擬考試：<b>${d.exams}</b> 個新建<br>
+      ⏭ 跳過（已存在）：<b>${d.skipped}</b>
+    `;
+    if (!dryRun) loadStats();
+  } catch(e) {
+    showErr(`組合失敗：${e.message}`);
+  } finally {
+    btn.disabled = false;
+    document.getElementById('assembleIco').textContent = '🗂';
+    document.getElementById('assembleTxt').textContent = '自動組合測驗';
+  }
+}
+
 // ── UI helpers ────────────────────────────────────────────────────────────────
 function setBusy(on) {
   document.getElementById('genBtn').disabled = on;
   document.getElementById('genIco').innerHTML = on ? '<div class="spin"></div>' : '⚡';
-  document.getElementById('genTxt').textContent = on ? '生成中...' : '開始生成題目';
+  const count = parseInt(document.getElementById('batchCount').value, 10) || 1;
+  document.getElementById('genTxt').textContent = on ? `生成中 (${count} 題)...` : '開始生成題目';
   document.getElementById('loadCard').style.display = on ? 'block' : 'none';
 }
 
@@ -616,15 +699,19 @@ document.getElementById('dryRun').addEventListener('change', function() {
 });
 
 // ── Add result card ───────────────────────────────────────────────────────────
-function addResult(data, dryRun) {
+function addResult(data, dryRun, batchIdx, batchTotal) {
   runCount++;
   document.getElementById('countBadge').textContent = `${runCount} 次`;
   document.getElementById('emptyState').style.display = 'none';
 
-  const q  = data.question;
-  const tr = data.traces || [];
-  const ts = new Date().toLocaleTimeString('zh-HK');
-  const id = `rc${runCount}`;
+  const q   = data.question;
+  const tr  = data.traces || [];
+  const tok = data.total_tokens || 0;
+  const ts  = new Date().toLocaleTimeString('zh-HK');
+  const id  = `rc${runCount}`;
+
+  const batchLabel = (batchTotal && batchTotal > 1)
+    ? `<span class="chip c-dim" style="font-size:10px;">${batchIdx}/${batchTotal}</span>` : '';
 
   const diffN = q.difficulty;
   const dChip = diffN <= 2 ? 'c-green' : diffN === 3 ? 'c-yellow' : 'c-orange';
@@ -638,11 +725,13 @@ function addResult(data, dryRun) {
   div.innerHTML = `
     <div class="run-hdr">
       <span class="run-n">#${runCount}</span>
+      ${batchLabel}
       <span class="chip c-blue">${q.passage_id}</span>
       <span class="chip ${dChip}">${q.difficulty_label} ${diffN}</span>
       <span class="chip c-purple">${q.skill}</span>
       <span class="chip ${sChip}">🏆 ${q.critique_score}/10</span>
       <span class="chip ${pChip}">${pLbl}</span>
+      ${tok ? `<span class="chip c-dim">~${tok.toLocaleString()} tokens</span>` : ''}
       <span class="ts">${ts}</span>
     </div>
     <div class="tabs">
@@ -730,9 +819,18 @@ function renderLLM(traces) {
           <span class="agent-badge ${m.cls}">${m.em} ${m.lbl}</span>
           ${rev ? '<span class="chip c-orange" style="font-size:10px;">修訂 #' + counts[t.agent] + '</span>' : ''}
           <span class="llm-meta">Bot: ${esc(t.bot||'—')} · 第 ${i+1} 次呼叫</span>
+          ${t.total_tokens ? `<span class="chip c-dim" style="margin-left:4px;font-size:10px;">~${t.total_tokens} tok</span>` : ''}
           <span class="expand-ico">▾</span>
         </div>
         <div class="llm-body">
+          ${t.total_tokens ? `
+          <div style="display:flex;gap:8px;margin-bottom:10px;font-size:11px;">
+            <span style="color:var(--muted)">Prompt: <b style="color:var(--text)">${t.prompt_tokens}</b></span>
+            <span style="color:var(--dim)">+</span>
+            <span style="color:var(--muted)">Response: <b style="color:var(--text)">${t.response_tokens}</b></span>
+            <span style="color:var(--dim)">=</span>
+            <span style="color:var(--accent)"><b>${t.total_tokens}</b> estimated tokens</span>
+          </div>` : ''}
           <div class="p-section">
             <div class="p-hdr">
               <span class="p-title">📤 發送的完整 Prompt</span>
