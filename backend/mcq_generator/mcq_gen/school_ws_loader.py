@@ -103,19 +103,6 @@ def format_school_ws_block(passage_id: str, cross_passage_id: str | None = None)
             "---",
         ]
 
-    # 2. Summary block
-    summary = load_summary()
-    if summary:
-        parts += [
-            "---",
-            "## 篇章總結摘要（課程重點速覽）",
-            "以下是本課程所有指定篇章的核心知識點摘要。",
-            "出題時請參考此摘要確認考核方向、重要概念及跨篇章主題。",
-            "",
-            summary,
-            "---",
-        ]
-
     # 2. Primary passage worksheet(s)
     worksheets = load_worksheets(passage_id)
     if worksheets:
