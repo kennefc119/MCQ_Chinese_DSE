@@ -30,17 +30,25 @@ export async function listQuizzes(): Promise<Quiz[]> {
 }
 
 export async function getQuiz(id: string): Promise<Quiz | null> {
-  if (!isSupabaseConfigured) return SEED_QUIZZES.find((q) => q.id === id) || null;
-  const { data } = await supabase.from("dsemcq_quizzes").select("*").eq("id", id).maybeSingle();
-  return data as Quiz | null;
+  if (!isSupabaseConfigured) return SEED_QUIZZES.find((q) => q.id === id) ?? null;
+  const { data, error } = await supabase.from("dsemcq_quizzes").select("*").eq("id", id).maybeSingle();
+  if (error) console.warn("[dsemcq] getQuiz error:", error.message);
+  // Fall back to seed data if not found in DB (e.g. table not yet seeded)
+  return (data as Quiz | null) ?? SEED_QUIZZES.find((q) => q.id === id) ?? null;
 }
 
 export async function getQuestionsForQuiz(quiz: Quiz): Promise<Question[]> {
   if (!isSupabaseConfigured) {
     return quiz.question_ids.map((qid) => SEED_QUESTIONS.find((q) => q.id === qid)!).filter(Boolean);
   }
-  const { data } = await supabase.rpc("get_quiz_for_attempt", { quiz_id: quiz.id });
-  return (data as Question[]) ?? [];
+  const { data, error } = await supabase.rpc("get_quiz_for_attempt", { quiz_id: quiz.id });
+  if (error) console.warn("[dsemcq] getQuestionsForQuiz error:", error.message);
+  const rows = (data as Question[]) ?? [];
+  // Fall back to seed questions if DB returned nothing
+  if (rows.length === 0) {
+    return quiz.question_ids.map((qid) => SEED_QUESTIONS.find((q) => q.id === qid)!).filter(Boolean);
+  }
+  return rows;
 }
 
 export async function listPassages(): Promise<Passage[]> {

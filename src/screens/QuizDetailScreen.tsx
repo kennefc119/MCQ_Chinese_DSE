@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Alert, Image, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Alert, Image, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -32,7 +32,11 @@ export default function QuizDetailScreen() {
     })();
   }, [quizId, user]);
 
-  if (!quiz) return <View style={styles.safe} />;
+  if (!quiz) return (
+    <SafeAreaView style={styles.safe}>
+      <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 80 }} />
+    </SafeAreaView>
+  );
   const locked = quiz.min_points_required > (user?.wenyuan_points ?? 0);
 
   const onJoin = async () => {
