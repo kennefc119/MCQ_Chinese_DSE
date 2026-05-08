@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import json
+import uuid
 from typing import TypeVar
+from urllib.parse import quote
 
 import httpx
 import structlog
@@ -84,14 +86,19 @@ def chat_structured(
         "query": [
             {"role": "user", "content": merged},
         ],
+        # Required by Poe protocol — can be synthetic UUIDs for non-persistent sessions
+        "user_id": "mcq-gen",
+        "conversation_id": str(uuid.uuid4()),
+        "message_id": str(uuid.uuid4()),
     }
 
-    log.debug("poe_call", bot=bot_name, schema=schema.__name__)
+    url = f"{_POE_BASE_URL}{quote(bot_name, safe='')}"
+    log.debug("poe_call", bot=bot_name, url=url, schema=schema.__name__)
 
     with httpx.Client(timeout=180.0) as client:
         with client.stream(
             "POST",
-            f"{_POE_BASE_URL}{bot_name}",
+            url,
             headers={
                 "Authorization": f"Bearer {settings.poe_api_key}",
                 "Content-Type": "application/json",
@@ -102,7 +109,7 @@ def chat_structured(
             if response.status_code != 200:
                 error_body = response.read().decode()
                 raise RuntimeError(
-                    f"Poe API error {response.status_code}: {error_body[:300]}"
+                    f"Poe API error {response.status_code}: {error_body[:500]}"
                 )
             raw = _read_poe_stream(response)
 
