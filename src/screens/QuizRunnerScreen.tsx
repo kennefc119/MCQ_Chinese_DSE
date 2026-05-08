@@ -31,14 +31,29 @@ export default function QuizRunnerScreen() {
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const startedAt = useRef(Date.now());
 
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     (async () => {
-      const q = await getQuiz(quizId);
-      if (!q) return;
-      setQuiz(q);
-      const qs = await getQuestionsForQuiz(q);
-      setQuestions(qs);
-      if (q.duration_seconds) setSecondsLeft(q.duration_seconds);
+      try {
+        const q = await getQuiz(quizId);
+        if (!q) {
+          Alert.alert("錯誤", "無法讀取測驗內容，請稍後再試", [{ text: "返回", onPress: () => nav.goBack() }]);
+          return;
+        }
+        setQuiz(q);
+        const qs = await getQuestionsForQuiz(q);
+        if (!qs || qs.length === 0) {
+          Alert.alert("錯誤", "沒有可用的題目，請聯絡管理員", [{ text: "返回", onPress: () => nav.goBack() }]);
+          return;
+        }
+        setQuestions(qs);
+        if (q.duration_seconds) setSecondsLeft(q.duration_seconds);
+      } catch (err: any) {
+        console.warn("[dsemcq] QuizRunner load error:", err?.message ?? err);
+        Alert.alert("錯誤", err?.message ?? "無法載入題目", [{ text: "返回", onPress: () => nav.goBack() }]);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [quizId]);
 

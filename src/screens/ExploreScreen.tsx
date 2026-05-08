@@ -17,7 +17,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, spacing, typography, QUIZ_TYPE_COLORS, QUIZ_TYPE_LABEL } from "../theme";
 import { Quiz, TipCard } from "../types/database";
-import { listQuizzes, listTipCards } from "../lib/dataService";
+import { listQuizzes, listTipCards, signUpForQuiz, startAttempt } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
 
@@ -125,6 +125,50 @@ function QuizFeedPage({ item, onClose }: { item: Quiz; onClose: () => void }) {
   const locked = item.min_points_required > (user?.wenyuan_points ?? 0);
   const badgeColor = QUIZ_TYPE_COLORS[item.type] ?? colors.primary;
   const durationMins = item.duration_seconds ? Math.round(item.duration_seconds / 60) : null;
+  const [loading, setLoading] = useState(false);
+
+  const onJoin = async () => {
+    if (!user) return;
+    if (locked) {
+      Alert.alert("尚未解鎖", `需要 ${item.min_points_required} 文淵點才能挑戰此項目`);
+      return;
+    }
+    Alert.alert(
+      `準備開始：${item.title}`,
+      [
+        `📝 共 ${item.question_ids.length} 條選擇題`,
+        item.duration_seconds ? `⏱ 限時 ${Math.round(item.duration_seconds / 60)} 分鐘` : "⏱ 不限時",
+        item.max_attempts ? `🔁 上限 ${item.max_attempts} 次嘗試` : "🔁 不限次數",
+        `✅ 合格分數：${item.pass_score}%`,
+        `🏆 通過可獲 ${item.points_reward} 文淵點`,
+        "",
+        "作答時可前後翻頁修改答案，提交後始計分。",
+      ].join("\n"),
+      [
+        { text: "取消", style: "cancel" },
+        {
+          text: "開始作答",
+          onPress: async () => {
+            setLoading(true);
+            try {
+              onClose();
+              if (!item) return;
+              if (!user) return;
+              // ensure signup then start attempt
+              await signUpForQuiz(user.id, item.id);
+              const attempt = await startAttempt(user.id, item);
+              // replace to runner
+              nav.replace("QuizRunner", { quizId: item.id, attemptId: attempt.id });
+            } catch (err: any) {
+              Alert.alert("無法開始", err?.message ?? "請稍後再試");
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ],
+    );
+  };
 
   return (
     <View style={styles.feedPage}>
@@ -158,9 +202,10 @@ function QuizFeedPage({ item, onClose }: { item: Quiz; onClose: () => void }) {
           <TouchableOpacity
             style={styles.feedActionBtn}
             activeOpacity={0.85}
-            onPress={() => { onClose(); nav.navigate("QuizDetail", { quizId: item.id }); }}
+            onPress={onJoin}
+            disabled={loading}
           >
-            <Text style={styles.feedActionText}>查看詳情並加入</Text>
+            <Text style={styles.feedActionText}>{loading ? "開始中…" : "查看詳情並加入"}</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
