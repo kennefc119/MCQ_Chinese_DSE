@@ -7,19 +7,12 @@ import {
   TouchableOpacity,
   Pressable,
   useWindowDimensions,
+  Animated,
+  Easing,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import Animated, {
-  useSharedValue,
-  withTiming,
-  withDelay,
-  withRepeat,
-  withSequence,
-  useAnimatedStyle,
-  Easing,
-} from "react-native-reanimated";
 import { colors, spacing, typography } from "../theme";
 import { PsychTest, PsychResultMapping } from "../types/database";
 import { listPsychTests, savePsychResult } from "../lib/dataService";
@@ -41,36 +34,40 @@ function BalloonItem({
   startX: number;
   screenHeight: number;
 }) {
-  const translateY = useSharedValue(0);
-  const translateX = useSharedValue(0);
-  const opacity = useSharedValue(1);
+  const translateY = useRef(new Animated.Value(0)).current;
+  const translateX = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    translateY.value = withDelay(
-      index * 120,
-      withTiming(-screenHeight - 200, { duration: 3000 })
-    );
-    translateX.value = withRepeat(
-      withSequence(
-        withTiming(15, { duration: 400 }),
-        withTiming(-15, { duration: 400 })
+    Animated.parallel([
+      Animated.sequence([
+        Animated.delay(index * 120),
+        Animated.timing(translateY, {
+          toValue: -screenHeight - 200,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(translateX, { toValue: 15, duration: 400, useNativeDriver: true }),
+          Animated.timing(translateX, { toValue: -15, duration: 400, useNativeDriver: true }),
+        ])
       ),
-      -1,
-      true
-    );
-    opacity.value = withDelay(2500, withTiming(0, { duration: 500 }));
+      Animated.sequence([
+        Animated.delay(2500),
+        Animated.timing(opacity, { toValue: 0, duration: 500, useNativeDriver: true }),
+      ]),
+    ]).start();
   }, []);
 
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: translateY.value },
-      { translateX: translateX.value },
-    ],
-    opacity: opacity.value,
-  }));
-
   return (
-    <Animated.View style={[{ position: "absolute", bottom: 0, left: startX }, animStyle]}>
+    <Animated.View
+      style={[
+        { position: "absolute", bottom: 0, left: startX },
+        { transform: [{ translateY }, { translateX }], opacity },
+      ]}
+    >
       <Text style={{ fontSize: 40 }}>🎈</Text>
     </Animated.View>
   );
@@ -106,18 +103,21 @@ function ProgressBar({
 }) {
   const { width: screenWidth } = useWindowDimensions();
   const barWidth = screenWidth - spacing.md * 2;
-  const progress = useSharedValue(0);
+  const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    progress.value = withTiming(current / total, {
+    Animated.timing(progress, {
+      toValue: current / total,
       duration: 350,
       easing: Easing.out(Easing.quad),
-    });
+      useNativeDriver: false,
+    }).start();
   }, [current, total]);
 
-  const animStyle = useAnimatedStyle(() => ({
-    width: progress.value * barWidth,
-  }));
+  const animWidth = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, barWidth],
+  });
 
   return (
     <View
@@ -130,7 +130,7 @@ function ProgressBar({
       }}
     >
       <Animated.View
-        style={[{ height: 6, borderRadius: 3, backgroundColor: color }, animStyle]}
+        style={{ height: 6, borderRadius: 3, backgroundColor: color, width: animWidth }}
       />
     </View>
   );

@@ -28,7 +28,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     "expo-font",
     "expo-secure-store",
-    "react-native-reanimated",
     [
       "expo-build-properties",
       {
