@@ -108,11 +108,14 @@ export interface InboxMessage {
 export interface TipCard {
   id: string;
   title: string;
+  subtitle?: string;
   body: string;
   image_url: string | null;
   category: "exam_tip" | "rest" | "study" | "wellness";
   position: number;
   is_active: boolean;
+  read_time_minutes?: number;
+  cta_label?: string;
 }
 
 export interface PsychTest {

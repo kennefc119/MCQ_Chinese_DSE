@@ -12,6 +12,7 @@ import { shuffleOptionsForAttempt } from "../lib/shuffleUtils";
 import { useAuth } from "../context/AuthContext";
 import Button from "../components/Button";
 import LoadingScreen from "../components/LoadingScreen";
+import Icon from "../components/Icon";
 import { AppStackParamList } from "../navigation/types";
 
 type Nav = NativeStackNavigationProp<AppStackParamList, "QuizRunner">;
@@ -146,7 +147,7 @@ export default function QuizRunnerScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={confirmExit} style={styles.headerBtn}>
-          <Text style={styles.headerBtnText}>✕</Text>
+          <Icon name="close" size="md" color={colors.ink} />
         </TouchableOpacity>
         <View style={styles.progressWrap}>
           <Text style={styles.progressText}>{idx + 1} / {displayQuestions.length}</Text>

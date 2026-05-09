@@ -43,8 +43,8 @@ export default function OtpVerificationScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
         <View style={styles.container}>
           <Text style={styles.title}>輸入驗證碼</Text>
-          <Text style={styles.subtitle}>已將驗證碼寄至 {email}</Text>
-          {demoMode && <Text style={styles.demoHint}>示範模式：輸入任意 6 位數字即可</Text>}
+          <Text style={styles.subtitle}>已寄至　{email}</Text>
+          {demoMode && <Text style={styles.demoHint}>試讀模式　·　任意 6 位數字即可</Text>}
           <FormInput
             label="6 位驗證碼"
             placeholder="● ● ● ● ● ●"
@@ -64,7 +64,7 @@ export default function OtpVerificationScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: spacing.lg, justifyContent: "center" },
-  title: { ...typography.title, color: colors.primary, textAlign: "center", marginBottom: spacing.sm },
-  subtitle: { ...typography.body, color: colors.textSecondary, textAlign: "center", marginBottom: spacing.lg },
+  title: { ...typography.display, color: colors.ink, textAlign: "center", marginBottom: spacing.sm },
+  subtitle: { ...typography.body, color: colors.inkSoft, textAlign: "center", marginBottom: spacing.lg },
   demoHint: { ...typography.caption, color: colors.warning, textAlign: "center", marginBottom: spacing.md },
 });

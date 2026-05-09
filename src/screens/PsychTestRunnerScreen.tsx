@@ -19,7 +19,7 @@ import { listPsychTests, savePsychResult } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
 import LoadingScreen from "../components/LoadingScreen";
-import FloatingBalloons from "../components/FloatingBalloons";
+import SealStamp from "../components/SealStamp";
 
 type Nav = NativeStackNavigationProp<AppStackParamList, "PsychTest">;
 type Rt = RouteProp<AppStackParamList, "PsychTest">;
@@ -153,7 +153,7 @@ export default function PsychTestRunnerScreen() {
 
           {(done.historical_figure || done.historical_background) && (
             <View style={styles.resultSection}>
-              <Text style={styles.resultSectionTitle}>🏛️ 歷史人物介紹</Text>
+              <Text style={styles.resultSectionTitle}>歷史人物</Text>
               {done.historical_figure && (
                 <Text style={styles.resultSectionText}>{done.historical_figure}</Text>
               )}
@@ -167,16 +167,16 @@ export default function PsychTestRunnerScreen() {
             <View style={styles.resultSection}>
               <Text style={styles.resultSectionTitle}>你的強項</Text>
               {done.strengths.map((s, i) => (
-                <Text key={i} style={styles.resultListItem}>✅ {s}</Text>
+                <Text key={i} style={styles.resultListItem}>•　{s}</Text>
               ))}
             </View>
           )}
 
           {done.weaknesses && done.weaknesses.length > 0 && (
             <View style={styles.resultSection}>
-              <Text style={styles.resultSectionTitle}>需要注意</Text>
+              <Text style={styles.resultSectionTitle}>留意之處</Text>
               {done.weaknesses.map((w, i) => (
-                <Text key={i} style={styles.resultListItem}>⚠️ {w}</Text>
+                <Text key={i} style={styles.resultListItem}>•　{w}</Text>
               ))}
             </View>
           )}
@@ -189,9 +189,9 @@ export default function PsychTestRunnerScreen() {
 
           {done.study_tips && done.study_tips.length > 0 && (
             <View style={styles.resultSection}>
-              <Text style={styles.resultSectionTitle}>學習小貼士</Text>
+              <Text style={styles.resultSectionTitle}>溫習小貼士</Text>
               {done.study_tips.map((tip, i) => (
-                <Text key={i} style={styles.resultListItem}>💡 {tip}</Text>
+                <Text key={i} style={styles.resultListItem}>•　{tip}</Text>
               ))}
             </View>
           )}
@@ -211,7 +211,7 @@ export default function PsychTestRunnerScreen() {
             </TouchableOpacity>
           </View>
         </ScrollView>
-        <FloatingBalloons shown={showBalloons} />
+        <SealStamp shown={showBalloons} char="成" />
       </SafeAreaView>
     );
   }

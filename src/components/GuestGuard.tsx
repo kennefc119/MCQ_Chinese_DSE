@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { colors, spacing, typography } from "../theme";
+import Icon from "./Icon";
 
 /**
  * Wraps content that requires a real account.
@@ -13,14 +14,14 @@ export default function GuestGuard({ children }: { children: React.ReactNode }) 
   if (!isGuest) return <>{children}</>;
 
   const goLogin = async () => {
-    await signOut(); // clears guest state → RootNavigator shows AuthStack
+    await signOut();
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.icon}>🔒</Text>
+      <Icon name="lock-closed-outline" size="xl" color={colors.inkMuted} style={{ marginBottom: spacing.lg }} />
       <Text style={styles.title}>需要登入</Text>
-      <Text style={styles.body}>此功能需要帳戶。請登入或註冊以繼續使用完整功能。</Text>
+      <Text style={styles.body}>此頁需要帳戶。登入或註冊後，方可開卷。</Text>
       <TouchableOpacity style={styles.btn} onPress={goLogin}>
         <Text style={styles.btnText}>登入 / 註冊</Text>
       </TouchableOpacity>
@@ -36,14 +37,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: spacing.xl,
   },
-  icon: { fontSize: 56, marginBottom: spacing.lg },
-  title: { ...typography.title, color: colors.textPrimary, marginBottom: spacing.sm, textAlign: "center" },
-  body: { ...typography.body, color: colors.textSecondary, textAlign: "center", marginBottom: spacing.xl },
+  title: { ...typography.heading, color: colors.ink, marginBottom: spacing.sm, textAlign: "center" },
+  body: { ...typography.body, color: colors.inkSoft, textAlign: "center", marginBottom: spacing.xl },
   btn: {
     backgroundColor: colors.primary,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.xl,
     borderRadius: 12,
   },
-  btnText: { ...typography.button, color: colors.background },
+  btnText: { ...typography.button, color: colors.primaryOnDark },
 });

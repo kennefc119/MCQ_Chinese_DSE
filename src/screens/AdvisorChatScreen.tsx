@@ -1,8 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet, TextInput, FlatList, KeyboardAvoidingView, Platform, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRoute, RouteProp } from "@react-navigation/native";
-import Constants from "expo-constants";
 import Markdown from "react-native-markdown-display";
 import { colors, spacing, typography } from "../theme";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
@@ -12,15 +11,15 @@ import { MainTabsParamList } from "../navigation/types";
 interface Msg { id: string; role: "user" | "assistant"; text: string }
 
 // Bot display name from .env (via app.config.ts extra.advisorBotName)
-const BOT_NAME: string = (Constants.expoConfig?.extra?.advisorBotName as string | undefined) ?? "DSE 中文顧問";
+const BOT_NAME = "文淵書僮";
 
 const INTRO_MSG: Msg = {
   id: "intro",
   role: "assistant",
-  text: `你好！我是你的${BOT_NAME}，專門協助你溫習 12 篇文言文。你可以問我任何關於文言文、學習方法、應試策略或情緒調節的問題。`,
+  text: `在下文淵書僮，承先賢之學，伴君溫故知新。\n\n（聲明：在下乃 AI 所成，非真人也。）\n\n十二篇文言、字句句讀、應試心法、考前焦慮，皆可問來。但講一聲，便為閣下細析。`,
 };
 
-const SYSTEM_PROMPT = `你是一位專為香港中學文憑試（DSE）中國語文科學生服務的學習顧問，特別熟悉 12 篇文言文指定篇章。請以繁體中文、親切而專業的語氣回答學生問題：解釋詞句、分析主旨、提供溫習與應試建議、舒緩考試壓力。每次回覆控制在 200 字以內。`;
+const SYSTEM_PROMPT = `你是「文淵書僮」，一位專為香港中學文憑試（DSE）中國語文科學生服務的 AI 學習助手，熟悉 12 篇指定文言文。請以繁體中文回答，語氣親切而略帶文人氣質——像一位細心的中文老師，用詞精煉、不囉嗦、不油腔滑調。可解釋詞句、分析主旨、提供溫習及應試策略、舒緩考試壓力。每次回覆控制在 200 字以內，避免過度使用條列式 bullet point，多用自然句子。如學生問及你的身分，可坦言自己是 AI 助手。`;
 
 const DEMO_RESPONSES: Record<string, string> = {
   default: "示範模式回覆：建議你從 12 篇指定文言文逐篇精讀，先掌握全文大意，再背誦關鍵字詞與名句。每周做 1-2 份練習，配合錯題本，把握重複出錯的弱項。",
@@ -41,17 +40,34 @@ function getDemoReply(input: string): string {
 // navigation from "Ask AI" buttons in result screens.
 let _persistedMessages: Msg[] = [INTRO_MSG];
 
+const GUEST_LIMIT = 10;
+const FREE_MONTHLY_LIMIT = 20;
+const PREMIUM_MONTHLY_LIMIT = 300;
+
 export default function AdvisorChatScreen() {
   const routeParams = useRoute<RouteProp<MainTabsParamList, "Advisor">>().params;
-  const { isGuest, signOut } = useAuth();
+  const { user, isGuest, signOut } = useAuth();
   const [messages, setMessages] = useState<Msg[]>(_persistedMessages);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [monthlyUsed, setMonthlyUsed] = useState<number | null>(null);
   const listRef = useRef<FlatList<Msg>>(null);
   const autoSentRef = useRef<typeof routeParams>(undefined);
   const sendRef = useRef<(text: string) => Promise<void>>(async () => {});
 
-  const GUEST_LIMIT = 10;
+  // Fetch this month's message count for logged-in users
+  const fetchMonthlyUsed = useCallback(async () => {
+    if (!user || isGuest || !isSupabaseConfigured) return;
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+    const { count } = await supabase
+      .from("dsemcq_advisor_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .gte("created_at", startOfMonth);
+    setMonthlyUsed(count ?? 0);
+  }, [user, isGuest]);
+
+  useEffect(() => { fetchMonthlyUsed(); }, [fetchMonthlyUsed]);
 
   // Keep persisted store in sync whenever messages change
   const updateMessages = (updater: (prev: Msg[]) => Msg[]) => {
@@ -65,7 +81,7 @@ export default function AdvisorChatScreen() {
   const sendMessage = async (text: string) => {
     if (!text.trim() || loading) return;
 
-    // Guest chat limit: count only user-role messages
+    // Guest session limit
     const currentUserMsgCount = _persistedMessages.filter(m => m.role === "user").length;
     if (isGuest && currentUserMsgCount >= GUEST_LIMIT) {
       Alert.alert(
@@ -77,6 +93,21 @@ export default function AdvisorChatScreen() {
         ]
       );
       return;
+    }
+
+    // Monthly limit for logged-in users
+    if (!isGuest && user) {
+      const limit = user.subscription_tier === "premium" ? PREMIUM_MONTHLY_LIMIT : FREE_MONTHLY_LIMIT;
+      const used = monthlyUsed ?? 0;
+      if (used >= limit) {
+        Alert.alert(
+          "本月對話已達上限",
+          user.subscription_tier === "premium"
+            ? `高級版每月 ${PREMIUM_MONTHLY_LIMIT} 次已用盡，如需更多請聯絡客服。`
+            : `免費版每月 ${FREE_MONTHLY_LIMIT} 次已用盡，升級至高級版可享每月 ${PREMIUM_MONTHLY_LIMIT} 次。`,
+        );
+        return;
+      }
     }
 
     const userMsg: Msg = { id: `u-${Date.now()}`, role: "user", text: text.trim() };
@@ -98,10 +129,15 @@ export default function AdvisorChatScreen() {
         });
         if (error || data?.error) {
           const errMsg = data?.error ?? error?.message ?? "未知錯誤";
+          if (data?.code === "MONTHLY_LIMIT") {
+            Alert.alert("本月對話已達上限", errMsg);
+          }
           console.log("[AdvisorChat] error:", error, "data.error:", data?.error);
-          reply = `（顧問服務異常：${errMsg}）`;
+          reply = data?.code === "MONTHLY_LIMIT" ? "" : `（顧問服務異常：${errMsg}）`;
         } else {
           reply = data?.reply ?? "（無回覆）";
+          // Increment local monthly counter on success
+          if (!isGuest && monthlyUsed !== null) setMonthlyUsed(monthlyUsed + 1);
         }
       }
       updateMessages((p) => [...p, { id: `a-${Date.now()}`, role: "assistant", text: reply }]);
@@ -134,7 +170,7 @@ export default function AdvisorChatScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
-        <Text style={styles.title}>📖 {BOT_NAME}</Text>
+        <Text style={styles.title}>{BOT_NAME}</Text>
         <Text style={styles.subtitle}>文言文溫習・應試策略・情緒調節</Text>
         {isGuest && (() => {
           const used = messages.filter(m => m.role === "user").length;
@@ -142,6 +178,16 @@ export default function AdvisorChatScreen() {
           return (
             <Text style={styles.guestLimit}>
               {remaining > 0 ? `訪客剩餘 ${remaining} 次免費提問` : "訪客免費次數已用盡，請登入繼續"}
+            </Text>
+          );
+        })()}
+        {!isGuest && user && monthlyUsed !== null && (() => {
+          const limit = user.subscription_tier === "premium" ? PREMIUM_MONTHLY_LIMIT : FREE_MONTHLY_LIMIT;
+          const remaining = Math.max(0, limit - monthlyUsed);
+          const tierLabel = user.subscription_tier === "premium" ? "高級版" : "免費版";
+          return (
+            <Text style={styles.guestLimit}>
+              {tierLabel} · 本月剩餘 {remaining} / {limit} 次
             </Text>
           );
         })()}
@@ -189,12 +235,12 @@ const styles = StyleSheet.create({
   bubble: { padding: spacing.md, borderRadius: 14, marginBottom: spacing.sm, maxWidth: "85%" },
   userBubble: { backgroundColor: colors.primary, alignSelf: "flex-end" },
   aiBubble: { backgroundColor: colors.surface, alignSelf: "flex-start", borderWidth: 1, borderColor: colors.border },
-  userText: { color: "#1A1208", lineHeight: 22 },
+  userText: { color: "#FFFFFF", lineHeight: 22 },
   aiText: { color: colors.textPrimary, lineHeight: 22 },
   inputRow: { flexDirection: "row", padding: spacing.sm, borderTopWidth: 1, borderColor: colors.border, alignItems: "flex-end" },
   input: { flex: 1, color: colors.textPrimary, backgroundColor: colors.surface, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, maxHeight: 120, marginRight: spacing.sm },
   sendBtn: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20 },
-  sendText: { color: "#1A1208", fontWeight: "700" },
+  sendText: { color: "#FFFFFF", fontWeight: "700" },
 });
 
 // Markdown styles for AI reply bubbles

@@ -5,6 +5,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { colors, spacing, typography } from "../theme";
+import Icon from "../components/Icon";
 import rawData from "../content/schoolPartner.json";
 
 type Feature = { emoji: string; title: string; desc: string };
@@ -114,7 +115,8 @@ export default function SchoolPartnerScreen() {
             style={styles.ctaBtn}
             onPress={() => Linking.openURL(`mailto:${D.cta.email}?subject=學校合作查詢&body=學校名稱：%0D%0A聯絡人：%0D%0A查詢內容：`)}
           >
-            <Text style={styles.ctaBtnText}>📧 發送合作查詢</Text>
+            <Icon name="mail-outline" size="sm" color={colors.primaryOnDark ?? "#FFFFFF"} />
+            <Text style={styles.ctaBtnText}>　發送合作查詢</Text>
           </TouchableOpacity>
           <Text style={styles.ctaEmail}>{D.cta.email}</Text>
           <Text style={styles.ctaAddress}>{D.cta.address}</Text>
@@ -243,7 +245,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     marginBottom: spacing.md,
     width: "100%",
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
   },
   ctaBtnText: { ...typography.button, color: colors.background, fontWeight: "700" },
   ctaEmail: { color: colors.primary, fontWeight: "600", marginBottom: spacing.sm },

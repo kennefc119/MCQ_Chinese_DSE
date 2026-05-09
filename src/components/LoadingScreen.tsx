@@ -2,7 +2,7 @@ import React from "react";
 import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import { colors, spacing, typography } from "../theme";
 
-export default function LoadingScreen({ message = "載入中..." }: { message?: string }) {
+export default function LoadingScreen({ message = "稍候片刻" }: { message?: string }) {
   return (
     <View style={styles.container}>
       <ActivityIndicator color={colors.primary} size="large" />
@@ -13,5 +13,5 @@ export default function LoadingScreen({ message = "載入中..." }: { message?: 
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background },
-  text: { ...typography.body, color: colors.textSecondary, marginTop: spacing.md },
+  text: { ...typography.body, color: colors.inkSoft, marginTop: spacing.md },
 });

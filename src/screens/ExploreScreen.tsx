@@ -63,11 +63,64 @@ function interleave(quizzes: Quiz[], tips: TipCard[]): FeedItem[] {
   return out;
 }
 
+/** Renders badge + title chars + difficulty stars as one vertical column anchored top-right. */
+function VerticalTileInfo({
+  categoryLabel,
+  categoryBgColor,
+  title,
+  difficulty,
+  locked,
+  maxTitleChars = 4,
+}: {
+  categoryLabel: string;
+  categoryBgColor: string;
+  title: string;
+  difficulty?: number;
+  locked?: boolean;
+  maxTitleChars?: number;
+}) {
+  const badgeChars = categoryLabel.replace(/\s/g, "").split("").slice(0, 3);
+  const titleChars = title.replace(/[\s—–·\-]/g, "").split("").slice(0, maxTitleChars);
+  const stars = difficulty ?? 0;
+
+  return (
+    <View style={styles.verticalInfoWrap}>
+      {locked && (
+        <View style={styles.verticalLock}>
+          <Ionicons name="lock-closed" size={8} color="#FFF" />
+        </View>
+      )}
+      <View style={[styles.verticalBadge, { backgroundColor: categoryBgColor }]}>
+        {badgeChars.map((c, i) => (
+          <Text key={i} style={styles.verticalBadgeChar}>{c}</Text>
+        ))}
+      </View>
+      <View style={styles.verticalDivider} />
+      {titleChars.map((c, i) => (
+        <Text key={i} style={styles.verticalChar}>{c}</Text>
+      ))}
+      {stars > 0 && (
+        <>
+          <View style={styles.verticalDivider} />
+          <Text style={styles.verticalDiffLabel}>難</Text>
+          {Array.from({ length: stars }).map((_, i) => (
+            <Text key={i} style={styles.verticalStar}>★</Text>
+          ))}
+          {Array.from({ length: 5 - stars }).map((_, i) => (
+            <Text key={i} style={styles.verticalStarEmpty}>☆</Text>
+          ))}
+        </>
+      )}
+    </View>
+  );
+}
+
 function QuizTile({ item, onPress, passageName }: { item: Quiz; onPress: () => void; passageName?: string }) {
-  const { user } = useAuth();
-  const locked = item.min_points_required > (user?.wenyuan_points ?? 0);
+  const { user, isGuest } = useAuth();
+  const pointsLocked = item.min_points_required > (user?.wenyuan_points ?? 0);
+  const tierLocked = !isGuest && !!user && user.subscription_tier !== "premium" && item.type !== "exercise";
+  const locked = pointsLocked || tierLocked;
   const badgeColor = QUIZ_TYPE_COLORS[item.type] ?? colors.primary;
-  // For skill quizzes (no passage), extract skill name from title (e.g. "修辭手法")
   const skillName = !passageName ? extractSkillFromTitle(item.title) : undefined;
   const heroText = passageName ?? skillName;
 
@@ -86,27 +139,13 @@ function QuizTile({ item, onPress, passageName }: { item: Quiz; onPress: () => v
         colors={["transparent", "rgba(0,0,0,0.85)"]}
         style={StyleSheet.absoluteFill}
       />
-      <View style={[styles.badge, { backgroundColor: badgeColor }]}>
-        <Text style={styles.badgeText}>{QUIZ_TYPE_LABEL[item.type] ?? item.type}</Text>
-      </View>
-      {locked && (
-        <View style={styles.lockIcon}>
-          <Ionicons name="lock-closed" size={12} color={colors.ink} />
-        </View>
-      )}
-      {heroText ? (
-        /* Passage or skill card: hero text shown prominently */
-        <>
-          <Text style={styles.tilePassageBig} numberOfLines={2}>{heroText}</Text>
-          <Text style={styles.tileStars}>{"★".repeat(item.difficulty)}{"☆".repeat(5 - item.difficulty)}</Text>
-        </>
-      ) : (
-        /* Difficulty / exam / other: show full title */
-        <>
-          <Text style={styles.tileTitleLarge} numberOfLines={3}>{item.title}</Text>
-          <Text style={styles.tileStars}>{"★".repeat(item.difficulty)}{"☆".repeat(5 - item.difficulty)}</Text>
-        </>
-      )}
+      <VerticalTileInfo
+        categoryLabel={QUIZ_TYPE_LABEL[item.type] ?? item.type}
+        categoryBgColor={badgeColor}
+        title={heroText ?? item.title}
+        difficulty={item.difficulty}
+        locked={locked}
+      />
     </TouchableOpacity>
   );
 }
@@ -129,10 +168,12 @@ function TipTile({ item, onPress }: { item: TipCard; onPress: () => void }) {
         colors={["transparent", "rgba(0,0,0,0.78)"]}
         style={StyleSheet.absoluteFill}
       />
-      <View style={[styles.badge, { backgroundColor: colors.accent }]}>
-        <Text style={styles.badgeText}>{label}</Text>
-      </View>
-      <Text style={styles.tileTitle} numberOfLines={2}>{item.title}</Text>
+      <VerticalTileInfo
+        categoryLabel={label}
+        categoryBgColor={colors.accent}
+        title={item.title}
+        maxTitleChars={6}
+      />
     </TouchableOpacity>
   );
 }
@@ -156,6 +197,13 @@ function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () 
       Alert.alert("請先登入", "訪客模式無法作答及儲存成績。請登入或註冊以繼續。");
       return;
     }
+    if (user.subscription_tier !== "premium" && item.type !== "exercise") {
+      Alert.alert(
+        "需要高級版",
+        "測驗及考試功能僅限高級版用戶。免費版可完成所有練習題，升級即可解鎖全部內容。",
+      );
+      return;
+    }
     if (locked) {
       Alert.alert("尚未解鎖", `需要 ${item.min_points_required} 文淵點才能挑戰此項目`);
       return;
@@ -163,11 +211,11 @@ function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () 
     Alert.alert(
       `準備開始：${item.title}`,
       [
-        `📝 共 ${item.question_ids.length} 條選擇題`,
-        item.duration_seconds ? `⏱ 限時 ${Math.round(item.duration_seconds / 60)} 分鐘` : "⏱ 不限時",
-        item.max_attempts ? `🔁 上限 ${item.max_attempts} 次嘗試` : "🔁 不限次數",
-        `✅ 合格分數：${item.pass_score}%`,
-        `🏆 通過可獲 ${item.points_reward} 文淵點`,
+        `題目數　${item.question_ids.length} 題`,
+        `時限　　${item.duration_seconds ? `${Math.round(item.duration_seconds / 60)} 分鐘` : "不限"}`,
+        `次數　　${item.max_attempts ? `${item.max_attempts} 次` : "不限"}`,
+        `合格　　${item.pass_score}%`,
+        `獎勵　　${item.points_reward} 文淵點`,
         "",
         "作答時可前後翻頁修改答案，提交後始計分。",
       ].join("\n"),
@@ -533,13 +581,13 @@ export default function ExploreScreen() {
             <SafeAreaView style={styles.feedOverlay} edges={["top"]} pointerEvents="box-none">
               <View style={styles.feedTopBar} pointerEvents="auto">
                 <TouchableOpacity style={styles.feedBtn} activeOpacity={0.7} onPress={closeFeed}>
-                  <Ionicons name="close" size={22} color={colors.ink} />
+                  <Ionicons name="close" size={22} color="#FFFFFF" />
                 </TouchableOpacity>
                 <Text style={styles.feedCounter}>
                   {feedIndex + 1} / {filteredItems.length}
                 </Text>
                 <TouchableOpacity style={styles.feedBtn} activeOpacity={0.7} onPress={closeFeed}>
-                  <Ionicons name="grid" size={20} color={colors.ink} />
+                  <Ionicons name="grid" size={20} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
             </SafeAreaView>
@@ -605,19 +653,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   tileTitle: {
-    color: colors.ink,
-    fontSize: 10,
-    fontWeight: "600",
-    lineHeight: 14,
-  },
-  tileTitleLarge: {
-    color: colors.ink,
+    color: "#FFFFFF",
     fontSize: 13,
     fontWeight: "700",
     lineHeight: 17,
+    textShadowColor: "rgba(0,0,0,0.6)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
-  tileStars: { color: colors.primary, fontSize: 8, marginTop: 2 },
-  tilePassage: { color: "rgba(255,255,255,0.6)", fontSize: 8, marginTop: 1 },
+  tileTitleLarge: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 17,
+    textShadowColor: "rgba(0,0,0,0.6)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  tileStars: { color: "#F0C97A", fontSize: 10, marginTop: 2, textShadowColor: "rgba(0,0,0,0.6)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
+  tilePassage: { color: "rgba(255,255,255,0.75)", fontSize: 9, marginTop: 1 },
   tilePassageBig: {
     color: "#ffffff",
     fontSize: 14,
@@ -626,6 +680,70 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0,0,0,0.6)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
+  },
+  // ── vertical tile info column ──────────────────────────────────────────
+  verticalInfoWrap: {
+    position: "absolute",
+    top: 6,
+    right: 5,
+    alignItems: "center",
+  },
+  verticalLock: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: "rgba(0,0,0,0.60)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 2,
+  },
+  verticalBadge: {
+    borderRadius: 3,
+    paddingVertical: 2,
+    paddingHorizontal: 3,
+    alignItems: "center",
+  },
+  verticalBadgeChar: {
+    color: "#FFFFFF",
+    fontSize: 8,
+    fontWeight: "700",
+    lineHeight: 10,
+    includeFontPadding: false,
+  },
+  verticalDivider: {
+    width: 10,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.30)",
+    marginVertical: 1,
+  },
+  verticalChar: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "700",
+    lineHeight: 11,
+    textShadowColor: "rgba(0,0,0,0.65)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+    includeFontPadding: false,
+  },
+  verticalDiffLabel: {
+    color: "rgba(255,255,255,0.65)",
+    fontSize: 6,
+    lineHeight: 8,
+    includeFontPadding: false,
+    letterSpacing: 0.3,
+  },
+  verticalStar: {
+    color: "#F0C97A",
+    fontSize: 8,
+    lineHeight: 9,
+    includeFontPadding: false,
+  },
+  verticalStarEmpty: {
+    color: "rgba(255,255,255,0.30)",
+    fontSize: 8,
+    lineHeight: 9,
+    includeFontPadding: false,
   },
 
   // feed modal
@@ -703,7 +821,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "rgba(0,0,0,0.5)",
   },
-  feedCounter: { color: colors.ink, fontSize: 14, fontWeight: "600" },
+  feedCounter: { color: "#FFFFFF", fontSize: 14, fontWeight: "600" },
 
   // filter bar
   filterRow: { flexGrow: 0 },
@@ -711,16 +829,17 @@ const styles = StyleSheet.create({
   filterChip: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 15,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 32,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
   filterChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  filterChipText: { color: colors.textSecondary, fontSize: 10 },
-  filterChipTextActive: { color: colors.background, fontWeight: "700" },
+  filterChipText: { color: colors.textSecondary, fontSize: 12, lineHeight: 16, includeFontPadding: false },
+  filterChipTextActive: { color: "#FFFFFF", fontWeight: "700" },
   filterExpanded: {
     paddingHorizontal: GRID_PADDING,
     paddingBottom: 8,

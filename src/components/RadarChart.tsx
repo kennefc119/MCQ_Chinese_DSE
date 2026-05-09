@@ -51,22 +51,22 @@ export default function RadarChart({ axes, values, color, size = 200, width, hei
       <Svg width={w} height={h}>
         {/* Grid */}
         {gridPolygons.map((pts, lvl) => (
-          <Polygon key={lvl} points={pts} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
+          <Polygon key={lvl} points={pts} fill="none" stroke="rgba(31,26,20,0.18)" strokeWidth={1} />
         ))}
         {Array.from({ length: n }, (_, i) => (
-          <Line key={i} x1={cx} y1={cy} x2={px(radius, i)} y2={py(radius, i)} stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
+          <Line key={i} x1={cx} y1={cy} x2={px(radius, i)} y2={py(radius, i)} stroke="rgba(31,26,20,0.18)" strokeWidth={1} />
         ))}
 
         {/* Outer glow layer */}
-        <Polygon points={dataPoints} fill="none" stroke={color} strokeWidth={18} strokeOpacity={0.08} strokeLinejoin="round" />
+        <Polygon points={dataPoints} fill="none" stroke={color} strokeWidth={18} strokeOpacity={0.10} strokeLinejoin="round" />
         {/* Mid glow layer */}
-        <Polygon points={dataPoints} fill="none" stroke={color} strokeWidth={8} strokeOpacity={0.18} strokeLinejoin="round" />
+        <Polygon points={dataPoints} fill="none" stroke={color} strokeWidth={8} strokeOpacity={0.22} strokeLinejoin="round" />
 
         {/* Fill */}
-        <Polygon points={dataPoints} fill={color} fillOpacity={0.25} stroke="none" />
+        <Polygon points={dataPoints} fill={color} fillOpacity={0.40} stroke="none" />
 
         {/* Outline border */}
-        <Polygon points={dataPoints} fill="none" stroke={color} strokeWidth={2} strokeOpacity={0.9} strokeLinejoin="round" />
+        <Polygon points={dataPoints} fill="none" stroke={color} strokeWidth={2.5} strokeOpacity={1} strokeLinejoin="round" />
 
         {/* Vertex dots */}
         {vertexPoints.map((pt, i) => (
@@ -83,7 +83,7 @@ export default function RadarChart({ axes, values, color, size = 200, width, hei
               x={px(labelRadius, i)}
               y={py(labelRadius, i)}
               fontSize={fontSize}
-              fill="rgba(255,255,255,0.7)"
+              fill="rgba(31,26,20,0.85)"
               textAnchor={anchor}
               alignmentBaseline="middle"
             >

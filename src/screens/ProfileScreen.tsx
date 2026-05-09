@@ -7,6 +7,9 @@ import { colors, spacing, typography } from "../theme";
 import { useAuth } from "../context/AuthContext";
 import Button from "../components/Button";
 import GuestGuard from "../components/GuestGuard";
+import Icon, { IconName } from "../components/Icon";
+import SealMark from "../components/SealMark";
+import InkDivider from "../components/InkDivider";
 import { AppStackParamList } from "../navigation/types";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
@@ -18,6 +21,8 @@ const ROW = (label: string, value: string) => (
   </View>
 );
 
+type MenuItem = { icon: IconName; label: string; onPress: () => void };
+
 export default function ProfileScreen() {
   const nav = useNavigation<Nav>();
   const { user, signOut, demoMode } = useAuth();
@@ -25,11 +30,22 @@ export default function ProfileScreen() {
   if (!user) return null;
 
   const onSignOut = () => {
-    Alert.alert("登出", "確定登出？", [
-      { text: "取消", style: "cancel" },
+    Alert.alert("登出文淵", "確認離席？下次再會。", [
+      { text: "再想想", style: "cancel" },
       { text: "登出", style: "destructive", onPress: signOut },
     ]);
   };
+
+  const menu: MenuItem[] = [
+    { icon: "mail-outline", label: "收件箱", onPress: () => nav.navigate("Inbox") },
+    { icon: "time-outline", label: "文淵點記錄", onPress: () => nav.navigate("PointHistory") },
+    { icon: "ribbon-outline", label: "訂閱方案", onPress: () => nav.navigate("Subscription") },
+    ...(user.role === "admin"
+      ? ([{ icon: "construct-outline", label: "管理後台", onPress: () => nav.navigate("Admin") }] as MenuItem[])
+      : []),
+    { icon: "document-text-outline", label: "使用條款", onPress: () => nav.navigate("Legal", { type: "terms" }) },
+    { icon: "shield-checkmark-outline", label: "私隱政策", onPress: () => nav.navigate("Legal", { type: "privacy" }) },
+  ];
 
   return (
     <GuestGuard>
@@ -41,13 +57,16 @@ export default function ProfileScreen() {
           </View>
           <Text style={styles.name}>{user.username}</Text>
           <Text style={styles.email}>{user.email}</Text>
-          {demoMode && <Text style={styles.demoTag}>示範模式</Text>}
+          {demoMode && <Text style={styles.demoTag}>試讀模式</Text>}
         </View>
 
         <View style={styles.pointsBox}>
-          <Text style={styles.pointsLabel}>文淵點</Text>
+          <View style={styles.pointsHeader}>
+            <SealMark char="淵" size={28} />
+            <Text style={styles.pointsLabel}>文淵點</Text>
+          </View>
           <Text style={styles.pointsValue}>{user.wenyuan_points}</Text>
-          <Text style={styles.pointsHint}>通過練習與測驗即可累積，解鎖更高難度挑戰</Text>
+          <Text style={styles.pointsHint}>練得多、考得多，文淵點自會累積。難關亦隨之而開。</Text>
         </View>
 
         <View style={styles.card}>
@@ -57,32 +76,15 @@ export default function ProfileScreen() {
           {user.role === "admin" && ROW("身份", "管理員")}
         </View>
 
-        <TouchableOpacity style={styles.menuItem} onPress={() => nav.navigate("Inbox")}>
-          <Text style={styles.menuLabel}>📨 收件箱</Text>
-          <Text style={styles.menuArrow}>›</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem} onPress={() => nav.navigate("PointHistory")}>
-          <Text style={styles.menuLabel}>📊 積分記錄</Text>
-          <Text style={styles.menuArrow}>›</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem} onPress={() => nav.navigate("Subscription")}>
-          <Text style={styles.menuLabel}>💎 訂閱方案</Text>
-          <Text style={styles.menuArrow}>›</Text>
-        </TouchableOpacity>
-        {user.role === "admin" && (
-          <TouchableOpacity style={styles.menuItem} onPress={() => nav.navigate("Admin")}>
-            <Text style={styles.menuLabel}>🛠 管理後台</Text>
-            <Text style={styles.menuArrow}>›</Text>
+        <InkDivider />
+
+        {menu.map((m) => (
+          <TouchableOpacity key={m.label} style={styles.menuItem} onPress={m.onPress}>
+            <Icon name={m.icon} size="sm" color={colors.inkSoft} />
+            <Text style={styles.menuLabel}>{m.label}</Text>
+            <Icon name="chevron-forward" size="sm" color={colors.inkMuted} />
           </TouchableOpacity>
-        )}
-        <TouchableOpacity style={styles.menuItem} onPress={() => nav.navigate("Legal", { type: "terms" })}>
-          <Text style={styles.menuLabel}>📋 使用條款</Text>
-          <Text style={styles.menuArrow}>›</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem} onPress={() => nav.navigate("Legal", { type: "privacy" })}>
-          <Text style={styles.menuLabel}>🔒 私隱政策</Text>
-          <Text style={styles.menuArrow}>›</Text>
-        </TouchableOpacity>
+        ))}
 
         <View style={{ height: spacing.lg }} />
         <Button title="登出" variant="ghost" onPress={onSignOut} />
@@ -95,21 +97,31 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   hero: { alignItems: "center", marginBottom: spacing.lg },
-  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center", marginBottom: spacing.sm },
-  avatarText: { fontSize: 36, fontWeight: "800", color: "#1A1208" },
-  name: { ...typography.title, color: colors.textPrimary },
-  email: { color: colors.textSecondary, marginTop: 4 },
-  demoTag: { marginTop: 8, color: colors.warning, fontSize: 12, backgroundColor: colors.surface, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  pointsBox: { backgroundColor: colors.surface, padding: spacing.lg, borderRadius: 16, alignItems: "center", marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border },
-  pointsLabel: { color: colors.textMuted, fontSize: 13 },
-  pointsValue: { color: colors.primary, fontSize: 48, fontWeight: "800", marginVertical: 4 },
-  pointsHint: { color: colors.textSecondary, fontSize: 12, textAlign: "center" },
-  card: { backgroundColor: colors.surface, borderRadius: 12, padding: spacing.sm, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border },
+  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center", marginBottom: spacing.sm, overflow: "hidden" },
+  avatarText: { ...typography.heading, fontSize: 36, lineHeight: 44, color: colors.primaryOnDark, includeFontPadding: false },
+  name: { ...typography.heading, color: colors.ink },
+  email: { ...typography.caption, color: colors.inkSoft, marginTop: 4 },
+  demoTag: { marginTop: 8, ...typography.micro, color: colors.warning, backgroundColor: colors.warningSoft, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  pointsBox: { backgroundColor: colors.surface, padding: spacing.lg, borderRadius: 16, alignItems: "center", marginBottom: spacing.md, borderWidth: 1, borderColor: colors.hairline },
+  pointsHeader: { flexDirection: "row", alignItems: "center", gap: spacing.xs, marginBottom: 4 },
+  pointsLabel: { ...typography.caption, color: colors.inkMuted },
+  pointsValue: { ...typography.display, color: colors.primary, marginVertical: 4 },
+  pointsHint: { ...typography.caption, color: colors.inkSoft, textAlign: "center" },
+  card: { backgroundColor: colors.surface, borderRadius: 12, padding: spacing.sm, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.hairline },
   row: { flexDirection: "row", justifyContent: "space-between", padding: spacing.sm },
-  rowLabel: { color: colors.textSecondary },
-  rowValue: { color: colors.textPrimary, fontWeight: "600" },
-  menuItem: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: spacing.md, backgroundColor: colors.surface, borderRadius: 10, marginBottom: spacing.xs, borderWidth: 1, borderColor: colors.border },
-  menuLabel: { color: colors.textPrimary, fontSize: 16 },
-  menuArrow: { color: colors.textMuted, fontSize: 22 },
-  sectionTitle: { ...typography.heading, color: colors.primary, marginBottom: spacing.sm },
+  rowLabel: { ...typography.body, color: colors.inkSoft },
+  rowValue: { ...typography.bodyEmphasis, color: colors.ink },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    marginBottom: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    gap: spacing.sm,
+  },
+  menuLabel: { flex: 1, ...typography.body, color: colors.ink },
 });

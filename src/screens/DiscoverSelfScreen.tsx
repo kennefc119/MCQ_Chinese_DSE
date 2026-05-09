@@ -121,7 +121,7 @@ export default function DiscoverSelfScreen() {
 
       {/* ── Passage radar ─────────────────────────── */}
       <View style={styles.analyticsCard}>
-        <Text style={styles.analyticsTitle}>📚 篇章掌握度</Text>
+        <Text style={styles.analyticsTitle}>篇章掌握度</Text>
         <Text style={styles.analyticsHint}>各篇章答題平均得分率（完成 3 次以上練習後更新）</Text>
         {hasData && passages.length === 12 ? (
           <View style={styles.chartCenter}>
@@ -144,7 +144,7 @@ export default function DiscoverSelfScreen() {
 
       {/* ── Skills radar ──────────────────────────── */}
       <View style={styles.analyticsCard}>
-        <Text style={styles.analyticsTitle}>🎯 能力分析</Text>
+        <Text style={styles.analyticsTitle}>能力分析</Text>
         <Text style={styles.analyticsHint}>各語文能力答題正確率（基於種子題庫）</Text>
         {hasData ? (
           <View style={styles.chartCenter}>
@@ -195,10 +195,11 @@ export default function DiscoverSelfScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.cardTitle}>{test.title}</Text>
                 <Text style={styles.cardDesc}>{test.description}</Text>
-                <Text style={styles.cardMeta}>📝 {test.question_count} 題　・　⏱ 約 {test.estimated_minutes} 分鐘</Text>
+                <Text style={styles.cardMeta}>{test.question_count} 題　・　約 {test.estimated_minutes} 分鐘</Text>
                 {resultMapping && (
                   <View style={styles.resultBadge}>
-                    <Text style={styles.resultBadgeText}>上次：{resultMapping.emoji} {resultMapping.title}</Text>
+                    <Text style={styles.resultBadgeLabel}>上次結果</Text>
+                    <Text style={styles.resultBadgeText} numberOfLines={2}>{resultMapping.title}</Text>
                   </View>
                 )}
               </View>
@@ -266,15 +267,26 @@ const styles = StyleSheet.create({
   cardDesc: { color: colors.textSecondary, marginTop: 4, lineHeight: 20 },
   cardMeta: { color: colors.textMuted, fontSize: 12, marginTop: 6 },
   resultBadge: {
-    marginTop: 8,
+    marginTop: 10,
     alignSelf: "flex-start",
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    maxWidth: "100%",
   },
-  resultBadgeText: { color: colors.textSecondary, fontSize: 12 },
+  resultBadgeLabel: {
+    color: "rgba(255,255,255,0.82)",
+    fontSize: 10,
+    fontWeight: "600",
+    letterSpacing: 1.5,
+    marginBottom: 2,
+  },
+  resultBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "800",
+    lineHeight: 22,
+  },
 });
 

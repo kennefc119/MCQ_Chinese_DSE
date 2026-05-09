@@ -29,10 +29,11 @@ export default function InboxScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={{ padding: spacing.md }}>
-        <Text style={styles.title}>收件箱</Text>
+          <Text style={styles.title}>收件箱</Text>
+          <Text style={styles.subtitle}>系統公告與通知，悉數在此。</Text>
       </View>
       {items.length === 0 ? (
-        <EmptyState icon="📭" title="沒有新訊息" subtitle="管理員的公告與系統通知會顯示在這裡" />
+        <EmptyState title="信箱安靜" subtitle="新的公告與系統通知會在此靜候。" />
       ) : (
         <FlatList
           data={items}
@@ -54,11 +55,12 @@ export default function InboxScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
-  title: { ...typography.title, color: colors.primary },
-  card: { backgroundColor: colors.surface, padding: spacing.md, borderRadius: 10, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.border },
-  unread: { borderColor: colors.primary },
-  unreadDot: { position: "absolute", top: 12, right: 12, width: 8, height: 8, borderRadius: 4, backgroundColor: colors.accent },
-  cardTitle: { ...typography.heading, color: colors.textPrimary, fontSize: 16 },
-  cardBody: { color: colors.textSecondary, marginTop: 4, lineHeight: 20 },
-  cardDate: { color: colors.textMuted, fontSize: 11, marginTop: 6 },
+  title: { ...typography.heading, color: colors.ink },
+  subtitle: { ...typography.caption, color: colors.inkSoft, marginTop: 2 },
+  card: { backgroundColor: colors.surface, padding: spacing.md, borderRadius: 12, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.hairline },
+  unread: { borderColor: colors.primary, borderLeftWidth: 3 },
+  unreadDot: { position: "absolute", top: 12, right: 12, width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
+  cardTitle: { ...typography.bodyEmphasis, color: colors.ink },
+  cardBody: { ...typography.body, color: colors.inkSoft, marginTop: 4, lineHeight: 21 },
+  cardDate: { ...typography.micro, color: colors.inkMuted, marginTop: 8 },
 });

@@ -31,7 +31,7 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Method not allowed" }, 405);
   }
 
-  // ── 1. Auth: verify Supabase JWT ────────────────────────────────────────
+  // ── 1. Auth: identify caller (guests send anon key — that's allowed) ───
   const authHeader = req.headers.get("Authorization") ?? "";
   const jwt = authHeader.replace("Bearer ", "").trim();
   if (!jwt) return json({ error: "Unauthorised" }, 401);
@@ -41,12 +41,44 @@ Deno.serve(async (req: Request) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  const { data: userData, error: authErr } = await supabase.auth.getUser(jwt);
-  if (authErr || !userData?.user) return json({ error: "Unauthorised" }, 401);
+  // getUser returns null for guests (anon key ≠ user JWT) — that's ok.
+  const { data: userData } = await supabase.auth.getUser(jwt);
+  const userId: string | null = userData?.user?.id ?? null;
 
-  const userId = userData.user.id;
+  // ── 2. Monthly limit check for authenticated users ─────────────────────
+  if (userId) {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
 
-  // ── 2. Parse body ──────────────────────────────────────────────────────
+    const [countResp, profileResp] = await Promise.all([
+      supabase
+        .from("dsemcq_advisor_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .gte("created_at", startOfMonth.toISOString()),
+      supabase
+        .from("dsemcq_profiles")
+        .select("subscription_tier")
+        .eq("id", userId)
+        .single(),
+    ]);
+
+    const used = countResp.count ?? 0;
+    const tier = (profileResp.data as { subscription_tier?: string } | null)?.subscription_tier ?? "free";
+    const monthlyLimit = tier === "premium" ? 300 : 20;
+
+    if (used >= monthlyLimit) {
+      return json({
+        error: tier === "premium"
+          ? `高級版每月 ${monthlyLimit} 次已用盡。如需更多請聯絡客服。`
+          : `免費版每月限 ${monthlyLimit} 次，升級至高級版可享每月 300 次。`,
+        code: "MONTHLY_LIMIT",
+      }, 200);
+    }
+  }
+
+  // ── 3. Parse body ──────────────────────────────────────────────────────
   let body: { message?: string; system?: string; history?: Array<{ role: string; text: string }> };
   try {
     body = await req.json();
@@ -128,15 +160,16 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Empty reply from AI service" }, 502);
   }
 
-  // ── 6. Persist exchange to dsemcq_advisor_messages ────────────────────
-  const { error: dbErr } = await supabase.from("dsemcq_advisor_messages").insert({
-    user_id:   userId,
-    user_text: userMessage,
-    bot_reply: reply,
-  });
-
-  if (dbErr) {
-    console.error("DB insert error:", dbErr.message);
+  // ── 6. Persist exchange (authenticated users only — guests not tracked) ──
+  if (userId) {
+    const { error: dbErr } = await supabase.from("dsemcq_advisor_messages").insert({
+      user_id:   userId,
+      user_text: userMessage,
+      bot_reply: reply,
+    });
+    if (dbErr) {
+      console.error("DB insert error:", dbErr.message);
+    }
   }
 
   // ── 7. Return reply ────────────────────────────────────────────────────

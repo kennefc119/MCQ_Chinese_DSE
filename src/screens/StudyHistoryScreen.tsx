@@ -189,7 +189,7 @@ export default function StudyHistoryScreen() {
                   </Text>
                   {skillDetail ? (
                     <Text style={styles.recordPassage} numberOfLines={1}>
-                      📚 {skillDetail}
+                      {skillDetail}
                     </Text>
                   ) : null}
                 </View>

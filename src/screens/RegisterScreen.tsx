@@ -43,7 +43,7 @@ export default function RegisterScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>建立你的學生檔案</Text>
-        <Text style={styles.subtitle}>{route.params.email}</Text>
+        <Text style={styles.subtitle}>{route.params.email}　·　簡單三步即成</Text>
 
         <FormInput label="暱稱" placeholder="如：小文" value={username} onChangeText={setUsername} maxLength={20} />
 
@@ -78,9 +78,9 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: spacing.lg },
-  title: { ...typography.title, color: colors.primary, marginBottom: spacing.xs },
-  subtitle: { ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg },
-  fieldLabel: { ...typography.caption, color: colors.textSecondary, fontWeight: "600", marginBottom: spacing.sm, marginTop: spacing.sm },
+  title: { ...typography.heading, color: colors.ink, marginBottom: spacing.xs },
+  subtitle: { ...typography.caption, color: colors.inkSoft, marginBottom: spacing.lg },
+  fieldLabel: { ...typography.micro, color: colors.inkSoft, marginBottom: spacing.sm, marginTop: spacing.sm },
   row: { flexDirection: "row", flexWrap: "wrap", marginBottom: spacing.md },
   chip: {
     paddingHorizontal: 16,
@@ -88,11 +88,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.hairline,
     marginRight: spacing.sm,
     marginBottom: spacing.sm,
   },
   chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipText: { ...typography.body, color: colors.textPrimary },
-  chipTextActive: { color: "#1A1208", fontWeight: "700" },
+  chipText: { ...typography.body, color: colors.ink },
+  chipTextActive: { color: colors.primaryOnDark, fontWeight: "700" },
 });

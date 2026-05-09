@@ -5,6 +5,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { colors, spacing, typography } from "../theme";
+import Icon from "../components/Icon";
+import InkDivider from "../components/InkDivider";
 import { TERMS_SECTIONS, TERMS_LAST_UPDATED } from "../content/termsContent";
 import { PRIVACY_SECTIONS, PRIVACY_LAST_UPDATED } from "../content/privacyContent";
 
@@ -23,17 +25,17 @@ export default function LegalScreen() {
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => nav.goBack()} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Text style={styles.backText}>‹ 返回</Text>
+          <Icon name="chevron-back" size="md" color={colors.ink} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{title}</Text>
-        <View style={{ width: 56 }} />
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.company}>Keeonz Limited</Text>
-        <Text style={styles.meta}>最後更新：{lastUpdated}</Text>
+        <Text style={styles.meta}>最後更新　{lastUpdated}</Text>
 
-        <View style={styles.divider} />
+        <InkDivider style={{ marginVertical: spacing.md }} />
 
         {sections.map((sec, i) => (
           <View key={i} style={styles.section}>
@@ -43,7 +45,7 @@ export default function LegalScreen() {
         ))}
 
         <View style={styles.contactBox}>
-          <Text style={styles.contactLabel}>如有查詢，請聯絡我們：</Text>
+          <Text style={styles.contactLabel}>有任何疑問，歡迎聯絡：</Text>
           <TouchableOpacity onPress={() => Linking.openURL("mailto:cs@keeonz.ai")}>
             <Text style={styles.contactEmail}>cs@keeonz.ai</Text>
           </TouchableOpacity>
@@ -64,29 +66,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: colors.hairline,
   },
-  backBtn: { paddingHorizontal: 4 },
-  backText: { color: colors.primary, fontSize: 17 },
-  headerTitle: { ...typography.heading, color: colors.textPrimary, textAlign: "center", flex: 1 },
+  backBtn: { paddingHorizontal: 4, width: 40 },
+  headerTitle: { ...typography.heading, color: colors.ink, textAlign: "center", flex: 1 },
   content: { padding: spacing.lg },
-  company: { ...typography.body, color: colors.primary, fontWeight: "700", marginBottom: 4 },
-  meta: { ...typography.caption, color: colors.textMuted, marginBottom: spacing.sm },
-  divider: { height: 1, backgroundColor: colors.border, marginBottom: spacing.lg },
+  company: { ...typography.bodyEmphasis, color: colors.primary, marginBottom: 4 },
+  meta: { ...typography.micro, color: colors.inkMuted },
   section: { marginBottom: spacing.lg },
   sectionTitle: {
-    ...typography.heading,
-    color: colors.textPrimary,
-    fontWeight: "700",
+    ...typography.subheading,
+    color: colors.ink,
     marginBottom: spacing.sm,
     paddingBottom: spacing.xs,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: colors.hairline,
   },
   sectionBody: {
     ...typography.body,
-    color: colors.textSecondary,
-    lineHeight: 22,
+    color: colors.inkSoft,
+    lineHeight: 23,
   },
   contactBox: {
     marginTop: spacing.lg,
@@ -94,9 +93,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.hairline,
     alignItems: "center",
   },
-  contactLabel: { ...typography.caption, color: colors.textMuted, marginBottom: 4 },
-  contactEmail: { ...typography.body, color: colors.primary, fontWeight: "600" },
+  contactLabel: { ...typography.caption, color: colors.inkMuted, marginBottom: 4 },
+  contactEmail: { ...typography.bodyEmphasis, color: colors.primary },
 });

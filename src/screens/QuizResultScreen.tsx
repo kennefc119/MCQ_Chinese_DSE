@@ -10,7 +10,10 @@ import { shuffleOptionsForAttempt } from "../lib/shuffleUtils";
 import { useAuth } from "../context/AuthContext";
 import Button from "../components/Button";
 import LoadingScreen from "../components/LoadingScreen";
-import FloatingBalloons from "../components/FloatingBalloons";
+import SealStamp from "../components/SealStamp";
+import Icon from "../components/Icon";
+import SealMark from "../components/SealMark";
+import InkDivider from "../components/InkDivider";
 import { AppStackParamList } from "../navigation/types";
 
 type Nav = NativeStackNavigationProp<AppStackParamList, "QuizResult">;
@@ -68,35 +71,49 @@ export default function QuizResultScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-      <FloatingBalloons shown={passed} />
+      <SealStamp shown={passed} char="優" />
       <ScrollView contentContainerStyle={styles.body}>
-        <Text style={styles.emoji}>{passed ? "🎉" : "📚"}</Text>
         <Text style={[styles.title, { color: passed ? colors.success : colors.warning }]}>
-          {passed ? "通過" : "再接再厲"}
+          {passed ? "已過此關" : "再來一次"}
         </Text>
         <Text style={styles.score}>{attempt.score} / {attempt.total}</Text>
         <Text style={styles.percent}>{pct}%</Text>
-        {passed && <Text style={styles.reward}>+{quiz.points_reward} 文淵點</Text>}
+        {passed && (
+          <View style={styles.rewardRow}>
+            <SealMark char="淵" size={22} />
+            <Text style={styles.reward}>+{quiz.points_reward} 文淵點</Text>
+          </View>
+        )}
 
-        <View style={styles.divider} />
-        <Text style={styles.sectionTitle}>逐題解析</Text>
+        <InkDivider />
+        <Text style={styles.sectionTitle}>逐題回顧</Text>
 
         {displayQuestions.map((q, i) => {
           const sel = attempt.answers[q.id];
           const correctOpt = q.options.find((o) => o.is_correct);
           const skipped = sel == null;
           const isCorrect = !skipped && sel === correctOpt?.id;
-          const isWrong = !skipped && sel !== correctOpt?.id;
           return (
             <View key={q.id} style={styles.qBlock}>
-              <Text style={styles.qHeader}>
-                第 {i + 1} 題　{isCorrect ? "✅" : "❌"}
-                {skipped ? "　未作答" : ""}
-              </Text>
+              <View style={styles.qHeaderRow}>
+                <Text style={styles.qHeader}>第 {i + 1} 題</Text>
+                {isCorrect ? (
+                  <View style={[styles.qBadge, styles.qBadgeOk]}>
+                    <Icon name="checkmark" size="xs" color={colors.success} />
+                    <Text style={[styles.qBadgeText, { color: colors.success }]}>正確</Text>
+                  </View>
+                ) : (
+                  <View style={[styles.qBadge, styles.qBadgeBad]}>
+                    <Icon name="close" size="xs" color={colors.danger} />
+                    <Text style={[styles.qBadgeText, { color: colors.danger }]}>{skipped ? "未答" : "錯誤"}</Text>
+                  </View>
+                )}
+              </View>
               <Text style={styles.qStem}>{q.stem}</Text>
               {skipped && (
                 <View style={styles.skippedBanner}>
-                  <Text style={styles.skippedText}>⚠️ 此題未作答，視為錯誤</Text>
+                  <Icon name="alert-circle-outline" size="xs" color={colors.danger} style={{ marginRight: 6 }} />
+                  <Text style={styles.skippedText}>未作答，計為錯誤。</Text>
                 </View>
               )}
               {q.options.map((o, optIdx) => {
@@ -125,12 +142,14 @@ export default function QuizResultScreen() {
                       ]}>
                         <Text style={styles.optExplainText}>{o.explanation}</Text>
                         <TouchableOpacity style={styles.askAIBtn} onPress={() => askAI(q, o, displayLabel, correctOpt)}>
-                          <Text style={styles.askAIText}>🤖 問AI</Text>
+                          <Icon name="sparkles-outline" size="xs" color={colors.primary} style={{ marginRight: 4 }} />
+                          <Text style={styles.askAIText}>請教 AI</Text>
                         </TouchableOpacity>
                       </View>
                     ) : (
                       <TouchableOpacity style={styles.askAIBtnInline} onPress={() => askAI(q, o, displayLabel, correctOpt)}>
-                        <Text style={styles.askAIText}>🤖 問AI</Text>
+                        <Icon name="sparkles-outline" size="xs" color={colors.primary} style={{ marginRight: 4 }} />
+                        <Text style={styles.askAIText}>請教 AI</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -156,32 +175,36 @@ export default function QuizResultScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   body: { padding: spacing.md, alignItems: "stretch" },
-  emoji: { fontSize: 64, textAlign: "center", marginTop: spacing.md },
-  title: { ...typography.title, textAlign: "center", marginTop: spacing.sm },
-  score: { fontSize: 36, color: colors.primary, textAlign: "center", fontWeight: "800", marginTop: spacing.sm },
-  percent: { fontSize: 18, color: colors.textSecondary, textAlign: "center", marginTop: 4 },
-  reward: { color: colors.accent, fontSize: 18, fontWeight: "700", textAlign: "center", marginTop: spacing.sm },
-  divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.lg },
-  sectionTitle: { ...typography.heading, color: colors.primary, marginBottom: spacing.md },
-  qBlock: { backgroundColor: colors.surface, borderRadius: 12, padding: spacing.md, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border },
-  qHeader: { color: colors.textSecondary, marginBottom: spacing.xs, fontWeight: "600" },
-  qStem: { color: colors.textPrimary, fontSize: 15, marginBottom: spacing.sm, lineHeight: 22 },
+  title: { ...typography.heading, textAlign: "center", marginTop: spacing.xl },
+  score: { ...typography.display, color: colors.ink, textAlign: "center", marginTop: spacing.sm },
+  percent: { ...typography.body, color: colors.inkSoft, textAlign: "center", marginTop: 4 },
+  rewardRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.xs, marginTop: spacing.sm },
+  reward: { ...typography.bodyEmphasis, color: colors.primary },
+  sectionTitle: { ...typography.heading, color: colors.ink, marginBottom: spacing.md },
+  qBlock: { backgroundColor: colors.surface, borderRadius: 12, padding: spacing.md, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.hairline },
+  qHeaderRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.xs },
+  qHeader: { ...typography.bodyEmphasis, color: colors.inkSoft },
+  qBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+  qBadgeOk: { backgroundColor: colors.successSoft },
+  qBadgeBad: { backgroundColor: colors.errorSoft },
+  qBadgeText: { ...typography.micro, fontWeight: "700" },
+  qStem: { ...typography.body, color: colors.ink, marginBottom: spacing.sm, lineHeight: 22 },
   optRow: { flexDirection: "row", alignItems: "center", paddingVertical: 6 },
-  optCorrect: { backgroundColor: "rgba(91,191,116,0.15)", paddingHorizontal: 8, borderRadius: 6 },
-  optWrong: { backgroundColor: "rgba(199,93,78,0.15)", paddingHorizontal: 8, borderRadius: 6 },
-  optLabel: { color: colors.textSecondary, fontWeight: "700", marginRight: spacing.sm, width: 20 },
-  optText: { flex: 1, color: colors.textPrimary },
-  optTag: { color: colors.success, fontSize: 12, fontWeight: "700", marginLeft: spacing.sm },
-  optExplainBox: { marginLeft: 28, marginBottom: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: colors.surfaceAlt },
+  optCorrect: { backgroundColor: colors.successSoft, paddingHorizontal: 8, borderRadius: 6 },
+  optWrong: { backgroundColor: colors.errorSoft, paddingHorizontal: 8, borderRadius: 6 },
+  optLabel: { ...typography.bodyEmphasis, color: colors.inkSoft, marginRight: spacing.sm, width: 20 },
+  optText: { flex: 1, ...typography.body, color: colors.ink },
+  optTag: { ...typography.micro, color: colors.success, fontWeight: "700", marginLeft: spacing.sm },
+  optExplainBox: { marginLeft: 28, marginBottom: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, backgroundColor: colors.surfaceAlt },
   optExplainCorrect: { borderLeftWidth: 2, borderLeftColor: colors.success },
   optExplainWrong: { borderLeftWidth: 2, borderLeftColor: colors.danger },
-  optExplainText: { color: colors.textSecondary, fontSize: 12, lineHeight: 18 },
+  optExplainText: { ...typography.caption, color: colors.inkSoft, lineHeight: 18 },
   explainBox: { marginTop: spacing.sm, padding: spacing.sm, backgroundColor: colors.surfaceAlt, borderRadius: 8 },
-  explainTitle: { color: colors.accent, fontWeight: "700", marginBottom: 4 },
-  explainText: { color: colors.textSecondary, lineHeight: 20 },
-  skippedBanner: { backgroundColor: "rgba(199,93,78,0.12)", borderLeftWidth: 3, borderLeftColor: colors.danger, borderRadius: 6, paddingVertical: 6, paddingHorizontal: 10, marginBottom: spacing.sm },
-  skippedText: { color: colors.danger, fontSize: 13, fontWeight: "600" },
-  askAIBtn: { alignSelf: "flex-end", marginTop: 6, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.primary },
-  askAIBtnInline: { alignSelf: "flex-start", marginLeft: 28, marginTop: 2, marginBottom: 4, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.primary },
-  askAIText: { color: colors.primary, fontSize: 11, fontWeight: "700" },
+  explainTitle: { ...typography.bodyEmphasis, color: colors.primary, marginBottom: 4 },
+  explainText: { ...typography.body, color: colors.inkSoft, lineHeight: 20 },
+  skippedBanner: { flexDirection: "row", alignItems: "center", backgroundColor: colors.errorSoft, borderLeftWidth: 3, borderLeftColor: colors.danger, borderRadius: 6, paddingVertical: 6, paddingHorizontal: 10, marginBottom: spacing.sm },
+  skippedText: { ...typography.caption, color: colors.danger, fontWeight: "600" },
+  askAIBtn: { flexDirection: "row", alignItems: "center", alignSelf: "flex-end", marginTop: 6, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.primary },
+  askAIBtnInline: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", marginLeft: 28, marginTop: 2, marginBottom: 4, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.primary },
+  askAIText: { ...typography.micro, color: colors.primary, fontWeight: "700" },
 });

@@ -8,6 +8,8 @@ import { Quiz } from "../types/database";
 import { getQuiz, signUpForQuiz, startAttempt, listSignups } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import Button from "../components/Button";
+import Icon, { IconName } from "../components/Icon";
+import SealMark from "../components/SealMark";
 import { AppStackParamList } from "../navigation/types";
 
 type Nav = NativeStackNavigationProp<AppStackParamList, "QuizDetail">;
@@ -52,11 +54,11 @@ export default function QuizDetailScreen() {
     Alert.alert(
       `準備開始：${quiz.title}`,
       [
-        `📝 共 ${quiz.question_ids.length} 條選擇題`,
-        quiz.duration_seconds ? `⏱ 限時 ${Math.round(quiz.duration_seconds / 60)} 分鐘` : "⏱ 不限時",
-        quiz.max_attempts ? `🔁 上限 ${quiz.max_attempts} 次嘗試` : "🔁 不限次數",
-        `✅ 合格分數：${quiz.pass_score}%`,
-        `🏆 通過可獲 ${quiz.points_reward} 文淵點`,
+        `題目數　${quiz.question_ids.length} 題`,
+        `時限　　${quiz.duration_seconds ? `${Math.round(quiz.duration_seconds / 60)} 分鐘` : "不限"}`,
+        `次數　　${quiz.max_attempts ? `${quiz.max_attempts} 次` : "不限"}`,
+        `合格　　${quiz.pass_score}%`,
+        `獎勵　　${quiz.points_reward} 文淵點`,
         "",
         "作答時可前後翻頁修改答案，提交後始計分。",
       ].join("\n"),
@@ -93,21 +95,24 @@ export default function QuizDetailScreen() {
           <Text style={styles.desc}>{quiz.description}</Text>
 
           <View style={styles.metaCard}>
-            <Meta icon="📝" label="題目數" value={`${quiz.question_ids.length}`} />
-            <Meta icon="⏱" label="時限" value={quiz.duration_seconds ? `${Math.round(quiz.duration_seconds / 60)} 分鐘` : "不限"} />
-            <Meta icon="🔁" label="嘗試次數" value={quiz.max_attempts ? `${quiz.max_attempts} 次` : "無限"} />
-            <Meta icon="✅" label="合格" value={`${quiz.pass_score}%`} />
-            <Meta icon="⭐" label="難度" value={"★".repeat(quiz.difficulty)} />
-            <Meta icon="🏆" label="獎勵" value={`${quiz.points_reward} 文淵點`} />
+            <Meta icon="document-text-outline" label="題目" value={`${quiz.question_ids.length}`} />
+            <Meta icon="time-outline" label="時限" value={quiz.duration_seconds ? `${Math.round(quiz.duration_seconds / 60)} 分鐘` : "不限"} />
+            <Meta icon="repeat-outline" label="次數" value={quiz.max_attempts ? `${quiz.max_attempts} 次` : "不限"} />
+            <Meta icon="checkmark-circle-outline" label="合格" value={`${quiz.pass_score}%`} />
+            <Meta icon="bar-chart-outline" label="難度" value={"★".repeat(quiz.difficulty)} />
+            <Meta icon="ribbon-outline" label="獎勵" value={`${quiz.points_reward} 點`} />
           </View>
 
           {locked ? (
             <View style={styles.lockBox}>
-              <Text style={styles.lockTitle}>🔒 尚未解鎖</Text>
-              <Text style={styles.lockBody}>需累積 {quiz.min_points_required} 文淵點才能參加（你目前 {user?.wenyuan_points ?? 0} 點）</Text>
+              <View style={styles.lockTitleRow}>
+                <Icon name="lock-closed-outline" size="sm" color={colors.warning} />
+                <Text style={styles.lockTitle}>尚未解鎖</Text>
+              </View>
+              <Text style={styles.lockBody}>需累積 {quiz.min_points_required} 文淵點方可挑戰（現有 {user?.wenyuan_points ?? 0} 點）</Text>
             </View>
           ) : (
-            <Button title={signedUp ? "再次挑戰" : "加入並開始"} onPress={onJoin} loading={loading} />
+            <Button title={signedUp ? "再來一次" : "開始作答"} onPress={onJoin} loading={loading} />
           )}
           <Button title="返回" variant="ghost" onPress={() => nav.goBack()} />
         </View>
@@ -116,9 +121,9 @@ export default function QuizDetailScreen() {
   );
 }
 
-const Meta = ({ icon, label, value }: { icon: string; label: string; value: string }) => (
+const Meta = ({ icon, label, value }: { icon: IconName; label: string; value: string }) => (
   <View style={styles.metaItem}>
-    <Text style={styles.metaIcon}>{icon}</Text>
+    <Icon name={icon} size="md" color={colors.inkSoft} />
     <Text style={styles.metaLabel}>{label}</Text>
     <Text style={styles.metaValue}>{value}</Text>
   </View>
@@ -129,15 +134,15 @@ const styles = StyleSheet.create({
   cover: { width: "100%", height: 220 },
   body: { padding: spacing.md },
   badge: { alignSelf: "flex-start", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, marginBottom: spacing.sm },
-  badgeText: { color: "#1A1208", fontWeight: "700" },
-  title: { ...typography.title, color: colors.textPrimary, marginBottom: spacing.sm },
-  desc: { ...typography.body, color: colors.textSecondary, lineHeight: 24, marginBottom: spacing.md },
-  metaCard: { flexDirection: "row", flexWrap: "wrap", backgroundColor: colors.surface, borderRadius: 12, padding: spacing.md, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border },
-  metaItem: { width: "33.33%", padding: spacing.xs, alignItems: "center" },
-  metaIcon: { fontSize: 22 },
-  metaLabel: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
-  metaValue: { color: colors.textPrimary, fontWeight: "600", marginTop: 2 },
-  lockBox: { backgroundColor: colors.surfaceAlt, padding: spacing.md, borderRadius: 12, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.warning },
-  lockTitle: { ...typography.heading, color: colors.warning },
-  lockBody: { color: colors.textSecondary, marginTop: 4 },
+  badgeText: { color: colors.primaryOnDark, ...typography.micro, fontWeight: "700" },
+  title: { ...typography.heading, color: colors.ink, marginBottom: spacing.sm },
+  desc: { ...typography.body, color: colors.inkSoft, lineHeight: 24, marginBottom: spacing.md },
+  metaCard: { flexDirection: "row", flexWrap: "wrap", backgroundColor: colors.surface, borderRadius: 12, padding: spacing.md, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.hairline },
+  metaItem: { width: "33.33%", paddingVertical: spacing.sm, alignItems: "center" },
+  metaLabel: { ...typography.micro, color: colors.inkMuted, marginTop: 4 },
+  metaValue: { ...typography.bodyEmphasis, color: colors.ink, marginTop: 2 },
+  lockBox: { backgroundColor: colors.warningSoft, padding: spacing.md, borderRadius: 12, marginBottom: spacing.sm, borderLeftWidth: 3, borderLeftColor: colors.warning },
+  lockTitleRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  lockTitle: { ...typography.bodyEmphasis, color: colors.warning },
+  lockBody: { ...typography.caption, color: colors.inkSoft, marginTop: 4 },
 });

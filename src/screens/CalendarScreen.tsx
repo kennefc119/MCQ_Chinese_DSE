@@ -206,7 +206,7 @@ export default function CalendarScreen() {
                   )}
                   <View style={{ flex: 1 }}>
                     <Text style={styles.recordTitle} numberOfLines={1}>{heroTitle}</Text>
-                    {skillDetail ? <Text style={styles.recordPassage} numberOfLines={1}>📚 {skillDetail}</Text> : null}
+                    {skillDetail ? <Text style={styles.recordPassage} numberOfLines={1}>{skillDetail}</Text> : null}
                   </View>
                   <View style={styles.recordRight}>
                     {pct !== null && (

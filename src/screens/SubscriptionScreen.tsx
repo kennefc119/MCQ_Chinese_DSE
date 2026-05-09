@@ -28,7 +28,7 @@ export default function SubscriptionScreen() {
         </View>
 
         <View style={[styles.plan, isPremium && styles.planActive, { borderColor: colors.primary }]}>
-          <Text style={[styles.planName, { color: colors.primary }]}>高級版 💎</Text>
+          <Text style={[styles.planName, { color: colors.primary }]}>高級版</Text>
           <Text style={styles.planPrice}>HK$48 / 月</Text>
           {PERKS_PREMIUM.map((p) => <Text key={p} style={styles.perk}>• {p}</Text>)}
           {isPremium ? (

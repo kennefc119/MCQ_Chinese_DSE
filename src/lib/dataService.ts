@@ -138,8 +138,13 @@ export async function listTipCards(): Promise<TipCard[]> {
 
 export async function listPsychTests(): Promise<PsychTest[]> {
   if (!isSupabaseConfigured) return SEED_PSYCH_TESTS;
-  const { data } = await supabase.from("dsemcq_psych_tests").select("*").eq("is_active", true).order("position");
-  return (data as PsychTest[]) ?? [];
+  const { data, error } = await supabase.from("dsemcq_psych_tests").select("*").eq("is_active", true).order("position");
+  if (error) {
+    console.warn("[dsemcq] listPsychTests error — falling back to seed:", error.message);
+    return SEED_PSYCH_TESTS;
+  }
+  if (!data || data.length === 0) return SEED_PSYCH_TESTS;
+  return data as PsychTest[];
 }
 
 export async function savePsychResult(userId: string, testId: string, resultCode: string) {

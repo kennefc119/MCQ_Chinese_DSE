@@ -10,6 +10,8 @@ import { colors, spacing, typography } from "../theme";
 import { useAuth } from "../context/AuthContext";
 import Button from "../components/Button";
 import FormInput from "../components/FormInput";
+import Icon from "../components/Icon";
+import SealMark from "../components/SealMark";
 import { AuthStackParamList } from "../navigation/types";
 
 // Apple Review test account — DO NOT remove (used by App Store review team)
@@ -85,9 +87,11 @@ export default function LoginScreen() {
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
 
           {/* Branding */}
-          <Text style={styles.brand}>📜</Text>
-          <Text style={styles.title}>DSE 文言文 MCQ</Text>
-          <Text style={styles.subtitle}>專為香港中學文憑試考生而設的文言文練習平台</Text>
+          <View style={styles.brandWrap}>
+            <SealMark char="文" size={64} />
+          </View>
+          <Text style={styles.title}>文淵 · DSE 中文 MCQ</Text>
+          <Text style={styles.subtitle}>香港中學文憑試中文閱讀練習，靜心一題一題溫。</Text>
 
           <View style={{ height: spacing.xl }} />
 
@@ -113,7 +117,7 @@ export default function LoginScreen() {
           {/* Secondary: Guest + School — side by side */}
           <View style={styles.altRow}>
             <TouchableOpacity style={styles.altBtn} onPress={enterGuest}>
-              <Text style={styles.altBtnIcon}>👀</Text>
+              <Icon name="eye-outline" size="md" color={colors.inkSoft} />
               <Text style={styles.altBtnText}>訪客瀏覽</Text>
             </TouchableOpacity>
 
@@ -121,9 +125,13 @@ export default function LoginScreen() {
               style={[styles.altBtn, activePanel === "school" && styles.altBtnActive]}
               onPress={() => togglePanel("school")}
             >
-              <Text style={styles.altBtnIcon}>🏫</Text>
+              <Icon
+                name="school-outline"
+                size="md"
+                color={activePanel === "school" ? colors.primary : colors.inkSoft}
+              />
               <Text style={[styles.altBtnText, activePanel === "school" && { color: colors.primary }]}>
-                學校平台登入
+                學校登入
               </Text>
             </TouchableOpacity>
           </View>
@@ -170,7 +178,8 @@ export default function LoginScreen() {
             <>
               <Text style={styles.demoNote}>未設定 Supabase — 可進入示範模式體驗 App</Text>
               <TouchableOpacity onPress={enterDemo} style={styles.demoBtn}>
-                <Text style={styles.demoText}>🎮 直接進入示範模式</Text>
+                <Icon name="play-circle-outline" size="sm" color={colors.primary} style={{ marginRight: 6 }} />
+                <Text style={styles.demoText}>進入試讀模式</Text>
               </TouchableOpacity>
             </>
           )}
@@ -189,7 +198,8 @@ export default function LoginScreen() {
 
           {/* Password login — discreet, for Apple review only */}
           <TouchableOpacity onPress={() => togglePanel("password")} style={styles.pwToggle}>
-            <Text style={styles.pwToggleText}>🔑 密碼登入</Text>
+            <Icon name="key-outline" size="xs" color={colors.inkMuted} style={{ marginRight: 4 }} />
+            <Text style={styles.pwToggleText}>以密碼登入</Text>
           </TouchableOpacity>
 
           {activePanel === "password" && (
@@ -234,14 +244,14 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { flexGrow: 1, padding: spacing.lg, justifyContent: "center", paddingBottom: spacing.xl },
-  brand: { fontSize: 64, textAlign: "center", marginBottom: spacing.md },
-  title: { ...typography.title, color: colors.primary, textAlign: "center" },
-  subtitle: { ...typography.body, color: colors.textSecondary, textAlign: "center", marginTop: spacing.sm },
+  brandWrap: { alignItems: "center", marginBottom: spacing.md },
+  title: { ...typography.title, color: colors.ink, textAlign: "center" },
+  subtitle: { ...typography.body, color: colors.inkSoft, textAlign: "center", marginTop: spacing.sm },
 
   // Divider
   dividerRow: { flexDirection: "row", alignItems: "center", marginVertical: spacing.lg },
-  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
-  dividerText: { ...typography.caption, color: colors.textMuted, marginHorizontal: spacing.md },
+  dividerLine: { flex: 1, height: 1, backgroundColor: colors.hairline },
+  dividerText: { ...typography.caption, color: colors.inkMuted, marginHorizontal: spacing.md },
 
   // Alt buttons row
   altRow: { flexDirection: "row", gap: spacing.sm, marginBottom: spacing.md },
@@ -252,13 +262,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.hairline,
     backgroundColor: colors.surface,
-    gap: 4,
+    gap: 6,
   },
-  altBtnActive: { borderColor: colors.primary, backgroundColor: "rgba(212,162,76,0.08)" },
-  altBtnIcon: { fontSize: 22 },
-  altBtnText: { ...typography.caption, color: colors.textSecondary, fontWeight: "600", textAlign: "center" },
+  altBtnActive: { borderColor: colors.primary, backgroundColor: "rgba(178,58,46,0.06)" },
+  altBtnText: { ...typography.caption, color: colors.inkSoft, fontWeight: "600", textAlign: "center" },
 
   // Shared panel
   panel: {
@@ -270,15 +279,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     gap: 6,
   },
-  panelTitle: { ...typography.heading, color: colors.primary, fontWeight: "700" },
-  panelSub: { ...typography.caption, color: colors.textMuted, marginBottom: spacing.xs },
+  panelTitle: { ...typography.heading, color: colors.ink },
+  panelSub: { ...typography.caption, color: colors.inkMuted, marginBottom: spacing.xs },
   input: {
     backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.hairline,
     borderRadius: 8,
     padding: spacing.sm,
-    color: colors.textPrimary,
+    color: colors.ink,
     ...typography.body,
   },
   panelBtn: {
@@ -288,27 +297,27 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     alignItems: "center",
   },
-  panelBtnText: { ...typography.button, color: colors.background },
+  panelBtnText: { ...typography.button, color: colors.primaryOnDark },
   panelLink: { alignItems: "center", paddingVertical: spacing.xs },
   panelLinkText: { ...typography.caption, color: colors.primary },
 
   // Password login (discreet)
-  pwToggle: { alignItems: "center", paddingVertical: spacing.sm, marginTop: spacing.xs },
-  pwToggleText: { ...typography.caption, color: colors.textMuted },
+  pwToggle: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: spacing.sm, marginTop: spacing.xs },
+  pwToggleText: { ...typography.caption, color: colors.inkMuted },
   pwPanel: {
     backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.hairline,
     padding: spacing.md,
     marginBottom: spacing.sm,
     gap: 6,
   },
 
   // Demo
-  demoNote: { ...typography.caption, color: colors.textMuted, textAlign: "center", marginTop: spacing.lg },
-  demoBtn: { padding: spacing.md, alignItems: "center", marginTop: spacing.sm },
-  demoText: { ...typography.button, color: colors.accent },
+  demoNote: { ...typography.caption, color: colors.inkMuted, textAlign: "center", marginTop: spacing.lg },
+  demoBtn: { flexDirection: "row", padding: spacing.md, alignItems: "center", justifyContent: "center", marginTop: spacing.sm },
+  demoText: { ...typography.button, color: colors.primary },
 
   // Footer
   footerRow: {
@@ -318,6 +327,6 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     marginTop: spacing.xl,
   },
-  footerText: { ...typography.caption, color: colors.textMuted },
+  footerText: { ...typography.caption, color: colors.inkMuted },
   footerLink: { ...typography.caption, color: colors.primary, textDecorationLine: "underline" },
 });

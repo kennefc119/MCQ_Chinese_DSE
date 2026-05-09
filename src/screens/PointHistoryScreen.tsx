@@ -78,7 +78,7 @@ export default function PointHistoryScreen() {
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>暫無記錄　完成測驗後即可在此查看</Text>
+            <Text style={styles.emptyText}>暫未有紀錄。完成測驗即見此處。</Text>
           </View>
         }
         renderItem={({ item: attempt }) => {
@@ -126,10 +126,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: colors.hairline,
   },
   backBtn: { width: 40, alignItems: "flex-start" },
-  title: { ...typography.heading, color: colors.primary, fontSize: 18 },
+  title: { ...typography.heading, color: colors.ink },
   summaryBox: {
     backgroundColor: colors.surface,
     borderRadius: 16,
@@ -137,26 +137,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.hairline,
   },
-  summaryLabel: { color: colors.textMuted, fontSize: 13 },
-  summaryValue: { color: colors.primary, fontSize: 48, fontWeight: "800", marginVertical: 4 },
-  summaryHint: { color: colors.textSecondary, fontSize: 12 },
+  summaryLabel: { ...typography.micro, color: colors.inkMuted },
+  summaryValue: { ...typography.display, color: colors.primary, fontSize: 48, lineHeight: 58, marginVertical: 4 },
+  summaryHint: { ...typography.caption, color: colors.inkSoft },
   card: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: colors.surface,
     padding: spacing.md,
-    borderRadius: 10,
+    borderRadius: 12,
     marginBottom: spacing.xs,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.hairline,
   },
-  cardTitle: { color: colors.textPrimary, fontWeight: "600", fontSize: 13 },
-  cardDate: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
-  cardScore: { color: colors.textSecondary, fontSize: 12 },
-  cardPoints: { color: colors.primary, fontWeight: "700", fontSize: 12, marginTop: 2 },
-  cardPointsMuted: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
+  cardTitle: { ...typography.bodyEmphasis, color: colors.ink, fontSize: 14 },
+  cardDate: { ...typography.micro, color: colors.inkMuted, marginTop: 2 },
+  cardScore: { ...typography.caption, color: colors.inkSoft },
+  cardPoints: { ...typography.bodyEmphasis, color: colors.primary, fontSize: 13, marginTop: 2 },
+  cardPointsMuted: { ...typography.caption, color: colors.inkMuted, marginTop: 2 },
   empty: { alignItems: "center", paddingVertical: 48 },
-  emptyText: { color: colors.textMuted, fontSize: 14, textAlign: "center" },
+  emptyText: { ...typography.body, color: colors.inkMuted, textAlign: "center" },
 });
