@@ -125,6 +125,9 @@ export interface PsychTest {
   estimated_minutes: number;
   questions: PsychQuestion[];
   results: PsychResultMapping[];
+  color_hex?: string;
+  position?: number;
+  featured?: boolean;
 }
 
 export interface PsychQuestion {
@@ -138,6 +141,19 @@ export interface PsychResultMapping {
   title: string;
   description: string;
   emoji: string;
+  // Enriched fields (v2 tests only — optional for backward compat)
+  historical_figure?: string;
+  historical_background?: string;
+  strengths?: string[];
+  weaknesses?: string[];
+  famous_quote?: string;
+  study_tips?: string[];
+}
+
+export interface PsychUserResult {
+  test_id: string;
+  result_code: string;
+  completed_at: string;
 }
 
 export interface PsychResult {

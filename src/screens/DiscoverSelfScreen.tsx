@@ -7,7 +7,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, typography } from "../theme";
 import { PsychTest, Attempt, Quiz, Passage } from "../types/database";
-import { listPsychTests, listUserAttempts, listQuizzes, listPassages } from "../lib/dataService";
+import { listPsychTests, listUserAttempts, listQuizzes, listPassages, listUserPsychResults } from "../lib/dataService";
 import { SEED_QUESTIONS } from "../data/seedQuestions";
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
@@ -46,6 +46,7 @@ export default function DiscoverSelfScreen() {
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [quizzes, setQuizzes]   = useState<Quiz[]>([]);
   const [passages, setPassages] = useState<Passage[]>([]);
+  const [userPsychResults, setUserPsychResults] = useState<Record<string, { result_code: string; completed_at: string }>>({});
 
   useEffect(() => {
     listPsychTests().then(setTests);
@@ -54,9 +55,10 @@ export default function DiscoverSelfScreen() {
 
   useFocusEffect(useCallback(() => {
     if (!user) return;
-    Promise.all([listUserAttempts(user.id), listQuizzes()]).then(([as, qs]) => {
+    Promise.all([listUserAttempts(user.id), listQuizzes(), listUserPsychResults(user.id)]).then(([as, qs, pr]) => {
       setAttempts(as.filter((a) => a.status === "submitted"));
       setQuizzes(qs);
+      setUserPsychResults(pr);
     });
   }, [user]));
 
@@ -172,26 +174,37 @@ export default function DiscoverSelfScreen() {
         keyExtractor={(t) => t.id}
         contentContainerStyle={{ padding: spacing.md }}
         ListHeaderComponent={ListHeader}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.card}
-            activeOpacity={0.85}
-            onPress={() => nav.navigate("PsychTest", { testId: item.id })}
-          >
-            <View style={styles.iconWrap}>
-              <Ionicons
-                name={PSYCH_ICON_MAP[item.icon_name] ?? "sparkles"}
-                size={24}
-                color={colors.primary}
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitle}>{item.title}</Text>
-              <Text style={styles.cardDesc}>{item.description}</Text>
-              <Text style={styles.cardMeta}>📝 {item.question_count} 題　・　⏱ 約 {item.estimated_minutes} 分鐘</Text>
-            </View>
-          </TouchableOpacity>
-        )}
+        renderItem={({ item: test }) => {
+          const pastResult = userPsychResults[test.id];
+          const resultMapping = pastResult
+            ? test.results.find((r) => r.code === pastResult.result_code)
+            : null;
+          return (
+            <TouchableOpacity
+              style={[styles.card, test.color_hex ? { backgroundColor: test.color_hex + "22" } : null]}
+              activeOpacity={0.85}
+              onPress={() => nav.navigate("PsychTest", { testId: test.id })}
+            >
+              <View style={styles.iconWrap}>
+                <Ionicons
+                  name={PSYCH_ICON_MAP[test.icon_name] ?? "sparkles"}
+                  size={24}
+                  color={test.color_hex ?? colors.primary}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.cardTitle}>{test.title}</Text>
+                <Text style={styles.cardDesc}>{test.description}</Text>
+                <Text style={styles.cardMeta}>📝 {test.question_count} 題　・　⏱ 約 {test.estimated_minutes} 分鐘</Text>
+                {resultMapping && (
+                  <View style={styles.resultBadge}>
+                    <Text style={styles.resultBadgeText}>上次：{resultMapping.emoji} {resultMapping.title}</Text>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+          );
+        }}
       />
     </SafeAreaView>
   );
@@ -252,5 +265,16 @@ const styles = StyleSheet.create({
   cardTitle: { ...typography.heading, color: colors.textPrimary },
   cardDesc: { color: colors.textSecondary, marginTop: 4, lineHeight: 20 },
   cardMeta: { color: colors.textMuted, fontSize: 12, marginTop: 6 },
+  resultBadge: {
+    marginTop: 8,
+    alignSelf: "flex-start",
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  resultBadgeText: { color: colors.textSecondary, fontSize: 12 },
 });
 

@@ -1,4 +1,4 @@
-import { Quiz, Question, QuestionOption, Attempt, QuizSignup, InboxMessage, TipCard, PsychTest, Passage } from "../types/database";
+import { Quiz, Question, QuestionOption, Attempt, QuizSignup, InboxMessage, TipCard, PsychTest, PsychUserResult, Passage } from "../types/database";
 import { isSupabaseConfigured, supabase } from "./supabase";
 import { SEED_QUIZZES } from "../data/seedQuizzes";
 import { SEED_QUESTIONS } from "../data/seedQuestions";
@@ -153,6 +153,16 @@ export async function savePsychResult(userId: string, testId: string, resultCode
     },
     { onConflict: "user_id,test_id" }
   );
+}
+
+export async function listUserPsychResults(userId: string): Promise<Record<string, { result_code: string; completed_at: string }>> {
+  if (!isSupabaseConfigured) return {};
+  const { data } = await supabase
+    .from("dsemcq_psych_user_results")
+    .select("test_id, result_code, completed_at")
+    .eq("user_id", userId);
+  if (!data) return {};
+  return Object.fromEntries(data.map((r: { test_id: string; result_code: string; completed_at: string }) => [r.test_id, { result_code: r.result_code, completed_at: r.completed_at }]));
 }
 
 // ── Inbox ────────────────────────────────────────────────────
