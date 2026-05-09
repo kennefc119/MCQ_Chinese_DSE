@@ -3,15 +3,15 @@
 // Persists each exchange to dsemcq_advisor_messages via service-role key.
 //
 // Required env vars (set in Supabase Dashboard → Edge Functions → Secrets):
-//   POE_API_KEY       — Poe API key (poe.com/api_key)
-//   POE_BOT_NAME      — Poe bot name to target, e.g. "GPT-4o-Mini" (default)
+//   POE_API_KEY            — Poe API key (poe.com/api_key)
+//   DSE_ADVISOR_BOT_NAME   — Poe bot name to target, e.g. "GPT-4o-Mini" (default)
 //   SUPABASE_URL      — auto-injected by Supabase
 //   SUPABASE_SERVICE_ROLE_KEY — auto-injected by Supabase
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const POE_CHAT_URL  = "https://api.poe.com/v1/chat/completions";
-const DEFAULT_BOT   = "GPT-4o-Mini";
+const DEFAULT_BOT   = "DSEChatConsultant";
 const MAX_REPLY_CHARS = 1200; // hard-cap to stay within ~200 Chinese chars
 
 // ── CORS headers for Expo / React Native fetch ────────────────────────────
@@ -83,7 +83,7 @@ Deno.serve(async (req: Request) => {
 
   // ── 4. Call Poe OpenAI-compatible API ─────────────────────────────────
   const poeApiKey = Deno.env.get("POE_API_KEY") ?? "";
-  const botName   = Deno.env.get("POE_BOT_NAME") ?? DEFAULT_BOT;
+  const botName   = Deno.env.get("DSE_ADVISOR_BOT_NAME") ?? DEFAULT_BOT;
 
   if (!poeApiKey) {
     console.error("POE_API_KEY not set");

@@ -3,11 +3,12 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, FlatList, Modal, BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp, CommonActions } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, spacing, typography } from "../theme";
 import { Question, Quiz } from "../types/database";
 import { getQuestionsForQuiz, getQuiz, saveAnswer, submitAttempt } from "../lib/dataService";
+import { shuffleOptionsForAttempt } from "../lib/shuffleUtils";
 import { useAuth } from "../context/AuthContext";
 import Button from "../components/Button";
 import LoadingScreen from "../components/LoadingScreen";
@@ -16,22 +17,6 @@ import { AppStackParamList } from "../navigation/types";
 type Nav = NativeStackNavigationProp<AppStackParamList, "QuizRunner">;
 type Rt = RouteProp<AppStackParamList, "QuizRunner">;
 
-const OPTION_LABELS = ["A", "B", "C", "D"] as const;
-
-/** Fisher-Yates shuffle + re-label A/B/C/D. Called once per quiz load. */
-function shuffleOptionsForDisplay(questions: Question[]): Question[] {
-  return questions.map((q) => {
-    const opts = [...q.options];
-    for (let i = opts.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [opts[i], opts[j]] = [opts[j], opts[i]];
-    }
-    return {
-      ...q,
-      options: opts.map((opt, idx) => ({ ...opt, label: OPTION_LABELS[idx] ?? opt.label })),
-    };
-  });
-}
 
 export default function QuizRunnerScreen() {
   const nav = useNavigation<Nav>();
@@ -50,32 +35,41 @@ export default function QuizRunnerScreen() {
 
   const [loading, setLoading] = useState(true);
 
-  // Shuffled display order: computed once when questions load, stable for the whole quiz.
+  // Shuffled display order: deterministic per attempt (seed = attemptId + questionId).
+  // Using the same seed in QuizResultScreen guarantees A/B/C/D labels are identical.
   // Answers are stored by option.id (not label), so scoring is unaffected by shuffling.
   const displayQuestions = useMemo(
-    () => (questions.length === 0 ? [] : shuffleOptionsForDisplay(questions)),
-    [questions],
+    () => (questions.length === 0 ? [] : shuffleOptionsForAttempt(questions, attemptId)),
+    [questions, attemptId],
   );
+
+  const safeGoBack = () => {
+    if (nav.canGoBack()) {
+      nav.goBack();
+    } else {
+      nav.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Tabs" }] }));
+    }
+  };
 
   useEffect(() => {
     (async () => {
       try {
         const q = await getQuiz(quizId);
         if (!q) {
-          Alert.alert("錯誤", "無法讀取測驗內容，請稍後再試", [{ text: "返回", onPress: () => nav.goBack() }]);
+          Alert.alert("錯誤", "無法讀取測驗內容，請稍後再試", [{ text: "返回", onPress: safeGoBack }]);
           return;
         }
         setQuiz(q);
         const qs = await getQuestionsForQuiz(q);
         if (!qs || qs.length === 0) {
-          Alert.alert("錯誤", "沒有可用的題目，請聯絡管理員", [{ text: "返回", onPress: () => nav.goBack() }]);
+          Alert.alert("錯誤", "沒有可用的題目，請聯絡管理員", [{ text: "返回", onPress: safeGoBack }]);
           return;
         }
         setQuestions(qs);
         if (q.duration_seconds) setSecondsLeft(q.duration_seconds);
       } catch (err: any) {
         console.warn("[dsemcq] QuizRunner load error:", err?.message ?? err);
-        Alert.alert("錯誤", err?.message ?? "無法載入題目", [{ text: "返回", onPress: () => nav.goBack() }]);
+        Alert.alert("錯誤", err?.message ?? "無法載入題目", [{ text: "返回", onPress: safeGoBack }]);
       } finally {
         setLoading(false);
       }
@@ -105,7 +99,7 @@ export default function QuizRunnerScreen() {
   const confirmExit = () => {
     Alert.alert("離開作答？", "未提交的作答將會遺失。", [
       { text: "繼續作答", style: "cancel" },
-      { text: "確定離開", style: "destructive", onPress: () => nav.goBack() },
+      { text: "確定離開", style: "destructive", onPress: safeGoBack },
     ]);
   };
 

@@ -10,6 +10,8 @@ import InboxScreen from "../screens/InboxScreen";
 import SubscriptionScreen from "../screens/SubscriptionScreen";
 import PassageViewScreen from "../screens/PassageViewScreen";
 import AdminHubScreen from "../screens/AdminHubScreen";
+import PointHistoryScreen from "../screens/PointHistoryScreen";
+import StudyHistoryScreen from "../screens/StudyHistoryScreen";
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -25,6 +27,8 @@ export default function AppStack() {
       <Stack.Screen name="Subscription" component={SubscriptionScreen} />
       <Stack.Screen name="PassageView" component={PassageViewScreen} />
       <Stack.Screen name="Admin" component={AdminHubScreen} />
+      <Stack.Screen name="PointHistory" component={PointHistoryScreen} />
+      <Stack.Screen name="StudyHistory" component={StudyHistoryScreen} />
     </Stack.Navigator>
   );
 }

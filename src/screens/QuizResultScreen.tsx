@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp, CommonActions } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, spacing, typography } from "../theme";
-import { Quiz, Question, Attempt } from "../types/database";
+import { Quiz, Question, QuestionOption, Attempt } from "../types/database";
 import { getQuiz, getQuestionsForResult, listUserAttempts } from "../lib/dataService";
+import { shuffleOptionsForAttempt } from "../lib/shuffleUtils";
 import { useAuth } from "../context/AuthContext";
 import Button from "../components/Button";
 import LoadingScreen from "../components/LoadingScreen";
@@ -39,8 +40,29 @@ export default function QuizResultScreen() {
   const pct = Math.round((attempt.score! / attempt.total) * 100);
   const passed = pct >= quiz.pass_score;
 
+  // Apply the same deterministic shuffle as QuizRunnerScreen so A/B/C/D labels match.
+  const displayQuestions = shuffleOptionsForAttempt(questions, attemptId);
+
   const goHome = () => {
     nav.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Tabs" }] }));
+  };
+
+  const askAI = (q: Question, o: QuestionOption, displayLabel: string, correctOpt: QuestionOption | undefined) => {
+    const isAns = o.id === correctOpt?.id;
+    const optStatus = isAns ? "正確答案" : `干擾項`;
+    const lines: string[] = [
+      `【題目】${q.stem}`,
+      ``,
+      `【選項 ${displayLabel}】${o.text}（${optStatus}）`,
+    ];
+    if (o.explanation) lines.push(`【此選項解析】${o.explanation}`);
+    if (correctOpt && correctOpt.id !== o.id) {
+      lines.push(``, `【正確答案】${correctOpt.text}`);
+      if (correctOpt.explanation) lines.push(`【正確答案解析】${correctOpt.explanation}`);
+    }
+    lines.push(``, `請以中學生能理解的方式，逐步詳細解釋為何如此，並說明各選項正確或錯誤的原因。`);
+    const message = lines.join("\n");
+    nav.navigate("Tabs", { screen: "Advisor", params: { initialMessage: message } } as any);
   };
 
   return (
@@ -57,17 +79,24 @@ export default function QuizResultScreen() {
         <View style={styles.divider} />
         <Text style={styles.sectionTitle}>逐題解析</Text>
 
-        {questions.map((q, i) => {
+        {displayQuestions.map((q, i) => {
           const sel = attempt.answers[q.id];
           const correctOpt = q.options.find((o) => o.is_correct);
-          const isCorrect = sel != null && sel === correctOpt?.id;
-          const isWrong = sel != null && sel !== correctOpt?.id;
+          const skipped = sel == null;
+          const isCorrect = !skipped && sel === correctOpt?.id;
+          const isWrong = !skipped && sel !== correctOpt?.id;
           return (
             <View key={q.id} style={styles.qBlock}>
               <Text style={styles.qHeader}>
-                第 {i + 1} 題　{isCorrect ? "✅" : isWrong ? "❌" : "—"}
+                第 {i + 1} 題　{isCorrect ? "✅" : "❌"}
+                {skipped ? "　未作答" : ""}
               </Text>
               <Text style={styles.qStem}>{q.stem}</Text>
+              {skipped && (
+                <View style={styles.skippedBanner}>
+                  <Text style={styles.skippedText}>⚠️ 此題未作答，視為錯誤</Text>
+                </View>
+              )}
               {q.options.map((o, optIdx) => {
                 const displayLabel = ["A", "B", "C", "D"][optIdx] ?? String(optIdx + 1);
                 const isSel = o.id === sel;
@@ -93,8 +122,15 @@ export default function QuizResultScreen() {
                         isSel && !isAns && styles.optExplainWrong,
                       ]}>
                         <Text style={styles.optExplainText}>{o.explanation}</Text>
+                        <TouchableOpacity style={styles.askAIBtn} onPress={() => askAI(q, o, displayLabel, correctOpt)}>
+                          <Text style={styles.askAIText}>🤖 問AI</Text>
+                        </TouchableOpacity>
                       </View>
-                    ) : null}
+                    ) : (
+                      <TouchableOpacity style={styles.askAIBtnInline} onPress={() => askAI(q, o, displayLabel, correctOpt)}>
+                        <Text style={styles.askAIText}>🤖 問AI</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 );
               })}
@@ -141,4 +177,9 @@ const styles = StyleSheet.create({
   explainBox: { marginTop: spacing.sm, padding: spacing.sm, backgroundColor: colors.surfaceAlt, borderRadius: 8 },
   explainTitle: { color: colors.accent, fontWeight: "700", marginBottom: 4 },
   explainText: { color: colors.textSecondary, lineHeight: 20 },
+  skippedBanner: { backgroundColor: "rgba(199,93,78,0.12)", borderLeftWidth: 3, borderLeftColor: colors.danger, borderRadius: 6, paddingVertical: 6, paddingHorizontal: 10, marginBottom: spacing.sm },
+  skippedText: { color: colors.danger, fontSize: 13, fontWeight: "600" },
+  askAIBtn: { alignSelf: "flex-end", marginTop: 6, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.primary },
+  askAIBtnInline: { alignSelf: "flex-start", marginLeft: 28, marginTop: 2, marginBottom: 4, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.primary },
+  askAIText: { color: colors.primary, fontSize: 11, fontWeight: "700" },
 });

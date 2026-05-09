@@ -10,7 +10,7 @@ export type AuthStackParamList = {
 export type MainTabsParamList = {
   Explore: undefined;
   Calendar: undefined;
-  Advisor: undefined;
+  Advisor: { initialMessage?: string } | undefined;
   Discover: undefined;
   Profile: undefined;
 };
@@ -26,6 +26,8 @@ export type AppStackParamList = {
   Subscription: undefined;
   PassageView: { passageId: string };
   Admin: undefined;
+  PointHistory: undefined;
+  StudyHistory: undefined;
 };
 
 export type RootStackParamList = AuthStackParamList & AppStackParamList;

@@ -12,6 +12,7 @@ import structlog
 from ..db.stats import fetch_db_stats
 from ..llm import chat_structured
 from ..schemas import DBStats, Spec
+from ..config import settings
 
 log = structlog.get_logger(__name__)
 
@@ -38,12 +39,13 @@ def run_strategist(stats: DBStats | None = None) -> Spec:
     system_prompt = _PROMPT_PATH.read_text(encoding="utf-8")
     user_message = _build_user_message(stats)
 
-    log.info("strategist_start", total_questions=stats.total)
+    log.info("strategist_start", total_questions=stats.total, bot=settings.strategist_bot)
     spec = chat_structured(
         system_prompt=system_prompt,
         user_message=user_message,
         schema=Spec,
         temperature=0.5,
+        model=settings.strategist_bot,
     )
     log.info(
         "strategist_done",

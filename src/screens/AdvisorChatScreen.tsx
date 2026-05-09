@@ -1,10 +1,23 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { View, Text, StyleSheet, TextInput, FlatList, KeyboardAvoidingView, Platform, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRoute, RouteProp } from "@react-navigation/native";
+import Constants from "expo-constants";
+import Markdown from "react-native-markdown-display";
 import { colors, spacing, typography } from "../theme";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
+import { MainTabsParamList } from "../navigation/types";
 
 interface Msg { id: string; role: "user" | "assistant"; text: string }
+
+// Bot display name from .env (via app.config.ts extra.advisorBotName)
+const BOT_NAME: string = (Constants.expoConfig?.extra?.advisorBotName as string | undefined) ?? "DSE 中文顧問";
+
+const INTRO_MSG: Msg = {
+  id: "intro",
+  role: "assistant",
+  text: `你好！我是你的${BOT_NAME}，專門協助你溫習 12 篇文言文。你可以問我任何關於文言文、學習方法、應試策略或情緒調節的問題。`,
+};
 
 const SYSTEM_PROMPT = `你是一位專為香港中學文憑試（DSE）中國語文科學生服務的學習顧問，特別熟悉 12 篇文言文指定篇章。請以繁體中文、親切而專業的語氣回答學生問題：解釋詞句、分析主旨、提供溫習與應試建議、舒緩考試壓力。每次回覆控制在 200 字以內。`;
 
@@ -22,20 +35,33 @@ function getDemoReply(input: string): string {
   return DEMO_RESPONSES.default;
 }
 
+// ── Module-level persistent message store ─────────────────────────────────────
+// Stored outside the component so chat history survives tab re-mounts and
+// navigation from "Ask AI" buttons in result screens.
+let _persistedMessages: Msg[] = [INTRO_MSG];
+
 export default function AdvisorChatScreen() {
-  const [messages, setMessages] = useState<Msg[]>([
-    { id: "intro", role: "assistant", text: "你好！我是你的 DSE 中文科顧問，專門協助你溫習 12 篇文言文。你可以問我任何關於文言文、學習方法、應試策略或情緒調節的問題。" },
-  ]);
+  const routeParams = useRoute<RouteProp<MainTabsParamList, "Advisor">>().params;
+  const [messages, setMessages] = useState<Msg[]>(_persistedMessages);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const listRef = useRef<FlatList<Msg>>(null);
+  const autoSentRef = useRef<typeof routeParams>(undefined);
+  const sendRef = useRef<(text: string) => Promise<void>>(async () => {});
 
-  const send = async () => {
-    const text = input.trim();
-    if (!text || loading) return;
-    const userMsg: Msg = { id: `u-${Date.now()}`, role: "user", text };
-    setMessages((p) => [...p, userMsg]);
-    setInput("");
+  // Keep persisted store in sync whenever messages change
+  const updateMessages = (updater: (prev: Msg[]) => Msg[]) => {
+    setMessages((prev) => {
+      const next = updater(prev);
+      _persistedMessages = next;
+      return next;
+    });
+  };
+
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || loading) return;
+    const userMsg: Msg = { id: `u-${Date.now()}`, role: "user", text: text.trim() };
+    updateMessages((p) => [...p, userMsg]);
     setLoading(true);
 
     try {
@@ -44,8 +70,12 @@ export default function AdvisorChatScreen() {
         await new Promise((r) => setTimeout(r, 600));
         reply = getDemoReply(text);
       } else {
+        // Send up to 6 full rounds (12 messages) of prior history, excluding intro
+        const historyToSend = _persistedMessages
+          .filter((m) => m.id !== "intro")
+          .slice(-12);
         const { data, error } = await supabase.functions.invoke("dsemcq-advisor-chat", {
-          body: { message: text, system: SYSTEM_PROMPT, history: messages.slice(-6) },
+          body: { message: text, system: SYSTEM_PROMPT, history: historyToSend },
         });
         if (error || data?.error) {
           const errMsg = data?.error ?? error?.message ?? "未知錯誤";
@@ -55,17 +85,37 @@ export default function AdvisorChatScreen() {
           reply = data?.reply ?? "（無回覆）";
         }
       }
-      setMessages((p) => [...p, { id: `a-${Date.now()}`, role: "assistant", text: reply }]);
+      updateMessages((p) => [...p, { id: `a-${Date.now()}`, role: "assistant", text: reply }]);
     } finally {
       setLoading(false);
       setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
     }
   };
 
+  // Keep sendRef always pointing to latest sendMessage to avoid stale closure
+  sendRef.current = sendMessage;
+
+  // Auto-send when navigated here with an initialMessage (e.g. from "Ask AI" button)
+  useEffect(() => {
+    const msg = routeParams?.initialMessage;
+    if (msg && routeParams !== autoSentRef.current) {
+      autoSentRef.current = routeParams;
+      const timer = setTimeout(() => sendRef.current(msg), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [routeParams]);
+
+  const send = async () => {
+    const text = input.trim();
+    if (!text) return;
+    setInput("");
+    await sendMessage(text);
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
-        <Text style={styles.title}>📖 DSE 中文顧問</Text>
+        <Text style={styles.title}>📖 {BOT_NAME}</Text>
         <Text style={styles.subtitle}>文言文溫習・應試策略・情緒調節</Text>
       </View>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }} keyboardVerticalOffset={80}>
@@ -76,7 +126,11 @@ export default function AdvisorChatScreen() {
           contentContainerStyle={{ padding: spacing.md }}
           renderItem={({ item }) => (
             <View style={[styles.bubble, item.role === "user" ? styles.userBubble : styles.aiBubble]}>
-              <Text style={item.role === "user" ? styles.userText : styles.aiText}>{item.text}</Text>
+              {item.role === "user" ? (
+                <Text style={styles.userText}>{item.text}</Text>
+              ) : (
+                <Markdown style={mdStyles}>{item.text}</Markdown>
+              )}
             </View>
           )}
         />
@@ -112,4 +166,24 @@ const styles = StyleSheet.create({
   input: { flex: 1, color: colors.textPrimary, backgroundColor: colors.surface, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, maxHeight: 120, marginRight: spacing.sm },
   sendBtn: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20 },
   sendText: { color: "#1A1208", fontWeight: "700" },
+});
+
+// Markdown styles for AI reply bubbles
+const mdStyles = StyleSheet.create({
+  body: { color: colors.textPrimary, fontSize: 15, lineHeight: 22 },
+  strong: { color: colors.ink, fontWeight: "700" },
+  em: { color: colors.textSecondary, fontStyle: "italic" },
+  heading1: { color: colors.primary, fontSize: 18, fontWeight: "700", marginBottom: 4 },
+  heading2: { color: colors.primary, fontSize: 16, fontWeight: "700", marginBottom: 4 },
+  heading3: { color: colors.ink, fontSize: 15, fontWeight: "700", marginBottom: 4 },
+  bullet_list: { marginVertical: 4 },
+  ordered_list: { marginVertical: 4 },
+  list_item: { color: colors.textPrimary, marginBottom: 2 },
+  bullet_list_icon: { color: colors.primary, marginRight: 6 },
+  code_inline: { backgroundColor: colors.surfaceAlt, color: colors.primary, borderRadius: 4, paddingHorizontal: 4, fontFamily: Platform.OS === "ios" ? "Courier" : "monospace" },
+  fence: { backgroundColor: colors.surfaceAlt, borderRadius: 8, padding: 10, marginVertical: 6 },
+  code_block: { color: colors.ink, fontFamily: Platform.OS === "ios" ? "Courier" : "monospace" },
+  blockquote: { borderLeftWidth: 3, borderLeftColor: colors.primary, paddingLeft: 10, marginLeft: 0, opacity: 0.85 },
+  hr: { borderColor: colors.border, marginVertical: 8 },
+  link: { color: colors.primary, textDecorationLine: "underline" },
 });

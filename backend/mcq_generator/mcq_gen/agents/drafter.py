@@ -13,6 +13,7 @@ from ..dse_reference import format_reference_block
 from ..llm import chat_structured
 from ..schemas import Critique, Draft, Spec
 from ..school_ws_loader import format_school_ws_block
+from ..config import settings
 
 log = structlog.get_logger(__name__)
 
@@ -111,6 +112,7 @@ def run_drafter(
         user_message=user_message,
         schema=Draft,
         temperature=0.8,
+        model=settings.drafter_bot,
     )
 
     log.info(

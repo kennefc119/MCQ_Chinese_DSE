@@ -1,4 +1,4 @@
-import { Quiz, Question, Attempt, QuizSignup, InboxMessage, TipCard, PsychTest, Passage } from "../types/database";
+import { Quiz, Question, QuestionOption, Attempt, QuizSignup, InboxMessage, TipCard, PsychTest, Passage } from "../types/database";
 import { isSupabaseConfigured, supabase } from "./supabase";
 import { SEED_QUIZZES } from "../data/seedQuizzes";
 import { SEED_QUESTIONS } from "../data/seedQuestions";
@@ -46,9 +46,41 @@ export async function getQuestionsForQuiz(quiz: Quiz): Promise<Question[]> {
   if (!isSupabaseConfigured) {
     return quiz.question_ids.map((qid) => SEED_QUESTIONS.find((q) => q.id === qid)!).filter(Boolean);
   }
-  const { data, error } = await supabase.rpc("get_quiz_for_attempt", { p_quiz_id: quiz.id });
-  if (error) console.warn("[dsemcq] getQuestionsForQuiz error:", error.message);
-  return (data as Question[]) ?? [];
+
+  // Try anti-cheat RPC first (hides is_correct during play)
+  const { data: rpcData, error: rpcError } = await supabase.rpc("get_quiz_for_attempt", { p_quiz_id: quiz.id });
+  if (rpcError) console.warn("[dsemcq] getQuestionsForQuiz RPC error:", rpcError.message);
+
+  const rpcQuestions = (rpcData as Question[]) ?? [];
+  if (rpcQuestions.length > 0) return rpcQuestions;
+
+  // Fallback: direct query — used when RPC returns empty (e.g. is_active mismatch, permission issue)
+  console.warn("[dsemcq] getQuestionsForQuiz: RPC returned empty, falling back to direct query");
+  const ids = quiz.question_ids;
+  if (ids.length === 0) return [];
+
+  const [{ data: qRows, error: qErr }, { data: optRows, error: optErr }] = await Promise.all([
+    supabase.from("dsemcq_questions").select("*").in("id", ids),
+    supabase
+      .from("dsemcq_question_options")
+      .select("id, question_id, label, text, explanation")  // is_correct intentionally omitted (anti-cheat)
+      .in("question_id", ids)
+      .order("id"),
+  ]);
+
+  if (qErr) console.warn("[dsemcq] getQuestionsForQuiz fallback questions error:", qErr.message);
+  if (optErr) console.warn("[dsemcq] getQuestionsForQuiz fallback options error:", optErr.message);
+
+  const optsByQ: Record<string, QuestionOption[]> = {};
+  for (const o of optRows ?? []) {
+    if (!optsByQ[o.question_id]) optsByQ[o.question_id] = [];
+    optsByQ[o.question_id]!.push({ ...o, is_correct: false }); // hide is_correct during quiz play
+  }
+
+  return ids
+    .map((id) => (qRows ?? []).find((q) => q.id === id))
+    .filter((q): q is NonNullable<typeof q> => q != null)
+    .map((q) => ({ ...q, options: optsByQ[q.id] ?? [] } as Question));
 }
 
 // Returns questions with REAL is_correct values by querying tables directly (bypasses the

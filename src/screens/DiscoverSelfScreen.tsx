@@ -21,14 +21,6 @@ const PSYCH_ICON_MAP: Record<string, React.ComponentProps<typeof Ionicons>["name
   "graduationcap.fill": "school",
 };
 
-// Short display labels for the 12 passages in radar chart (matching official DSE passage names)
-const PASSAGE_SHORT: Record<string, string> = {
-  p01: "論仁孝君子", p02: "魚我所欲", p03: "逍遙遊",
-  p04: "勸學",      p05: "廉頗列傳", p06: "出師表",
-  p07: "師說",      p08: "西山宴遊", p09: "岳陽樓記",
-  p10: "六國論",    p11: "唐詩三首", p12: "宋詞三首",
-};
-
 const SKILL_TAGS = [
   { id: "t-meaning",      label: "字詞解釋" },
   { id: "t-comprehension",label: "內容理解" },
@@ -75,12 +67,16 @@ export default function DiscoverSelfScreen() {
 
   // ── Passage radar (12 axes) ──────────────────────────────────────────
   const { passageAxes, passageValues } = useMemo(() => {
-    const axes = passages.map((p) => PASSAGE_SHORT[p.id] ?? p.title.slice(0, 3));
+    // Use actual passage titles from DB, stripping "(節錄)" suffix
+    const axes = passages.map((p) => p.title.replace(/（節錄）$/, ""));
+    // Aggregate: sum correct / sum total across all attempts for each passage
     const values = passages.map((p) => {
       const pa = attempts.filter((a) => quizMap[a.quiz_id]?.passage_id === p.id);
       if (pa.length === 0) return 0;
-      const avg = pa.reduce((s, a) => s + (a.score ?? 0) / Math.max(1, a.total), 0) / pa.length;
-      return Math.round(avg * 100);
+      const totalCorrect = pa.reduce((s, a) => s + (a.score ?? 0), 0);
+      const totalAnswered = pa.reduce((s, a) => s + (a.total ?? 0), 0);
+      if (totalAnswered === 0) return 0;
+      return Math.round((totalCorrect / totalAnswered) * 100);
     });
     return { passageAxes: axes, passageValues: values };
   }, [passages, attempts, quizMap]);

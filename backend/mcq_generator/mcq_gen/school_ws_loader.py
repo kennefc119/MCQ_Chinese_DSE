@@ -1,5 +1,5 @@
 """
-School Worksheet Loader — loads the summary.md and per-passage teacher worksheets
+School Worksheet Loader — loads per-passage teacher worksheets
 from the school_ws/ directory and injects them into LLM user messages.
 
 Used by both drafter.py and critic.py to ground question generation and critique
@@ -17,8 +17,6 @@ log = structlog.get_logger(__name__)
 # This file lives at repo_root/backend/mcq_generator/mcq_gen/school_ws_loader.py
 _REPO_ROOT = Path(__file__).parent.parent.parent.parent
 _SCHOOL_WS_DIR = _REPO_ROOT / "school_ws"
-_SUMMARY_FILE = _SCHOOL_WS_DIR / "summary.md"
-_CRITERIA_FILE = _SCHOOL_WS_DIR / "mc_question_criteria.md"
 
 # Maps passage IDs to their worksheet filename(s) in school_ws/
 _PASSAGE_WORKSHEET_MAP: dict[str, list[str]] = {
@@ -45,22 +43,6 @@ _PASSAGE_WORKSHEET_MAP: dict[str, list[str]] = {
 }
 
 
-def load_summary() -> str:
-    """Load the school_ws/summary.md content. Returns empty string if not found."""
-    if not _SUMMARY_FILE.exists():
-        log.warning("school_ws_summary_missing", path=str(_SUMMARY_FILE))
-        return ""
-    return _SUMMARY_FILE.read_text(encoding="utf-8")
-
-
-def load_criteria() -> str:
-    """Load the school_ws/mc_question_criteria.md content. Returns empty string if not found."""
-    if not _CRITERIA_FILE.exists():
-        log.warning("school_ws_criteria_missing", path=str(_CRITERIA_FILE))
-        return ""
-    return _CRITERIA_FILE.read_text(encoding="utf-8")
-
-
 def load_worksheets(passage_id: str) -> list[tuple[str, str]]:
     """
     Load worksheet file(s) for the given passage ID.
@@ -82,28 +64,14 @@ def load_worksheets(passage_id: str) -> list[tuple[str, str]]:
 def format_school_ws_block(passage_id: str, cross_passage_id: str | None = None) -> str:
     """
     Build a formatted markdown block containing:
-    1. The summary.md (once, regardless of number of passages)
-    2. The relevant worksheet(s) for passage_id
-    3. The relevant worksheet(s) for cross_passage_id (if provided)
+    1. The relevant worksheet(s) for passage_id
+    2. The relevant worksheet(s) for cross_passage_id (if provided)
 
     Ready to be appended to the LLM user message.
     """
     parts: list[str] = []
 
-    # 1. Criteria block (quality standards)
-    criteria = load_criteria()
-    if criteria:
-        parts += [
-            "---",
-            "## MC 題目質素準則",
-            "以下是本題庫對 MC 題目質素的要求及排除準則。",
-            "出題時必須確保題目符合所有準則，特別注意「必須排除的題目」一節。",
-            "",
-            criteria,
-            "---",
-        ]
-
-    # 2. Primary passage worksheet(s)
+    # Primary passage worksheet(s)
     worksheets = load_worksheets(passage_id)
     if worksheets:
         parts += [
@@ -115,7 +83,7 @@ def format_school_ws_block(passage_id: str, cross_passage_id: str | None = None)
         for fname, content in worksheets:
             parts += [f"### 工作紙：{fname}", content, ""]
 
-    # 3. Cross-passage worksheet(s)
+    # Cross-passage worksheet(s)
     if cross_passage_id:
         cross_worksheets = load_worksheets(cross_passage_id)
         if cross_worksheets:

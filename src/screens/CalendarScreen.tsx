@@ -8,14 +8,9 @@ import { Quiz, Attempt, Passage } from "../types/database";
 import { listQuizzes, listUserAttempts, listPassages } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
+import { cleanPassageName, extractSkillFromTitle } from "../lib/quizDisplayUtils";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
-
-/** Strip leading "p01 -" / "p12" numeric codes from passage titles. */
-function cleanPassageName(title?: string): string | undefined {
-  if (!title) return undefined;
-  return title.replace(/^p\d+\s*[-—–：:·\s]*/i, "").trim() || title;
-}
 
 export default function CalendarScreen() {
   const { user } = useAuth();
@@ -172,14 +167,20 @@ export default function CalendarScreen() {
             </Text>
           </View>
         ) : (
-          groupedAttempts.map((group) => {
+          <>
+            {groupedAttempts.slice(0, 5).map((group) => {
             const quiz = quizMap[group.quiz_id];
             const pts = getPointsEarned(quiz, group.highestScore, group.highestTotal);
             const pct = group.highestTotal > 0 ? Math.round((group.highestScore / group.highestTotal) * 100) : null;
             const passageName = quiz?.passage_id ? cleanPassageName(passageMap[quiz.passage_id]?.title) : null;
-            const quizTitle = quiz?.title
-              ? quiz.title.replace(/^p\d+\s*[-—–：:·\s]*/i, "").trim() || quiz.title
-              : "未知測驗";
+            const skillName = quiz?.title ? extractSkillFromTitle(quiz.title) : undefined;
+            // Hero title: passage name > skill name > cleaned quiz title (no "篇章xx")
+            const heroTitle = passageName
+              ?? skillName
+              ?? quiz?.title?.replace(/^(p\d+|篇章[一二三四五六七八九十\d]+|第[一二三四五六七八九十\d]+篇)\s*[-—–：:·（(）)\s]*/i, "").trim()
+              ?? "未知測驗";
+            // Secondary line: if passage shown, display skill (if any); if skill shown, nothing extra
+            const skillDetail = passageName && skillName ? skillName : null;
             return (
               <TouchableOpacity
                 key={group.quiz_id}
@@ -202,8 +203,8 @@ export default function CalendarScreen() {
                     </View>
                   )}
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.recordTitle} numberOfLines={1}>{quizTitle}</Text>
-                    {passageName ? <Text style={styles.recordPassage} numberOfLines={1}>📖 {passageName}</Text> : null}
+                    <Text style={styles.recordTitle} numberOfLines={1}>{heroTitle}</Text>
+                    {skillDetail ? <Text style={styles.recordPassage} numberOfLines={1}>📚 {skillDetail}</Text> : null}
                   </View>
                   <View style={styles.recordRight}>
                     {pct !== null && (
@@ -216,7 +217,13 @@ export default function CalendarScreen() {
                 </View>
               </TouchableOpacity>
             );
-          })
+          })}
+          {groupedAttempts.length > 5 && (
+            <TouchableOpacity style={styles.seeAllBtn} onPress={() => nav.navigate("StudyHistory")}>
+              <Text style={styles.seeAllText}>查看全部記錄（共 {groupedAttempts.length} 個測驗） ›</Text>
+            </TouchableOpacity>
+          )}
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -262,4 +269,6 @@ const styles = StyleSheet.create({
   recordRight: { alignItems: "flex-end" },
   recordScore: { color: colors.textSecondary, fontSize: 12 },
   recordPoints: { color: colors.primary, fontSize: 12, fontWeight: "700", marginTop: 2 },
+  seeAllBtn: { alignItems: "center", paddingVertical: spacing.md, marginTop: spacing.xs },
+  seeAllText: { color: colors.primary, fontWeight: "600", fontSize: 14 },
 });

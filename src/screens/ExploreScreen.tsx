@@ -9,6 +9,7 @@ import {
   Modal,
   ScrollView,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -21,6 +22,7 @@ import { Quiz, TipCard, Passage } from "../types/database";
 import { listQuizzes, listTipCards, listPassages, signUpForQuiz, startAttempt } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
+import { extractSkillFromTitle, getQuizTypeSuffix } from "../lib/quizDisplayUtils";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
@@ -65,6 +67,9 @@ function QuizTile({ item, onPress, passageName }: { item: Quiz; onPress: () => v
   const { user } = useAuth();
   const locked = item.min_points_required > (user?.wenyuan_points ?? 0);
   const badgeColor = QUIZ_TYPE_COLORS[item.type] ?? colors.primary;
+  // For skill quizzes (no passage), extract skill name from title (e.g. "修辭手法")
+  const skillName = !passageName ? extractSkillFromTitle(item.title) : undefined;
+  const heroText = passageName ?? skillName;
 
   return (
     <TouchableOpacity
@@ -78,7 +83,7 @@ function QuizTile({ item, onPress, passageName }: { item: Quiz; onPress: () => v
         <View style={[StyleSheet.absoluteFill, styles.tilePlaceholder]} />
       )}
       <LinearGradient
-        colors={["transparent", "rgba(0,0,0,0.78)"]}
+        colors={["transparent", "rgba(0,0,0,0.85)"]}
         style={StyleSheet.absoluteFill}
       />
       <View style={[styles.badge, { backgroundColor: badgeColor }]}>
@@ -89,9 +94,19 @@ function QuizTile({ item, onPress, passageName }: { item: Quiz; onPress: () => v
           <Ionicons name="lock-closed" size={12} color={colors.ink} />
         </View>
       )}
-      <Text style={styles.tileTitle} numberOfLines={2}>{item.title}</Text>
-      <Text style={styles.tileStars}>{"★".repeat(item.difficulty)}{"☆".repeat(5 - item.difficulty)}</Text>
-      {passageName ? <Text style={styles.tilePassage} numberOfLines={1}>{passageName}</Text> : null}
+      {heroText ? (
+        /* Passage or skill card: hero text shown prominently */
+        <>
+          <Text style={styles.tilePassageBig} numberOfLines={2}>{heroText}</Text>
+          <Text style={styles.tileStars}>{"★".repeat(item.difficulty)}{"☆".repeat(5 - item.difficulty)}</Text>
+        </>
+      ) : (
+        /* Difficulty / exam / other: show full title */
+        <>
+          <Text style={styles.tileTitleLarge} numberOfLines={3}>{item.title}</Text>
+          <Text style={styles.tileStars}>{"★".repeat(item.difficulty)}{"☆".repeat(5 - item.difficulty)}</Text>
+        </>
+      )}
     </TouchableOpacity>
   );
 }
@@ -129,6 +144,11 @@ function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () 
   const badgeColor = QUIZ_TYPE_COLORS[item.type] ?? colors.primary;
   const durationMins = item.duration_seconds ? Math.round(item.duration_seconds / 60) : null;
   const [loading, setLoading] = useState(false);
+
+  // Hero text: passage name OR skill name; strip it from feedTitle to avoid repetition
+  const skillName = !passageName ? extractSkillFromTitle(item.title) : undefined;
+  const heroText = passageName ?? skillName;
+  const feedDisplayTitle = heroText ? getQuizTypeSuffix(item.title, heroText) : item.title;
 
   const onJoin = async () => {
     if (!user) return;
@@ -189,7 +209,10 @@ function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () 
         <View style={[styles.badge, { backgroundColor: badgeColor, alignSelf: "flex-start", marginBottom: spacing.sm }]}>
           <Text style={styles.badgeText}>{QUIZ_TYPE_LABEL[item.type] ?? item.type}</Text>
         </View>
-        <Text style={styles.feedTitle}>{item.title}</Text>
+        {heroText ? (
+          <Text style={styles.feedPassageTitle}>{heroText}</Text>
+        ) : null}
+        <Text style={styles.feedTitle}>{feedDisplayTitle}</Text>
         {item.description ? <Text style={styles.feedDesc}>{item.description}</Text> : null}
 
         {/* Stats row */}
@@ -239,12 +262,6 @@ function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () 
                 開放日期：{new Date(item.scheduled_start).toLocaleDateString("zh-HK")}
                 {item.scheduled_end ? ` — ${new Date(item.scheduled_end).toLocaleDateString("zh-HK")}` : ""}
               </Text>
-            </View>
-          ) : null}
-          {passageName ? (
-            <View style={styles.feedDetailRow}>
-              <Ionicons name="document-text-outline" size={14} color={colors.muted} />
-              <Text style={styles.feedDetailText}>篇章：{passageName}</Text>
             </View>
           ) : null}
         </View>
@@ -313,19 +330,29 @@ export default function ExploreScreen() {
   const [filterPassageId, setFilterPassageId] = useState<string | null>(null);
   const [filterMinPoints, setFilterMinPoints] = useState<number | null>(null);
   const [filterExpanded, setFilterExpanded] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const load = async () => {
+    const [quizzes, tips, passageList] = await Promise.all([listQuizzes(), listTipCards(), listPassages()]);
+    setItems(interleave(quizzes, tips));
+    setPassages(passageList);
+  };
 
   useEffect(() => {
     if (authLoading) return;
     let mounted = true;
-    const load = async () => {
-      const [quizzes, tips, passageList] = await Promise.all([listQuizzes(), listTipCards(), listPassages()]);
-      if (!mounted) return;
-      setItems(interleave(quizzes, tips));
-      setPassages(passageList);
+    const run = async () => {
+      await load();
+      if (!mounted) setItems([]);
     };
-    load();
+    run();
     return () => { mounted = false; };
   }, [authLoading]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try { await load(); } finally { setRefreshing(false); }
+  };
 
   const passageMap = useMemo(
     () => passages.reduce<Record<string, Passage>>((m, p) => ({ ...m, [p.id]: p }), {}),
@@ -359,8 +386,10 @@ export default function ExploreScreen() {
   const getPassageName = (passageId?: string | null): string | undefined => {
     const title = passageId ? passageMap[passageId]?.title : undefined;
     if (!title) return undefined;
-    // Strip any leading "p01" / "p12 -" style numeric prefix from passage titles
-    return title.replace(/^p\d+\s*[-—–：:·\s]*/i, "").trim() || title;
+    // Strip numeric prefixes like "p01 - ", "第一篇", "篇章1" etc.
+    return title
+      .replace(/^(p\d+|第[一二三四五六七八九十\d]+篇|篇章[一二三四五六七八九十\d]+)\s*[-—–：:·\s]*/i, "")
+      .trim() || title;
   };
 
   const renderGridItem = ({ item, index }: { item: FeedItem; index: number }) => {
@@ -437,7 +466,7 @@ export default function ExploreScreen() {
                 </TouchableOpacity>
                 {passages.map((p) => (
                   <TouchableOpacity key={p.id} style={[styles.filterChip, filterPassageId === p.id && styles.filterChipActive]} onPress={() => setFilterPassageId(filterPassageId === p.id ? null : p.id)}>
-                    <Text style={[styles.filterChipText, filterPassageId === p.id && styles.filterChipTextActive]} numberOfLines={1}>{p.title.replace(/^p\d+\s*[-—–：:·\s]*/i, "").trim() || p.title}</Text>
+                    <Text style={[styles.filterChipText, filterPassageId === p.id && styles.filterChipTextActive]} numberOfLines={1}>{p.title.replace(/^(p\d+|第[一二三四五六七八九十\d]+篇|篇章[一二三四五六七八九十\d]+)\s*[-—–：:·\s]*/i, "").trim() || p.title}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -468,6 +497,7 @@ export default function ExploreScreen() {
         contentContainerStyle={styles.gridContent}
         columnWrapperStyle={styles.gridRow}
         renderItem={renderGridItem}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       />
 
       <Modal
@@ -576,8 +606,23 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     lineHeight: 14,
   },
+  tileTitleLarge: {
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 17,
+  },
   tileStars: { color: colors.primary, fontSize: 8, marginTop: 2 },
   tilePassage: { color: "rgba(255,255,255,0.6)", fontSize: 8, marginTop: 1 },
+  tilePassageBig: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "800",
+    lineHeight: 18,
+    textShadowColor: "rgba(0,0,0,0.6)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
 
   // feed modal
   feedContainer: { flex: 1, backgroundColor: colors.background },
@@ -585,6 +630,13 @@ const styles = StyleSheet.create({
   feedImageWrap: { height: FEED_IMAGE_HEIGHT, overflow: "hidden" },
   feedInfoContent: { padding: spacing.md, paddingBottom: 120 },
   feedTitle: { ...typography.heading, color: colors.textPrimary, marginBottom: spacing.sm },
+  feedPassageTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: colors.primary,
+    marginBottom: 4,
+    letterSpacing: 0.5,
+  },
   feedDesc: { color: colors.textSecondary, lineHeight: 22, marginBottom: spacing.md },
   feedMeta: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: spacing.md },
   feedMetaText: { color: colors.textMuted, fontSize: 13 },
