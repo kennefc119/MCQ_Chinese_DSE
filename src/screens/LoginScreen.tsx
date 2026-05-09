@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
   View, Text, StyleSheet, KeyboardAvoidingView, Platform,
-  TouchableOpacity, Alert, TextInput, ActivityIndicator,
+  TouchableOpacity, Alert, TextInput, ActivityIndicator, ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -29,6 +29,12 @@ export default function LoginScreen() {
   const [pwEmail, setPwEmail] = useState("");
   const [pwPassword, setPwPassword] = useState("");
   const [pwLoading, setPwLoading] = useState(false);
+
+  // School package login (collapsible)
+  const [showSchoolLogin, setShowSchoolLogin] = useState(false);
+  const [schoolEmail, setSchoolEmail] = useState("");
+  const [schoolPassword, setSchoolPassword] = useState("");
+  const [schoolLoading, setSchoolLoading] = useState(false);
 
   const onSend = async () => {
     if (!email.includes("@")) {
@@ -58,10 +64,23 @@ export default function LoginScreen() {
     }
   };
 
+  const onSchoolLogin = async () => {
+    if (!schoolEmail.includes("@") || schoolPassword.length < 6) {
+      Alert.alert("請輸入有效的學校電郵及密碼");
+      return;
+    }
+    setSchoolLoading(true);
+    const res = await signInWithPassword(schoolEmail.trim(), schoolPassword);
+    setSchoolLoading(false);
+    if (!res.ok) {
+      Alert.alert("登入失敗", res.error || "學校帳戶電郵或密碼不正確，如需協助請聯絡 cs@keeonz.ai");
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
-        <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <Text style={styles.brand}>📜</Text>
           <Text style={styles.title}>DSE 文言文 MCQ</Text>
           <Text style={styles.subtitle}>專為香港中學文憑試考生而設的文言文練習平台</Text>
@@ -85,9 +104,61 @@ export default function LoginScreen() {
             <Text style={styles.guestText}>👀 以訪客身份瀏覽（部分功能受限）</Text>
           </TouchableOpacity>
 
-          {/* Collapsible password login */}
+          {/* School package login */}
           <TouchableOpacity
-            onPress={() => setShowPasswordLogin(v => !v)}
+            onPress={() => { setShowSchoolLogin(v => !v); setShowPasswordLogin(false); }}
+            style={styles.schoolToggleRow}
+          >
+            <Text style={styles.schoolToggleText}>
+              🏫 {showSchoolLogin ? "▲ 隱藏學校套餐登入" : "▼ 學校套餐登入"}
+            </Text>
+          </TouchableOpacity>
+
+          {showSchoolLogin && (
+            <View style={styles.schoolBox}>
+              <Text style={styles.schoolBoxTitle}>學校套餐帳戶登入</Text>
+              <Text style={styles.schoolBoxSub}>適用於已訂閱學校合作計劃的帳戶</Text>
+              <Text style={styles.pwLabel}>學校電郵帳戶</Text>
+              <TextInput
+                style={styles.pwInput}
+                placeholder="school@example.edu.hk"
+                placeholderTextColor={colors.textMuted}
+                value={schoolEmail}
+                onChangeText={setSchoolEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                autoCorrect={false}
+              />
+              <Text style={styles.pwLabel}>密碼</Text>
+              <TextInput
+                style={styles.pwInput}
+                placeholder="••••••••"
+                placeholderTextColor={colors.textMuted}
+                value={schoolPassword}
+                onChangeText={setSchoolPassword}
+                secureTextEntry
+              />
+              <TouchableOpacity
+                style={[styles.schoolLoginBtn, schoolLoading && { opacity: 0.6 }]}
+                onPress={onSchoolLogin}
+                disabled={schoolLoading}
+              >
+                {schoolLoading
+                  ? <ActivityIndicator color={colors.background} size="small" />
+                  : <Text style={styles.schoolLoginBtnText}>學校帳戶登入</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.schoolInfoLink}
+                onPress={() => nav.navigate("SchoolPartner")}
+              >
+                <Text style={styles.schoolInfoLinkText}>了解學校合作計劃 ›</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Collapsible password login (Apple review) */}
+          <TouchableOpacity
+            onPress={() => { setShowPasswordLogin(v => !v); setShowSchoolLogin(false); }}
             style={styles.togglePwRow}
           >
             <Text style={styles.togglePwText}>
@@ -138,8 +209,18 @@ export default function LoginScreen() {
             </>
           )}
 
-          <Text style={styles.footer}>登入即表示同意使用條款及私隱政策</Text>
-        </View>
+          {/* T&C + Privacy footer */}
+          <View style={styles.footerRow}>
+            <Text style={styles.footerText}>登入即表示同意 </Text>
+            <TouchableOpacity onPress={() => nav.navigate("Legal", { type: "terms" })}>
+              <Text style={styles.footerLink}>使用條款</Text>
+            </TouchableOpacity>
+            <Text style={styles.footerText}> 及 </Text>
+            <TouchableOpacity onPress={() => nav.navigate("Legal", { type: "privacy" })}>
+              <Text style={styles.footerLink}>私隱政策</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -147,7 +228,7 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
-  container: { flex: 1, padding: spacing.lg, justifyContent: "center" },
+  container: { flexGrow: 1, padding: spacing.lg, justifyContent: "center", paddingBottom: spacing.xl },
   brand: { fontSize: 64, textAlign: "center", marginBottom: spacing.md },
   title: { ...typography.title, color: colors.primary, textAlign: "center" },
   subtitle: { ...typography.body, color: colors.textSecondary, textAlign: "center", marginTop: spacing.sm },
@@ -160,6 +241,33 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   guestText: { ...typography.button, color: colors.textSecondary },
+
+  // School login
+  schoolToggleRow: { marginTop: spacing.md, alignItems: "center", paddingVertical: spacing.xs },
+  schoolToggleText: { ...typography.caption, color: colors.primary, fontWeight: "600" },
+  schoolBox: {
+    marginTop: spacing.sm,
+    padding: spacing.md,
+    backgroundColor: "#1A1B0F",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    gap: 6,
+  },
+  schoolBoxTitle: { ...typography.heading, color: colors.primary, fontWeight: "700" },
+  schoolBoxSub: { ...typography.caption, color: colors.textMuted, marginBottom: spacing.xs },
+  schoolLoginBtn: {
+    marginTop: spacing.sm,
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingVertical: spacing.sm,
+    alignItems: "center",
+  },
+  schoolLoginBtnText: { ...typography.button, color: colors.background },
+  schoolInfoLink: { alignItems: "center", marginTop: spacing.sm, paddingVertical: spacing.xs },
+  schoolInfoLinkText: { ...typography.caption, color: colors.primary },
+
+  // Standard password login
   togglePwRow: { marginTop: spacing.md, alignItems: "center", paddingVertical: spacing.xs },
   togglePwText: { ...typography.caption, color: colors.textMuted },
   pwBox: {
@@ -189,8 +297,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   pwLoginBtnText: { ...typography.button, color: colors.background },
+
   demoNote: { ...typography.caption, color: colors.textMuted, textAlign: "center", marginTop: spacing.lg },
   demoBtn: { padding: spacing.md, alignItems: "center", marginTop: spacing.sm },
   demoText: { ...typography.button, color: colors.accent },
-  footer: { ...typography.caption, color: colors.textMuted, textAlign: "center", marginTop: spacing.xl },
+
+  // Footer
+  footerRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    flexWrap: "wrap",
+    marginTop: spacing.xl,
+  },
+  footerText: { ...typography.caption, color: colors.textMuted },
+  footerLink: { ...typography.caption, color: colors.primary, textDecorationLine: "underline" },
 });

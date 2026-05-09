@@ -5,6 +5,8 @@ export type AuthStackParamList = {
   Login: undefined;
   Otp: { email: string };
   Register: { email: string };
+  Legal: { type: "terms" | "privacy" };
+  SchoolPartner: undefined;
 };
 
 export type MainTabsParamList = {
@@ -28,6 +30,8 @@ export type AppStackParamList = {
   Admin: undefined;
   PointHistory: undefined;
   StudyHistory: undefined;
+  Legal: { type: "terms" | "privacy" };
+  SchoolPartner: undefined;
 };
 
 export type RootStackParamList = AuthStackParamList & AppStackParamList;

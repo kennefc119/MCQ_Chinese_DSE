@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, Text, StyleSheet, TextInput, FlatList, KeyboardAvoidingView, Platform, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TextInput, FlatList, KeyboardAvoidingView, Platform, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import Constants from "expo-constants";
 import Markdown from "react-native-markdown-display";
 import { colors, spacing, typography } from "../theme";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
+import { useAuth } from "../context/AuthContext";
 import { MainTabsParamList } from "../navigation/types";
 
 interface Msg { id: string; role: "user" | "assistant"; text: string }
@@ -42,12 +43,15 @@ let _persistedMessages: Msg[] = [INTRO_MSG];
 
 export default function AdvisorChatScreen() {
   const routeParams = useRoute<RouteProp<MainTabsParamList, "Advisor">>().params;
+  const { isGuest, signOut } = useAuth();
   const [messages, setMessages] = useState<Msg[]>(_persistedMessages);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const listRef = useRef<FlatList<Msg>>(null);
   const autoSentRef = useRef<typeof routeParams>(undefined);
   const sendRef = useRef<(text: string) => Promise<void>>(async () => {});
+
+  const GUEST_LIMIT = 10;
 
   // Keep persisted store in sync whenever messages change
   const updateMessages = (updater: (prev: Msg[]) => Msg[]) => {
@@ -60,6 +64,21 @@ export default function AdvisorChatScreen() {
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || loading) return;
+
+    // Guest chat limit: count only user-role messages
+    const currentUserMsgCount = _persistedMessages.filter(m => m.role === "user").length;
+    if (isGuest && currentUserMsgCount >= GUEST_LIMIT) {
+      Alert.alert(
+        "已達免費使用上限",
+        `訪客可免費使用 AI 顧問 ${GUEST_LIMIT} 次。請登入或登記帳戶以繼續對話。`,
+        [
+          { text: "稍後再算", style: "cancel" },
+          { text: "前往登入", style: "default", onPress: signOut },
+        ]
+      );
+      return;
+    }
+
     const userMsg: Msg = { id: `u-${Date.now()}`, role: "user", text: text.trim() };
     updateMessages((p) => [...p, userMsg]);
     setLoading(true);
@@ -117,6 +136,15 @@ export default function AdvisorChatScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>📖 {BOT_NAME}</Text>
         <Text style={styles.subtitle}>文言文溫習・應試策略・情緒調節</Text>
+        {isGuest && (() => {
+          const used = messages.filter(m => m.role === "user").length;
+          const remaining = Math.max(0, GUEST_LIMIT - used);
+          return (
+            <Text style={styles.guestLimit}>
+              {remaining > 0 ? `訪客剩餘 ${remaining} 次免費提問` : "訪客免費次數已用盡，請登入繼續"}
+            </Text>
+          );
+        })()}
       </View>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }} keyboardVerticalOffset={80}>
         <FlatList
@@ -157,6 +185,7 @@ const styles = StyleSheet.create({
   header: { padding: spacing.md, borderBottomWidth: 1, borderColor: colors.border },
   title: { ...typography.heading, color: colors.primary },
   subtitle: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
+  guestLimit: { ...typography.caption, color: colors.warning, marginTop: 4 },
   bubble: { padding: spacing.md, borderRadius: 14, marginBottom: spacing.sm, maxWidth: "85%" },
   userBubble: { backgroundColor: colors.primary, alignSelf: "flex-end" },
   aiBubble: { backgroundColor: colors.surface, alignSelf: "flex-start", borderWidth: 1, borderColor: colors.border },

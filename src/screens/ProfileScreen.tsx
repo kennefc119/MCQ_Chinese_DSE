@@ -75,6 +75,14 @@ export default function ProfileScreen() {
             <Text style={styles.menuArrow}>›</Text>
           </TouchableOpacity>
         )}
+        <TouchableOpacity style={styles.menuItem} onPress={() => nav.navigate("Legal", { type: "terms" })}>
+          <Text style={styles.menuLabel}>📋 使用條款</Text>
+          <Text style={styles.menuArrow}>›</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.menuItem} onPress={() => nav.navigate("Legal", { type: "privacy" })}>
+          <Text style={styles.menuLabel}>🔒 私隱政策</Text>
+          <Text style={styles.menuArrow}>›</Text>
+        </TouchableOpacity>
 
         <View style={{ height: spacing.lg }} />
         <Button title="登出" variant="ghost" onPress={onSignOut} />
