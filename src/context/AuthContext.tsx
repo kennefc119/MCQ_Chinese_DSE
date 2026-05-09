@@ -8,7 +8,9 @@ const PROFILE_KEY = "dsemcq_profile";
 interface AuthContextValue {
   user: Profile | null;
   loading: boolean;
+  isGuest: boolean;
   signInWithEmail: (email: string) => Promise<{ ok: boolean; error?: string }>;
+  signInWithPassword: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   verifyOtp: (email: string, code: string) => Promise<{ ok: boolean; needsRegister: boolean; error?: string }>;
   registerProfile: (data: { username: string; gender: Gender; dse_year: number }) => Promise<{ ok: boolean; error?: string }>;
   signOut: () => Promise<void>;
@@ -16,6 +18,7 @@ interface AuthContextValue {
   /** demo mode flag for offline preview */
   demoMode: boolean;
   enterDemo: () => Promise<void>;
+  enterGuest: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -33,9 +36,23 @@ const DEMO_PROFILE: Profile = {
   created_at: new Date().toISOString(),
 };
 
+const GUEST_PROFILE: Profile = {
+  id: "guest-user",
+  email: "guest@dsemcq.app",
+  username: "訪客",
+  gender: "other",
+  dse_year: new Date().getFullYear() + 1,
+  wenyuan_points: 0,
+  role: "user",
+  subscription_tier: "free",
+  subscription_status: "active",
+  created_at: new Date().toISOString(),
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   useEffect(() => {
@@ -116,6 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    setIsGuest(false);
     if (isSupabaseConfigured) await supabase.auth.signOut();
     await persist(null);
   };
@@ -129,7 +147,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await persist(next);
   };
 
+  const signInWithPassword = async (email: string, password: string) => {
+    if (!isSupabaseConfigured) return { ok: false, error: "Supabase 未設定" };
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !data.user) return { ok: false, error: error?.message || "登入失敗" };
+    const { data: profile } = await supabase
+      .from("dsemcq_profiles")
+      .select("*")
+      .eq("id", data.user.id)
+      .maybeSingle();
+    if (!profile) return { ok: false, error: "找不到用戶資料" };
+    setIsGuest(false);
+    await persist(profile as Profile);
+    return { ok: true };
+  };
+
+  const enterGuest = () => {
+    setIsGuest(true);
+    setUser(GUEST_PROFILE);
+  };
+
   const enterDemo = async () => {
+    setIsGuest(false);
     await persist(DEMO_PROFILE);
   };
 
@@ -138,13 +177,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         loading,
+        isGuest,
         signInWithEmail,
+        signInWithPassword,
         verifyOtp,
         registerProfile,
         signOut,
         updateProfile,
         demoMode: !isSupabaseConfigured,
         enterDemo,
+        enterGuest,
       }}
     >
       {children}

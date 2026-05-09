@@ -138,7 +138,7 @@ function TipTile({ item, onPress }: { item: TipCard; onPress: () => void }) {
 }
 
 function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () => void; passageName?: string }) {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const nav = useNavigation<Nav>();
   const locked = item.min_points_required > (user?.wenyuan_points ?? 0);
   const badgeColor = QUIZ_TYPE_COLORS[item.type] ?? colors.primary;
@@ -152,6 +152,10 @@ function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () 
 
   const onJoin = async () => {
     if (!user) return;
+    if (isGuest) {
+      Alert.alert("請先登入", "訪客模式無法作答及儲存成績。請登入或註冊以繼續。");
+      return;
+    }
     if (locked) {
       Alert.alert("尚未解鎖", `需要 ${item.min_points_required} 文淵點才能挑戰此項目`);
       return;

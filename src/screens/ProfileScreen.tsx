@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, spacing, typography } from "../theme";
 import { useAuth } from "../context/AuthContext";
 import Button from "../components/Button";
+import GuestGuard from "../components/GuestGuard";
 import { AppStackParamList } from "../navigation/types";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
@@ -31,7 +32,8 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top"]}>
+    <GuestGuard>
+      <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={{ padding: spacing.md }}>
         <View style={styles.hero}>
           <View style={styles.avatar}>
@@ -78,6 +80,7 @@ export default function ProfileScreen() {
         <Button title="登出" variant="ghost" onPress={onSignOut} />
       </ScrollView>
     </SafeAreaView>
+    </GuestGuard>
   );
 }
 

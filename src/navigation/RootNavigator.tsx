@@ -20,11 +20,11 @@ const navTheme = {
 };
 
 export default function RootNavigator() {
-  const { user, loading } = useAuth();
+  const { user, loading, isGuest } = useAuth();
   if (loading) return <LoadingScreen />;
   return (
     <NavigationContainer theme={navTheme}>
-      {user ? <AppStack /> : <AuthStack />}
+      {user || isGuest ? <AppStack /> : <AuthStack />}
     </NavigationContainer>
   );
 }

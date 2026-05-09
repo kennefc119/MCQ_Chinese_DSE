@@ -690,3 +690,25 @@ INSERT INTO dsemcq_psych_tests (
   '[{"code": "stem", "title": "理工探索者", "description": "邏輯嚴謹，熱愛科技。以數據和分析思考世界，是未來科技創新的核心力量。", "emoji": "microscope", "historical_figure": "理工科路向 — STEM教育研究", "historical_background": "理工型人才在現代社會需求極高。隨著AI、生物科技和可持續能源的發展，這類人才的就業前景廣闊。香港近年積極發展創科，大學理工學系的競爭力和業界影響力持續增強，DSE成績尤其數學和科學科至關重要。", "strengths": ["邏輯思維強，分析問題有條理", "善於運用數字和數據", "具備系統性解決問題的能力"], "weaknesses": ["有時較難從感性角度思考問題", "文字表達方面可能需要多加練習"], "famous_quote": "科學的本質是疑問，而疑問是進步的起點。", "study_tips": ["DSE數學和物理成績尤為重要", "培養編程或數據分析技能", "參加STEM比賽豐富課外活動記錄"]}, {"code": "arts", "title": "創作藝術派", "description": "想像力豐富，感受細膩。以創作表達對世界的理解，讓藝術成為溝通的橋樑。", "emoji": "palette", "historical_figure": "人文藝術路向 — 創意產業研究", "historical_background": "創意產業在香港持續發展，包括設計、媒體、廣告和文化藝術。具備語文和創意能力的學生，在傳媒、廣告、文學及藝術教育等領域有廣闊發展空間。香港作為亞洲文化中心，對創意人才的需求不斷增長。", "strengths": ["想像力豐富，視角獨特", "語文表達能力強", "能感受他人情緒並以作品回應"], "weaknesses": ["有時過於沉浸創作，忽略計劃時間", "對商業化要求可能感到不適"], "famous_quote": "不落言詮，直指人心。", "study_tips": ["DSE中文和英文成績對申請相關院校尤為重要", "建立個人作品集（文學、藝術等）", "多閱讀不同類型文章，拓展語感和視野"]}, {"code": "social", "title": "助人服務型", "description": "充滿同理心，以行動關懷他人。推動社會進步是你最深層的動力。", "emoji": "heart", "historical_figure": "社會服務路向 — 香港社福人力資源報告", "historical_background": "香港有超過400個社福機構，提供多元化的社會服務。教育、社工、心理諮詢和醫護是社會型人才的主要出路。面對社會老齡化和心理健康議題的挑戰，相關專業人才需求持續增加。", "strengths": ["同理心強，善於理解他人感受", "具備聆聽和溝通技巧", "有強烈的社會責任感"], "weaknesses": ["容易受他人負面情緒影響", "有時把他人需求放在自身之前"], "famous_quote": "老吾老，以及人之老；幼吾幼，以及人之幼。", "study_tips": ["積極參與義工服務，豐富課外活動記錄", "DSE中文和英文溝通能力對申請社福和教育課程非常重要", "留意社工、護士等專業的收生要求和入學條件"]}, {"code": "business", "title": "務實謀略派", "description": "目標清晰，善於組織。以策略思維創造價值，是天生的領袖人才。", "emoji": "briefcase", "historical_figure": "商業管理路向 — 香港商業教育研究", "historical_background": "香港作為國際金融中心，商業管理、金融和法律人才的需求穩定。具備策略思維和領導能力的學生，在金融、管理顧問、市場推廣等領域有廣闊發展空間。積極融入大灣區亦為本港商科學生帶來更多機遇。", "strengths": ["目標清晰，做事有計劃", "領導力強，善於組織團隊", "實際思維，注重效益"], "weaknesses": ["有時過於強調效率，忽略人際感受", "在藝術創意方面可能較保守"], "famous_quote": "合抱之木，生於毫末；千里之行，始於足下。", "study_tips": ["關注時事和商業新聞，了解市場動態", "DSE數學和英文成績對申請商學院尤為重要", "積極參與商業比賽或模擬股票，培養實戰思維"]}, {"code": "education", "title": "教育法律型", "description": "熱愛知識，重視公義。以文字和邏輯推動社會進步，是未來的思想領袖。", "emoji": "scales", "historical_figure": "教育法律路向 — 香港人文社科研究", "historical_background": "香港的教育和法律界別在人才需求上保持穩定。教師、律師和政策研究員需要具備強大的語言能力、邏輯思辨和社會分析能力。這類人才往往擅長文字，熱愛鑽研複雜議題，並對推動社會公義有強烈使命感。", "strengths": ["文字表達能力強，邏輯嚴謹", "擅長鑽研複雜問題", "具備強烈的公民意識和使命感"], "weaknesses": ["有時過於理想化", "在純粹商業環境中可能較不適應"], "famous_quote": "有教無類，因材施教。", "study_tips": ["DSE中文和英文是申請法律和教育課程的核心科目", "多閱讀時評文章，培養批判思考能力", "參加辯論隊或模擬法庭活動，鍛鍊說理能力"]}]'::jsonb,
   true, 6, '#8B5CF6', false
 );
+
+-- ── Apple Review Account (DO NOT REMOVE) ─────────────────────
+-- For App Store review only. Create this account via Supabase Auth Dashboard:
+--   Email:    apple.review@dsemcq.app
+--   Password: DSEMcq@Review2025
+-- Then run the INSERT below to create the matching profile row.
+-- NOTE: Replace <UUID_FROM_AUTH_DASHBOARD> with the actual auth user UUID.
+--
+-- INSERT INTO dsemcq_profiles (id, email, username, gender, dse_year, wenyuan_points, role, subscription_tier, subscription_status, created_at)
+-- VALUES (
+--   '<UUID_FROM_AUTH_DASHBOARD>',
+--   'apple.review@dsemcq.app',
+--   'AppleReviewer',
+--   'other',
+--   2026,
+--   999,
+--   'user',
+--   'free',
+--   'active',
+--   NOW()
+-- )
+-- ON CONFLICT (id) DO NOTHING;

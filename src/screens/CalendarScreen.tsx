@@ -7,6 +7,7 @@ import { colors, spacing, typography, QUIZ_TYPE_COLORS, QUIZ_TYPE_LABEL } from "
 import { Quiz, Attempt, Passage } from "../types/database";
 import { listQuizzes, listUserAttempts, listPassages } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
+import GuestGuard from "../components/GuestGuard";
 import { AppStackParamList } from "../navigation/types";
 import { cleanPassageName, extractSkillFromTitle } from "../lib/quizDisplayUtils";
 
@@ -111,6 +112,7 @@ export default function CalendarScreen() {
   };
 
   return (
+    <GuestGuard>
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={{ padding: spacing.md }}>
         <Text style={styles.title}>學習日曆</Text>
@@ -227,6 +229,7 @@ export default function CalendarScreen() {
         )}
       </ScrollView>
     </SafeAreaView>
+    </GuestGuard>
   );
 }
 

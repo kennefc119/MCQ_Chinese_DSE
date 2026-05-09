@@ -16,7 +16,7 @@ type Rt = RouteProp<AppStackParamList, "QuizDetail">;
 export default function QuizDetailScreen() {
   const nav = useNavigation<Nav>();
   const { quizId } = useRoute<Rt>().params;
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, isGuest } = useAuth();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [signedUp, setSignedUp] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -41,6 +41,10 @@ export default function QuizDetailScreen() {
 
   const onJoin = async () => {
     if (!user) return;
+    if (isGuest) {
+      Alert.alert("請先登入", "訪客模式無法作答及儲存成績。請登入或註冊以繼續。");
+      return;
+    }
     if (locked) {
       Alert.alert("尚未解鎖", `需要 ${quiz.min_points_required} 文淵點才能挑戰此項目`);
       return;
