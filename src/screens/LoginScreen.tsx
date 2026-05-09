@@ -18,23 +18,28 @@ import { AuthStackParamList } from "../navigation/types";
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, "Login">;
 
+type Panel = "school" | "password" | null;
+
 export default function LoginScreen() {
   const nav = useNavigation<Nav>();
   const { signInWithEmail, signInWithPassword, enterDemo, enterGuest, demoMode } = useAuth();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Password login (collapsible, for Apple review)
-  const [showPasswordLogin, setShowPasswordLogin] = useState(false);
+  const [activePanel, setActivePanel] = useState<Panel>(null);
+
+  // Password login (Apple review)
   const [pwEmail, setPwEmail] = useState("");
   const [pwPassword, setPwPassword] = useState("");
   const [pwLoading, setPwLoading] = useState(false);
 
-  // School package login (collapsible)
-  const [showSchoolLogin, setShowSchoolLogin] = useState(false);
+  // School login
   const [schoolEmail, setSchoolEmail] = useState("");
   const [schoolPassword, setSchoolPassword] = useState("");
   const [schoolLoading, setSchoolLoading] = useState(false);
+
+  const togglePanel = (panel: Panel) =>
+    setActivePanel(prev => (prev === panel ? null : panel));
 
   const onSend = async () => {
     if (!email.includes("@")) {
@@ -59,9 +64,7 @@ export default function LoginScreen() {
     setPwLoading(true);
     const res = await signInWithPassword(pwEmail.trim(), pwPassword);
     setPwLoading(false);
-    if (!res.ok) {
-      Alert.alert("登入失敗", res.error || "電郵或密碼不正確");
-    }
+    if (!res.ok) Alert.alert("登入失敗", res.error || "電郵或密碼不正確");
   };
 
   const onSchoolLogin = async () => {
@@ -72,21 +75,23 @@ export default function LoginScreen() {
     setSchoolLoading(true);
     const res = await signInWithPassword(schoolEmail.trim(), schoolPassword);
     setSchoolLoading(false);
-    if (!res.ok) {
+    if (!res.ok)
       Alert.alert("登入失敗", res.error || "學校帳戶電郵或密碼不正確，如需協助請聯絡 cs@keeonz.ai");
-    }
   };
 
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+
+          {/* Branding */}
           <Text style={styles.brand}>📜</Text>
           <Text style={styles.title}>DSE 文言文 MCQ</Text>
           <Text style={styles.subtitle}>專為香港中學文憑試考生而設的文言文練習平台</Text>
 
           <View style={{ height: spacing.xl }} />
 
+          {/* Primary: OTP login */}
           <FormInput
             label="電郵地址"
             placeholder="you@example.com"
@@ -96,32 +101,41 @@ export default function LoginScreen() {
             keyboardType="email-address"
             autoCorrect={false}
           />
-
           <Button title="發送驗證碼" onPress={onSend} loading={loading} />
 
-          {/* Guest mode */}
-          <TouchableOpacity onPress={enterGuest} style={styles.guestBtn}>
-            <Text style={styles.guestText}>👀 以訪客身份瀏覽（部分功能受限）</Text>
-          </TouchableOpacity>
+          {/* Divider */}
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>或</Text>
+            <View style={styles.dividerLine} />
+          </View>
 
-          {/* School package login */}
-          <TouchableOpacity
-            onPress={() => { setShowSchoolLogin(v => !v); setShowPasswordLogin(false); }}
-            style={styles.schoolToggleRow}
-          >
-            <Text style={styles.schoolToggleText}>
-              🏫 {showSchoolLogin ? "▲ 隱藏學校平台登入" : "▼ 學校平台登入"}
-            </Text>
-          </TouchableOpacity>
+          {/* Secondary: Guest + School — side by side */}
+          <View style={styles.altRow}>
+            <TouchableOpacity style={styles.altBtn} onPress={enterGuest}>
+              <Text style={styles.altBtnIcon}>👀</Text>
+              <Text style={styles.altBtnText}>訪客瀏覽</Text>
+            </TouchableOpacity>
 
-          {showSchoolLogin && (
-            <View style={styles.schoolBox}>
-              <Text style={styles.schoolBoxTitle}>學校平台帳戶登入</Text>
-              <Text style={styles.schoolBoxSub}>適用於已訂閱學校服務計劃的帳戶</Text>
-              <Text style={styles.pwLabel}>學校電郵帳戶</Text>
+            <TouchableOpacity
+              style={[styles.altBtn, activePanel === "school" && styles.altBtnActive]}
+              onPress={() => togglePanel("school")}
+            >
+              <Text style={styles.altBtnIcon}>🏫</Text>
+              <Text style={[styles.altBtnText, activePanel === "school" && { color: colors.primary }]}>
+                學校平台登入
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* School login panel */}
+          {activePanel === "school" && (
+            <View style={styles.panel}>
+              <Text style={styles.panelTitle}>學校平台帳戶登入</Text>
+              <Text style={styles.panelSub}>適用於已訂閱學校服務計劃的帳戶</Text>
               <TextInput
-                style={styles.pwInput}
-                placeholder="school@example.edu.hk"
+                style={styles.input}
+                placeholder="學校電郵 school@example.edu.hk"
                 placeholderTextColor={colors.textMuted}
                 value={schoolEmail}
                 onChangeText={setSchoolEmail}
@@ -129,73 +143,25 @@ export default function LoginScreen() {
                 keyboardType="email-address"
                 autoCorrect={false}
               />
-              <Text style={styles.pwLabel}>密碼</Text>
               <TextInput
-                style={styles.pwInput}
-                placeholder="••••••••"
+                style={[styles.input, { marginTop: spacing.sm }]}
+                placeholder="密碼"
                 placeholderTextColor={colors.textMuted}
                 value={schoolPassword}
                 onChangeText={setSchoolPassword}
                 secureTextEntry
               />
               <TouchableOpacity
-                style={[styles.schoolLoginBtn, schoolLoading && { opacity: 0.6 }]}
+                style={[styles.panelBtn, schoolLoading && { opacity: 0.6 }]}
                 onPress={onSchoolLogin}
                 disabled={schoolLoading}
               >
                 {schoolLoading
                   ? <ActivityIndicator color={colors.background} size="small" />
-                  : <Text style={styles.schoolLoginBtnText}>學校帳戶登入</Text>}
+                  : <Text style={styles.panelBtnText}>學校帳戶登入</Text>}
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.schoolInfoLink}
-                onPress={() => nav.navigate("SchoolPartner")}
-              >
-                <Text style={styles.schoolInfoLinkText}>了解學校合作計劃 ›</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* Collapsible password login (Apple review) */}
-          <TouchableOpacity
-            onPress={() => { setShowPasswordLogin(v => !v); setShowSchoolLogin(false); }}
-            style={styles.togglePwRow}
-          >
-            <Text style={styles.togglePwText}>
-              {showPasswordLogin ? "▲ 隱藏帳號密碼登入" : "▼ 使用帳號密碼登入"}
-            </Text>
-          </TouchableOpacity>
-
-          {showPasswordLogin && (
-            <View style={styles.pwBox}>
-              <Text style={styles.pwLabel}>電郵</Text>
-              <TextInput
-                style={styles.pwInput}
-                placeholder="email@example.com"
-                placeholderTextColor={colors.textMuted}
-                value={pwEmail}
-                onChangeText={setPwEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                autoCorrect={false}
-              />
-              <Text style={styles.pwLabel}>密碼</Text>
-              <TextInput
-                style={styles.pwInput}
-                placeholder="••••••••"
-                placeholderTextColor={colors.textMuted}
-                value={pwPassword}
-                onChangeText={setPwPassword}
-                secureTextEntry
-              />
-              <TouchableOpacity
-                style={[styles.pwLoginBtn, pwLoading && { opacity: 0.6 }]}
-                onPress={onPasswordLogin}
-                disabled={pwLoading}
-              >
-                {pwLoading
-                  ? <ActivityIndicator color={colors.background} size="small" />
-                  : <Text style={styles.pwLoginBtnText}>登入</Text>}
+              <TouchableOpacity onPress={() => nav.navigate("SchoolPartner")} style={styles.panelLink}>
+                <Text style={styles.panelLinkText}>了解學校服務計劃 ›</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -220,6 +186,45 @@ export default function LoginScreen() {
               <Text style={styles.footerLink}>私隱政策</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Password login — discreet, for Apple review only */}
+          <TouchableOpacity onPress={() => togglePanel("password")} style={styles.pwToggle}>
+            <Text style={styles.pwToggleText}>🔑 密碼登入</Text>
+          </TouchableOpacity>
+
+          {activePanel === "password" && (
+            <View style={styles.pwPanel}>
+              <TextInput
+                style={styles.input}
+                placeholder="電郵"
+                placeholderTextColor={colors.textMuted}
+                value={pwEmail}
+                onChangeText={setPwEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                autoCorrect={false}
+              />
+              <TextInput
+                style={[styles.input, { marginTop: spacing.sm }]}
+                placeholder="密碼"
+                placeholderTextColor={colors.textMuted}
+                value={pwPassword}
+                onChangeText={setPwPassword}
+                secureTextEntry
+              />
+              <TouchableOpacity
+                style={[styles.panelBtn, { marginTop: spacing.sm }, pwLoading && { opacity: 0.6 }]}
+                onPress={onPasswordLogin}
+                disabled={pwLoading}
+              >
+                {pwLoading
+                  ? <ActivityIndicator color={colors.background} size="small" />
+                  : <Text style={styles.panelBtnText}>登入</Text>}
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <View style={{ height: spacing.lg }} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -232,55 +237,42 @@ const styles = StyleSheet.create({
   brand: { fontSize: 64, textAlign: "center", marginBottom: spacing.md },
   title: { ...typography.title, color: colors.primary, textAlign: "center" },
   subtitle: { ...typography.body, color: colors.textSecondary, textAlign: "center", marginTop: spacing.sm },
-  guestBtn: {
-    marginTop: spacing.md,
-    paddingVertical: spacing.sm,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-  },
-  guestText: { ...typography.button, color: colors.textSecondary },
 
-  // School login
-  schoolToggleRow: { marginTop: spacing.md, alignItems: "center", paddingVertical: spacing.xs },
-  schoolToggleText: { ...typography.caption, color: colors.primary, fontWeight: "600" },
-  schoolBox: {
-    marginTop: spacing.sm,
-    padding: spacing.md,
-    backgroundColor: "#1A1B0F",
+  // Divider
+  dividerRow: { flexDirection: "row", alignItems: "center", marginVertical: spacing.lg },
+  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
+  dividerText: { ...typography.caption, color: colors.textMuted, marginHorizontal: spacing.md },
+
+  // Alt buttons row
+  altRow: { flexDirection: "row", gap: spacing.sm, marginBottom: spacing.md },
+  altBtn: {
+    flex: 1,
+    flexDirection: "column",
+    alignItems: "center",
+    paddingVertical: spacing.md,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.primary,
-    gap: 6,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    gap: 4,
   },
-  schoolBoxTitle: { ...typography.heading, color: colors.primary, fontWeight: "700" },
-  schoolBoxSub: { ...typography.caption, color: colors.textMuted, marginBottom: spacing.xs },
-  schoolLoginBtn: {
-    marginTop: spacing.sm,
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    paddingVertical: spacing.sm,
-    alignItems: "center",
-  },
-  schoolLoginBtnText: { ...typography.button, color: colors.background },
-  schoolInfoLink: { alignItems: "center", marginTop: spacing.sm, paddingVertical: spacing.xs },
-  schoolInfoLinkText: { ...typography.caption, color: colors.primary },
+  altBtnActive: { borderColor: colors.primary, backgroundColor: "rgba(212,162,76,0.08)" },
+  altBtnIcon: { fontSize: 22 },
+  altBtnText: { ...typography.caption, color: colors.textSecondary, fontWeight: "600", textAlign: "center" },
 
-  // Standard password login
-  togglePwRow: { marginTop: spacing.md, alignItems: "center", paddingVertical: spacing.xs },
-  togglePwText: { ...typography.caption, color: colors.textMuted },
-  pwBox: {
-    marginTop: spacing.sm,
-    padding: spacing.md,
+  // Shared panel
+  panel: {
     backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.primary,
+    padding: spacing.md,
+    marginBottom: spacing.md,
     gap: 6,
   },
-  pwLabel: { ...typography.caption, color: colors.textSecondary, marginTop: 4 },
-  pwInput: {
+  panelTitle: { ...typography.heading, color: colors.primary, fontWeight: "700" },
+  panelSub: { ...typography.caption, color: colors.textMuted, marginBottom: spacing.xs },
+  input: {
     backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.border,
@@ -289,15 +281,31 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     ...typography.body,
   },
-  pwLoginBtn: {
+  panelBtn: {
     marginTop: spacing.sm,
     backgroundColor: colors.primary,
     borderRadius: 8,
     paddingVertical: spacing.sm,
     alignItems: "center",
   },
-  pwLoginBtnText: { ...typography.button, color: colors.background },
+  panelBtnText: { ...typography.button, color: colors.background },
+  panelLink: { alignItems: "center", paddingVertical: spacing.xs },
+  panelLinkText: { ...typography.caption, color: colors.primary },
 
+  // Password login (discreet)
+  pwToggle: { alignItems: "center", paddingVertical: spacing.sm, marginTop: spacing.xs },
+  pwToggleText: { ...typography.caption, color: colors.textMuted },
+  pwPanel: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    gap: 6,
+  },
+
+  // Demo
   demoNote: { ...typography.caption, color: colors.textMuted, textAlign: "center", marginTop: spacing.lg },
   demoBtn: { padding: spacing.md, alignItems: "center", marginTop: spacing.sm },
   demoText: { ...typography.button, color: colors.accent },
