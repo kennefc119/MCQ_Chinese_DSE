@@ -68,7 +68,7 @@ export default function QuizResultScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-      <FloatingBalloons shown />
+      <FloatingBalloons shown={passed} />
       <ScrollView contentContainerStyle={styles.body}>
         <Text style={styles.emoji}>{passed ? "🎉" : "📚"}</Text>
         <Text style={[styles.title, { color: passed ? colors.success : colors.warning }]}>
