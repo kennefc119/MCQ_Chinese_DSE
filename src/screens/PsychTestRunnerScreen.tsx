@@ -19,76 +19,10 @@ import { listPsychTests, savePsychResult } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
 import LoadingScreen from "../components/LoadingScreen";
+import FloatingBalloons from "../components/FloatingBalloons";
 
 type Nav = NativeStackNavigationProp<AppStackParamList, "PsychTest">;
 type Rt = RouteProp<AppStackParamList, "PsychTest">;
-
-// ── FloatingBalloons ─────────────────────────────────────────────────────────
-
-function BalloonItem({
-  index,
-  startX,
-  screenHeight,
-}: {
-  index: number;
-  startX: number;
-  screenHeight: number;
-}) {
-  const translateY = useRef(new Animated.Value(0)).current;
-  const translateX = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.sequence([
-        Animated.delay(index * 120),
-        Animated.timing(translateY, {
-          toValue: -screenHeight - 200,
-          duration: 3000,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(translateX, { toValue: 15, duration: 400, useNativeDriver: true }),
-          Animated.timing(translateX, { toValue: -15, duration: 400, useNativeDriver: true }),
-        ])
-      ),
-      Animated.sequence([
-        Animated.delay(2500),
-        Animated.timing(opacity, { toValue: 0, duration: 500, useNativeDriver: true }),
-      ]),
-    ]).start();
-  }, []);
-
-  return (
-    <Animated.View
-      style={[
-        { position: "absolute", bottom: 0, left: startX },
-        { transform: [{ translateY }, { translateX }], opacity },
-      ]}
-    >
-      <Text style={{ fontSize: 40 }}>🎈</Text>
-    </Animated.View>
-  );
-}
-
-function FloatingBalloons({ shown }: { shown: boolean }) {
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const positionsRef = useRef<number[]>(
-    Array.from({ length: 8 }, () => Math.random() * Math.max(screenWidth - 50, 0))
-  );
-
-  if (!shown) return null;
-
-  return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {positionsRef.current.map((x, i) => (
-        <BalloonItem key={i} index={i} startX={x} screenHeight={screenHeight} />
-      ))}
-    </View>
-  );
-}
 
 // ── ProgressBar ───────────────────────────────────────────────────────────────
 

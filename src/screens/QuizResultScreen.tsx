@@ -10,6 +10,7 @@ import { shuffleOptionsForAttempt } from "../lib/shuffleUtils";
 import { useAuth } from "../context/AuthContext";
 import Button from "../components/Button";
 import LoadingScreen from "../components/LoadingScreen";
+import FloatingBalloons from "../components/FloatingBalloons";
 import { AppStackParamList } from "../navigation/types";
 
 type Nav = NativeStackNavigationProp<AppStackParamList, "QuizResult">;
@@ -67,6 +68,7 @@ export default function QuizResultScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+      <FloatingBalloons shown />
       <ScrollView contentContainerStyle={styles.body}>
         <Text style={styles.emoji}>{passed ? "🎉" : "📚"}</Text>
         <Text style={[styles.title, { color: passed ? colors.success : colors.warning }]}>
