@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keeonz Content Editor</title>
+  <style>
+    :root {
+      --bg: #15110D; --surface: #1F1A14; --surface-alt: #2A2218;
+      --hover: #332820; --primary: #D4A24C; --primary-dk: #B68A3E;
+      --text: #F0E8D8; --text-sec: #A09080; --text-muted: #6A5A48;
+      --border: #3A2E22; --danger: #C75D4E; --success: #5BBF74;
+      --r: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; min-height: 100vh; }
+
+    /* Header */
+    .hdr { position: sticky; top: 0; z-index: 100; background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 20px rgba(0,0,0,.4); }
+    .hdr-l { display: flex; align-items: center; gap: 12px; }
+    .hdr-logo { font-size: 28px; }
+    .hdr-title { font-size: 18px; font-weight: 700; color: var(--primary); }
+    .hdr-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .status { font-size: 13px; padding: 5px 14px; border-radius: 20px; font-weight: 600; opacity: 0; transition: opacity .3s; }
+    .status.show { opacity: 1; }
+    .status.ok { background: rgba(91,191,116,.15); color: var(--success); border: 1px solid var(--success); }
+    .status.err { background: rgba(199,93,78,.15); color: var(--danger); border: 1px solid var(--danger); }
+
+    /* Tabs */
+    .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; gap: 4px; }
+    .tab { padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; color: var(--text-sec); font-size: 15px; font-weight: 600; cursor: pointer; transition: all .2s; }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    /* Main */
+    .main { max-width: 900px; margin: 0 auto; padding: 24px; }
+    .loading { text-align: center; padding: 60px; color: var(--text-muted); font-size: 16px; }
+
+    /* Cards */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 16px; }
+    .card:hover { border-color: var(--primary-dk); }
+    .card-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .card-num { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+    .card-acts { display: flex; gap: 6px; }
+
+    /* Form */
+    label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+    input[type=text], textarea { width: 100%; background: var(--surface-alt); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 15px; padding: 10px 14px; outline: none; font-family: inherit; transition: border-color .2s; resize: vertical; }
+    input[type=text]:focus, textarea:focus { border-color: var(--primary); }
+    input[type=text] { height: 40px; resize: none; }
+    textarea { min-height: 120px; line-height: 1.6; }
+    .fg { margin-bottom: 14px; }
+    .fg:last-child { margin-bottom: 0; }
+    .help { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
+
+    /* Grid */
+    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .g3-emoji { display: grid; grid-template-columns: 60px 1fr 2fr; gap: 10px; }
+
+    /* Icon buttons */
+    .ib { background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-sec); border-radius: 6px; width: 28px; height: 28px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+    .ib:hover { background: var(--hover); color: var(--text); }
+    .ib.del:hover { background: rgba(199,93,78,.2); color: var(--danger); border-color: var(--danger); }
+
+    /* Add button */
+    .add-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px; background: none; border: 2px dashed var(--border); border-radius: var(--r); color: var(--text-muted); font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; margin-bottom: 16px; }
+    .add-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(212,162,76,.05); }
+
+    /* Array items */
+    .ai { background: var(--surface-alt); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 10px; }
+    .ai-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .ai-num { font-size: 11px; font-weight: 700; color: var(--text-muted); background: var(--surface); border-radius: 4px; padding: 2px 8px; }
+
+    /* Point rows */
+    .pt { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .pt input { flex: 1; }
+
+    /* Group (school sections) */
+    .grp { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 16px; }
+    .grp-title { font-size: 14px; font-weight: 700; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 16px; }
+
+    /* Toolbar */
+    .toolbar { position: sticky; bottom: 0; z-index: 100; background: var(--surface); border-top: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .lu-grp { display: flex; align-items: center; gap: 10px; }
+    .lu-grp label { margin-bottom: 0; }
+    .lu-grp input { width: 200px; }
+    .save-btn { background: var(--primary); color: #15110D; border: none; border-radius: 10px; padding: 12px 28px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all .2s; }
+    .save-btn:hover { background: var(--primary-dk); transform: translateY(-1px); }
+    .save-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    /* Info banner */
+    .banner { background: rgba(212,162,76,.08); border: 1px solid rgba(212,162,76,.25); border-radius: var(--r); padding: 14px 16px; margin-bottom: 20px; font-size: 13px; color: var(--text-sec); line-height: 1.6; }
+    .banner strong { color: var(--primary); }
+  </style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-l">
+    <div class="hdr-logo">📜</div>
+    <div>
+      <div class="hdr-title">Keeonz Content Editor</div>
+      <div class="hdr-sub">內容管理工具 · 本地開發專用</div>
+    </div>
+  </div>
+  <div class="status" id="st"></div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" onclick="switchTab('terms')">📋 使用條款</button>
+  <button class="tab" onclick="switchTab('privacy')">🔒 私隱政策</button>
+  <button class="tab" onclick="switchTab('school')">🏫 學校服務計劃</button>
+</nav>
+
+<div class="main" id="main"><div class="loading">⏳ 載入中...</div></div>
+
+<div class="toolbar" id="toolbar" style="display:none">
+  <div class="lu-grp" id="lu-grp">
+    <label>最後更新日期</label>
+    <input type="text" id="lu-input" placeholder="2025年1月1日">
+  </div>
+  <button class="save-btn" id="save-btn" onclick="saveContent()">💾 儲存所有更改</button>
+</div>
+
+<script>
+let currentTab = 'terms';
+let currentData = null;
+
+/* ── Tab ─────────────────────────────────────────────── */
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['terms','privacy','school'][i] === tab);
+  });
+  loadContent(tab);
+}
+
+/* ── API ─────────────────────────────────────────────── */
+async function loadContent(tab) {
+  const m = document.getElementById('main');
+  m.innerHTML = '<div class="loading">⏳ 載入中...</div>';
+  document.getElementById('toolbar').style.display = 'none';
+  try {
+    const r = await fetch(`/api/content/${tab}`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}: ${await r.text()}`);
+    currentData = await r.json();
+    renderEditor(tab, currentData);
+    document.getElementById('toolbar').style.display = 'flex';
+    const lg = document.getElementById('lu-grp');
+    if (tab === 'school') { lg.style.display = 'none'; }
+    else { lg.style.display = 'flex'; document.getElementById('lu-input').value = currentData.lastUpdated || ''; }
+  } catch(e) {
+    m.innerHTML = `<div class="loading" style="color:var(--danger)">❌ 載入失敗: ${e.message}</div>`;
+  }
+}
+
+async function saveContent() {
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = '⏳ 儲存中...';
+  try {
+    const data = collectData();
+    const r = await fetch(`/api/content/${currentTab}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json; charset=utf-8'},
+      body: JSON.stringify(data)
+    });
+    const res = await r.json();
+    showStatus(res.success, res.message);
+  } catch(e) { showStatus(false, e.message); }
+  finally { btn.disabled = false; btn.innerHTML = '💾 儲存所有更改'; }
+}
+
+function showStatus(ok, msg) {
+  const el = document.getElementById('st');
+  el.className = `status show ${ok ? 'ok' : 'err'}`;
+  el.textContent = (ok ? '✅ ' : '❌ ') + msg;
+  setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+/* ── Render ──────────────────────────────────────────── */
+function renderEditor(tab, data) {
+  tab === 'school' ? renderSchool(data) : renderSections(data);
+}
+
+/* ── Sections (Terms / Privacy) ─────────────────────── */
+function renderSections(data) {
+  const secs = data.sections || [];
+  let html = `<div class="banner"><strong>提示：</strong>每個段落包含標題和正文。修改後點擊「儲存所有更改」，重新載入 App 即可生效。</div>`;
+  secs.forEach((s, i) => { html += renderCard(s, i, secs.length); });
+  html += `<button class="add-btn" onclick="addSection()">＋ 新增段落</button>`;
+  document.getElementById('main').innerHTML = html;
+}
+
+function renderCard(s, i, total) {
+  return `
+  <div class="card" id="sec-${i}">
+    <div class="card-hdr">
+      <span class="card-num">段落 ${i+1}</span>
+      <div class="card-acts">
+        <button class="ib" onclick="moveSection(${i},-1)" ${i===0?'disabled':''}>↑</button>
+        <button class="ib" onclick="moveSection(${i},1)" ${i===total-1?'disabled':''}>↓</button>
+        <button class="ib del" onclick="removeSection(${i})">✕</button>
+      </div>
+    </div>
+    <div class="fg"><label>標題</label><input type="text" id="t-${i}" value="${esc(s.title)}"></div>
+    <div class="fg"><label>正文</label><textarea id="b-${i}" rows="7">${esc(s.body)}</textarea>
+    <div class="help">提示：用空白行（按兩次 Enter）分隔段落</div></div>
+  </div>`;
+}
+
+function addSection() {
+  const d = collectData(); d.sections.push({title:'新段落', body:''});
+  renderSections(d); currentData = d;
+  setTimeout(() => { const el = document.querySelector('.card:last-of-type'); if(el) el.scrollIntoView({behavior:'smooth'}); }, 80);
+}
+function removeSection(i) {
+  if(!confirm(`確定刪除第 ${i+1} 段落？`)) return;
+  const d = collectData(); d.sections.splice(i, 1); renderSections(d); currentData = d;
+}
+function moveSection(i, dir) {
+  const d = collectData(); const ni = i + dir;
+  if(ni < 0 || ni >= d.sections.length) return;
+  [d.sections[i], d.sections[ni]] = [d.sections[ni], d.sections[i]];
+  renderSections(d); currentData = d;
+  setTimeout(() => { const el = document.getElementById(`sec-${ni}`); if(el) el.scrollIntoView({behavior:'smooth', block:'center'}); }, 50);
+}
+
+/* ── School Editor ───────────────────────────────────── */
+function renderSchool(data) {
+  const f = data.features || [], s = data.steps || [], pts = data.pricing?.points || [];
+  document.getElementById('main').innerHTML = `
+  <div class="banner"><strong>提示：</strong>管理「學校服務計劃」頁面所有文字內容。儲存後重新載入 App 即可看到更改。</div>
+
+  <div class="grp">
+    <div class="grp-title">🏫 英雄區塊 (Hero)</div>
+    <div class="g3-emoji">
+      <div class="fg"><label>Emoji</label><input type="text" id="h_e" value="${esc(data.hero?.emoji||'')}"></div>
+      <div class="fg"><label>標題 (\\n=換行)</label><textarea id="h_t" rows="2" style="min-height:60px">${esc(data.hero?.title||'')}</textarea></div>
+      <div class="fg"><label>副標題</label><textarea id="h_s" rows="3" style="min-height:70px">${esc(data.hero?.subtitle||'')}</textarea></div>
+    </div>
+  </div>
+
+  <div class="grp">
+    <div class="grp-title">❓ 為什麼選擇 Keeonz</div>
+    <div class="fg"><label>標題</label><input type="text" id="w_h" value="${esc(data.whySection?.header||'')}"></div>
+    <div class="fg"><label>第一段</label><textarea id="w_p1" rows="3">${esc(data.whySection?.paragraph1||'')}</textarea></div>
+    <div class="fg"><label>第二段</label><textarea id="w_p2" rows="3">${esc(data.whySection?.paragraph2||'')}</textarea></div>
+  </div>
+
+  <div class="grp">
+    <div class="grp-title">⭐ 功能列表</div>
+    <div class="fg"><label>區塊標題</label><input type="text" id="fh" value="${esc(data.featuresHeader||'')}"></div>
+    <div id="fl">${f.map((x,i)=>featureItem(x,i)).join('')}</div>
+    <button class="add-btn" onclick="addFeature()">＋ 新增功能</button>
+  </div>
+
+  <div class="grp">
+    <div class="grp-title">🔢 合作步驟</div>
+    <div class="fg"><label>區塊標題</label><input type="text" id="sh" value="${esc(data.stepsHeader||'')}"></div>
+    <div id="sl">${s.map((x,i)=>stepItem(x,i)).join('')}</div>
+    <button class="add-btn" onclick="addStep()">＋ 新增步驟</button>
+  </div>
+
+  <div class="grp">
+    <div class="grp-title">💰 定價區塊</div>
+    <div class="g2">
+      <div class="fg"><label>標籤</label><input type="text" id="p_tag" value="${esc(data.pricing?.tag||'')}"></div>
+      <div class="fg"><label>標題</label><input type="text" id="p_title" value="${esc(data.pricing?.title||'')}"></div>
+    </div>
+    <div class="fg"><label>描述</label><textarea id="p_desc" rows="3">${esc(data.pricing?.desc||'')}</textarea></div>
+    <div class="fg"><label>✓ 服務亮點</label>
+      <div id="pl">${pts.map((p,i)=>pointItem(p,i)).join('')}</div>
+      <button class="add-btn" onclick="addPoint()" style="margin-top:4px;margin-bottom:0">＋ 新增亮點</button>
+    </div>
+  </div>
+
+  <div class="grp">
+    <div class="grp-title">📧 行動呼籲 (CTA)</div>
+    <div class="g2">
+      <div class="fg"><label>標題</label><input type="text" id="c_title" value="${esc(data.cta?.title||'')}"></div>
+      <div class="fg"><label>聯絡電郵</label><input type="text" id="c_email" value="${esc(data.cta?.email||'')}"></div>
+    </div>
+    <div class="fg"><label>描述</label><textarea id="c_desc" rows="3">${esc(data.cta?.desc||'')}</textarea></div>
+    <div class="fg"><label>地址 (\\n=換行)</label><textarea id="c_addr" rows="2" style="min-height:55px">${esc(data.cta?.address||'')}</textarea></div>
+  </div>
+  <div style="height:16px"></div>`;
+}
+
+function featureItem(x, i) {
+  return `<div class="ai" id="f-${i}">
+    <div class="ai-hdr"><span class="ai-num">功能 ${i+1}</span><button class="ib del" onclick="removeFeature(${i})">✕</button></div>
+    <div style="display:grid;grid-template-columns:60px 1fr 2fr;gap:10px">
+      <div class="fg" style="margin:0"><label>Emoji</label><input type="text" id="fe-${i}" value="${esc(x.emoji||'')}"></div>
+      <div class="fg" style="margin:0"><label>名稱</label><input type="text" id="ft-${i}" value="${esc(x.title||'')}"></div>
+      <div class="fg" style="margin:0"><label>描述</label><input type="text" id="fd-${i}" value="${esc(x.desc||'')}"></div>
+    </div></div>`;
+}
+function stepItem(x, i) {
+  return `<div class="ai" id="s-${i}">
+    <div class="ai-hdr"><span class="ai-num">步驟 ${i+1}</span><button class="ib del" onclick="removeStep(${i})">✕</button></div>
+    <div style="display:grid;grid-template-columns:70px 1fr 2fr;gap:10px">
+      <div class="fg" style="margin:0"><label>編號</label><input type="text" id="sn-${i}" value="${esc(x.num||'')}"></div>
+      <div class="fg" style="margin:0"><label>標題</label><input type="text" id="st-${i}" value="${esc(x.title||'')}"></div>
+      <div class="fg" style="margin:0"><label>描述</label><textarea id="sd-${i}" rows="2" style="min-height:48px">${esc(x.desc||'')}</textarea></div>
+    </div></div>`;
+}
+function pointItem(p, i) {
+  return `<div class="pt" id="pt-${i}"><input type="text" id="pv-${i}" value="${esc(p||'')}"><button class="ib del" onclick="removePoint(${i})">✕</button></div>`;
+}
+
+function addFeature() { const d=collectSchoolData(); d.features.push({emoji:'⭐',title:'新功能',desc:'功能描述'}); renderSchool(d); currentData=d; }
+function removeFeature(i) { const d=collectSchoolData(); d.features.splice(i,1); renderSchool(d); currentData=d; }
+function addStep() { const d=collectSchoolData(); const n=String(d.steps.length+1).padStart(2,'0'); d.steps.push({num:n,title:'新步驟',desc:'步驟描述'}); renderSchool(d); currentData=d; }
+function removeStep(i) { const d=collectSchoolData(); d.steps.splice(i,1); renderSchool(d); currentData=d; }
+function addPoint() { const d=collectSchoolData(); d.pricing.points.push('新亮點'); renderSchool(d); currentData=d; }
+function removePoint(i) { const d=collectSchoolData(); d.pricing.points.splice(i,1); renderSchool(d); currentData=d; }
+
+/* ── Collect ─────────────────────────────────────────── */
+function collectData() {
+  return currentTab === 'school' ? collectSchoolData() : collectSectionsData();
+}
+function collectSectionsData() {
+  const secs = []; let i = 0;
+  while (document.getElementById(`t-${i}`)) {
+    secs.push({ title: document.getElementById(`t-${i}`).value, body: document.getElementById(`b-${i}`).value });
+    i++;
+  }
+  return { lastUpdated: document.getElementById('lu-input')?.value || '', sections: secs };
+}
+function collectSchoolData() {
+  const features = []; let fi = 0;
+  while (document.getElementById(`f-${fi}`)) {
+    features.push({ emoji: v(`fe-${fi}`), title: v(`ft-${fi}`), desc: v(`fd-${fi}`) }); fi++;
+  }
+  const steps = []; let si = 0;
+  while (document.getElementById(`s-${si}`)) {
+    steps.push({ num: v(`sn-${si}`), title: v(`st-${si}`), desc: v(`sd-${si}`) }); si++;
+  }
+  const points = []; let pi = 0;
+  while (document.getElementById(`pt-${pi}`)) { points.push(v(`pv-${pi}`)); pi++; }
+  return {
+    hero: { emoji: v('h_e'), title: v('h_t'), subtitle: v('h_s') },
+    whySection: { header: v('w_h'), paragraph1: v('w_p1'), paragraph2: v('w_p2') },
+    featuresHeader: v('fh'), features,
+    stepsHeader: v('sh'), steps,
+    pricing: { tag: v('p_tag'), title: v('p_title'), desc: v('p_desc'), points },
+    cta: { title: v('c_title'), desc: v('c_desc'), email: v('c_email'), address: v('c_addr') }
+  };
+}
+
+/* ── Utils ───────────────────────────────────────────── */
+const v = id => document.getElementById(id)?.value || '';
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* ── Init ────────────────────────────────────────────── */
+loadContent('terms');
+</script>
+</body>
+</html>

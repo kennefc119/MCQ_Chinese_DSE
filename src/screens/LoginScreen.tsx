@@ -110,14 +110,14 @@ export default function LoginScreen() {
             style={styles.schoolToggleRow}
           >
             <Text style={styles.schoolToggleText}>
-              🏫 {showSchoolLogin ? "▲ 隱藏學校套餐登入" : "▼ 學校套餐登入"}
+              🏫 {showSchoolLogin ? "▲ 隱藏學校平台登入" : "▼ 學校平台登入"}
             </Text>
           </TouchableOpacity>
 
           {showSchoolLogin && (
             <View style={styles.schoolBox}>
-              <Text style={styles.schoolBoxTitle}>學校套餐帳戶登入</Text>
-              <Text style={styles.schoolBoxSub}>適用於已訂閱學校合作計劃的帳戶</Text>
+              <Text style={styles.schoolBoxTitle}>學校平台帳戶登入</Text>
+              <Text style={styles.schoolBoxSub}>適用於已訂閱學校服務計劃的帳戶</Text>
               <Text style={styles.pwLabel}>學校電郵帳戶</Text>
               <TextInput
                 style={styles.pwInput}
