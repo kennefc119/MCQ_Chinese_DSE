@@ -40,6 +40,7 @@ export default function ProfileScreen() {
     { icon: "mail-outline", label: "收件箱", onPress: () => nav.navigate("Inbox") },
     { icon: "time-outline", label: "文淵點記錄", onPress: () => nav.navigate("PointHistory") },
     { icon: "ribbon-outline", label: "訂閱方案", onPress: () => nav.navigate("Subscription") },
+    { icon: "business-outline", label: "學校合作計劃", onPress: () => nav.navigate("SchoolPartner") },
     ...(user.role === "admin"
       ? ([{ icon: "construct-outline", label: "管理後台", onPress: () => nav.navigate("Admin") }] as MenuItem[])
       : []),
