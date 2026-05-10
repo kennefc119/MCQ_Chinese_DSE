@@ -129,9 +129,11 @@ function QuizTile({ item, onPress, passageName }: { item: Quiz; onPress: () => v
         colors={["transparent", "rgba(0,0,0,0.85)"]}
         style={StyleSheet.absoluteFill}
       />
-      {/* Centered title */}
+      {/* Vertical title column */}
       <View style={styles.tileCenteredWrap}>
-        <Text style={styles.tileCenteredTitle} numberOfLines={3}>{heroText ?? item.title}</Text>
+        {(heroText ?? item.title).replace(/[\s—–·\-]/g, "").split("").slice(0, 10).map((c, i) => (
+          <Text key={i} style={styles.tileCenteredTitle}>{c}</Text>
+        ))}
       </View>
       <VerticalTileInfo
         categoryLabel={QUIZ_TYPE_LABEL[item.type] ?? item.type}
@@ -165,9 +167,11 @@ function TipTile({ item, onPress }: { item: TipCard; onPress: () => void }) {
         categoryLabel={label}
         categoryBgColor={colors.accent}
       />
-      {/* Centered title */}
+      {/* Vertical title column */}
       <View style={styles.tileCenteredWrap}>
-        <Text style={styles.tileCenteredTitle} numberOfLines={3}>{item.title}</Text>
+        {item.title.replace(/[\s—–·\-]/g, "").split("").slice(0, 10).map((c, i) => (
+          <Text key={i} style={styles.tileCenteredTitle}>{c}</Text>
+        ))}
       </View>
     </TouchableOpacity>
   );
@@ -745,18 +749,19 @@ const styles = StyleSheet.create({
   tileCenteredWrap: {
     position: "absolute",
     left: 6,
-    right: 22,           // clear the right vertical column
+    right: 22,
     top: 0,
     bottom: 0,
     justifyContent: "center",
     alignItems: "center",
+    flexDirection: "column",
   },
   tileCenteredTitle: {
     color: "#FFFFFF",
-    fontSize: 20,        // was 10 → +100%
+    fontSize: 16,        // was 20 → −20%
     fontWeight: "800",
     textAlign: "center",
-    lineHeight: 24,
+    lineHeight: 19,
     textShadowColor: "rgba(0,0,0,0.80)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
