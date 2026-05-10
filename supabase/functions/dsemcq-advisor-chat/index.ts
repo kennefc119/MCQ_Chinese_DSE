@@ -66,7 +66,7 @@ Deno.serve(async (req: Request) => {
 
     const used = countResp.count ?? 0;
     const tier = (profileResp.data as { subscription_tier?: string } | null)?.subscription_tier ?? "free";
-    const monthlyLimit = tier === "premium" ? 300 : 20;
+    const monthlyLimit = tier === "premium" ? 300 : 30;
 
     if (used >= monthlyLimit) {
       return json({
