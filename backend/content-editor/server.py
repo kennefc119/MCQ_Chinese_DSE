@@ -30,6 +30,7 @@ SRC_CONTENT = BASE.parent.parent / "src" / "content"
 TERMS_TS = SRC_CONTENT / "termsContent.ts"
 PRIVACY_TS = SRC_CONTENT / "privacyContent.ts"
 SCHOOL_JSON = SRC_CONTENT / "schoolPartner.json"
+SUBSCRIPTION_JSON = SRC_CONTENT / "subscriptionContent.json"
 
 # ─── TS Parser / Writer ───────────────────────────────────────────────────────
 
@@ -120,6 +121,10 @@ def get_content(doc: str):
         if not SCHOOL_JSON.exists():
             return jsonify({"error": f"File not found: {SCHOOL_JSON}"}), 404
         return jsonify(json.loads(SCHOOL_JSON.read_text(encoding="utf-8")))
+    elif doc == "subscription":
+        if not SUBSCRIPTION_JSON.exists():
+            return jsonify({"error": f"File not found: {SUBSCRIPTION_JSON}"}), 404
+        return jsonify(json.loads(SUBSCRIPTION_JSON.read_text(encoding="utf-8")))
     return jsonify({"error": "Unknown document"}), 404
 
 
@@ -135,6 +140,10 @@ def save_content(doc: str):
             write_ts_privacy(data)
         elif doc == "school":
             SCHOOL_JSON.write_text(
+                json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+        elif doc == "subscription":
+            SUBSCRIPTION_JSON.write_text(
                 json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
             )
         else:
@@ -155,6 +164,7 @@ if __name__ == "__main__":
     print(f"📄  使用條款   : {TERMS_TS.name}  {status(TERMS_TS)}")
     print(f"📄  私隱政策   : {PRIVACY_TS.name}  {status(PRIVACY_TS)}")
     print(f"📄  學校服務   : {SCHOOL_JSON.name}  {status(SCHOOL_JSON)}")
+    print(f"📄  訂閱方案   : {SUBSCRIPTION_JSON.name}  {status(SUBSCRIPTION_JSON)}")
     print()
     print("🌐  開啟瀏覽器: http://localhost:5001")
     print("=" * 60)

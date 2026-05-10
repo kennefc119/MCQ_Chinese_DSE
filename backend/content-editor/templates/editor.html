@@ -110,6 +110,7 @@
   <button class="tab active" onclick="switchTab('terms')">📋 使用條款</button>
   <button class="tab" onclick="switchTab('privacy')">🔒 私隱政策</button>
   <button class="tab" onclick="switchTab('school')">🏫 學校服務計劃</button>
+  <button class="tab" onclick="switchTab('subscription')">💎 訂閱方案</button>
 </nav>
 
 <div class="main" id="main"><div class="loading">⏳ 載入中...</div></div>
@@ -130,7 +131,7 @@ let currentData = null;
 function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.tab').forEach((t, i) => {
-    t.classList.toggle('active', ['terms','privacy','school'][i] === tab);
+    t.classList.toggle('active', ['terms','privacy','school','subscription'][i] === tab);
   });
   loadContent(tab);
 }
@@ -147,7 +148,7 @@ async function loadContent(tab) {
     renderEditor(tab, currentData);
     document.getElementById('toolbar').style.display = 'flex';
     const lg = document.getElementById('lu-grp');
-    if (tab === 'school') { lg.style.display = 'none'; }
+    if (tab === 'school' || tab === 'subscription') { lg.style.display = 'none'; }
     else { lg.style.display = 'flex'; document.getElementById('lu-input').value = currentData.lastUpdated || ''; }
   } catch(e) {
     m.innerHTML = `<div class="loading" style="color:var(--danger)">❌ 載入失敗: ${e.message}</div>`;
@@ -179,7 +180,9 @@ function showStatus(ok, msg) {
 
 /* ── Render ──────────────────────────────────────────── */
 function renderEditor(tab, data) {
-  tab === 'school' ? renderSchool(data) : renderSections(data);
+  if (tab === 'school') renderSchool(data);
+  else if (tab === 'subscription') renderSubscription(data);
+  else renderSections(data);
 }
 
 /* ── Sections (Terms / Privacy) ─────────────────────── */
@@ -315,9 +318,71 @@ function removeStep(i) { const d=collectSchoolData(); d.steps.splice(i,1); rende
 function addPoint() { const d=collectSchoolData(); d.pricing.points.push('新亮點'); renderSchool(d); currentData=d; }
 function removePoint(i) { const d=collectSchoolData(); d.pricing.points.splice(i,1); renderSchool(d); currentData=d; }
 
-/* ── Collect ─────────────────────────────────────────── */
+/* ── Subscription Editor ─────────────────────────────── */
+function renderSubscription(data) {
+  const fp = data.freePlan?.perks || [], pp = data.premiumPlan?.perks || [];
+  document.getElementById('main').innerHTML = `
+  <div class="banner"><strong>提示：</strong>管理訂閱方案頁面的所有文字內容。儲存後重新載入 App 即可看到更改。</div>
+
+  <div class="grp">
+    <div class="grp-title">📄 頁面標題</div>
+    <div class="g2">
+      <div class="fg"><label>主標題</label><input type="text" id="sub_title" value="${esc(data.pageTitle||'')}"></div>
+      <div class="fg"><label>副標題</label><input type="text" id="sub_subtitle" value="${esc(data.pageSubtitle||'')}"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>「目前方案」標籤文字</label><input type="text" id="sub_currlabel" value="${esc(data.currentPlanLabel||'')}"></div>
+      <div class="fg"><label>升級按鈕文字</label><input type="text" id="sub_upbtn" value="${esc(data.upgradeButtonLabel||'')}"></div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="grp">
+      <div class="grp-title">🆓 免費版</div>
+      <div class="fg"><label>方案名稱</label><input type="text" id="fp_name" value="${esc(data.freePlan?.name||'')}"></div>
+      <div class="fg"><label>價格</label><input type="text" id="fp_price" value="${esc(data.freePlan?.price||'')}"></div>
+      <div class="fg"><label>功能亮點</label>
+        <div id="fp_perks">${fp.map((p,i)=>perkItem('fp',p,i)).join('')}</div>
+        <button class="add-btn" onclick="addPerk('fp')" style="margin-top:4px;margin-bottom:0">＋ 新增亮點</button>
+      </div>
+    </div>
+    <div class="grp" style="border-color:var(--primary)">
+      <div class="grp-title">💎 高級版</div>
+      <div class="fg"><label>方案名稱</label><input type="text" id="pp_name" value="${esc(data.premiumPlan?.name||'')}"></div>
+      <div class="fg"><label>價格</label><input type="text" id="pp_price" value="${esc(data.premiumPlan?.price||'')}"></div>
+      <div class="fg"><label>功能亮點</label>
+        <div id="pp_perks">${pp.map((p,i)=>perkItem('pp',p,i)).join('')}</div>
+        <button class="add-btn" onclick="addPerk('pp')" style="margin-top:4px;margin-bottom:0">＋ 新增亮點</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grp">
+    <div class="grp-title">📝 底部備注</div>
+    <div class="fg"><textarea id="sub_note" rows="3">${esc(data.note||'')}</textarea></div>
+  </div>
+  <div style="height:16px"></div>`;
+}
+
+function perkItem(prefix, text, i) {
+  return `<div class="pt" id="${prefix}-pk-${i}"><input type="text" id="${prefix}-pv-${i}" value="${esc(text||'')}"><button class="ib del" onclick="removePerk('${prefix}',${i})">✕</button></div>`;
+}
+function addPerk(prefix) {
+  const d = collectSubscriptionData();
+  const arr = prefix === 'fp' ? d.freePlan.perks : d.premiumPlan.perks;
+  arr.push('新亮點'); renderSubscription(d); currentData = d;
+}
+function removePerk(prefix, i) {
+  const d = collectSubscriptionData();
+  const arr = prefix === 'fp' ? d.freePlan.perks : d.premiumPlan.perks;
+  arr.splice(i, 1); renderSubscription(d); currentData = d;
+}
+
+
 function collectData() {
-  return currentTab === 'school' ? collectSchoolData() : collectSectionsData();
+  if (currentTab === 'school') return collectSchoolData();
+  if (currentTab === 'subscription') return collectSubscriptionData();
+  return collectSectionsData();
 }
 function collectSectionsData() {
   const secs = []; let i = 0;
@@ -345,6 +410,21 @@ function collectSchoolData() {
     stepsHeader: v('sh'), steps,
     pricing: { tag: v('p_tag'), title: v('p_title'), desc: v('p_desc'), points },
     cta: { title: v('c_title'), desc: v('c_desc'), email: v('c_email'), address: v('c_addr') }
+  };
+}
+function collectSubscriptionData() {
+  const fp = [], pp = []; let i = 0;
+  while (document.getElementById(`fp-pk-${i}`)) { fp.push(v(`fp-pv-${i}`)); i++; }
+  i = 0;
+  while (document.getElementById(`pp-pk-${i}`)) { pp.push(v(`pp-pv-${i}`)); i++; }
+  return {
+    pageTitle: v('sub_title'),
+    pageSubtitle: v('sub_subtitle'),
+    currentPlanLabel: v('sub_currlabel'),
+    upgradeButtonLabel: v('sub_upbtn'),
+    freePlan: { name: v('fp_name'), price: v('fp_price'), perks: fp },
+    premiumPlan: { name: v('pp_name'), price: v('pp_price'), perks: pp },
+    note: v('sub_note')
   };
 }
 
