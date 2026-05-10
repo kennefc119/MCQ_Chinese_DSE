@@ -3,7 +3,7 @@ export interface LegalSection {
   body: string;
 }
 
-export const TERMS_LAST_UPDATED = "2025年1月1日";
+export const TERMS_LAST_UPDATED = "2025年5月1日";
 
 export const TERMS_SECTIONS: LegalSection[] = [
   {
@@ -303,7 +303,7 @@ export const TERMS_SECTIONS: LegalSection[] = [
 
 Keeonz Limited
 電郵：cs@keeonz.ai
-地址：香港中環雅柏道3號環球商業中心29樓2904-05室
+地址：香港中環雅柏道3號環球商業中心29樓
 
 本公司將於收到查詢後的合理時間內作出回覆。
 

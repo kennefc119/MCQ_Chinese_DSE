@@ -63,6 +63,34 @@ function interleave(quizzes: Quiz[], tips: TipCard[]): FeedItem[] {
   return out;
 }
 
+const MAX_COL_CHARS = 6; // chars per vertical column before splitting to two
+
+/** Renders a title as one or two vertical char-columns, centred in the card area. */
+function TileVerticalTitle({ title }: { title: string }) {
+  const chars = title.replace(/[\s—–·\-。，、！？]/g, "").split("").slice(0, 12);
+  const twoCol = chars.length > MAX_COL_CHARS;
+  const mid = twoCol ? Math.ceil(chars.length / 2) : chars.length;
+  const col1 = chars.slice(0, mid);
+  const col2 = twoCol ? chars.slice(mid) : [];
+
+  return (
+    <View style={styles.tileCenteredWrap}>
+      <View style={styles.tileVertCol}>
+        {col1.map((c, i) => (
+          <Text key={i} style={styles.tileCenteredTitle}>{c}</Text>
+        ))}
+      </View>
+      {col2.length > 0 && (
+        <View style={styles.tileVertCol}>
+          {col2.map((c, i) => (
+            <Text key={i} style={styles.tileCenteredTitle}>{c}</Text>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
 /** Renders category badge + difficulty stars as a vertical column anchored top-right. */
 function VerticalTileInfo({
   categoryLabel,
@@ -129,12 +157,8 @@ function QuizTile({ item, onPress, passageName }: { item: Quiz; onPress: () => v
         colors={["transparent", "rgba(0,0,0,0.85)"]}
         style={StyleSheet.absoluteFill}
       />
-      {/* Vertical title column */}
-      <View style={styles.tileCenteredWrap}>
-        {(heroText ?? item.title).replace(/[\s—–·\-]/g, "").split("").slice(0, 10).map((c, i) => (
-          <Text key={i} style={styles.tileCenteredTitle}>{c}</Text>
-        ))}
-      </View>
+      {/* Vertical title (1 or 2 columns) */}
+      <TileVerticalTitle title={heroText ?? item.title} />
       <VerticalTileInfo
         categoryLabel={QUIZ_TYPE_LABEL[item.type] ?? item.type}
         categoryBgColor={badgeColor}
@@ -167,12 +191,8 @@ function TipTile({ item, onPress }: { item: TipCard; onPress: () => void }) {
         categoryLabel={label}
         categoryBgColor={colors.accent}
       />
-      {/* Vertical title column */}
-      <View style={styles.tileCenteredWrap}>
-        {item.title.replace(/[\s—–·\-]/g, "").split("").slice(0, 10).map((c, i) => (
-          <Text key={i} style={styles.tileCenteredTitle}>{c}</Text>
-        ))}
-      </View>
+      {/* Vertical title (1 or 2 columns) */}
+      <TileVerticalTitle title={item.title} />
     </TouchableOpacity>
   );
 }
@@ -752,9 +772,14 @@ const styles = StyleSheet.create({
     right: 22,
     top: 0,
     bottom: 0,
+    flexDirection: "row",        // columns sit side-by-side
     justifyContent: "center",
     alignItems: "center",
+  },
+  tileVertCol: {
     flexDirection: "column",
+    alignItems: "center",
+    marginHorizontal: 2,
   },
   tileCenteredTitle: {
     color: "#FFFFFF",
