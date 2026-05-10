@@ -176,6 +176,17 @@ def api_save():
     return jsonify({"ok": True, "saved": saved})
 
 
+@app.delete("/api/variable/<key>")
+def api_variable_delete(key: str):
+    """Delete a variable from variables.json."""
+    data = _load_variables()
+    if key not in data:
+        return jsonify({"error": "not found"}), 404
+    del data[key]
+    _save_variables(data)
+    return jsonify({"ok": True, "deleted": key})
+
+
 @app.get("/api/prompt/<key>")
 def api_prompt_get(key: str):
     meta = _ALL_PROMPTS.get(key)

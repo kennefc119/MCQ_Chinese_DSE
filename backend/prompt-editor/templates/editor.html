@@ -197,6 +197,51 @@
   .loading { opacity: .4; pointer-events: none; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin .6s linear infinite; }
+
+  /* ─── Add-variable form ───────────────────────────────────────────── */
+  .btn-sm {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 4px; font-size: 11px; font-weight: 600;
+    cursor: pointer; border: none; transition: background .12s, opacity .12s;
+  }
+  .btn-sm-primary { background: var(--primary); color: #15110D; }
+  .btn-sm-primary:hover { background: var(--primary-d); }
+  .btn-sm-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-sm-ghost:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-sm-danger { background: transparent; color: var(--error); border: 1px solid var(--border); }
+  .btn-sm-danger:hover { background: rgba(178,58,46,.12); border-color: var(--error); }
+  .btn-sm-insert { background: rgba(212,162,76,.15); color: var(--primary); border: 1px solid rgba(212,162,76,.3); }
+  .btn-sm-insert:hover { background: rgba(212,162,76,.3); }
+
+  .add-var-form {
+    background: var(--surface2); border-bottom: 1px solid var(--border);
+    padding: 12px 16px; display: none; flex-direction: column; gap: 8px;
+  }
+  .add-var-form.open { display: flex; }
+  .add-var-form-title { font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 2px; }
+  .add-var-row { display: flex; gap: 8px; align-items: center; }
+  .add-var-input {
+    flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text); padding: 5px 8px; font-size: 12px; font-family: monospace;
+  }
+  .add-var-input:focus { outline: none; border-color: var(--primary); }
+  .add-var-input.error { border-color: var(--error); }
+  .add-var-hint { font-size: 10px; color: var(--muted); margin-top: -4px; }
+  .add-var-hint.err { color: var(--error); }
+
+  /* var card action row */
+  .var-card-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .var-card-divider { height: 1px; background: var(--border); margin: 10px 0 6px; }
+
+  /* code snippet */
+  .code-snippet {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+    padding: 8px 10px; font-family: "SF Mono","Cascadia Code","Fira Code",monospace;
+    font-size: 11px; color: #9DD95B; overflow-x: auto; white-space: pre; margin-top: 6px;
+  }
+  .code-snippet-label { font-size: 10px; color: var(--muted); margin-top: 10px; margin-bottom: 3px; }
+  .new-var-badge { display: inline-block; font-size: 9px; padding: 1px 5px; background: rgba(93,217,122,.2); color: #5BD97A; border-radius: 3px; margin-left: 6px; font-weight: 700; vertical-align: middle; }
+
 </style>
 </head>
 <body>
@@ -271,7 +316,27 @@
     <aside class="var-panel" id="varPanel">
       <div class="var-panel-header">
         <span class="var-panel-title">注入變量</span>
-        <span style="font-size:11px; color:var(--muted)" id="varCount">—</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px; color:var(--muted)" id="varCount">—</span>
+          <button class="btn-sm btn-sm-primary" onclick="toggleAddVarForm()" id="addVarBtn">＋ 新增</button>
+        </div>
+      </div>
+      <!-- Add-variable inline form -->
+      <div class="add-var-form" id="addVarForm">
+        <div class="add-var-form-title">建立新注入變量</div>
+        <div class="add-var-row">
+          <input class="add-var-input" id="newVarKey" placeholder="變量鍵名（英文，如 my_variable）" autocomplete="off" oninput="validateNewVarKey()">
+        </div>
+        <div class="add-var-hint" id="newVarKeyHint">用於模板中的 {{my_variable}} 佔位符</div>
+        <div class="add-var-row">
+          <input class="add-var-input" style="font-family:system-ui" id="newVarLabel" placeholder="中文標籤（如「我的變量」）">
+        </div>
+        <textarea class="add-var-input" id="newVarDesc" style="font-family:system-ui;resize:vertical;min-height:48px" placeholder="描述：此變量代表什麼？Python 代碼如何傳入？"></textarea>
+        <input class="add-var-input" style="font-family:system-ui" id="newVarExample" placeholder="示例值（可選）">
+        <div class="add-var-row" style="justify-content:flex-end;gap:8px;margin-top:4px">
+          <button class="btn-sm btn-sm-ghost" onclick="toggleAddVarForm()">取消</button>
+          <button class="btn-sm btn-sm-primary" onclick="submitNewVariable()">建立變量</button>
+        </div>
       </div>
       <div class="var-panel-body" id="varPanelBody">
         <div class="empty-state">
@@ -318,7 +383,7 @@ async function boot() {
 
     buildSidebar();
     renderVarPanel(null); // show all vars in right panel
-    document.getElementById('varCount').textContent = `${Object.keys(state.variables).length} 個變量`;
+    updateVarCount();
   } catch(e) {
     showToast('載入失敗：' + e.message, true);
   }
@@ -470,13 +535,14 @@ function renderVarPanel(usedVars) {
     : Object.keys(state.variables);
 
   if (keysToShow.length === 0) {
-    body.innerHTML = '<div class="empty-state"><div class="icon">🔗</div><p>此提示詞不使用任何注入變量</p></div>';
+    body.innerHTML = '<div class="empty-state"><div class="icon">🔗</div><p>尚無注入變量。點擊「＋ 新增」建立第一個。</p></div>';
     return;
   }
 
   keysToShow.forEach(k => {
     const v = state.variables[k] || { label: k, description: '（未登記）', agents: [], example: '' };
     const highlighted = usedVars && usedVars.includes(k);
+    const isNew = !!v._new;
     const color = state.varColors[k] || '#999';
 
     const card = document.createElement('div');
@@ -490,15 +556,26 @@ function renderVarPanel(usedVars) {
       .map(([pk, p]) => `<span class="prompt-ref" onclick="selectItem('${pk}')" title="${p.label}">${p.label}</span>`)
       .join('');
 
+    // Python integration snippet
+    const pySnippet = `render_template(\n    _USER_TEMPLATE_PATH,\n    ...,\n    ${k}=your_${k}_value,\n)`;
+
     card.innerHTML = `
       <div class="var-card-header">
         <span class="var-pill" style="background:${color}22;color:${color};border:1px solid ${color}44;font-size:11px;padding:2px 7px;border-radius:4px;font-weight:700">{{${k}}}</span>
+        ${isNew ? '<span class="new-var-badge">NEW</span>' : ''}
       </div>
       <input class="var-label-input" placeholder="標籤" value="${escHtml(v.label || '')}"
         oninput="updateVar('${k}','label',this.value)">
       <textarea class="var-desc-input" placeholder="描述（此變量代表什麼？）"
         oninput="updateVar('${k}','description',this.value)">${escHtml(v.description || '')}</textarea>
       ${usedIn ? `<div class="var-used-in">${usedIn}</div>` : ''}
+      <div class="var-card-divider"></div>
+      <div class="var-card-actions">
+        <button class="btn-sm btn-sm-insert" onclick="insertVarAtCursor('${k}')">⬅ 插入到編輯器</button>
+        <button class="btn-sm btn-sm-danger" onclick="deleteVariable('${k}')">刪除</button>
+      </div>
+      ${isNew ? `<div class="code-snippet-label">Python 整合提示 — 在 agent 的 render_template() 呼叫加入：</div>
+        <div class="code-snippet">${escHtml(pySnippet)}</div>` : ''}
     `;
     body.appendChild(card);
   });
@@ -516,11 +593,126 @@ function jumpToVar(key) {
   if (card) { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); card.style.outline = '2px solid ' + (state.varColors[key] || '#fff'); setTimeout(() => card.style.outline = '', 1200); }
 }
 
+// ─── Insert var at cursor ─────────────────────────────────────────────────
+function insertVarAtCursor(key) {
+  const ta = document.getElementById('promptTextarea');
+  if (!state.selected || state.selected === '__vars__') {
+    showToast('請先在左側選擇一個提示詞模板', true); return;
+  }
+  if (ta.style.display === 'none') {
+    // Switch to raw tab first
+    setEditorTab('raw');
+  }
+  ta.focus();
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const token = `{{${key}}}`;
+  const before = ta.value.substring(0, start);
+  const after = ta.value.substring(end);
+  ta.value = before + token + after;
+  // Restore cursor after inserted token
+  const newPos = start + token.length;
+  ta.setSelectionRange(newPos, newPos);
+  // Trigger the input handler to update state, preview, vars-used
+  ta.dispatchEvent(new Event('input'));
+  showToast(`已插入 {{${key}}}`);
+}
+
+// ─── Add new variable ─────────────────────────────────────────────────────
+function toggleAddVarForm() {
+  const form = document.getElementById('addVarForm');
+  form.classList.toggle('open');
+  if (form.classList.contains('open')) {
+    document.getElementById('newVarKey').focus();
+    document.getElementById('newVarKey').value = '';
+    document.getElementById('newVarLabel').value = '';
+    document.getElementById('newVarDesc').value = '';
+    document.getElementById('newVarExample').value = '';
+    document.getElementById('newVarKeyHint').className = 'add-var-hint';
+    document.getElementById('newVarKeyHint').textContent = '用於模板中的 {{my_variable}} 佔位符';
+    document.getElementById('newVarKey').classList.remove('error');
+  }
+}
+
+function validateNewVarKey() {
+  const keyEl = document.getElementById('newVarKey');
+  const hint = document.getElementById('newVarKeyHint');
+  const val = keyEl.value.trim();
+  if (!val) { hint.textContent = '用於模板中的 {{my_variable}} 佔位符'; hint.className = 'add-var-hint'; keyEl.classList.remove('error'); return true; }
+  if (!/^[a-z][a-z0-9_]*$/.test(val)) { hint.textContent = '只能使用小寫字母、數字、下劃線，且以字母開頭'; hint.className = 'add-var-hint err'; keyEl.classList.add('error'); return false; }
+  if (state.variables[val]) { hint.textContent = `⚠ 「${val}」已存在`; hint.className = 'add-var-hint err'; keyEl.classList.add('error'); return false; }
+  hint.textContent = `✓ 將建立 {{${val}}}`; hint.className = 'add-var-hint'; keyEl.classList.remove('error'); return true;
+}
+
+function submitNewVariable() {
+  if (!validateNewVarKey()) return;
+  const key = document.getElementById('newVarKey').value.trim();
+  if (!key) { showToast('請輸入變量鍵名', true); return; }
+
+  const label = document.getElementById('newVarLabel').value.trim() || key;
+  const description = document.getElementById('newVarDesc').value.trim();
+  const example = document.getElementById('newVarExample').value.trim();
+
+  // Assign next color
+  const idx = Object.keys(state.varColors).length;
+  state.varColors[key] = VAR_COLORS[idx % VAR_COLORS.length];
+
+  // Add to variables (mark as new for Python hint display)
+  state.variables[key] = { label, description, agents: [], example, _new: true };
+  state.dirty.__vars__ = true;
+  updateSaveStatus();
+  updateVarCount();
+
+  // Close form and re-render
+  toggleAddVarForm();
+  const currentVars = state.selected && state.selected !== '__vars__'
+    ? (state.prompts[state.selected]?.vars_used || null)
+    : null;
+  renderVarPanel(currentVars);
+
+  // Scroll to the new card
+  setTimeout(() => jumpToVar(key), 80);
+  showToast(`已建立 {{${key}}} — 點擊「插入到編輯器」使用`);
+}
+
+// ─── Delete variable ──────────────────────────────────────────────────────
+function deleteVariable(key) {
+  // Check if actively used in any prompt
+  const usedIn = Object.entries(state.prompts)
+    .filter(([, p]) => (p.vars_used || []).includes(key))
+    .map(([, p]) => p.label);
+
+  const confirmMsg = usedIn.length > 0
+    ? `⚠ {{${key}}} 正被以下提示詞使用：\n${usedIn.join('\n')}\n\n仍要刪除此變量？（提示詞中的 {{${key}}} 不會自動移除）`
+    : `確定要刪除 {{${key}}}？`;
+
+  if (!confirm(confirmMsg)) return;
+
+  // Remove from state
+  delete state.variables[key];
+  delete state.varColors[key];
+  state.dirty.__vars__ = true;
+  updateSaveStatus();
+  updateVarCount();
+
+  // Also DELETE from server immediately (so it's not orphaned)
+  fetch(`/api/variable/${key}`, { method: 'DELETE' }).catch(() => {});
+
+  const currentVars = state.selected && state.selected !== '__vars__'
+    ? (state.prompts[state.selected]?.vars_used || null)
+    : null;
+  renderVarPanel(currentVars);
+  showToast(`已刪除 {{${key}}}`);
+}
+
+function updateVarCount() {
+  document.getElementById('varCount').textContent = `${Object.keys(state.variables).length} 個變量`;
+}
+
 // ─── Variables management screen (when __vars__ selected) ─────────────────
 function showVarsScreen() {
   document.getElementById('emptyState').style.display = 'none';
   document.getElementById('promptEditor').style.display = 'none';
-  // The var panel already shows all vars — just render it fully
   renderVarPanel(null);
 }
 
@@ -543,7 +735,15 @@ async function saveAll() {
   });
 
   const body = { prompts: promptsDirty };
-  if (state.dirty.__vars__) body.variables = state.variables;
+  if (state.dirty.__vars__) {
+    // Strip internal _new flag before persisting
+    const cleanVars = {};
+    Object.entries(state.variables).forEach(([k, v]) => {
+      const { _new, ...rest } = v;
+      cleanVars[k] = rest;
+    });
+    body.variables = cleanVars;
+  }
 
   try {
     const res = await fetch('/api/save', {
