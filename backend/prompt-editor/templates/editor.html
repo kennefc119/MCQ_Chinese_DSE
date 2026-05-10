@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>提示詞編輯器 — 文淵 MCQ Generator</title>
+<style>
+  /* ─── Design tokens ─────────────────────────────────────────────── */
+  :root {
+    --bg:        #15110D;
+    --surface:   #1F1A14;
+    --surface2:  #2A231A;
+    --border:    #3D3020;
+    --primary:   #D4A24C;
+    --primary-d: #B8893A;
+    --text:      #F0E6D2;
+    --muted:     #8A7B62;
+    --success:   #5C8A50;
+    --error:     #B23A2E;
+    --warning:   #C28A1E;
+
+    /* variable pill colours — 12 rotating */
+    --v0: #5B8DD9; --v1: #D9855B; --v2: #5BD97A; --v3: #D95B9E;
+    --v4: #5BD9CB; --v5: #D9C45B; --v6: #A45BD9; --v7: #5BA8D9;
+    --v8: #D9755B; --v9: #5BD9A4; --v10:#D95B5B; --v11:#9DD95B;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+  /* ─── Layout ─────────────────────────────────────────────────────── */
+  .app { display: grid; grid-template-rows: 54px 1fr; height: 100vh; }
+
+  /* Top bar */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 16px; padding: 0 20px;
+  }
+  .topbar .brand { font-size: 18px; font-weight: 700; color: var(--primary); letter-spacing: 0.03em; }
+  .topbar .brand small { font-size: 12px; color: var(--muted); font-weight: 400; margin-left: 8px; }
+  .topbar .spacer { flex: 1; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600;
+    cursor: pointer; border: none; transition: background .15s, opacity .15s;
+  }
+  .btn-primary { background: var(--primary); color: #15110D; }
+  .btn-primary:hover { background: var(--primary-d); }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+  .save-status { font-size: 12px; color: var(--muted); }
+  .save-status.ok { color: var(--success); }
+  .save-status.err { color: var(--error); }
+
+  /* Main 3-pane layout */
+  .main { display: grid; grid-template-columns: 220px 1fr 340px; overflow: hidden; }
+
+  /* ─── LEFT SIDEBAR ─────────────────────────────────────────────── */
+  .sidebar {
+    background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow-y: auto;
+  }
+  .sidebar-section { padding: 14px 12px 4px; }
+  .sidebar-section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border-radius: 6px; cursor: pointer;
+    margin-bottom: 2px; font-size: 12.5px; color: var(--text);
+    transition: background .1s;
+  }
+  .sidebar-item:hover { background: var(--surface2); }
+  .sidebar-item.active { background: rgba(212,162,76,.15); color: var(--primary); }
+  .sidebar-item .kind-badge {
+    font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 4px;
+    text-transform: uppercase; letter-spacing: .05em; flex-shrink: 0;
+  }
+  .kind-badge.system { background: rgba(212,162,76,.2); color: var(--primary); }
+  .kind-badge.user   { background: rgba(91,141,217,.2); color: #5B8DD9; }
+  .sidebar-item.vars-item { color: var(--muted); }
+  .sidebar-item.vars-item.active { color: var(--primary); }
+  .sidebar-divider { height: 1px; background: var(--border); margin: 8px 12px; }
+
+  /* ─── CENTRE EDITOR ────────────────────────────────────────────── */
+  .editor-pane {
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .editor-header {
+    padding: 12px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  }
+  .editor-title { font-size: 15px; font-weight: 600; }
+  .editor-agent { font-size: 11px; color: var(--muted); background: var(--surface2); padding: 2px 8px; border-radius: 4px; }
+  .editor-vars-used { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; min-height: 36px; }
+  .editor-vars-used .var-pill-label { font-size: 10px; color: var(--muted); align-self: center; margin-right: 4px; }
+  .editor-body { flex: 1; display: grid; grid-template-rows: 1fr; overflow: hidden; }
+  .editor-body.split { grid-template-rows: 1fr 1fr; }
+
+  /* Tabs inside editor */
+  .editor-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .editor-tab {
+    padding: 8px 16px; font-size: 12px; cursor: pointer; border-bottom: 2px solid transparent;
+    color: var(--muted); transition: color .1s;
+  }
+  .editor-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+  textarea.prompt-textarea {
+    flex: 1; width: 100%; background: var(--surface2); color: var(--text);
+    border: none; outline: none; resize: none; padding: 16px 20px;
+    font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+    font-size: 13px; line-height: 1.7; tab-size: 2;
+  }
+  textarea.prompt-textarea:focus { box-shadow: inset 0 0 0 2px rgba(212,162,76,.3); }
+
+  /* Preview panel */
+  .preview-panel {
+    overflow-y: auto; padding: 16px 20px; background: var(--surface);
+    border-top: 1px solid var(--border);
+    font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+    font-size: 13px; line-height: 1.75; white-space: pre-wrap; word-break: break-word;
+  }
+  .preview-panel .var-pill {
+    display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 12px;
+    font-weight: 600; font-family: system-ui, sans-serif; white-space: nowrap;
+    cursor: pointer;
+  }
+  .preview-panel .var-pill:hover { filter: brightness(1.2); }
+
+  /* ─── RIGHT VARIABLE PANEL ─────────────────────────────────────── */
+  .var-panel {
+    background: var(--surface); border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .var-panel-header {
+    padding: 12px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .var-panel-title { font-size: 14px; font-weight: 600; }
+  .var-panel-body { flex: 1; overflow-y: auto; }
+  .var-card {
+    border-bottom: 1px solid var(--border); padding: 12px 16px;
+  }
+  .var-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .var-card .var-pill { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 700; }
+  .var-card-key { font-size: 11px; color: var(--muted); font-family: monospace; }
+  .var-label-input {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text); padding: 4px 8px; font-size: 12px; margin-bottom: 6px;
+  }
+  .var-desc-input {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text); padding: 4px 8px; font-size: 12px;
+    resize: vertical; min-height: 52px; font-family: system-ui;
+  }
+  .var-used-in {
+    margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px;
+  }
+  .var-used-in .prompt-ref {
+    font-size: 10px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 3px; padding: 1px 6px; color: var(--muted); cursor: pointer;
+    transition: border-color .1s;
+  }
+  .var-used-in .prompt-ref:hover { border-color: var(--primary); color: var(--primary); }
+
+  /* Variables screen (full editor area when "variables" is selected) */
+  .vars-screen {
+    display: none; flex-direction: column; overflow: hidden;
+    grid-column: 2; /* only fills editor+var columns when sidebar = vars */
+  }
+  .vars-screen.visible { display: flex; }
+
+  /* ─── Notification toast ─────────────────────────────────────────── */
+  .toast {
+    position: fixed; bottom: 20px; right: 20px; padding: 10px 18px;
+    border-radius: 8px; font-size: 13px; font-weight: 600;
+    background: var(--success); color: #fff;
+    transform: translateY(60px); opacity: 0;
+    transition: transform .25s ease, opacity .25s ease;
+    pointer-events: none; z-index: 999;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.err { background: var(--error); }
+
+  /* Empty state */
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; color: var(--muted); gap: 12px; text-align: center; padding: 40px;
+  }
+  .empty-state .icon { font-size: 40px; opacity: .4; }
+  .empty-state p { font-size: 14px; max-width: 280px; line-height: 1.6; }
+
+  /* Loading */
+  .loading { opacity: .4; pointer-events: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin .6s linear infinite; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <span class="brand">提示詞編輯器 <small>文淵 MCQ Generator</small></span>
+    <span class="spacer"></span>
+    <span class="save-status" id="saveStatus"></span>
+    <button class="btn btn-ghost" onclick="resetChanges()">重置</button>
+    <button class="btn btn-primary" id="saveBtn" onclick="saveAll()">
+      <span id="saveBtnIcon">💾</span> 儲存全部
+    </button>
+  </header>
+
+  <!-- MAIN 3-PANE -->
+  <div class="main" id="mainGrid">
+
+    <!-- LEFT: prompt tree -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">系統提示</div>
+        <div id="nav-system"></div>
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">用戶消息模板</div>
+        <div id="nav-user"></div>
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">注入變量</div>
+        <div id="nav-vars">
+          <div class="sidebar-item vars-item" data-key="__vars__" onclick="selectItem('__vars__')">
+            <span>🔧</span> 變量管理
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- CENTRE: editor -->
+    <section class="editor-pane" id="editorPane">
+      <div class="empty-state" id="emptyState">
+        <div class="icon">📝</div>
+        <p>從左側選擇一個提示詞開始編輯</p>
+      </div>
+
+      <div id="promptEditor" style="display:none; flex-direction:column; height:100%; overflow:hidden;">
+        <div class="editor-header">
+          <span class="editor-title" id="editorTitle">—</span>
+          <span class="editor-agent kind-badge" id="editorAgentBadge"></span>
+          <span class="kind-badge" id="editorKindBadge"></span>
+        </div>
+        <div class="editor-vars-used" id="editorVarsUsed">
+          <span class="var-pill-label">使用變量：</span>
+        </div>
+        <div class="editor-tabs">
+          <div class="editor-tab active" onclick="setEditorTab('raw')">原始文本</div>
+          <div class="editor-tab" onclick="setEditorTab('preview')">預覽</div>
+          <div class="editor-tab" onclick="setEditorTab('split')">分割視圖</div>
+        </div>
+        <div class="editor-body" id="editorBody">
+          <textarea class="prompt-textarea" id="promptTextarea" spellcheck="false"
+            oninput="onTextareaInput()"></textarea>
+          <div class="preview-panel" id="previewPanel" style="display:none"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: variable detail panel -->
+    <aside class="var-panel" id="varPanel">
+      <div class="var-panel-header">
+        <span class="var-panel-title">注入變量</span>
+        <span style="font-size:11px; color:var(--muted)" id="varCount">—</span>
+      </div>
+      <div class="var-panel-body" id="varPanelBody">
+        <div class="empty-state">
+          <div class="icon">🔗</div>
+          <p>選擇提示詞後，此欄顯示其使用的注入變量詳情</p>
+        </div>
+      </div>
+    </aside>
+  </div><!-- .main -->
+</div><!-- .app -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────────
+let state = {
+  prompts: {},       // key → {label, agent, filename, kind, content, vars_used}
+  variables: {},     // key → {label, description, agents, example, used_in_prompts}
+  dirty: {},         // key → modified content (prompts + "variables")
+  selected: null,
+  varColors: {},     // var_key → css color var
+  editorTab: 'raw',
+};
+
+const VAR_COLORS = [
+  'var(--v0)','var(--v1)','var(--v2)','var(--v3)',
+  'var(--v4)','var(--v5)','var(--v6)','var(--v7)',
+  'var(--v8)','var(--v9)','var(--v10)','var(--v11)',
+];
+
+// ─── Boot ─────────────────────────────────────────────────────────────────
+async function boot() {
+  try {
+    const res = await fetch('/api/data');
+    const data = await res.json();
+    state.prompts = data.prompts;
+    state.variables = data.variables;
+
+    // Assign colours to all vars
+    Object.keys(state.variables).forEach((k, i) => {
+      state.varColors[k] = VAR_COLORS[i % VAR_COLORS.length];
+    });
+
+    buildSidebar();
+    renderVarPanel(null); // show all vars in right panel
+    document.getElementById('varCount').textContent = `${Object.keys(state.variables).length} 個變量`;
+  } catch(e) {
+    showToast('載入失敗：' + e.message, true);
+  }
+}
+
+// ─── Sidebar ──────────────────────────────────────────────────────────────
+function buildSidebar() {
+  const sysCont = document.getElementById('nav-system');
+  const usrCont = document.getElementById('nav-user');
+  sysCont.innerHTML = '';
+  usrCont.innerHTML = '';
+
+  Object.entries(state.prompts).forEach(([key, p]) => {
+    const el = document.createElement('div');
+    el.className = 'sidebar-item';
+    el.dataset.key = key;
+    el.onclick = () => selectItem(key);
+    el.innerHTML = `
+      <span class="kind-badge ${p.kind}">${p.kind === 'system' ? 'SYS' : 'USR'}</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">${p.label}</span>
+    `;
+    (p.kind === 'system' ? sysCont : usrCont).appendChild(el);
+  });
+}
+
+function setActiveSidebarItem(key) {
+  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+  const el = document.querySelector(`.sidebar-item[data-key="${key}"]`);
+  if (el) el.classList.add('active');
+}
+
+// ─── Item selection ───────────────────────────────────────────────────────
+function selectItem(key) {
+  state.selected = key;
+  setActiveSidebarItem(key);
+
+  if (key === '__vars__') {
+    showVarsScreen();
+    return;
+  }
+
+  const p = state.prompts[key];
+  if (!p) return;
+
+  // Show editor
+  document.getElementById('emptyState').style.display = 'none';
+  const ed = document.getElementById('promptEditor');
+  ed.style.display = 'flex';
+
+  document.getElementById('editorTitle').textContent = p.label;
+  document.getElementById('editorAgentBadge').textContent = agentLabel(p.agent);
+  document.getElementById('editorKindBadge').textContent = p.kind === 'system' ? '系統提示' : '用戶消息';
+  document.getElementById('editorKindBadge').className = `kind-badge ${p.kind}`;
+
+  const content = state.dirty[key] !== undefined ? state.dirty[key] : p.content;
+  document.getElementById('promptTextarea').value = content;
+
+  renderVarsUsedBadges(p.vars_used);
+  renderPreview(content);
+  renderVarPanel(p.vars_used);
+}
+
+function agentLabel(agent) {
+  return { strategist: '策略師', drafter: '出題員', critic: '審題主任', drafter_revision: '出題員（修改）' }[agent] || agent;
+}
+
+// ─── Editor ───────────────────────────────────────────────────────────────
+function setEditorTab(tab) {
+  state.editorTab = tab;
+  document.querySelectorAll('.editor-tab').forEach((el, i) => {
+    el.classList.toggle('active', ['raw','preview','split'][i] === tab);
+  });
+
+  const ta = document.getElementById('promptTextarea');
+  const pp = document.getElementById('previewPanel');
+  const body = document.getElementById('editorBody');
+
+  if (tab === 'raw') {
+    ta.style.display = 'block'; pp.style.display = 'none';
+    body.classList.remove('split');
+  } else if (tab === 'preview') {
+    ta.style.display = 'none'; pp.style.display = 'block';
+    body.classList.remove('split');
+  } else {
+    ta.style.display = 'block'; pp.style.display = 'block';
+    body.classList.add('split');
+  }
+}
+
+function onTextareaInput() {
+  const key = state.selected;
+  if (!key || key === '__vars__') return;
+  const content = document.getElementById('promptTextarea').value;
+  state.dirty[key] = content;
+
+  // Update vars_used in state
+  const vars = findVarsInText(content);
+  if (state.prompts[key]) state.prompts[key].vars_used = vars;
+  renderVarsUsedBadges(vars);
+  renderPreview(content);
+  renderVarPanel(vars);
+  updateSaveStatus();
+}
+
+function findVarsInText(text) {
+  const matches = [...text.matchAll(/\{\{(\w+)\}\}/g)];
+  return [...new Set(matches.map(m => m[1]))];
+}
+
+function renderVarsUsedBadges(vars) {
+  const cont = document.getElementById('editorVarsUsed');
+  cont.innerHTML = '<span class="var-pill-label">使用變量：</span>';
+  if (!vars || vars.length === 0) {
+    cont.innerHTML += '<span style="color:var(--muted);font-size:12px">（無）</span>';
+    return;
+  }
+  vars.forEach(v => {
+    const pill = varPillEl(v);
+    pill.onclick = () => jumpToVar(v);
+    cont.appendChild(pill);
+  });
+}
+
+function renderPreview(text) {
+  const pp = document.getElementById('previewPanel');
+  // Escape HTML then replace {{VAR}} with coloured pills
+  let html = escHtml(text);
+  html = html.replace(/\{\{(\w+)\}\}/g, (_, name) => {
+    const color = state.varColors[name] || '#999';
+    const label = state.variables[name]?.label || name;
+    return `<span class="var-pill" style="background:${color}22;color:${color};border:1px solid ${color}44"
+      title="${escHtml(label)}" onclick="jumpToVar('${name}')">{{${name}}}</span>`;
+  });
+  pp.innerHTML = html;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── Variable panel (right) ───────────────────────────────────────────────
+function renderVarPanel(usedVars) {
+  const body = document.getElementById('varPanelBody');
+  body.innerHTML = '';
+
+  // If no selection or showing all, show all vars
+  const keysToShow = usedVars
+    ? [...new Set([...usedVars, ...Object.keys(state.variables)])]
+    : Object.keys(state.variables);
+
+  if (keysToShow.length === 0) {
+    body.innerHTML = '<div class="empty-state"><div class="icon">🔗</div><p>此提示詞不使用任何注入變量</p></div>';
+    return;
+  }
+
+  keysToShow.forEach(k => {
+    const v = state.variables[k] || { label: k, description: '（未登記）', agents: [], example: '' };
+    const highlighted = usedVars && usedVars.includes(k);
+    const color = state.varColors[k] || '#999';
+
+    const card = document.createElement('div');
+    card.className = 'var-card';
+    card.id = `varcard-${k}`;
+    if (!highlighted && usedVars) card.style.opacity = '0.45';
+
+    // Find prompts that use this var
+    const usedIn = Object.entries(state.prompts)
+      .filter(([, p]) => (p.vars_used || []).includes(k))
+      .map(([pk, p]) => `<span class="prompt-ref" onclick="selectItem('${pk}')" title="${p.label}">${p.label}</span>`)
+      .join('');
+
+    card.innerHTML = `
+      <div class="var-card-header">
+        <span class="var-pill" style="background:${color}22;color:${color};border:1px solid ${color}44;font-size:11px;padding:2px 7px;border-radius:4px;font-weight:700">{{${k}}}</span>
+      </div>
+      <input class="var-label-input" placeholder="標籤" value="${escHtml(v.label || '')}"
+        oninput="updateVar('${k}','label',this.value)">
+      <textarea class="var-desc-input" placeholder="描述（此變量代表什麼？）"
+        oninput="updateVar('${k}','description',this.value)">${escHtml(v.description || '')}</textarea>
+      ${usedIn ? `<div class="var-used-in">${usedIn}</div>` : ''}
+    `;
+    body.appendChild(card);
+  });
+}
+
+function updateVar(key, field, value) {
+  if (!state.variables[key]) state.variables[key] = {};
+  state.variables[key][field] = value;
+  if (!state.dirty.__vars__) state.dirty.__vars__ = true;
+  updateSaveStatus();
+}
+
+function jumpToVar(key) {
+  const card = document.getElementById(`varcard-${key}`);
+  if (card) { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); card.style.outline = '2px solid ' + (state.varColors[key] || '#fff'); setTimeout(() => card.style.outline = '', 1200); }
+}
+
+// ─── Variables management screen (when __vars__ selected) ─────────────────
+function showVarsScreen() {
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('promptEditor').style.display = 'none';
+  // The var panel already shows all vars — just render it fully
+  renderVarPanel(null);
+}
+
+// ─── Save ─────────────────────────────────────────────────────────────────
+function updateSaveStatus() {
+  const n = Object.keys(state.dirty).length;
+  const el = document.getElementById('saveStatus');
+  el.textContent = n > 0 ? `${n} 項未儲存` : '';
+  el.className = 'save-status';
+}
+
+async function saveAll() {
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  document.getElementById('saveBtnIcon').innerHTML = '<span class="spinner"></span>';
+
+  const promptsDirty = {};
+  Object.keys(state.dirty).forEach(k => {
+    if (k !== '__vars__') promptsDirty[k] = state.dirty[k];
+  });
+
+  const body = { prompts: promptsDirty };
+  if (state.dirty.__vars__) body.variables = state.variables;
+
+  try {
+    const res = await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      state.dirty = {};
+      updateSaveStatus();
+      showToast(`已儲存 ${data.saved.length} 個檔案`);
+    } else {
+      showToast('儲存失敗：' + (data.errors || []).join(', '), true);
+    }
+  } catch(e) {
+    showToast('網絡錯誤：' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    document.getElementById('saveBtnIcon').textContent = '💾';
+  }
+}
+
+function resetChanges() {
+  if (!confirm('放棄所有未儲存的更改？')) return;
+  state.dirty = {};
+  if (state.selected && state.selected !== '__vars__') selectItem(state.selected);
+  updateSaveStatus();
+  showToast('已重置');
+}
+
+// ─── Utilities ────────────────────────────────────────────────────────────
+function varPillEl(name) {
+  const color = state.varColors[name] || '#999';
+  const span = document.createElement('span');
+  span.className = 'var-pill';
+  span.textContent = `{{${name}}}`;
+  span.style.cssText = `background:${color}22;color:${color};border:1px solid ${color}44;font-size:11px;padding:2px 8px;border-radius:4px;font-weight:700;cursor:pointer`;
+  span.title = state.variables[name]?.label || name;
+  return span;
+}
+
+function showToast(msg, isErr = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (isErr ? ' err' : '');
+  void el.offsetWidth; // reflow
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// Keyboard shortcut: Ctrl+S / Cmd+S
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    saveAll();
+  }
+});
+
+boot();
+</script>
+</body>
+</html>

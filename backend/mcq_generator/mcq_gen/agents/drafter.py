@@ -14,10 +14,14 @@ from ..llm import chat_structured
 from ..schemas import Critique, Draft, Spec
 from ..school_ws_loader import format_school_ws_block
 from ..config import settings
+from ..template_utils import render_template
 
 log = structlog.get_logger(__name__)
 
-_PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "drafter.md"
+_SYSTEM_PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "drafter.md"
+_USER_TEMPLATE_PATH = Path(__file__).parent.parent / "prompts" / "drafter_user.md"
+_CLOSING_INITIAL_PATH = Path(__file__).parent.parent / "prompts" / "drafter_user_closing_initial.md"
+_CLOSING_REVISION_PATH = Path(__file__).parent.parent / "prompts" / "drafter_user_closing_revision.md"
 _PASSAGES_FILE = Path(__file__).parent.parent.parent / "data" / "passages.json"
 
 
@@ -42,47 +46,44 @@ def _build_user_message(
     critique: Critique | None,
     cross_text: str | None,
 ) -> str:
-    parts = [
-        "## 題目需求規格 (spec)",
-        f"```json\n{spec.model_dump_json(indent=2)}\n```",
-        "",
-        "## 主篇章原文",
-        passage_text,
-    ]
-    if cross_text:
-        parts += ["", "## 跨篇章原文（第二篇）", cross_text]
+    # Optional sections — prepend separator if non-empty
+    cross_text_section = (
+        f"\n\n## 跨篇章原文（第二篇）\n{cross_text}" if cross_text else ""
+    )
 
-    # Inject past DSE reference questions for style/difficulty calibration
-    reference_block = format_reference_block(spec.passage)
-    if reference_block:
-        parts += ["", reference_block]
+    ref_parts: list[str] = []
+    primary_ref = format_reference_block(spec.passage)
+    if primary_ref:
+        ref_parts.append(primary_ref)
     if spec.cross_passage:
         cross_ref = format_reference_block(spec.cross_passage)
         if cross_ref:
-            parts += ["", f"### 跨篇章參考（{spec.cross_passage}）", cross_ref]
+            ref_parts.append(f"### 跨篇章參考（{spec.cross_passage}）\n{cross_ref}")
+    reference_block = ("\n\n" + "\n\n".join(ref_parts)) if ref_parts else ""
 
-    # Inject school worksheet summary + relevant teacher worksheets
-    school_ws_block = format_school_ws_block(spec.passage, spec.cross_passage)
-    if school_ws_block:
-        parts += ["", school_ws_block]
+    ws = format_school_ws_block(spec.passage, spec.cross_passage)
+    school_ws_block = ("\n\n" + ws) if ws else ""
 
     if prev_draft and critique:
-        parts += [
-            "",
-            "## 你之前的草稿",
-            f"```json\n{prev_draft.model_dump_json(indent=2)}\n```",
-            "",
-            "## 審題主任的意見",
-            f"**評分**: {critique.score}/10",
-            f"**評語**: {critique.comments}",
-            f"**修改指示**: {critique.revision_instructions}",
-            "",
-            "⚠️ 請**逐項回應**所有修改指示，輸出改進後的完整 MC 題目。",
-        ]
+        closing_section = render_template(
+            _CLOSING_REVISION_PATH,
+            prev_draft_json=prev_draft.model_dump_json(indent=2),
+            critique_score=str(critique.score),
+            critique_comments=critique.comments,
+            critique_instructions=critique.revision_instructions,
+        )
     else:
-        parts.append("\n請根據規格和篇章原文，輸出一條完整的 MC 題目。")
+        closing_section = _CLOSING_INITIAL_PATH.read_text(encoding="utf-8").strip()
 
-    return "\n".join(parts)
+    return render_template(
+        _USER_TEMPLATE_PATH,
+        spec_json=spec.model_dump_json(indent=2),
+        passage_text=passage_text,
+        cross_text_section=cross_text_section,
+        reference_block=reference_block,
+        school_ws_block=school_ws_block,
+        closing_section=closing_section,
+    )
 
 
 def run_drafter(
@@ -92,7 +93,7 @@ def run_drafter(
     iteration: int = 0,
 ) -> Draft:
     """呼叫出題員，回傳一個 Draft。"""
-    system_prompt = _PROMPT_PATH.read_text(encoding="utf-8")
+    system_prompt = _SYSTEM_PROMPT_PATH.read_text(encoding="utf-8")
 
     passage_text = _load_passage_text(spec.passage)
     cross_text = _load_passage_text(spec.cross_passage) if spec.cross_passage else None

@@ -13,22 +13,19 @@ from ..db.stats import fetch_db_stats
 from ..llm import chat_structured
 from ..schemas import DBStats, Spec
 from ..config import settings
+from ..template_utils import render_template
 
 log = structlog.get_logger(__name__)
 
-_PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "strategist.md"
+_SYSTEM_PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "strategist.md"
+_USER_TEMPLATE_PATH = Path(__file__).parent.parent / "prompts" / "strategist_user.md"
 
 
 def _build_user_message(stats: DBStats) -> str:
-    return f"""以下是現有題庫的分佈統計，請根據此分析決定下一條 MC 題目的規格。
-
-## 現有題庫統計
-```json
-{json.dumps(stats.model_dump(), ensure_ascii=False, indent=2)}
-```
-
-請輸出一個符合格式要求的 JSON 規格。
-"""
+    return render_template(
+        _USER_TEMPLATE_PATH,
+        stats_json=json.dumps(stats.model_dump(), ensure_ascii=False, indent=2),
+    )
 
 
 def run_strategist(stats: DBStats | None = None) -> Spec:
@@ -36,7 +33,7 @@ def run_strategist(stats: DBStats | None = None) -> Spec:
     if stats is None:
         stats = fetch_db_stats()
 
-    system_prompt = _PROMPT_PATH.read_text(encoding="utf-8")
+    system_prompt = _SYSTEM_PROMPT_PATH.read_text(encoding="utf-8")
     user_message = _build_user_message(stats)
 
     log.info("strategist_start", total_questions=stats.total, bot=settings.strategist_bot)

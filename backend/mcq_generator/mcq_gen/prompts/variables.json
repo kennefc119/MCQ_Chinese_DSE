@@ -1,0 +1,74 @@
+{
+  "stats_json": {
+    "label": "題庫統計",
+    "description": "現有題庫的分佈統計（由 Supabase 讀取），包含各篇章×難度×技能的題數分佈。",
+    "agents": ["strategist"],
+    "example": "{ \"total\": 120, \"by_passage\": {...}, \"by_difficulty\": {...}, \"by_skill\": {...} }"
+  },
+  "spec_json": {
+    "label": "題目規格",
+    "description": "策略師輸出的題目需求規格，包含 passage、difficulty、skill_tested、special_notes、reasoning 等欄位。",
+    "agents": ["drafter", "critic"],
+    "example": "{ \"passage\": \"p09\", \"difficulty\": \"中\", \"skill_tested\": \"修辭手法\", \"special_notes\": \"...\", \"reasoning\": \"...\" }"
+  },
+  "passage_text": {
+    "label": "主篇章原文",
+    "description": "指定篇章的完整課文，從 data/passages.json 讀取。",
+    "agents": ["drafter", "critic"],
+    "example": "（課文全文，例如《岳陽樓記》原文...）"
+  },
+  "cross_text_section": {
+    "label": "跨篇章原文區塊",
+    "description": "跨篇章比較題時，第二篇的完整課文（含 Markdown 標題「## 跨篇章原文（第二篇）」）。若非跨篇章題則為空字符串。",
+    "agents": ["drafter", "critic"],
+    "example": "\n\n## 跨篇章原文（第二篇）\n（課文全文...）"
+  },
+  "reference_block": {
+    "label": "DSE 真題參考區塊",
+    "description": "近年 DSE 考試中針對本篇章的真實 MC 題目，從 source/ 讀取（含 Markdown 標題）。若無對應真題則為空字符串。",
+    "agents": ["drafter"],
+    "example": "\n\n## 近年 DSE 真題參考（MC 題）\n以下是 2020–2025 年 DSE 考試中針對本篇章的真實 MC 題目..."
+  },
+  "school_ws_block": {
+    "label": "教師版工作紙區塊",
+    "description": "本篇章的學校官方工作紙摘要，包含詞語解釋、篇章結構、重點問答及歷屆題目（含 Markdown 標題）。若無工作紙則為空字符串。",
+    "agents": ["drafter", "critic"],
+    "example": "\n\n## 教師版工作紙摘要\n..."
+  },
+  "closing_section": {
+    "label": "收尾指令",
+    "description": "初次出題模式：讀取 drafter_user_closing_initial.md 的一句要求輸出指令。修改模式：由 drafter_user_closing_revision.md 模板渲染，附上之前草稿和審題主任意見。",
+    "agents": ["drafter"],
+    "example": "請根據規格和篇章原文，輸出一條完整的 MC 題目。"
+  },
+  "prev_draft_json": {
+    "label": "之前草稿（修改模式）",
+    "description": "出題員上一次的草稿 JSON，供出題員在修改模式下參考（僅在 drafter_user_closing_revision.md 中使用）。",
+    "agents": ["drafter_revision"],
+    "example": "{ \"question_stem\": \"...\", \"options\": [...], \"mapped_spec\": {...} }"
+  },
+  "critique_score": {
+    "label": "審題評分（修改模式）",
+    "description": "審題主任給予的評分（1–10），顯示在修改模式收尾中（僅在 drafter_user_closing_revision.md 中使用）。",
+    "agents": ["drafter_revision"],
+    "example": "6"
+  },
+  "critique_comments": {
+    "label": "審題評語（修改模式）",
+    "description": "審題主任的審核評語，顯示在修改模式收尾中（僅在 drafter_user_closing_revision.md 中使用）。",
+    "agents": ["drafter_revision"],
+    "example": "選項長度差異過大，第三個 distractor 太過明顯..."
+  },
+  "critique_instructions": {
+    "label": "修改指示（修改模式）",
+    "description": "審題主任的具體修改指示，列出出題員必須逐項回應的改動（僅在 drafter_user_closing_revision.md 中使用）。",
+    "agents": ["drafter_revision"],
+    "example": "1. 重寫選項使長度均衡。2. 替換第四個選項..."
+  },
+  "draft_json": {
+    "label": "出題員草稿",
+    "description": "出題員撰寫的 MC 題目草稿 JSON，供審題主任審核用。",
+    "agents": ["critic"],
+    "example": "{ \"question_stem\": \"...\", \"options\": [...], \"mapped_spec\": {...} }"
+  }
+}

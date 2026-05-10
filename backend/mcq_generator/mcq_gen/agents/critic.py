@@ -13,10 +13,12 @@ from ..llm import chat_structured
 from ..schemas import Critique, Draft, Spec
 from ..school_ws_loader import format_school_ws_block
 from ..config import settings
+from ..template_utils import render_template
 
 log = structlog.get_logger(__name__)
 
-_PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "critic.md"
+_SYSTEM_PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "critic.md"
+_USER_TEMPLATE_PATH = Path(__file__).parent.parent / "prompts" / "critic_user.md"
 _PASSAGES_FILE = Path(__file__).parent.parent.parent / "data" / "passages.json"
 
 
@@ -29,29 +31,20 @@ def _load_passage_text(passage_id: str) -> str:
 
 
 def _build_user_message(spec: Spec, draft: Draft, cross_text: str | None, passage_text: str) -> str:
-    parts = [
-        "## 原始題目需求規格 (spec)",
-        f"```json\n{spec.model_dump_json(indent=2)}\n```",
-        "",
-        "## 篇章原文",
-        passage_text,
-    ]
-    if cross_text:
-        parts += ["", "## 跨篇章原文（第二篇）", cross_text]
+    cross_text_section = (
+        f"\n\n## 跨篇章原文（第二篇）\n{cross_text}" if cross_text else ""
+    )
+    ws = format_school_ws_block(spec.passage, spec.cross_passage)
+    school_ws_block = ("\n\n" + ws) if ws else ""
 
-    # Inject school worksheet summary + relevant teacher worksheets
-    school_ws_block = format_school_ws_block(spec.passage, spec.cross_passage)
-    if school_ws_block:
-        parts += ["", school_ws_block]
-
-    parts += [
-        "",
-        "## 出題員草稿",
-        f"```json\n{draft.model_dump_json(indent=2)}\n```",
-        "",
-        "請根據五個審核維度，輸出審核結果 JSON。",
-    ]
-    return "\n".join(parts)
+    return render_template(
+        _USER_TEMPLATE_PATH,
+        spec_json=spec.model_dump_json(indent=2),
+        passage_text=passage_text,
+        cross_text_section=cross_text_section,
+        school_ws_block=school_ws_block,
+        draft_json=draft.model_dump_json(indent=2),
+    )
 
 
 def run_critic(spec: Spec, draft: Draft, iteration: int = 0) -> Critique:
@@ -64,7 +57,7 @@ def run_critic(spec: Spec, draft: Draft, iteration: int = 0) -> Critique:
         else None
     )
 
-    system_prompt = _PROMPT_PATH.read_text(encoding="utf-8")
+    system_prompt = _SYSTEM_PROMPT_PATH.read_text(encoding="utf-8")
     user_message = _build_user_message(spec, draft, cross_text, passage_text)
 
     log.info(
