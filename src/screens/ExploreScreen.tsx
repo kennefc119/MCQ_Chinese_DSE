@@ -63,24 +63,19 @@ function interleave(quizzes: Quiz[], tips: TipCard[]): FeedItem[] {
   return out;
 }
 
-/** Renders badge + title chars + difficulty stars as one vertical column anchored top-right. */
+/** Renders category badge + difficulty stars as a vertical column anchored top-right. */
 function VerticalTileInfo({
   categoryLabel,
   categoryBgColor,
-  title,
   difficulty,
   locked,
-  maxTitleChars = 4,
 }: {
   categoryLabel: string;
   categoryBgColor: string;
-  title: string;
   difficulty?: number;
   locked?: boolean;
-  maxTitleChars?: number;
 }) {
   const badgeChars = categoryLabel.replace(/\s/g, "").split("").slice(0, 3);
-  const titleChars = title.replace(/[\s—–·\-]/g, "").split("").slice(0, maxTitleChars);
   const stars = difficulty ?? 0;
 
   return (
@@ -95,13 +90,8 @@ function VerticalTileInfo({
           <Text key={i} style={styles.verticalBadgeChar}>{c}</Text>
         ))}
       </View>
-      <View style={styles.verticalDivider} />
-      {titleChars.map((c, i) => (
-        <Text key={i} style={styles.verticalChar}>{c}</Text>
-      ))}
       {stars > 0 && (
         <>
-          <View style={styles.verticalDivider} />
           <Text style={styles.verticalDiffLabel}>難</Text>
           {Array.from({ length: stars }).map((_, i) => (
             <Text key={i} style={styles.verticalStar}>★</Text>
@@ -139,10 +129,13 @@ function QuizTile({ item, onPress, passageName }: { item: Quiz; onPress: () => v
         colors={["transparent", "rgba(0,0,0,0.85)"]}
         style={StyleSheet.absoluteFill}
       />
+      {/* Centered title */}
+      <View style={styles.tileCenteredWrap}>
+        <Text style={styles.tileCenteredTitle} numberOfLines={3}>{heroText ?? item.title}</Text>
+      </View>
       <VerticalTileInfo
         categoryLabel={QUIZ_TYPE_LABEL[item.type] ?? item.type}
         categoryBgColor={badgeColor}
-        title={heroText ?? item.title}
         difficulty={item.difficulty}
         locked={locked}
       />
@@ -171,9 +164,11 @@ function TipTile({ item, onPress }: { item: TipCard; onPress: () => void }) {
       <VerticalTileInfo
         categoryLabel={label}
         categoryBgColor={colors.accent}
-        title={item.title}
-        maxTitleChars={6}
       />
+      {/* Centered title */}
+      <View style={styles.tileCenteredWrap}>
+        <Text style={styles.tileCenteredTitle} numberOfLines={3}>{item.title}</Text>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -699,15 +694,15 @@ const styles = StyleSheet.create({
   },
   verticalBadge: {
     borderRadius: 3,
-    paddingVertical: 2,
-    paddingHorizontal: 3,
+    paddingVertical: 3,
+    paddingHorizontal: 4,
     alignItems: "center",
   },
   verticalBadgeChar: {
     color: "#FFFFFF",
-    fontSize: 8,
+    fontSize: 10,        // was 8 → +25%
     fontWeight: "700",
-    lineHeight: 10,
+    lineHeight: 12,
     includeFontPadding: false,
   },
   verticalDivider: {
@@ -727,22 +722,44 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   verticalDiffLabel: {
-    color: "rgba(255,255,255,0.65)",
-    fontSize: 6,
-    lineHeight: 8,
+    color: "rgba(255,255,255,0.70)",
+    fontSize: 7,
+    lineHeight: 9,
     includeFontPadding: false,
     letterSpacing: 0.3,
+    marginTop: 3,
   },
   verticalStar: {
     color: "#F0C97A",
-    fontSize: 8,
-    lineHeight: 9,
+    fontSize: 10,        // was 8 → +20% (rounded)
+    lineHeight: 11,
     includeFontPadding: false,
   },
   verticalStarEmpty: {
     color: "rgba(255,255,255,0.30)",
-    fontSize: 8,
-    lineHeight: 9,
+    fontSize: 10,        // was 8 → +20% (rounded)
+    lineHeight: 11,
+    includeFontPadding: false,
+  },
+  // ── centered card title ────────────────────────────────────────────────
+  tileCenteredWrap: {
+    position: "absolute",
+    left: 6,
+    right: 22,           // clear the right vertical column
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  tileCenteredTitle: {
+    color: "#FFFFFF",
+    fontSize: 20,        // was 10 → +100%
+    fontWeight: "800",
+    textAlign: "center",
+    lineHeight: 24,
+    textShadowColor: "rgba(0,0,0,0.80)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
     includeFontPadding: false,
   },
 
