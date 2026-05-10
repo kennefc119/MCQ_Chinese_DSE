@@ -3,804 +3,709 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>提示詞編輯器 — 文淵 MCQ Generator</title>
+<title>提示詞管理 — 文淵 MCQ Generator</title>
 <style>
-  /* ─── Design tokens ─────────────────────────────────────────────── */
-  :root {
-    --bg:        #15110D;
-    --surface:   #1F1A14;
-    --surface2:  #2A231A;
-    --border:    #3D3020;
-    --primary:   #D4A24C;
-    --primary-d: #B8893A;
-    --text:      #F0E6D2;
-    --muted:     #8A7B62;
-    --success:   #5C8A50;
-    --error:     #B23A2E;
-    --warning:   #C28A1E;
+:root {
+  --bg: #0F0C09; --surface: #1A1510; --surface2: #231E17; --surface3: #2E271E;
+  --border: #3D3020; --primary: #D4A24C; --primary-d: #B8893A;
+  --text: #F0E6D2; --muted: #8A7B62; --success: #5C8A50; --error: #B23A2E; --warning: #C28A1E;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
 
-    /* variable pill colours — 12 rotating */
-    --v0: #5B8DD9; --v1: #D9855B; --v2: #5BD97A; --v3: #D95B9E;
-    --v4: #5BD9CB; --v5: #D9C45B; --v6: #A45BD9; --v7: #5BA8D9;
-    --v8: #D9755B; --v9: #5BD9A4; --v10:#D95B5B; --v11:#9DD95B;
-  }
+.topbar{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;padding:0 24px;height:54px}
+.brand{font-size:16px;font-weight:700;color:var(--primary)}
+.brand small{font-size:11px;color:var(--muted);font-weight:400;margin-left:6px}
+.legend{display:flex;gap:12px;align-items:center;padding:4px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)}
+.leg{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)}
+.leg-dot{width:8px;height:8px;border-radius:2px}
+.spacer{flex:1}
+.save-status{font-size:12px;color:var(--muted)}
+.save-status.dirty{color:var(--warning)}
+.save-status.ok{color:var(--success)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:background .15s,opacity .15s}
+.btn-primary{background:var(--primary);color:#0F0C09}
+.btn-primary:hover{background:var(--primary-d)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--primary);color:var(--primary)}
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+.main-scroll{overflow-y:auto;height:calc(100vh - 54px);padding:28px 0 80px}
+.agents-container{max-width:880px;margin:0 auto;padding:0 24px;display:flex;flex-direction:column;gap:0}
 
-  /* ─── Layout ─────────────────────────────────────────────────────── */
-  .app { display: grid; grid-template-rows: 54px 1fr; height: 100vh; }
+.flow-arrow{display:flex;justify-content:center;align-items:center;height:36px;color:var(--muted);font-size:18px;opacity:.6;user-select:none}
 
-  /* Top bar */
-  .topbar {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 16px; padding: 0 20px;
-  }
-  .topbar .brand { font-size: 18px; font-weight: 700; color: var(--primary); letter-spacing: 0.03em; }
-  .topbar .brand small { font-size: 12px; color: var(--muted); font-weight: 400; margin-left: 8px; }
-  .topbar .spacer { flex: 1; }
-  .btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600;
-    cursor: pointer; border: none; transition: background .15s, opacity .15s;
-  }
-  .btn-primary { background: var(--primary); color: #15110D; }
-  .btn-primary:hover { background: var(--primary-d); }
-  .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
-  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
-  .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
-  .save-status { font-size: 12px; color: var(--muted); }
-  .save-status.ok { color: var(--success); }
-  .save-status.err { color: var(--error); }
+.agent-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:0}
+.agent-card-header{display:flex;align-items:center;gap:12px;padding:14px 20px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.agent-num{width:26px;height:26px;border-radius:50%;background:rgba(212,162,76,.15);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.agent-title{font-size:15px;font-weight:700}
+.agent-desc{font-size:12px;color:var(--muted);flex:1}
 
-  /* Main 3-pane layout */
-  .main { display: grid; grid-template-columns: 220px 1fr 340px; overflow: hidden; }
+.add-pill-wrap{position:relative}
+.add-pill-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px dashed var(--border);background:transparent;color:var(--muted);transition:border-color .12s,color .12s}
+.add-pill-btn:hover{border-color:var(--primary);color:var(--primary)}
+.pill-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-width:280px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.5);overflow:hidden}
+.pill-menu.open{display:block}
+.pill-menu-hdr{padding:7px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--border)}
+.pill-menu-item{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;font-size:12px;transition:background .1s}
+.pill-menu-item:hover{background:var(--surface3)}
+.pmi-icon{font-size:13px;flex-shrink:0}
+.pmi-label{flex:1;font-weight:600}
+.pmi-key{font-size:10px;color:var(--muted);font-family:monospace}
+.pill-menu-sep{height:1px;background:var(--border);margin:4px 0}
 
-  /* ─── LEFT SIDEBAR ─────────────────────────────────────────────── */
-  .sidebar {
-    background: var(--surface); border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; overflow-y: auto;
-  }
-  .sidebar-section { padding: 14px 12px 4px; }
-  .sidebar-section-label {
-    font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-    color: var(--muted); margin-bottom: 6px;
-  }
-  .sidebar-item {
-    display: flex; align-items: center; gap: 8px;
-    padding: 7px 10px; border-radius: 6px; cursor: pointer;
-    margin-bottom: 2px; font-size: 12.5px; color: var(--text);
-    transition: background .1s;
-  }
-  .sidebar-item:hover { background: var(--surface2); }
-  .sidebar-item.active { background: rgba(212,162,76,.15); color: var(--primary); }
-  .sidebar-item .kind-badge {
-    font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 4px;
-    text-transform: uppercase; letter-spacing: .05em; flex-shrink: 0;
-  }
-  .kind-badge.system { background: rgba(212,162,76,.2); color: var(--primary); }
-  .kind-badge.user   { background: rgba(91,141,217,.2); color: #5B8DD9; }
-  .sidebar-item.vars-item { color: var(--muted); }
-  .sidebar-item.vars-item.active { color: var(--primary); }
-  .sidebar-divider { height: 1px; background: var(--border); margin: 8px 12px; }
+.block-editor{padding:14px 20px;display:flex;flex-direction:column;min-height:100px}
 
-  /* ─── CENTRE EDITOR ────────────────────────────────────────────── */
-  .editor-pane {
-    display: flex; flex-direction: column; overflow: hidden;
-  }
-  .editor-header {
-    padding: 12px 20px; border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 12px; flex-shrink: 0;
-  }
-  .editor-title { font-size: 15px; font-weight: 600; }
-  .editor-agent { font-size: 11px; color: var(--muted); background: var(--surface2); padding: 2px 8px; border-radius: 4px; }
-  .editor-vars-used { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; min-height: 36px; }
-  .editor-vars-used .var-pill-label { font-size: 10px; color: var(--muted); align-self: center; margin-right: 4px; }
-  .editor-body { flex: 1; display: grid; grid-template-rows: 1fr; overflow: hidden; }
-  .editor-body.split { grid-template-rows: 1fr 1fr; }
+.drop-zone{height:3px;border-radius:2px;transition:background .1s,height .1s;margin:1px 0}
+.drop-zone.dz-active{height:5px;background:var(--primary);border-radius:2px}
 
-  /* Tabs inside editor */
-  .editor-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-  .editor-tab {
-    padding: 8px 16px; font-size: 12px; cursor: pointer; border-bottom: 2px solid transparent;
-    color: var(--muted); transition: color .1s;
-  }
-  .editor-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.text-block{width:100%;background:transparent;color:var(--text);border:none;outline:none;resize:none;padding:4px 2px;font-family:"SF Mono","Cascadia Code","Fira Code",monospace;font-size:13px;line-height:1.75;tab-size:2;overflow:hidden;min-height:1.75em}
+.text-block:focus{background:rgba(212,162,76,.035);border-radius:4px;padding:4px 8px;margin:0 -8px}
 
-  textarea.prompt-textarea {
-    flex: 1; width: 100%; background: var(--surface2); color: var(--text);
-    border: none; outline: none; resize: none; padding: 16px 20px;
-    font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
-    font-size: 13px; line-height: 1.7; tab-size: 2;
-  }
-  textarea.prompt-textarea:focus { box-shadow: inset 0 0 0 2px rgba(212,162,76,.3); }
+.pill-block{display:inline-flex;align-items:stretch;border-radius:6px;font-size:12px;font-weight:600;user-select:none;margin:3px 0;align-self:flex-start;position:relative;cursor:default;max-width:100%}
+.pill-block.dragging{opacity:.35}
+.ph{padding:5px 5px 5px 9px;cursor:grab;opacity:.45;font-size:13px;display:flex;align-items:center}
+.ph:hover{opacity:.9}
+.ph:active{cursor:grabbing}
+.pi{padding:5px 3px 5px 0;display:flex;align-items:center}
+.pl{padding:5px 0;display:flex;align-items:center}
+.pk{padding:5px 6px 5px 5px;font-family:monospace;font-size:10px;opacity:.65;display:flex;align-items:center}
+.pdel{padding:5px 8px 5px 2px;cursor:pointer;opacity:0;font-size:14px;line-height:1;transition:opacity .1s;background:none;border:none;color:inherit;display:flex;align-items:center}
+.pill-block:hover .pdel{opacity:.55}
+.pdel:hover{opacity:1!important}
+.pexp{padding:5px 7px 5px 0;cursor:pointer;font-size:10px;opacity:.7;transition:opacity .1s,transform .2s;background:none;border:none;color:inherit;display:flex;align-items:center}
+.pexp:hover{opacity:1}
+.pexp.open{transform:rotate(180deg)}
 
-  /* Preview panel */
-  .preview-panel {
-    overflow-y: auto; padding: 16px 20px; background: var(--surface);
-    border-top: 1px solid var(--border);
-    font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
-    font-size: 13px; line-height: 1.75; white-space: pre-wrap; word-break: break-word;
-  }
-  .preview-panel .var-pill {
-    display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 12px;
-    font-weight: 600; font-family: system-ui, sans-serif; white-space: nowrap;
-    cursor: pointer;
-  }
-  .preview-panel .var-pill:hover { filter: brightness(1.2); }
+.pt-runtime{background:rgba(107,114,128,.14);color:#9CA3AF;border:1px solid rgba(107,114,128,.28)}
+.pt-db{background:rgba(59,130,246,.12);color:#60A5FA;border:1px solid rgba(59,130,246,.24)}
+.pt-file_path{background:rgba(217,119,6,.12);color:#FCD34D;border:1px solid rgba(217,119,6,.28)}
+.pt-editable_prompt{background:rgba(212,162,76,.14);color:var(--primary);border:1px solid rgba(212,162,76,.32);cursor:pointer}
 
-  /* ─── RIGHT VARIABLE PANEL ─────────────────────────────────────── */
-  .var-panel {
-    background: var(--surface); border-left: 1px solid var(--border);
-    display: flex; flex-direction: column; overflow: hidden;
-  }
-  .var-panel-header {
-    padding: 12px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .var-panel-title { font-size: 14px; font-weight: 600; }
-  .var-panel-body { flex: 1; overflow-y: auto; }
-  .var-card {
-    border-bottom: 1px solid var(--border); padding: 12px 16px;
-  }
-  .var-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-  .var-card .var-pill { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 700; }
-  .var-card-key { font-size: 11px; color: var(--muted); font-family: monospace; }
-  .var-label-input {
-    width: 100%; background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 4px; color: var(--text); padding: 4px 8px; font-size: 12px; margin-bottom: 6px;
-  }
-  .var-desc-input {
-    width: 100%; background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 4px; color: var(--text); padding: 4px 8px; font-size: 12px;
-    resize: vertical; min-height: 52px; font-family: system-ui;
-  }
-  .var-used-in {
-    margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px;
-  }
-  .var-used-in .prompt-ref {
-    font-size: 10px; background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 3px; padding: 1px 6px; color: var(--muted); cursor: pointer;
-    transition: border-color .1s;
-  }
-  .var-used-in .prompt-ref:hover { border-color: var(--primary); color: var(--primary); }
+.pill-tip{display:none;position:absolute;bottom:calc(100% + 7px);left:0;background:var(--surface3);border:1px solid var(--border);border-radius:7px;padding:9px 13px;min-width:200px;max-width:300px;font-size:11px;line-height:1.55;color:var(--text);box-shadow:0 4px 16px rgba(0,0,0,.45);z-index:300;pointer-events:none;white-space:normal}
+.pill-block:hover .pill-tip{display:block}
+.tip-title{font-weight:700;color:var(--primary);margin-bottom:3px}
+.tip-src{font-size:10px;color:var(--muted);margin-top:4px;font-family:monospace}
 
-  /* Variables screen (full editor area when "variables" is selected) */
-  .vars-screen {
-    display: none; flex-direction: column; overflow: hidden;
-    grid-column: 2; /* only fills editor+var columns when sidebar = vars */
-  }
-  .vars-screen.visible { display: flex; }
+.closing-editor{display:none;margin:4px 0 8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.closing-editor.ce-open{display:block}
+.closing-tabs{display:flex;border-bottom:1px solid var(--border)}
+.ce-tab{padding:9px 16px;font-size:12px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:color .1s;font-weight:500}
+.ce-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.ce-body{padding:12px 14px;display:none}
+.ce-body.active{display:block}
+.ce-textarea{width:100%;background:var(--surface3);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-family:"SF Mono","Cascadia Code","Fira Code",monospace;font-size:12px;line-height:1.7;resize:vertical;min-height:72px;outline:none}
+.ce-textarea:focus{border-color:var(--primary)}
+.ce-note{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5}
+.ce-pill-preview{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
 
-  /* ─── Notification toast ─────────────────────────────────────────── */
-  .toast {
-    position: fixed; bottom: 20px; right: 20px; padding: 10px 18px;
-    border-radius: 8px; font-size: 13px; font-weight: 600;
-    background: var(--success); color: #fff;
-    transform: translateY(60px); opacity: 0;
-    transition: transform .25s ease, opacity .25s ease;
-    pointer-events: none; z-index: 999;
-  }
-  .toast.show { transform: translateY(0); opacity: 1; }
-  .toast.err { background: var(--error); }
-
-  /* Empty state */
-  .empty-state {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    height: 100%; color: var(--muted); gap: 12px; text-align: center; padding: 40px;
-  }
-  .empty-state .icon { font-size: 40px; opacity: .4; }
-  .empty-state p { font-size: 14px; max-width: 280px; line-height: 1.6; }
-
-  /* Loading */
-  .loading { opacity: .4; pointer-events: none; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin .6s linear infinite; }
-
-  /* ─── Add-variable form ───────────────────────────────────────────── */
-  .btn-sm {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 9px; border-radius: 4px; font-size: 11px; font-weight: 600;
-    cursor: pointer; border: none; transition: background .12s, opacity .12s;
-  }
-  .btn-sm-primary { background: var(--primary); color: #15110D; }
-  .btn-sm-primary:hover { background: var(--primary-d); }
-  .btn-sm-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
-  .btn-sm-ghost:hover { border-color: var(--primary); color: var(--primary); }
-  .btn-sm-danger { background: transparent; color: var(--error); border: 1px solid var(--border); }
-  .btn-sm-danger:hover { background: rgba(178,58,46,.12); border-color: var(--error); }
-  .btn-sm-insert { background: rgba(212,162,76,.15); color: var(--primary); border: 1px solid rgba(212,162,76,.3); }
-  .btn-sm-insert:hover { background: rgba(212,162,76,.3); }
-
-  .add-var-form {
-    background: var(--surface2); border-bottom: 1px solid var(--border);
-    padding: 12px 16px; display: none; flex-direction: column; gap: 8px;
-  }
-  .add-var-form.open { display: flex; }
-  .add-var-form-title { font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 2px; }
-  .add-var-row { display: flex; gap: 8px; align-items: center; }
-  .add-var-input {
-    flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
-    color: var(--text); padding: 5px 8px; font-size: 12px; font-family: monospace;
-  }
-  .add-var-input:focus { outline: none; border-color: var(--primary); }
-  .add-var-input.error { border-color: var(--error); }
-  .add-var-hint { font-size: 10px; color: var(--muted); margin-top: -4px; }
-  .add-var-hint.err { color: var(--error); }
-
-  /* var card action row */
-  .var-card-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
-  .var-card-divider { height: 1px; background: var(--border); margin: 10px 0 6px; }
-
-  /* code snippet */
-  .code-snippet {
-    background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
-    padding: 8px 10px; font-family: "SF Mono","Cascadia Code","Fira Code",monospace;
-    font-size: 11px; color: #9DD95B; overflow-x: auto; white-space: pre; margin-top: 6px;
-  }
-  .code-snippet-label { font-size: 10px; color: var(--muted); margin-top: 10px; margin-bottom: 3px; }
-  .new-var-badge { display: inline-block; font-size: 9px; padding: 1px 5px; background: rgba(93,217,122,.2); color: #5BD97A; border-radius: 3px; margin-left: 6px; font-weight: 700; vertical-align: middle; }
-
+.toast{position:fixed;bottom:24px;right:24px;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;background:var(--success);color:#fff;transform:translateY(60px);opacity:0;transition:transform .25s ease,opacity .25s ease;pointer-events:none;z-index:9999}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.err{background:var(--error)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite}
 </style>
 </head>
 <body>
-<div class="app">
-
-  <!-- TOP BAR -->
-  <header class="topbar">
-    <span class="brand">提示詞編輯器 <small>文淵 MCQ Generator</small></span>
-    <span class="spacer"></span>
-    <span class="save-status" id="saveStatus"></span>
-    <button class="btn btn-ghost" onclick="resetChanges()">重置</button>
-    <button class="btn btn-primary" id="saveBtn" onclick="saveAll()">
-      <span id="saveBtnIcon">💾</span> 儲存全部
-    </button>
-  </header>
-
-  <!-- MAIN 3-PANE -->
-  <div class="main" id="mainGrid">
-
-    <!-- LEFT: prompt tree -->
-    <nav class="sidebar" id="sidebar">
-      <div class="sidebar-section">
-        <div class="sidebar-section-label">系統提示</div>
-        <div id="nav-system"></div>
-      </div>
-      <div class="sidebar-divider"></div>
-      <div class="sidebar-section">
-        <div class="sidebar-section-label">用戶消息模板</div>
-        <div id="nav-user"></div>
-      </div>
-      <div class="sidebar-divider"></div>
-      <div class="sidebar-section">
-        <div class="sidebar-section-label">注入變量</div>
-        <div id="nav-vars">
-          <div class="sidebar-item vars-item" data-key="__vars__" onclick="selectItem('__vars__')">
-            <span>🔧</span> 變量管理
-          </div>
-        </div>
-      </div>
-    </nav>
-
-    <!-- CENTRE: editor -->
-    <section class="editor-pane" id="editorPane">
-      <div class="empty-state" id="emptyState">
-        <div class="icon">📝</div>
-        <p>從左側選擇一個提示詞開始編輯</p>
-      </div>
-
-      <div id="promptEditor" style="display:none; flex-direction:column; height:100%; overflow:hidden;">
-        <div class="editor-header">
-          <span class="editor-title" id="editorTitle">—</span>
-          <span class="editor-agent kind-badge" id="editorAgentBadge"></span>
-          <span class="kind-badge" id="editorKindBadge"></span>
-        </div>
-        <div class="editor-vars-used" id="editorVarsUsed">
-          <span class="var-pill-label">使用變量：</span>
-        </div>
-        <div class="editor-tabs">
-          <div class="editor-tab active" onclick="setEditorTab('raw')">原始文本</div>
-          <div class="editor-tab" onclick="setEditorTab('preview')">預覽</div>
-          <div class="editor-tab" onclick="setEditorTab('split')">分割視圖</div>
-        </div>
-        <div class="editor-body" id="editorBody">
-          <textarea class="prompt-textarea" id="promptTextarea" spellcheck="false"
-            oninput="onTextareaInput()"></textarea>
-          <div class="preview-panel" id="previewPanel" style="display:none"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- RIGHT: variable detail panel -->
-    <aside class="var-panel" id="varPanel">
-      <div class="var-panel-header">
-        <span class="var-panel-title">注入變量</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px; color:var(--muted)" id="varCount">—</span>
-          <button class="btn-sm btn-sm-primary" onclick="toggleAddVarForm()" id="addVarBtn">＋ 新增</button>
-        </div>
-      </div>
-      <!-- Add-variable inline form -->
-      <div class="add-var-form" id="addVarForm">
-        <div class="add-var-form-title">建立新注入變量</div>
-        <div class="add-var-row">
-          <input class="add-var-input" id="newVarKey" placeholder="變量鍵名（英文，如 my_variable）" autocomplete="off" oninput="validateNewVarKey()">
-        </div>
-        <div class="add-var-hint" id="newVarKeyHint">用於模板中的 {{my_variable}} 佔位符</div>
-        <div class="add-var-row">
-          <input class="add-var-input" style="font-family:system-ui" id="newVarLabel" placeholder="中文標籤（如「我的變量」）">
-        </div>
-        <textarea class="add-var-input" id="newVarDesc" style="font-family:system-ui;resize:vertical;min-height:48px" placeholder="描述：此變量代表什麼？Python 代碼如何傳入？"></textarea>
-        <input class="add-var-input" style="font-family:system-ui" id="newVarExample" placeholder="示例值（可選）">
-        <div class="add-var-row" style="justify-content:flex-end;gap:8px;margin-top:4px">
-          <button class="btn-sm btn-sm-ghost" onclick="toggleAddVarForm()">取消</button>
-          <button class="btn-sm btn-sm-primary" onclick="submitNewVariable()">建立變量</button>
-        </div>
-      </div>
-      <div class="var-panel-body" id="varPanelBody">
-        <div class="empty-state">
-          <div class="icon">🔗</div>
-          <p>選擇提示詞後，此欄顯示其使用的注入變量詳情</p>
-        </div>
-      </div>
-    </aside>
-  </div><!-- .main -->
-</div><!-- .app -->
-
-<!-- TOAST -->
+<header class="topbar">
+  <span class="brand">提示詞管理 <small>文淵 MCQ Generator</small></span>
+  <div class="legend">
+    <span class="leg"><span class="leg-dot" style="background:#60A5FA"></span>資料庫注入</span>
+    <span class="leg"><span class="leg-dot" style="background:#9CA3AF"></span>執行時計算</span>
+    <span class="leg"><span class="leg-dot" style="background:#FCD34D"></span>檔案路徑</span>
+    <span class="leg"><span class="leg-dot" style="background:#D4A24C"></span>可編輯文本（點擊展開）</span>
+  </div>
+  <div class="spacer"></div>
+  <span class="save-status" id="saveStatus"></span>
+  <button class="btn btn-ghost" onclick="resetAll()">重置</button>
+  <button class="btn btn-primary" id="saveBtn" onclick="saveAll()"><span id="saveBtnInner">💾 儲存全部</span></button>
+</header>
+<main class="main-scroll">
+  <div class="agents-container" id="agentsContainer"></div>
+</main>
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── State ───────────────────────────────────────────────────────────────
-let state = {
-  prompts: {},       // key → {label, agent, filename, kind, content, vars_used}
-  variables: {},     // key → {label, description, agents, example, used_in_prompts}
-  dirty: {},         // key → modified content (prompts + "variables")
-  selected: null,
-  varColors: {},     // var_key → css color var
-  editorTab: 'raw',
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+const S = {
+  agentPrompts: {},   // key → {label,order,filename,description,content}
+  closingPrompts: {}, // key → {label,filename,variant,content}
+  variables: {},      // key → {label,description,source_type,editable,...}
+  blocks: {},         // agentKey → Block[]
+  dirtyAgents: {},    // agentKey → true
+  dirtyClosing: {},   // closingKey → true
+  closingOpen: {},    // agentKey → bool
+  closingTab: {},     // agentKey → 'initial'|'revision'
+  drag: null,         // {agentKey, idx}
 };
 
-const VAR_COLORS = [
-  'var(--v0)','var(--v1)','var(--v2)','var(--v3)',
-  'var(--v4)','var(--v5)','var(--v6)','var(--v7)',
-  'var(--v8)','var(--v9)','var(--v10)','var(--v11)',
-];
-
-// ─── Boot ─────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════
 async function boot() {
   try {
-    const res = await fetch('/api/data');
-    const data = await res.json();
-    state.prompts = data.prompts;
-    state.variables = data.variables;
+    const r = await fetch('/api/data');
+    const d = await r.json();
+    S.agentPrompts = d.agent_prompts || {};
+    S.closingPrompts = d.closing_prompts || {};
+    S.variables = d.variables || {};
 
-    // Assign colours to all vars
-    Object.keys(state.variables).forEach((k, i) => {
-      state.varColors[k] = VAR_COLORS[i % VAR_COLORS.length];
+    // Sort agents by order field
+    const agentKeys = Object.keys(S.agentPrompts).sort(
+      (a,b) => (S.agentPrompts[a].order||99) - (S.agentPrompts[b].order||99)
+    );
+
+    // Parse each agent template into blocks
+    agentKeys.forEach(k => {
+      S.blocks[k] = parseTemplate(S.agentPrompts[k].content || '');
+      S.closingTab[k] = 'initial';
     });
 
-    buildSidebar();
-    renderVarPanel(null); // show all vars in right panel
-    updateVarCount();
+    renderAllCards(agentKeys);
   } catch(e) {
-    showToast('載入失敗：' + e.message, true);
+    toast('載入失敗：' + e.message, true);
   }
 }
 
-// ─── Sidebar ──────────────────────────────────────────────────────────────
-function buildSidebar() {
-  const sysCont = document.getElementById('nav-system');
-  const usrCont = document.getElementById('nav-user');
-  sysCont.innerHTML = '';
-  usrCont.innerHTML = '';
-
-  Object.entries(state.prompts).forEach(([key, p]) => {
-    const el = document.createElement('div');
-    el.className = 'sidebar-item';
-    el.dataset.key = key;
-    el.onclick = () => selectItem(key);
-    el.innerHTML = `
-      <span class="kind-badge ${p.kind}">${p.kind === 'system' ? 'SYS' : 'USR'}</span>
-      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">${p.label}</span>
-    `;
-    (p.kind === 'system' ? sysCont : usrCont).appendChild(el);
+// ═══════════════════════════════════════════════════
+// TEMPLATE PARSING / SERIALIZATION
+// ═══════════════════════════════════════════════════
+function parseTemplate(text) {
+  const parts = text.split(/(\{\{\w+\}\})/);
+  const blocks = [];
+  parts.forEach(p => {
+    const m = p.match(/^\{\{(\w+)\}\}$/);
+    if (m) {
+      blocks.push({ type: 'pill', var: m[1] });
+    } else if (p !== '') {
+      blocks.push({ type: 'text', content: p });
+    }
   });
+  return blocks;
 }
 
-function setActiveSidebarItem(key) {
-  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-  const el = document.querySelector(`.sidebar-item[data-key="${key}"]`);
-  if (el) el.classList.add('active');
+function serializeBlocks(blocks) {
+  return blocks.map(b => b.type === 'pill' ? '{{' + b.var + '}}' : b.content).join('');
 }
 
-// ─── Item selection ───────────────────────────────────────────────────────
-function selectItem(key) {
-  state.selected = key;
-  setActiveSidebarItem(key);
+// ═══════════════════════════════════════════════════
+// RENDER AGENT CARDS
+// ═══════════════════════════════════════════════════
+function renderAllCards(agentKeys) {
+  const container = document.getElementById('agentsContainer');
+  container.innerHTML = '';
 
-  if (key === '__vars__') {
-    showVarsScreen();
+  agentKeys.forEach((key, i) => {
+    if (i > 0) {
+      const arrow = document.createElement('div');
+      arrow.className = 'flow-arrow';
+      arrow.textContent = '↓';
+      container.appendChild(arrow);
+    }
+    // Append card shell to DOM FIRST so getElementById works inside
+    const card = buildAgentCardShell(key);
+    container.appendChild(card);
+    // Now safe to query by ID
+    buildPillMenu(key);
+    renderBlockEditor(key);
+  });
+
+  // One shared listener to close all pill menus on outside click
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.add-pill-wrap')) {
+      document.querySelectorAll('.pill-menu.open').forEach(m => m.classList.remove('open'));
+    }
+  }, { capture: true });
+}
+
+function buildAgentCardShell(agentKey) {
+  const ap = S.agentPrompts[agentKey];
+  const card = document.createElement('div');
+  card.className = 'agent-card';
+  card.id = 'card-' + agentKey;
+  card.innerHTML = `
+    <div class="agent-card-header">
+      <div class="agent-num">${esc(String(ap.order))}</div>
+      <div class="agent-title">${esc(ap.label)}</div>
+      <div class="agent-desc">${esc(ap.description||'')}</div>
+      <div class="add-pill-wrap" id="addwrap-${agentKey}">
+        <button class="add-pill-btn" onclick="togglePillMenu('${agentKey}')">＋ 添加注入</button>
+        <div class="pill-menu" id="pillmenu-${agentKey}"></div>
+      </div>
+    </div>
+    <div class="block-editor" id="editor-${agentKey}"></div>
+  `;
+  return card;
+}
+
+// ═══════════════════════════════════════════════════
+// PILL MENU
+// ═══════════════════════════════════════════════════
+function buildPillMenu(agentKey) {
+  const menu = document.getElementById('pillmenu-' + agentKey);
+  if (!menu) return;
+  menu.innerHTML = '<div class="pill-menu-hdr">插入注入變量</div>';
+
+  const vars = Object.entries(S.variables);
+  if (vars.length === 0) {
+    menu.innerHTML += '<div style="padding:10px 12px;font-size:12px;color:var(--muted)">（無可用變量）</div>';
     return;
   }
 
-  const p = state.prompts[key];
-  if (!p) return;
-
-  // Show editor
-  document.getElementById('emptyState').style.display = 'none';
-  const ed = document.getElementById('promptEditor');
-  ed.style.display = 'flex';
-
-  document.getElementById('editorTitle').textContent = p.label;
-  document.getElementById('editorAgentBadge').textContent = agentLabel(p.agent);
-  document.getElementById('editorKindBadge').textContent = p.kind === 'system' ? '系統提示' : '用戶消息';
-  document.getElementById('editorKindBadge').className = `kind-badge ${p.kind}`;
-
-  const content = state.dirty[key] !== undefined ? state.dirty[key] : p.content;
-  document.getElementById('promptTextarea').value = content;
-
-  renderVarsUsedBadges(p.vars_used);
-  renderPreview(content);
-  renderVarPanel(p.vars_used);
-}
-
-function agentLabel(agent) {
-  return { strategist: '策略師', drafter: '出題員', critic: '審題主任', drafter_revision: '出題員（修改）' }[agent] || agent;
-}
-
-// ─── Editor ───────────────────────────────────────────────────────────────
-function setEditorTab(tab) {
-  state.editorTab = tab;
-  document.querySelectorAll('.editor-tab').forEach((el, i) => {
-    el.classList.toggle('active', ['raw','preview','split'][i] === tab);
+  const typeOrder = ['db', 'editable_prompt', 'file_path', 'runtime'];
+  const grouped = {};
+  typeOrder.forEach(t => grouped[t] = []);
+  vars.forEach(([k, v]) => {
+    const t = v.source_type || 'runtime';
+    if (!grouped[t]) grouped[t] = [];
+    grouped[t].push([k, v]);
   });
 
-  const ta = document.getElementById('promptTextarea');
-  const pp = document.getElementById('previewPanel');
-  const body = document.getElementById('editorBody');
+  const typeLabels = { db:'資料庫', editable_prompt:'可編輯文本', file_path:'檔案路徑', runtime:'執行時計算' };
 
-  if (tab === 'raw') {
-    ta.style.display = 'block'; pp.style.display = 'none';
-    body.classList.remove('split');
-  } else if (tab === 'preview') {
-    ta.style.display = 'none'; pp.style.display = 'block';
-    body.classList.remove('split');
+  let first = true;
+  typeOrder.forEach(t => {
+    const items = grouped[t] || [];
+    if (!items.length) return;
+    if (!first) menu.innerHTML += '<div class="pill-menu-sep"></div>';
+    first = false;
+    menu.innerHTML += `<div class="pill-menu-hdr" style="padding:5px 12px">${typeLabels[t]||t}</div>`;
+    items.forEach(([k, v]) => {
+      const icon = pillIcon(v.source_type);
+      const div = document.createElement('div');
+      div.className = 'pill-menu-item';
+      div.innerHTML = `<span class="pmi-icon">${icon}</span><span class="pmi-label">${esc(v.label||k)}</span><span class="pmi-key">{{${esc(k)}}}</span>`;
+      div.onclick = () => { addPillToAgent(agentKey, k); menu.classList.remove('open'); };
+      menu.appendChild(div);
+    });
+  });
+}
+
+function togglePillMenu(agentKey) {
+  const menu = document.getElementById('pillmenu-' + agentKey);
+  if (menu) menu.classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════════════
+// BLOCK EDITOR RENDERING
+// ═══════════════════════════════════════════════════
+function renderBlockEditor(agentKey) {
+  const editor = document.getElementById('editor-' + agentKey);
+  if (!editor) return;
+  editor.innerHTML = '';
+
+  const blocks = S.blocks[agentKey] || [];
+
+  // Opening drop zone
+  editor.appendChild(makeDropZone(agentKey, 0));
+
+  blocks.forEach((block, idx) => {
+    if (block.type === 'text') {
+      editor.appendChild(makeTextBlockEl(agentKey, idx));
+    } else {
+      editor.appendChild(makePillBlockEl(agentKey, idx));
+      // If this is a closing_section pill and it's open, add the closing editor
+      if (block.var === 'closing_section' && S.closingOpen[agentKey]) {
+        editor.appendChild(makeClosingEditor(agentKey));
+      }
+    }
+    // Drop zone after each block
+    editor.appendChild(makeDropZone(agentKey, idx + 1));
+  });
+
+  if (blocks.length === 0) {
+    const b0 = { type: 'text', content: '' };
+    S.blocks[agentKey] = [b0];
+    editor.innerHTML = '';
+    editor.appendChild(makeDropZone(agentKey, 0));
+    editor.appendChild(makeTextBlockEl(agentKey, 0));
+    editor.appendChild(makeDropZone(agentKey, 1));
+  }
+
+  // Auto-resize all textareas after layout is committed
+  requestAnimationFrame(() => editor.querySelectorAll('textarea').forEach(autoResize));
+}
+
+function makeTextBlockEl(agentKey, idx) {
+  const block = S.blocks[agentKey][idx];
+  const ta = document.createElement('textarea');
+  ta.className = 'text-block';
+  ta.value = block.content;
+  ta.placeholder = '在此輸入提示詞文本...';
+  ta.spellcheck = false;
+  autoResize(ta);
+  ta.addEventListener('input', () => {
+    S.blocks[agentKey][idx].content = ta.value;
+    markAgentDirty(agentKey);
+    autoResize(ta);
+  });
+  // Enable drag over text blocks too
+  ta.addEventListener('dragover', e => { e.preventDefault(); highlightNearestDZ(agentKey, idx); });
+  ta.addEventListener('drop', e => { e.preventDefault(); handleDrop(agentKey, idx); });
+  return ta;
+}
+
+function makePillBlockEl(agentKey, idx) {
+  const block = S.blocks[agentKey][idx];
+  const varKey = block.var;
+  const v = S.variables[varKey] || { label: varKey, description:'', source_type:'runtime', editable:false };
+  const srcType = v.source_type || 'runtime';
+  const icon = pillIcon(srcType);
+  const isEditable = (srcType === 'editable_prompt');
+
+  const pill = document.createElement('div');
+  pill.className = `pill-block pt-${srcType}`;
+  pill.setAttribute('draggable', 'true');
+  pill.dataset.idx = idx;
+
+  // Tooltip
+  const srcLabels = { db:'資料庫（執行時讀取）', runtime:'執行時計算（不可直接編輯）', file_path:'檔案路徑（執行時載入）', editable_prompt:'可編輯文本（點擊展開編輯）' };
+  pill.innerHTML = `
+    <div class="pill-tip">
+      <div class="tip-title">${esc(v.label||varKey)}</div>
+      ${esc(v.description||'')}
+      <div class="tip-src">${srcLabels[srcType]||srcType}</div>
+    </div>
+    <span class="ph" title="拖動重新排序">⠿</span>
+    <span class="pi">${icon}</span>
+    <span class="pl">${esc(v.label||varKey)}</span>
+    <span class="pk">{{${esc(varKey)}}}</span>
+    ${isEditable ? `<button class="pexp" id="pexp-${agentKey}-${varKey}" onclick="toggleClosing('${agentKey}')" title="展開編輯">▼</button>` : ''}
+    <button class="pdel" onclick="deletePill('${agentKey}',${idx})" title="移除此注入">✕</button>
+  `;
+
+  // Update expand button state
+  if (isEditable && S.closingOpen[agentKey]) {
+    const btn = pill.querySelector('.pexp');
+    if (btn) btn.classList.add('open');
+  }
+
+  // Drag events
+  pill.addEventListener('dragstart', e => {
+    S.drag = { agentKey, idx };
+    pill.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', idx);
+  });
+  pill.addEventListener('dragend', () => {
+    pill.classList.remove('dragging');
+    clearAllDZHighlights(agentKey);
+    S.drag = null;
+  });
+  pill.addEventListener('dragover', e => { e.preventDefault(); highlightNearestDZ(agentKey, idx); });
+  pill.addEventListener('drop', e => { e.preventDefault(); handleDrop(agentKey, idx); });
+
+  return pill;
+}
+
+function makeDropZone(agentKey, insertBefore) {
+  const dz = document.createElement('div');
+  dz.className = 'drop-zone';
+  dz.dataset.insertBefore = insertBefore;
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dz-active'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('dz-active'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault();
+    dz.classList.remove('dz-active');
+    handleDropAtZone(agentKey, insertBefore);
+  });
+  return dz;
+}
+
+function highlightNearestDZ(agentKey, blockIdx) {
+  // Not used heavily; drop zones handle their own highlighting
+}
+
+function clearAllDZHighlights(agentKey) {
+  const editor = document.getElementById('editor-' + agentKey);
+  if (!editor) return;
+  editor.querySelectorAll('.drop-zone').forEach(el => el.classList.remove('dz-active'));
+}
+
+// ═══════════════════════════════════════════════════
+// DRAG AND DROP HANDLING
+// ═══════════════════════════════════════════════════
+function handleDropAtZone(agentKey, insertBefore) {
+  if (!S.drag || S.drag.agentKey !== agentKey) { S.drag = null; return; }
+  const fromIdx = S.drag.idx;
+  S.drag = null;
+
+  const blocks = S.blocks[agentKey];
+  if (fromIdx === insertBefore || fromIdx + 1 === insertBefore) return; // No-op
+
+  const pill = blocks.splice(fromIdx, 1)[0];
+  // Adjust insertBefore for the removed element
+  const adjustedInsert = insertBefore > fromIdx ? insertBefore - 1 : insertBefore;
+  blocks.splice(adjustedInsert, 0, pill);
+  mergeAdjacentTextBlocks(agentKey);
+  markAgentDirty(agentKey);
+  renderBlockEditor(agentKey);
+}
+
+function handleDrop(agentKey, targetIdx) {
+  if (!S.drag || S.drag.agentKey !== agentKey) { S.drag = null; return; }
+  const fromIdx = S.drag.idx;
+  if (fromIdx === targetIdx) { S.drag = null; return; }
+  S.drag = null;
+
+  const blocks = S.blocks[agentKey];
+  const pill = blocks.splice(fromIdx, 1)[0];
+  const adjustedTarget = targetIdx > fromIdx ? targetIdx - 1 : targetIdx;
+  blocks.splice(adjustedTarget, 0, pill);
+  mergeAdjacentTextBlocks(agentKey);
+  markAgentDirty(agentKey);
+  renderBlockEditor(agentKey);
+}
+
+function mergeAdjacentTextBlocks(agentKey) {
+  const blocks = S.blocks[agentKey];
+  const merged = [];
+  blocks.forEach(b => {
+    if (b.type === 'text' && merged.length && merged[merged.length-1].type === 'text') {
+      merged[merged.length-1].content += b.content;
+    } else {
+      merged.push({...b});
+    }
+  });
+  S.blocks[agentKey] = merged;
+}
+
+// ═══════════════════════════════════════════════════
+// PILL OPERATIONS
+// ═══════════════════════════════════════════════════
+function deletePill(agentKey, idx) {
+  const blocks = S.blocks[agentKey];
+  const varKey = blocks[idx]?.var;
+  if (!varKey) return;
+
+  // If deleting closing_section, close its editor
+  if (varKey === 'closing_section') S.closingOpen[agentKey] = false;
+
+  blocks.splice(idx, 1);
+  mergeAdjacentTextBlocks(agentKey);
+  // Ensure there's at least one text block
+  if (blocks.length === 0) blocks.push({ type: 'text', content: '' });
+  // Ensure starts and ends with text blocks
+  if (blocks[0].type !== 'text') blocks.unshift({ type: 'text', content: '' });
+  if (blocks[blocks.length-1].type !== 'text') blocks.push({ type: 'text', content: '' });
+  markAgentDirty(agentKey);
+  renderBlockEditor(agentKey);
+}
+
+function addPillToAgent(agentKey, varKey) {
+  const blocks = S.blocks[agentKey];
+  // Add pill at end; ensure there's a trailing text block
+  if (blocks.length === 0) blocks.push({ type: 'text', content: '' });
+  // Insert before the last text block (or at end)
+  const lastIdx = blocks.length - 1;
+  if (blocks[lastIdx].type === 'text') {
+    blocks.splice(lastIdx, 0, { type: 'pill', var: varKey });
   } else {
-    ta.style.display = 'block'; pp.style.display = 'block';
-    body.classList.add('split');
+    blocks.push({ type: 'pill', var: varKey });
+    blocks.push({ type: 'text', content: '' });
   }
+  markAgentDirty(agentKey);
+  renderBlockEditor(agentKey);
+  // Scroll to newly added pill
+  setTimeout(() => {
+    const card = document.getElementById('card-' + agentKey);
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, 50);
 }
 
-function onTextareaInput() {
-  const key = state.selected;
-  if (!key || key === '__vars__') return;
-  const content = document.getElementById('promptTextarea').value;
-  state.dirty[key] = content;
-
-  // Update vars_used in state
-  const vars = findVarsInText(content);
-  if (state.prompts[key]) state.prompts[key].vars_used = vars;
-  renderVarsUsedBadges(vars);
-  renderPreview(content);
-  renderVarPanel(vars);
-  updateSaveStatus();
+// ═══════════════════════════════════════════════════
+// CLOSING SECTION EDITOR
+// ═══════════════════════════════════════════════════
+function toggleClosing(agentKey) {
+  S.closingOpen[agentKey] = !S.closingOpen[agentKey];
+  if (!S.closingTab[agentKey]) S.closingTab[agentKey] = 'initial';
+  renderBlockEditor(agentKey);
 }
 
-function findVarsInText(text) {
-  const matches = [...text.matchAll(/\{\{(\w+)\}\}/g)];
-  return [...new Set(matches.map(m => m[1]))];
+function makeClosingEditor(agentKey) {
+  const wrap = document.createElement('div');
+  wrap.className = 'closing-editor ce-open';
+  wrap.id = 'closing-' + agentKey;
+
+  const initKey = Object.keys(S.closingPrompts).find(k => S.closingPrompts[k].variant === 'initial');
+  const revKey = Object.keys(S.closingPrompts).find(k => S.closingPrompts[k].variant === 'revision');
+  const initContent = initKey ? (S._closingDirty?.[initKey] ?? S.closingPrompts[initKey].content) : '';
+  const revContent = revKey ? (S._closingDirty?.[revKey] ?? S.closingPrompts[revKey].content) : '';
+
+  const activeTab = S.closingTab[agentKey] || 'initial';
+
+  wrap.innerHTML = `
+    <div class="closing-tabs">
+      <div class="ce-tab ${activeTab==='initial'?'active':''}" data-variant="initial" onclick="switchClosingTab('${agentKey}','initial')">📝 初次出題 (Initial)</div>
+      <div class="ce-tab ${activeTab==='revision'?'active':''}" data-variant="revision" onclick="switchClosingTab('${agentKey}','revision')">🔄 修改模式 (Revision)</div>
+    </div>
+    <div class="ce-body ${activeTab==='initial'?'active':''}" id="cetab-${agentKey}-initial">
+      <textarea class="ce-textarea" id="cetextarea-${agentKey}-initial" spellcheck="false">${esc(initContent)}</textarea>
+      <div class="ce-note">此文本在<strong>首次出題</strong>時作為收尾指令發送到出題員。對應檔案：<code>drafter_user_closing_initial.md</code></div>
+    </div>
+    <div class="ce-body ${activeTab==='revision'?'active':''}" id="cetab-${agentKey}-revision">
+      <textarea class="ce-textarea" id="cetextarea-${agentKey}-revision" spellcheck="false">${esc(revContent)}</textarea>
+      <div class="ce-note">此文本在<strong>重寫模式</strong>時發送，其中 <code>{{prev_draft_json}}</code>、<code>{{critique_score}}</code> 等變量在執行時自動替換。對應檔案：<code>drafter_user_closing_revision.md</code></div>
+    </div>
+  `;
+
+  // Attach input listeners (autoResize on load handled by renderBlockEditor's rAF)
+  ['initial','revision'].forEach(variant => {
+    const ta = wrap.querySelector(`#cetextarea-${agentKey}-${variant}`);
+    if (!ta) return;
+    const cKey = variant === 'initial' ? initKey : revKey;
+    if (!cKey) return;
+    ta.addEventListener('input', () => {
+      if (!S._closingDirty) S._closingDirty = {};
+      S._closingDirty[cKey] = ta.value;
+      S.dirtyClosing[cKey] = true;
+      markDirtyStatus();
+      autoResize(ta);
+    });
+  });
+
+  return wrap;
 }
 
-function renderVarsUsedBadges(vars) {
-  const cont = document.getElementById('editorVarsUsed');
-  cont.innerHTML = '<span class="var-pill-label">使用變量：</span>';
-  if (!vars || vars.length === 0) {
-    cont.innerHTML += '<span style="color:var(--muted);font-size:12px">（無）</span>';
-    return;
-  }
-  vars.forEach(v => {
-    const pill = varPillEl(v);
-    pill.onclick = () => jumpToVar(v);
-    cont.appendChild(pill);
+function switchClosingTab(agentKey, tab) {
+  S.closingTab[agentKey] = tab;
+  const closingEl = document.getElementById('closing-' + agentKey);
+  if (!closingEl) return;
+  closingEl.querySelectorAll('.ce-tab').forEach(el => {
+    el.classList.toggle('active', el.dataset.variant === tab);
+  });
+  ['initial','revision'].forEach(v => {
+    const bodyEl = document.getElementById(`cetab-${agentKey}-${v}`);
+    if (bodyEl) bodyEl.classList.toggle('active', v === tab);
   });
 }
 
-function renderPreview(text) {
-  const pp = document.getElementById('previewPanel');
-  // Escape HTML then replace {{VAR}} with coloured pills
-  let html = escHtml(text);
-  html = html.replace(/\{\{(\w+)\}\}/g, (_, name) => {
-    const color = state.varColors[name] || '#999';
-    const label = state.variables[name]?.label || name;
-    return `<span class="var-pill" style="background:${color}22;color:${color};border:1px solid ${color}44"
-      title="${escHtml(label)}" onclick="jumpToVar('${name}')">{{${name}}}</span>`;
-  });
-  pp.innerHTML = html;
+// ═══════════════════════════════════════════════════
+// DIRTY TRACKING & SAVE
+// ═══════════════════════════════════════════════════
+function markAgentDirty(agentKey) {
+  S.dirtyAgents[agentKey] = true;
+  markDirtyStatus();
 }
 
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// ─── Variable panel (right) ───────────────────────────────────────────────
-function renderVarPanel(usedVars) {
-  const body = document.getElementById('varPanelBody');
-  body.innerHTML = '';
-
-  // If no selection or showing all, show all vars
-  const keysToShow = usedVars
-    ? [...new Set([...usedVars, ...Object.keys(state.variables)])]
-    : Object.keys(state.variables);
-
-  if (keysToShow.length === 0) {
-    body.innerHTML = '<div class="empty-state"><div class="icon">🔗</div><p>尚無注入變量。點擊「＋ 新增」建立第一個。</p></div>';
-    return;
-  }
-
-  keysToShow.forEach(k => {
-    const v = state.variables[k] || { label: k, description: '（未登記）', agents: [], example: '' };
-    const highlighted = usedVars && usedVars.includes(k);
-    const isNew = !!v._new;
-    const color = state.varColors[k] || '#999';
-
-    const card = document.createElement('div');
-    card.className = 'var-card';
-    card.id = `varcard-${k}`;
-    if (!highlighted && usedVars) card.style.opacity = '0.45';
-
-    // Find prompts that use this var
-    const usedIn = Object.entries(state.prompts)
-      .filter(([, p]) => (p.vars_used || []).includes(k))
-      .map(([pk, p]) => `<span class="prompt-ref" onclick="selectItem('${pk}')" title="${p.label}">${p.label}</span>`)
-      .join('');
-
-    // Python integration snippet
-    const pySnippet = `render_template(\n    _USER_TEMPLATE_PATH,\n    ...,\n    ${k}=your_${k}_value,\n)`;
-
-    card.innerHTML = `
-      <div class="var-card-header">
-        <span class="var-pill" style="background:${color}22;color:${color};border:1px solid ${color}44;font-size:11px;padding:2px 7px;border-radius:4px;font-weight:700">{{${k}}}</span>
-        ${isNew ? '<span class="new-var-badge">NEW</span>' : ''}
-      </div>
-      <input class="var-label-input" placeholder="標籤" value="${escHtml(v.label || '')}"
-        oninput="updateVar('${k}','label',this.value)">
-      <textarea class="var-desc-input" placeholder="描述（此變量代表什麼？）"
-        oninput="updateVar('${k}','description',this.value)">${escHtml(v.description || '')}</textarea>
-      ${usedIn ? `<div class="var-used-in">${usedIn}</div>` : ''}
-      <div class="var-card-divider"></div>
-      <div class="var-card-actions">
-        <button class="btn-sm btn-sm-insert" onclick="insertVarAtCursor('${k}')">⬅ 插入到編輯器</button>
-        <button class="btn-sm btn-sm-danger" onclick="deleteVariable('${k}')">刪除</button>
-      </div>
-      ${isNew ? `<div class="code-snippet-label">Python 整合提示 — 在 agent 的 render_template() 呼叫加入：</div>
-        <div class="code-snippet">${escHtml(pySnippet)}</div>` : ''}
-    `;
-    body.appendChild(card);
-  });
-}
-
-function updateVar(key, field, value) {
-  if (!state.variables[key]) state.variables[key] = {};
-  state.variables[key][field] = value;
-  if (!state.dirty.__vars__) state.dirty.__vars__ = true;
-  updateSaveStatus();
-}
-
-function jumpToVar(key) {
-  const card = document.getElementById(`varcard-${key}`);
-  if (card) { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); card.style.outline = '2px solid ' + (state.varColors[key] || '#fff'); setTimeout(() => card.style.outline = '', 1200); }
-}
-
-// ─── Insert var at cursor ─────────────────────────────────────────────────
-function insertVarAtCursor(key) {
-  const ta = document.getElementById('promptTextarea');
-  if (!state.selected || state.selected === '__vars__') {
-    showToast('請先在左側選擇一個提示詞模板', true); return;
-  }
-  if (ta.style.display === 'none') {
-    // Switch to raw tab first
-    setEditorTab('raw');
-  }
-  ta.focus();
-  const start = ta.selectionStart;
-  const end = ta.selectionEnd;
-  const token = `{{${key}}}`;
-  const before = ta.value.substring(0, start);
-  const after = ta.value.substring(end);
-  ta.value = before + token + after;
-  // Restore cursor after inserted token
-  const newPos = start + token.length;
-  ta.setSelectionRange(newPos, newPos);
-  // Trigger the input handler to update state, preview, vars-used
-  ta.dispatchEvent(new Event('input'));
-  showToast(`已插入 {{${key}}}`);
-}
-
-// ─── Add new variable ─────────────────────────────────────────────────────
-function toggleAddVarForm() {
-  const form = document.getElementById('addVarForm');
-  form.classList.toggle('open');
-  if (form.classList.contains('open')) {
-    document.getElementById('newVarKey').focus();
-    document.getElementById('newVarKey').value = '';
-    document.getElementById('newVarLabel').value = '';
-    document.getElementById('newVarDesc').value = '';
-    document.getElementById('newVarExample').value = '';
-    document.getElementById('newVarKeyHint').className = 'add-var-hint';
-    document.getElementById('newVarKeyHint').textContent = '用於模板中的 {{my_variable}} 佔位符';
-    document.getElementById('newVarKey').classList.remove('error');
-  }
-}
-
-function validateNewVarKey() {
-  const keyEl = document.getElementById('newVarKey');
-  const hint = document.getElementById('newVarKeyHint');
-  const val = keyEl.value.trim();
-  if (!val) { hint.textContent = '用於模板中的 {{my_variable}} 佔位符'; hint.className = 'add-var-hint'; keyEl.classList.remove('error'); return true; }
-  if (!/^[a-z][a-z0-9_]*$/.test(val)) { hint.textContent = '只能使用小寫字母、數字、下劃線，且以字母開頭'; hint.className = 'add-var-hint err'; keyEl.classList.add('error'); return false; }
-  if (state.variables[val]) { hint.textContent = `⚠ 「${val}」已存在`; hint.className = 'add-var-hint err'; keyEl.classList.add('error'); return false; }
-  hint.textContent = `✓ 將建立 {{${val}}}`; hint.className = 'add-var-hint'; keyEl.classList.remove('error'); return true;
-}
-
-function submitNewVariable() {
-  if (!validateNewVarKey()) return;
-  const key = document.getElementById('newVarKey').value.trim();
-  if (!key) { showToast('請輸入變量鍵名', true); return; }
-
-  const label = document.getElementById('newVarLabel').value.trim() || key;
-  const description = document.getElementById('newVarDesc').value.trim();
-  const example = document.getElementById('newVarExample').value.trim();
-
-  // Assign next color
-  const idx = Object.keys(state.varColors).length;
-  state.varColors[key] = VAR_COLORS[idx % VAR_COLORS.length];
-
-  // Add to variables (mark as new for Python hint display)
-  state.variables[key] = { label, description, agents: [], example, _new: true };
-  state.dirty.__vars__ = true;
-  updateSaveStatus();
-  updateVarCount();
-
-  // Close form and re-render
-  toggleAddVarForm();
-  const currentVars = state.selected && state.selected !== '__vars__'
-    ? (state.prompts[state.selected]?.vars_used || null)
-    : null;
-  renderVarPanel(currentVars);
-
-  // Scroll to the new card
-  setTimeout(() => jumpToVar(key), 80);
-  showToast(`已建立 {{${key}}} — 點擊「插入到編輯器」使用`);
-}
-
-// ─── Delete variable ──────────────────────────────────────────────────────
-function deleteVariable(key) {
-  // Check if actively used in any prompt
-  const usedIn = Object.entries(state.prompts)
-    .filter(([, p]) => (p.vars_used || []).includes(key))
-    .map(([, p]) => p.label);
-
-  const confirmMsg = usedIn.length > 0
-    ? `⚠ {{${key}}} 正被以下提示詞使用：\n${usedIn.join('\n')}\n\n仍要刪除此變量？（提示詞中的 {{${key}}} 不會自動移除）`
-    : `確定要刪除 {{${key}}}？`;
-
-  if (!confirm(confirmMsg)) return;
-
-  // Remove from state
-  delete state.variables[key];
-  delete state.varColors[key];
-  state.dirty.__vars__ = true;
-  updateSaveStatus();
-  updateVarCount();
-
-  // Also DELETE from server immediately (so it's not orphaned)
-  fetch(`/api/variable/${key}`, { method: 'DELETE' }).catch(() => {});
-
-  const currentVars = state.selected && state.selected !== '__vars__'
-    ? (state.prompts[state.selected]?.vars_used || null)
-    : null;
-  renderVarPanel(currentVars);
-  showToast(`已刪除 {{${key}}}`);
-}
-
-function updateVarCount() {
-  document.getElementById('varCount').textContent = `${Object.keys(state.variables).length} 個變量`;
-}
-
-// ─── Variables management screen (when __vars__ selected) ─────────────────
-function showVarsScreen() {
-  document.getElementById('emptyState').style.display = 'none';
-  document.getElementById('promptEditor').style.display = 'none';
-  renderVarPanel(null);
-}
-
-// ─── Save ─────────────────────────────────────────────────────────────────
-function updateSaveStatus() {
-  const n = Object.keys(state.dirty).length;
+function markDirtyStatus() {
+  const total = Object.keys(S.dirtyAgents).length + Object.keys(S.dirtyClosing).length;
   const el = document.getElementById('saveStatus');
-  el.textContent = n > 0 ? `${n} 項未儲存` : '';
-  el.className = 'save-status';
+  if (total > 0) {
+    el.textContent = `${total} 項未儲存`;
+    el.className = 'save-status dirty';
+  } else {
+    el.textContent = '';
+    el.className = 'save-status';
+  }
 }
 
 async function saveAll() {
   const btn = document.getElementById('saveBtn');
   btn.disabled = true;
-  document.getElementById('saveBtnIcon').innerHTML = '<span class="spinner"></span>';
+  document.getElementById('saveBtnInner').innerHTML = '<span class="spinner"></span> 儲存中...';
 
-  const promptsDirty = {};
-  Object.keys(state.dirty).forEach(k => {
-    if (k !== '__vars__') promptsDirty[k] = state.dirty[k];
+  // Collect agent prompts
+  const agentPromptsPayload = {};
+  Object.keys(S.dirtyAgents).forEach(k => {
+    agentPromptsPayload[k] = serializeBlocks(S.blocks[k]);
   });
 
-  const body = { prompts: promptsDirty };
-  if (state.dirty.__vars__) {
-    // Strip internal _new flag before persisting
-    const cleanVars = {};
-    Object.entries(state.variables).forEach(([k, v]) => {
-      const { _new, ...rest } = v;
-      cleanVars[k] = rest;
+  // Collect closing prompts
+  const closingPromptsPayload = {};
+  if (S._closingDirty) {
+    Object.keys(S.dirtyClosing).forEach(k => {
+      closingPromptsPayload[k] = S._closingDirty[k] ?? S.closingPrompts[k]?.content ?? '';
     });
-    body.variables = cleanVars;
   }
 
   try {
-    const res = await fetch('/api/save', {
+    const r = await fetch('/api/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ agent_prompts: agentPromptsPayload, closing_prompts: closingPromptsPayload }),
     });
-    const data = await res.json();
-    if (data.ok) {
-      state.dirty = {};
-      updateSaveStatus();
-      showToast(`已儲存 ${data.saved.length} 個檔案`);
+    const d = await r.json();
+    if (d.ok) {
+      S.dirtyAgents = {};
+      S.dirtyClosing = {};
+      // Update stored content
+      Object.entries(agentPromptsPayload).forEach(([k, v]) => {
+        if (S.agentPrompts[k]) S.agentPrompts[k].content = v;
+      });
+      Object.entries(closingPromptsPayload).forEach(([k, v]) => {
+        if (S.closingPrompts[k]) S.closingPrompts[k].content = v;
+      });
+      markDirtyStatus();
+      const el = document.getElementById('saveStatus');
+      el.textContent = '已儲存 ✓';
+      el.className = 'save-status ok';
+      setTimeout(() => { el.textContent=''; el.className='save-status'; }, 3000);
+      toast(`已儲存 ${d.saved.length} 個檔案`);
     } else {
-      showToast('儲存失敗：' + (data.errors || []).join(', '), true);
+      toast('儲存失敗：' + (d.errors||[]).join(', '), true);
     }
   } catch(e) {
-    showToast('網絡錯誤：' + e.message, true);
+    toast('網絡錯誤：' + e.message, true);
   } finally {
     btn.disabled = false;
-    document.getElementById('saveBtnIcon').textContent = '💾';
+    document.getElementById('saveBtnInner').textContent = '💾 儲存全部';
   }
 }
 
-function resetChanges() {
+function resetAll() {
   if (!confirm('放棄所有未儲存的更改？')) return;
-  state.dirty = {};
-  if (state.selected && state.selected !== '__vars__') selectItem(state.selected);
-  updateSaveStatus();
-  showToast('已重置');
+  S.dirtyAgents = {};
+  S.dirtyClosing = {};
+  S._closingDirty = {};
+  // Re-parse from original content
+  Object.keys(S.agentPrompts).forEach(k => {
+    S.blocks[k] = parseTemplate(S.agentPrompts[k].content || '');
+    S.closingOpen[k] = false;
+  });
+  const agentKeys = Object.keys(S.agentPrompts).sort(
+    (a,b) => (S.agentPrompts[a].order||99) - (S.agentPrompts[b].order||99)
+  );
+  renderAllCards(agentKeys);
+  markDirtyStatus();
+  toast('已重置所有更改');
 }
 
-// ─── Utilities ────────────────────────────────────────────────────────────
-function varPillEl(name) {
-  const color = state.varColors[name] || '#999';
-  const span = document.createElement('span');
-  span.className = 'var-pill';
-  span.textContent = `{{${name}}}`;
-  span.style.cssText = `background:${color}22;color:${color};border:1px solid ${color}44;font-size:11px;padding:2px 8px;border-radius:4px;font-weight:700;cursor:pointer`;
-  span.title = state.variables[name]?.label || name;
-  return span;
+// ═══════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════
+function pillIcon(srcType) {
+  return { db:'🗄️', editable_prompt:'✏️', file_path:'📁', runtime:'⚙️' }[srcType] || '📌';
 }
 
-function showToast(msg, isErr = false) {
+function autoResize(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = Math.max(ta.scrollHeight, 24) + 'px';
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toast(msg, isErr=false) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.className = 'toast' + (isErr ? ' err' : '');
-  void el.offsetWidth; // reflow
+  void el.offsetWidth;
   el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 3000);
+  setTimeout(() => el.classList.remove('show'), 3200);
 }
 
-// Keyboard shortcut: Ctrl+S / Cmd+S
+// Keyboard shortcut
 document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-    e.preventDefault();
-    saveAll();
-  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveAll(); }
+});
+
+// Close pill menus on escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.pill-menu.open').forEach(m => m.classList.remove('open'));
 });
 
 boot();
