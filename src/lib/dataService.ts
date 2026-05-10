@@ -125,6 +125,20 @@ export async function listPassages(): Promise<Passage[]> {
   return (data as Passage[]) ?? SEED_PASSAGES;
 }
 
+export async function getPassagesByIds(ids: string[]): Promise<Passage[]> {
+  if (ids.length === 0) return [];
+  if (!isSupabaseConfigured) return SEED_PASSAGES.filter((p) => ids.includes(p.id));
+  const { data, error } = await supabase
+    .from("dsemcq_passages")
+    .select("id, title, dynasty, author, body")
+    .in("id", ids);
+  if (error) {
+    console.warn("[dsemcq] getPassagesByIds error:", error.message);
+    return [];
+  }
+  return (data as Passage[]) ?? [];
+}
+
 export async function listTipCards(): Promise<TipCard[]> {
   if (!isSupabaseConfigured) return SEED_TIP_CARDS;
   const { data, error } = await supabase.from("dsemcq_tip_cards").select("*").eq("is_active", true).order("position");

@@ -6,8 +6,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp, CommonActions } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, spacing, typography } from "../theme";
-import { Question, Quiz } from "../types/database";
-import { getQuestionsForQuiz, getQuiz, saveAnswer, submitAttempt } from "../lib/dataService";
+import { Passage, Question, Quiz } from "../types/database";
+import { getPassagesByIds, getQuestionsForQuiz, getQuiz, saveAnswer, submitAttempt } from "../lib/dataService";
 import { shuffleOptionsForAttempt } from "../lib/shuffleUtils";
 import { useAuth } from "../context/AuthContext";
 import Button from "../components/Button";
@@ -35,6 +35,13 @@ export default function QuizRunnerScreen() {
   const startedAt = useRef(Date.now());
 
   const [loading, setLoading] = useState(true);
+
+  // Passage reference (exercises only)
+  const [passageMap, setPassageMap] = useState<Record<string, Passage>>({});
+  const [passageModal, setPassageModal] = useState<{ visible: boolean; passage: Passage | null }>({
+    visible: false,
+    passage: null,
+  });
 
   // Shuffled display order: deterministic per attempt (seed = attemptId + questionId).
   // Using the same seed in QuizResultScreen guarantees A/B/C/D labels are identical.
@@ -68,6 +75,21 @@ export default function QuizRunnerScreen() {
         }
         setQuestions(qs);
         if (q.duration_seconds) setSecondsLeft(q.duration_seconds);
+
+        // Preload passages for exercises only
+        if (q.type === "exercise") {
+          const ids = new Set<string>();
+          if (q.passage_id) ids.add(q.passage_id);
+          for (const qst of qs) {
+            if (qst.passage_id) ids.add(qst.passage_id);
+          }
+          if (ids.size > 0) {
+            const passages = await getPassagesByIds([...ids]);
+            const map: Record<string, Passage> = {};
+            for (const p of passages) map[p.id] = p;
+            setPassageMap(map);
+          }
+        }
       } catch (err: any) {
         console.warn("[dsemcq] QuizRunner load error:", err?.message ?? err);
         Alert.alert("錯誤", err?.message ?? "無法載入題目", [{ text: "返回", onPress: safeGoBack }]);
@@ -142,6 +164,14 @@ export default function QuizRunnerScreen() {
 
   const fmtTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
+  // Passages relevant to the current question (exercise mode only)
+  const curPassages = useMemo<Passage[]>(() => {
+    if (!quiz || quiz.type !== "exercise") return [];
+    const ids = new Set<string>();
+    if (cur.passage_id) ids.add(cur.passage_id);
+    if (quiz.passage_id) ids.add(quiz.passage_id);
+    return [...ids].map((id) => passageMap[id]).filter(Boolean) as Passage[];
+  }, [quiz, cur, passageMap]);
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       {/* Header */}
@@ -190,6 +220,22 @@ export default function QuizRunnerScreen() {
             </TouchableOpacity>
           );
         })}
+
+        {/* Passage reference links — exercises only */}
+        {curPassages.length > 0 && (
+          <View style={styles.passageRefRow}>
+            <Text style={styles.passageRefHint}>📖 參考文章：</Text>
+            {curPassages.map((p) => (
+              <TouchableOpacity
+                key={p.id}
+                onPress={() => setPassageModal({ visible: true, passage: p })}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={styles.passageRefLink}>《{p.title}》</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </ScrollView>
 
       {/* Bottom navigation */}
@@ -271,6 +317,41 @@ export default function QuizRunnerScreen() {
           </View>
         </SafeAreaView>
       </Modal>
+      {/* Passage reference modal */}
+      <Modal
+        visible={passageModal.visible}
+        animationType="slide"
+        onRequestClose={() => setPassageModal({ visible: false, passage: null })}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+          <View style={styles.passageModalHeader}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.passageModalTitle}>
+                {passageModal.passage ? `《${passageModal.passage.title}》` : ""}
+              </Text>
+              {passageModal.passage?.dynasty || passageModal.passage?.author ? (
+                <Text style={styles.passageModalMeta}>
+                  {[passageModal.passage.dynasty, passageModal.passage.author].filter(Boolean).join(" · ")}
+                </Text>
+              ) : null}
+            </View>
+            <TouchableOpacity
+              onPress={() => setPassageModal({ visible: false, passage: null })}
+              style={styles.passageModalClose}
+            >
+              <Icon name="close" size="md" color={colors.ink} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.passageRefBanner}>
+            <Text style={styles.passageRefBannerText}>以下為原文全文，供本題參考之用</Text>
+          </View>
+          <ScrollView contentContainerStyle={styles.passageModalBody}>
+            <Text style={styles.passageBodyText}>
+              {passageModal.passage?.body ?? ""}
+            </Text>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -312,4 +393,17 @@ const styles = StyleSheet.create({
   reviewIdx: { color: colors.primary, fontWeight: "700", marginRight: spacing.sm, width: 28 },
   reviewStem: { color: colors.textPrimary },
   reviewAns: { color: colors.accent, marginTop: 4, fontSize: 13 },
+  // Passage reference
+  passageRefRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", marginTop: spacing.md, gap: 4 },
+  passageRefHint: { fontSize: 11, color: colors.textMuted },
+  passageRefLink: { fontSize: 11, color: colors.primary, textDecorationLine: "underline", marginRight: 6 },
+  // Passage modal
+  passageModalHeader: { flexDirection: "row", alignItems: "center", padding: spacing.md, borderBottomWidth: 1, borderColor: colors.border },
+  passageModalTitle: { ...typography.heading, color: colors.primary, fontSize: 16 },
+  passageModalMeta: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
+  passageModalClose: { width: 40, height: 40, alignItems: "center", justifyContent: "center", borderRadius: 8, backgroundColor: colors.surface },
+  passageRefBanner: { backgroundColor: colors.surfaceAlt, paddingVertical: 7, paddingHorizontal: spacing.md, borderBottomWidth: 1, borderColor: colors.border },
+  passageRefBannerText: { color: colors.textMuted, fontSize: 12, fontStyle: "italic" },
+  passageModalBody: { padding: spacing.md, paddingBottom: 40 },
+  passageBodyText: { color: colors.textPrimary, fontSize: 16, lineHeight: 30, letterSpacing: 0.5 },
 });
