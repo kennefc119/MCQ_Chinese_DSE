@@ -126,6 +126,18 @@ export default function QuizRunnerScreen() {
     ]);
   };
 
+  // Passages relevant to the current question (exercise mode only).
+  // Must be declared BEFORE any early returns to satisfy Rules of Hooks.
+  const curPassages = useMemo<Passage[]>(() => {
+    if (!quiz || quiz.type !== "exercise") return [];
+    const cur = displayQuestions[idx];
+    if (!cur) return [];
+    const ids = new Set<string>();
+    if (cur.passage_id) ids.add(cur.passage_id);
+    if (quiz.passage_id) ids.add(quiz.passage_id);
+    return [...ids].map((id) => passageMap[id]).filter(Boolean) as Passage[];
+  }, [quiz, displayQuestions, idx, passageMap]);
+
   if (!quiz || displayQuestions.length === 0) return <LoadingScreen />;
 
   const cur = displayQuestions[idx];
@@ -164,14 +176,6 @@ export default function QuizRunnerScreen() {
 
   const fmtTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
-  // Passages relevant to the current question (exercise mode only)
-  const curPassages = useMemo<Passage[]>(() => {
-    if (!quiz || quiz.type !== "exercise") return [];
-    const ids = new Set<string>();
-    if (cur.passage_id) ids.add(cur.passage_id);
-    if (quiz.passage_id) ids.add(quiz.passage_id);
-    return [...ids].map((id) => passageMap[id]).filter(Boolean) as Passage[];
-  }, [quiz, cur, passageMap]);
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       {/* Header */}
