@@ -17,13 +17,12 @@ from ..template_utils import render_template
 
 log = structlog.get_logger(__name__)
 
-_SYSTEM_PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "strategist.md"
-_USER_TEMPLATE_PATH = Path(__file__).parent.parent / "prompts" / "strategist_user.md"
+_PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "strategist_prompt.md"
 
 
-def _build_user_message(stats: DBStats) -> str:
+def _build_prompt(stats: DBStats) -> str:
     return render_template(
-        _USER_TEMPLATE_PATH,
+        _PROMPT_PATH,
         stats_json=json.dumps(stats.model_dump(), ensure_ascii=False, indent=2),
     )
 
@@ -33,13 +32,11 @@ def run_strategist(stats: DBStats | None = None) -> Spec:
     if stats is None:
         stats = fetch_db_stats()
 
-    system_prompt = _SYSTEM_PROMPT_PATH.read_text(encoding="utf-8")
-    user_message = _build_user_message(stats)
+    prompt = _build_prompt(stats)
 
     log.info("strategist_start", total_questions=stats.total, bot=settings.strategist_bot)
     spec = chat_structured(
-        system_prompt=system_prompt,
-        user_message=user_message,
+        user_message=prompt,
         schema=Spec,
         temperature=0.5,
         model=settings.strategist_bot,

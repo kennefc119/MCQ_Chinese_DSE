@@ -1,6 +1,6 @@
 """
-School Worksheet Loader — loads per-passage teacher worksheets
-from the school_ws/ directory and injects them into LLM user messages.
+School Worksheet Loader — dynamically scans school_ws/ directory and
+finds .md files whose filename contains passage title keywords.
 
 Used by both drafter.py and critic.py to ground question generation and critique
 in the official school curriculum materials.
@@ -11,6 +11,8 @@ from pathlib import Path
 
 import structlog
 
+from .dse_reference import _PASSAGE_KEYWORDS
+
 log = structlog.get_logger(__name__)
 
 # school_ws/ is at repo_root/school_ws/
@@ -18,46 +20,53 @@ log = structlog.get_logger(__name__)
 _REPO_ROOT = Path(__file__).parent.parent.parent.parent
 _SCHOOL_WS_DIR = _REPO_ROOT / "school_ws"
 
-# Maps passage IDs to their worksheet filename(s) in school_ws/
-_PASSAGE_WORKSHEET_MAP: dict[str, list[str]] = {
-    "p01": ["2526《論仁論孝論君子》工作紙_教師版.md"],
-    "p02": ["2526魚我所欲也工作紙_教師版.md"],
-    "p03": ["2526 逍遙遊工作紙_教師版_revised.md"],
-    "p04": ["25-26 勸學工作紙_教師版_revised.md"],
-    "p05": ["2526 廉頗藺相如列傳_教師版_revised.md"],
-    "p06": ["25-26 出師表工作紙(教師版)_revised.md"],
-    "p07": ["25-26 師說工作紙_教師版_revised.md"],
-    "p08": ["25-26 《始得西山宴遊記》工作紙_教師版_revised.md"],
-    "p09": ["2526岳陽樓記_教師版_revised.md"],
-    "p10": ["25-26 六國論工作紙(教師版).md"],
-    "p11": [
-        "25-26 《登樓》工作紙_教師版.md",
-        "25-26 《月下獨酌》工作紙_教師版.md",
-        "25-26 《山居秋暝》工作紙_教師版.md",
-    ],
-    "p12": [
-        "25-26《念奴嬌﹒赤壁懷古》工作紙_教師版_updated.md",
-        "25-26《聲聲慢．秋情》工作紙_教師版.md",
-        "25-26《青玉案．元夕》工作紙_教師版.md",
-    ],
-}
+
+def _find_worksheet_files(passage_id: str) -> list[Path]:
+    """
+    Scan school_ws/ directory and return all .md files whose filename
+    contains any keyword for the given passage_id.
+
+    Matching is a simple substring check (case-sensitive, as passage titles
+    appear verbatim in the filenames).
+    """
+    keywords = _PASSAGE_KEYWORDS.get(passage_id, [])
+    if not keywords:
+        log.warning("school_ws_no_keywords", passage_id=passage_id)
+        return []
+
+    if not _SCHOOL_WS_DIR.exists():
+        log.error("school_ws_dir_missing", path=str(_SCHOOL_WS_DIR))
+        return []
+
+    matched: list[Path] = []
+    for fpath in sorted(_SCHOOL_WS_DIR.glob("*.md")):
+        fname = fpath.name
+        if any(kw in fname for kw in keywords):
+            matched.append(fpath)
+
+    log.debug(
+        "school_ws_scan",
+        passage_id=passage_id,
+        keywords=keywords,
+        matched=[p.name for p in matched],
+    )
+    return matched
 
 
 def load_worksheets(passage_id: str) -> list[tuple[str, str]]:
     """
-    Load worksheet file(s) for the given passage ID.
+    Load worksheet .md file(s) for the given passage ID by dynamic filename scan.
 
     Returns a list of (filename, content) tuples.
-    Returns empty list if passage_id has no mapping or files are missing.
+    Returns empty list if no matching files are found.
     """
-    filenames = _PASSAGE_WORKSHEET_MAP.get(passage_id, [])
     results: list[tuple[str, str]] = []
-    for fname in filenames:
-        fpath = _SCHOOL_WS_DIR / fname
-        if fpath.exists():
-            results.append((fname, fpath.read_text(encoding="utf-8")))
-        else:
-            log.warning("school_ws_file_missing", passage_id=passage_id, file=fname)
+    for fpath in _find_worksheet_files(passage_id):
+        try:
+            content = fpath.read_text(encoding="utf-8")
+            results.append((fpath.name, content))
+        except OSError as exc:
+            log.warning("school_ws_read_error", file=fpath.name, error=str(exc))
     return results
 
 

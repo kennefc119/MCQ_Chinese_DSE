@@ -39,24 +39,94 @@ def get_traces() -> list[dict]:
     return list(_traces)
 
 
+def chat_freeform(
+    user_message: str,
+    *,
+    model: str | None = None,
+    temperature: float = 0.7,
+) -> str:
+    """
+    呼叫 Poe OpenAI-compatible API，直接回傳原始文字回應（不做 JSON 解析）。
+    適用於 test-run 預覽：讓管理員看到 LLM 的完整原始輸出。
+    """
+    bot_name = model or settings.poe_bot_name
+    merged = user_message.strip()
+
+    payload = {
+        "model": bot_name,
+        "messages": [{"role": "user", "content": merged}],
+        "temperature": temperature,
+    }
+
+    log.debug("poe_freeform_call", bot=bot_name)
+
+    _MAX_RETRIES = 5
+    response = None
+    for attempt in range(1, _MAX_RETRIES + 1):
+        with httpx.Client(timeout=180.0) as client:
+            response = client.post(
+                _POE_BASE_URL,
+                headers={
+                    "Authorization": f"Bearer {settings.poe_api_key}",
+                    "Content-Type": "application/json",
+                },
+                json=payload,
+            )
+
+        if response.status_code == 200:
+            break
+
+        if response.status_code >= 500 and attempt < _MAX_RETRIES:
+            delay = 2 * attempt
+            log.warning("poe_retry", attempt=attempt, max=_MAX_RETRIES,
+                        status=response.status_code, delay_s=delay)
+            time.sleep(delay)
+            continue
+
+        raise RuntimeError(
+            f"Poe API error {response.status_code}: {response.text[:500]}"
+        )
+
+    data = response.json()
+    raw = data["choices"][0]["message"]["content"]
+
+    prompt_tokens = _estimate_tokens(merged)
+    response_tokens = _estimate_tokens(raw)
+    _traces.append({
+        "agent": "freeform",
+        "bot": bot_name,
+        "merged_prompt": merged,
+        "raw_response": raw,
+        "prompt_tokens": prompt_tokens,
+        "response_tokens": response_tokens,
+        "total_tokens": prompt_tokens + response_tokens,
+    })
+
+    log.debug("poe_freeform_response", length=len(raw))
+    return raw
+
+
 def chat_structured(
-    system_prompt: str,
     user_message: str,
     schema: type[T],
     *,
+    system_prompt: str = "",
     temperature: float = 0.7,
     model: str | None = None,
 ) -> T:
     """
     呼叫 Poe OpenAI-compatible API，解析 JSON 回傳值為 Pydantic model。
 
-    Poe bots ignore the system role — merge system prompt + user message
-    into a single user turn (same pattern as fortune-teller in table_for_6).
+    When system_prompt is provided, it is merged with user_message via a '---'
+    separator (Poe bots ignore the system role). When system_prompt is empty,
+    the user_message is sent directly as a single unified prompt.
     """
     bot_name = model or settings.poe_bot_name
 
-    # Merge system prompt into user message — Poe bots ignore the system role
-    merged = f"{system_prompt.strip()}\n\n---\n\n{user_message.strip()}"
+    if system_prompt.strip():
+        merged = f"{system_prompt.strip()}\n\n---\n\n{user_message.strip()}"
+    else:
+        merged = user_message.strip()
 
     payload = {
         "model": bot_name,

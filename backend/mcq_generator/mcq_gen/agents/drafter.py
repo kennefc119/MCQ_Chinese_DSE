@@ -4,13 +4,13 @@ Agent 2：出題員
 """
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import structlog
 
 from ..dse_reference import format_reference_block
 from ..llm import chat_structured
+from ..passage_db import get_passage_body
 from ..schemas import Critique, Draft, Spec
 from ..school_ws_loader import format_school_ws_block
 from ..config import settings
@@ -18,28 +18,12 @@ from ..template_utils import render_template
 
 log = structlog.get_logger(__name__)
 
-_SYSTEM_PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "drafter.md"
-_USER_TEMPLATE_PATH = Path(__file__).parent.parent / "prompts" / "drafter_user.md"
+_PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "drafter_prompt.md"
 _CLOSING_INITIAL_PATH = Path(__file__).parent.parent / "prompts" / "drafter_user_closing_initial.md"
 _CLOSING_REVISION_PATH = Path(__file__).parent.parent / "prompts" / "drafter_user_closing_revision.md"
-_PASSAGES_FILE = Path(__file__).parent.parent.parent / "data" / "passages.json"
 
 
-def _load_passage_text(passage_id: str) -> str:
-    """從 data/passages.json 讀取課文全文。"""
-    if not _PASSAGES_FILE.exists():
-        raise FileNotFoundError(
-            f"找不到課文資料檔：{_PASSAGES_FILE}\n"
-            "請先執行 `mcq-gen fetch-passages` 從 Supabase 拉取課文。"
-        )
-    passages = json.loads(_PASSAGES_FILE.read_text(encoding="utf-8"))
-    entry = passages.get(passage_id)
-    if not entry:
-        raise KeyError(f"找不到篇章 {passage_id}，請確認 passages.json 包含此 ID。")
-    return entry.get("body", "")
-
-
-def _build_user_message(
+def _build_prompt(
     spec: Spec,
     passage_text: str,
     prev_draft: Draft | None,
@@ -76,7 +60,7 @@ def _build_user_message(
         closing_section = _CLOSING_INITIAL_PATH.read_text(encoding="utf-8").strip()
 
     return render_template(
-        _USER_TEMPLATE_PATH,
+        _PROMPT_PATH,
         spec_json=spec.model_dump_json(indent=2),
         passage_text=passage_text,
         cross_text_section=cross_text_section,
@@ -93,12 +77,10 @@ def run_drafter(
     iteration: int = 0,
 ) -> Draft:
     """呼叫出題員，回傳一個 Draft。"""
-    system_prompt = _SYSTEM_PROMPT_PATH.read_text(encoding="utf-8")
+    passage_text = get_passage_body(spec.passage)
+    cross_text = get_passage_body(spec.cross_passage) if spec.cross_passage else None
 
-    passage_text = _load_passage_text(spec.passage)
-    cross_text = _load_passage_text(spec.cross_passage) if spec.cross_passage else None
-
-    user_message = _build_user_message(spec, passage_text, prev_draft, critique, cross_text)
+    prompt = _build_prompt(spec, passage_text, prev_draft, critique, cross_text)
 
     log.info(
         "drafter_start",
@@ -109,8 +91,7 @@ def run_drafter(
     )
 
     draft = chat_structured(
-        system_prompt=system_prompt,
-        user_message=user_message,
+        user_message=prompt,
         schema=Draft,
         temperature=0.8,
         model=settings.drafter_bot,

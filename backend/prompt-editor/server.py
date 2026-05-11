@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import json
 import re
+import sys
+import uuid
 from pathlib import Path
 
 from flask import Flask, jsonify, request, send_from_directory
@@ -21,79 +23,66 @@ _HERE = Path(__file__).parent
 _PROMPTS_DIR = _HERE.parent / "mcq_generator" / "mcq_gen" / "prompts"
 _VARS_FILE = _PROMPTS_DIR / "variables.json"
 
-# All editable prompt files with human-readable labels
-_SYSTEM_PROMPTS: dict[str, dict] = {
-    "strategist_system": {
-        "label": "策略師 — 系統提示",
-        "agent": "strategist",
-        "filename": "strategist.md",
-        "kind": "system",
+# ---------------------------------------------------------------------------
+# Add mcq_generator to Python path so agents can be imported
+# ---------------------------------------------------------------------------
+_MCQ_GEN_ROOT = str(_HERE.parent / "mcq_generator")
+if _MCQ_GEN_ROOT not in sys.path:
+    sys.path.insert(0, _MCQ_GEN_ROOT)
+
+# ---------------------------------------------------------------------------
+# Agent prompt registry — one unified template file per agent
+# ---------------------------------------------------------------------------
+_AGENT_PROMPTS: dict[str, dict] = {
+    "strategist": {
+        "label": "策略師 (Strategist)",
+        "order": 1,
+        "filename": "strategist_prompt.md",
+        "description": "分析題庫分佈，決定下一題的規格。",
     },
-    "drafter_system": {
-        "label": "出題員 — 系統提示",
-        "agent": "drafter",
-        "filename": "drafter.md",
-        "kind": "system",
+    "drafter": {
+        "label": "出題員 (Drafter)",
+        "order": 2,
+        "filename": "drafter_prompt.md",
+        "description": "根據規格和篇章原文撰寫 MC 題目草稿。",
     },
-    "critic_system": {
-        "label": "審題主任 — 系統提示",
-        "agent": "critic",
-        "filename": "critic.md",
-        "kind": "system",
+    "critic": {
+        "label": "審題主任 (Critic)",
+        "order": 3,
+        "filename": "critic_prompt.md",
+        "description": "審核出題員的草稿，給出 PASS 或 REVISE 判決。",
     },
 }
 
-_USER_PROMPTS: dict[str, dict] = {
-    "strategist_user": {
-        "label": "策略師 — 用戶消息",
-        "agent": "strategist",
-        "filename": "strategist_user.md",
-        "kind": "user",
-    },
-    "drafter_user": {
-        "label": "出題員 — 用戶消息（主體）",
-        "agent": "drafter",
-        "filename": "drafter_user.md",
-        "kind": "user",
-    },
-    "drafter_user_closing_initial": {
-        "label": "出題員 — 收尾（初次出題）",
-        "agent": "drafter",
+# ---------------------------------------------------------------------------
+# Closing-section variant files (editable prompt pills inside Drafter)
+# ---------------------------------------------------------------------------
+_CLOSING_PROMPTS: dict[str, dict] = {
+    "drafter_closing_initial": {
+        "label": "收尾指令 — 初次出題",
         "filename": "drafter_user_closing_initial.md",
-        "kind": "user",
+        "variant": "initial",
     },
-    "drafter_user_closing_revision": {
-        "label": "出題員 — 收尾（修改模式）",
-        "agent": "drafter",
+    "drafter_closing_revision": {
+        "label": "收尾指令 — 修改模式",
         "filename": "drafter_user_closing_revision.md",
-        "kind": "user",
-    },
-    "critic_user": {
-        "label": "審題主任 — 用戶消息",
-        "agent": "critic",
-        "filename": "critic_user.md",
-        "kind": "user",
+        "variant": "revision",
     },
 }
 
-_ALL_PROMPTS = {**_SYSTEM_PROMPTS, **_USER_PROMPTS}
+# ---------------------------------------------------------------------------
+# In-memory test-run sessions: session_id → {spec, draft, critique, traces}
+# ---------------------------------------------------------------------------
+_RUN_SESSIONS: dict[str, dict] = {}
 
 
-def _load_prompt(key: str) -> str:
-    meta = _ALL_PROMPTS.get(key)
-    if not meta:
-        return ""
-    path = _PROMPTS_DIR / meta["filename"]
+def _read(filename: str) -> str:
+    path = _PROMPTS_DIR / filename
     return path.read_text(encoding="utf-8") if path.exists() else ""
 
 
-def _save_prompt(key: str, content: str) -> bool:
-    meta = _ALL_PROMPTS.get(key)
-    if not meta:
-        return False
-    path = _PROMPTS_DIR / meta["filename"]
-    path.write_text(content, encoding="utf-8")
-    return True
+def _write(filename: str, content: str) -> None:
+    (_PROMPTS_DIR / filename).write_text(content, encoding="utf-8")
 
 
 def _load_variables() -> dict:
@@ -102,12 +91,7 @@ def _load_variables() -> dict:
     return {}
 
 
-def _save_variables(data: dict) -> None:
-    _VARS_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-
-
 def _find_vars_in_text(text: str) -> list[str]:
-    """Find all {{VAR_NAME}} tokens in text, return list of unique var names."""
     return list(dict.fromkeys(re.findall(r"\{\{(\w+)\}\}", text)))
 
 
@@ -122,89 +106,188 @@ def index():
 
 @app.get("/api/data")
 def api_data():
-    """Return all prompts + variable registry."""
-    prompts = {}
-    for key, meta in _ALL_PROMPTS.items():
-        content = _load_prompt(key)
-        prompts[key] = {
+    """Return all agent prompts, closing variants, and variable metadata."""
+    variables = _load_variables()
+
+    agent_prompts = {}
+    for key, meta in _AGENT_PROMPTS.items():
+        content = _read(meta["filename"])
+        agent_prompts[key] = {
             **meta,
             "content": content,
             "vars_used": _find_vars_in_text(content),
         }
 
-    variables = _load_variables()
-
-    # Annotate each variable with which prompts use it
-    for var_key, var_meta in variables.items():
-        used_in = [
-            k for k, p in prompts.items()
-            if var_key in p.get("vars_used", [])
-        ]
-        var_meta["used_in_prompts"] = used_in
+    closing_prompts = {}
+    for key, meta in _CLOSING_PROMPTS.items():
+        content = _read(meta["filename"])
+        closing_prompts[key] = {
+            **meta,
+            "content": content,
+            "vars_used": _find_vars_in_text(content),
+        }
 
     return jsonify({
-        "prompts": prompts,
+        "agent_prompts": agent_prompts,
+        "closing_prompts": closing_prompts,
         "variables": variables,
-        "prompt_meta": _ALL_PROMPTS,
     })
 
 
 @app.post("/api/save")
 def api_save():
-    """Save one or more prompts and/or variables."""
+    """Save agent prompts and/or closing prompt variants."""
     body = request.get_json(force=True)
     saved = []
     errors = []
 
-    # Save prompts
-    for key, content in (body.get("prompts") or {}).items():
-        if _save_prompt(key, content):
-            saved.append(key)
-        else:
-            errors.append(f"Unknown prompt key: {key}")
+    for key, content in (body.get("agent_prompts") or {}).items():
+        meta = _AGENT_PROMPTS.get(key)
+        if not meta:
+            errors.append(f"Unknown agent key: {key}")
+            continue
+        _write(meta["filename"], content)
+        saved.append(key)
 
-    # Save variables
-    if "variables" in body:
-        try:
-            _save_variables(body["variables"])
-            saved.append("variables.json")
-        except Exception as exc:
-            errors.append(str(exc))
+    for key, content in (body.get("closing_prompts") or {}).items():
+        meta = _CLOSING_PROMPTS.get(key)
+        if not meta:
+            errors.append(f"Unknown closing key: {key}")
+            continue
+        _write(meta["filename"], content)
+        saved.append(key)
 
     if errors:
         return jsonify({"ok": False, "saved": saved, "errors": errors}), 400
     return jsonify({"ok": True, "saved": saved})
 
 
-@app.delete("/api/variable/<key>")
-def api_variable_delete(key: str):
-    """Delete a variable from variables.json."""
-    data = _load_variables()
-    if key not in data:
-        return jsonify({"error": "not found"}), 404
-    del data[key]
-    _save_variables(data)
-    return jsonify({"ok": True, "deleted": key})
+# ---------------------------------------------------------------------------
+# Test-Run API
+# ---------------------------------------------------------------------------
+
+def _import_agents():
+    """Lazy import of agent modules (requires mcq_generator in sys.path)."""
+    from mcq_gen.agents.strategist import run_strategist
+    from mcq_gen.agents.drafter import run_drafter
+    from mcq_gen.agents.critic import run_critic
+    from mcq_gen.llm import get_traces, reset_traces
+    return run_strategist, run_drafter, run_critic, get_traces, reset_traces
 
 
-@app.get("/api/prompt/<key>")
-def api_prompt_get(key: str):
-    meta = _ALL_PROMPTS.get(key)
-    if not meta:
-        return jsonify({"error": "not found"}), 404
-    content = _load_prompt(key)
-    return jsonify({**meta, "content": content, "vars_used": _find_vars_in_text(content)})
+@app.post("/api/test-run/start")
+def api_test_run_start():
+    """
+    Start a new test-run pipeline by calling the Strategist with real DB stats.
+    Returns session_id, the prompt used, the raw response, and the parsed Spec.
+    """
+    try:
+        run_strategist, _, _, get_traces, reset_traces = _import_agents()
+    except Exception as exc:
+        return jsonify({"ok": False, "error": f"Import error: {exc}"}), 500
+
+    reset_traces()
+    try:
+        spec = run_strategist()
+    except Exception as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 500
+
+    traces = get_traces()
+    trace = traces[-1] if traces else {}
+
+    session_id = str(uuid.uuid4())
+    _RUN_SESSIONS[session_id] = {
+        "spec": spec,
+        "draft": None,
+        "critique": None,
+    }
+
+    return jsonify({
+        "ok": True,
+        "session_id": session_id,
+        "agent": "strategist",
+        "prompt_used": trace.get("merged_prompt", ""),
+        "response_text": trace.get("raw_response", ""),
+        "prompt_tokens": trace.get("prompt_tokens", 0),
+        "response_tokens": trace.get("response_tokens", 0),
+        "spec_json": spec.model_dump(),
+    })
 
 
-@app.post("/api/prompt/<key>")
-def api_prompt_post(key: str):
+@app.post("/api/test-run/next")
+def api_test_run_next():
+    """
+    Continue a test-run to the next agent.
+    Body: { "session_id": "...", "agent": "drafter" | "critic" }
+    """
     body = request.get_json(force=True)
-    content = body.get("content", "")
-    if not _save_prompt(key, content):
-        return jsonify({"error": "unknown key"}), 404
-    return jsonify({"ok": True, "key": key, "vars_used": _find_vars_in_text(content)})
+    session_id = body.get("session_id", "")
+    agent = body.get("agent", "")
+
+    session = _RUN_SESSIONS.get(session_id)
+    if not session:
+        return jsonify({"ok": False, "error": "Session not found or expired."}), 404
+
+    try:
+        _, run_drafter, run_critic, get_traces, reset_traces = _import_agents()
+    except Exception as exc:
+        return jsonify({"ok": False, "error": f"Import error: {exc}"}), 500
+
+    reset_traces()
+    spec = session["spec"]
+    result_data: dict = {}
+
+    if agent == "drafter":
+        try:
+            draft = run_drafter(spec)
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 500
+        session["draft"] = draft
+        traces = get_traces()
+        trace = traces[-1] if traces else {}
+        result_data = {
+            "agent": "drafter",
+            "prompt_used": trace.get("merged_prompt", ""),
+            "response_text": trace.get("raw_response", ""),
+            "prompt_tokens": trace.get("prompt_tokens", 0),
+            "response_tokens": trace.get("response_tokens", 0),
+            "draft_json": draft.model_dump(),
+        }
+
+    elif agent == "critic":
+        draft = session.get("draft")
+        if not draft:
+            return jsonify({"ok": False, "error": "Drafter has not run yet."}), 400
+        try:
+            critique = run_critic(spec, draft)
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 500
+        session["critique"] = critique
+        traces = get_traces()
+        trace = traces[-1] if traces else {}
+        result_data = {
+            "agent": "critic",
+            "prompt_used": trace.get("merged_prompt", ""),
+            "response_text": trace.get("raw_response", ""),
+            "prompt_tokens": trace.get("prompt_tokens", 0),
+            "response_tokens": trace.get("response_tokens", 0),
+            "critique_json": critique.model_dump(),
+        }
+
+    else:
+        return jsonify({"ok": False, "error": f"Unknown agent: {agent!r}"}), 400
+
+    return jsonify({"ok": True, "session_id": session_id, **result_data})
+
+
+@app.delete("/api/test-run/<session_id>")
+def api_test_run_delete(session_id: str):
+    """Clean up a test-run session."""
+    _RUN_SESSIONS.pop(session_id, None)
+    return jsonify({"ok": True})
 
 
 if __name__ == "__main__":
     print("🔴  Prompt Editor running at http://localhost:5002")
     app.run(port=5002, debug=True)
+

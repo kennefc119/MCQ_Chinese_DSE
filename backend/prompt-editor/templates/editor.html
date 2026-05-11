@@ -104,6 +104,41 @@ html,body{height:100%;font-family:system-ui,-apple-system,sans-serif;background:
 .toast.err{background:var(--error)}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinner{display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite}
+
+/* ── Test-Run Panel ── */
+.testrun-section{max-width:880px;margin:32px auto 80px;padding:0 24px}
+.testrun-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.testrun-header{display:flex;align-items:center;gap:12px;padding:14px 20px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.testrun-title{font-size:15px;font-weight:700;color:var(--primary)}
+.testrun-desc{font-size:12px;color:var(--muted);flex:1}
+.testrun-body{padding:20px}
+.testrun-step{margin-bottom:20px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface2)}
+.testrun-step-header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.step-num{width:22px;height:22px;border-radius:50%;background:rgba(212,162,76,.15);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.step-label{font-size:13px;font-weight:700;flex:1}
+.step-status{font-size:11px;color:var(--muted);padding:2px 8px;border-radius:4px;background:var(--surface3)}
+.step-status.done{color:var(--success);background:rgba(92,138,80,.15)}
+.step-status.running{color:var(--warning);background:rgba(194,138,30,.15)}
+.testrun-step-body{padding:14px 16px;display:none}
+.testrun-step-body.open{display:block}
+.tr-meta{display:flex;gap:16px;margin-bottom:10px;flex-wrap:wrap}
+.tr-meta-item{font-size:11px;color:var(--muted);background:var(--surface3);padding:3px 8px;border-radius:4px}
+.tr-meta-item strong{color:var(--text)}
+.tr-response-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.tr-response{background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:12px;font-family:"SF Mono","Cascadia Code","Fira Code",monospace;font-size:12px;line-height:1.65;white-space:pre-wrap;word-break:break-word;color:var(--text);max-height:320px;overflow-y:auto}
+.tr-json{margin-top:10px}
+.tr-json-label{font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.tr-json-block{background:var(--surface3);border:1px solid rgba(212,162,76,.2);border-radius:6px;padding:10px;font-family:"SF Mono","Cascadia Code","Fira Code",monospace;font-size:11px;line-height:1.55;white-space:pre-wrap;word-break:break-word;color:#93C5FD;max-height:220px;overflow-y:auto}
+.tr-prompt-toggle{font-size:11px;color:var(--muted);cursor:pointer;margin-top:8px;display:inline-flex;align-items:center;gap:4px}
+.tr-prompt-toggle:hover{color:var(--primary)}
+.tr-prompt-block{display:none;margin-top:6px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:10px;font-family:"SF Mono","Cascadia Code","Fira Code",monospace;font-size:11px;line-height:1.55;white-space:pre-wrap;word-break:break-word;color:var(--muted);max-height:300px;overflow-y:auto}
+.tr-prompt-block.open{display:block}
+.testrun-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.btn-run{background:rgba(212,162,76,.15);color:var(--primary);border:1px solid rgba(212,162,76,.4);padding:9px 18px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:background .15s}
+.btn-run:hover:not(:disabled){background:rgba(212,162,76,.28)}
+.btn-run:disabled{opacity:.38;cursor:not-allowed}
+.btn-run-reset{background:transparent;color:var(--muted);border:1px solid var(--border);padding:9px 14px;border-radius:7px;font-size:12px;cursor:pointer;transition:border-color .12s}
+.btn-run-reset:hover{border-color:var(--primary);color:var(--primary)}
 </style>
 </head>
 <body>
@@ -122,6 +157,57 @@ html,body{height:100%;font-family:system-ui,-apple-system,sans-serif;background:
 </header>
 <main class="main-scroll">
   <div class="agents-container" id="agentsContainer"></div>
+
+  <!-- ── Test-Run Panel ── -->
+  <div class="testrun-section">
+    <div class="testrun-card">
+      <div class="testrun-header">
+        <span style="font-size:18px">🧪</span>
+        <span class="testrun-title">測試運行 (Test Run)</span>
+        <span class="testrun-desc">使用當前提示詞進行真實 Poe API 呼叫，逐步審查每個 Agent 的回應後再繼續。</span>
+      </div>
+      <div class="testrun-body">
+
+        <!-- Step 1: Strategist -->
+        <div class="testrun-step" id="tr-step-strategist">
+          <div class="testrun-step-header">
+            <div class="step-num">1</div>
+            <div class="step-label">🎯 策略師 (Strategist)</div>
+            <div class="step-status" id="tr-status-strategist">待執行</div>
+          </div>
+          <div class="testrun-step-body" id="tr-body-strategist"></div>
+        </div>
+
+        <!-- Step 2: Drafter -->
+        <div class="testrun-step" id="tr-step-drafter">
+          <div class="testrun-step-header">
+            <div class="step-num">2</div>
+            <div class="step-label">✍️ 出題員 (Drafter)</div>
+            <div class="step-status" id="tr-status-drafter">等待策略師</div>
+          </div>
+          <div class="testrun-step-body" id="tr-body-drafter"></div>
+        </div>
+
+        <!-- Step 3: Critic -->
+        <div class="testrun-step" id="tr-step-critic">
+          <div class="testrun-step-header">
+            <div class="step-num">3</div>
+            <div class="step-label">🔍 審題主任 (Critic)</div>
+            <div class="step-status" id="tr-status-critic">等待出題員</div>
+          </div>
+          <div class="testrun-step-body" id="tr-body-critic"></div>
+        </div>
+
+        <!-- Actions row -->
+        <div class="testrun-actions" id="tr-actions">
+          <button class="btn-run" id="tr-btn-start" onclick="trStart()">▶ 開始 — 運行策略師</button>
+          <button class="btn-run" id="tr-btn-drafter" disabled onclick="trNext('drafter')">▶ 繼續 → 出題員</button>
+          <button class="btn-run" id="tr-btn-critic" disabled onclick="trNext('critic')">▶ 繼續 → 審題主任</button>
+          <button class="btn-run-reset" onclick="trReset()">↺ 重置</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 <div class="toast" id="toast"></div>
 
@@ -696,6 +782,149 @@ function toast(msg, isErr=false) {
   void el.offsetWidth;
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+// ═══════════════════════════════════════════════════
+// TEST-RUN LOGIC
+// ═══════════════════════════════════════════════════
+const TR = { sessionId: null };
+
+function trSetStatus(agent, text, cls) {
+  const el = document.getElementById('tr-status-' + agent);
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'step-status' + (cls ? ' ' + cls : '');
+}
+
+function trShowBody(agent) {
+  const el = document.getElementById('tr-body-' + agent);
+  if (el) el.classList.add('open');
+}
+
+function trSetBodyHtml(agent, html) {
+  const el = document.getElementById('tr-body-' + agent);
+  if (el) { el.innerHTML = html; el.classList.add('open'); }
+}
+
+function trBuildResultHtml(data) {
+  const promptTokens = data.prompt_tokens || 0;
+  const respTokens = data.response_tokens || 0;
+  const resp = data.response_text || '（空回應）';
+  let jsonBlock = '';
+  if (data.spec_json) {
+    jsonBlock = `<div class="tr-json"><div class="tr-json-label">📋 策略師規格 (Spec JSON)</div><div class="tr-json-block">${esc(JSON.stringify(data.spec_json, null, 2))}</div></div>`;
+  } else if (data.draft_json) {
+    jsonBlock = `<div class="tr-json"><div class="tr-json-label">📄 出題員草稿 (Draft JSON)</div><div class="tr-json-block">${esc(JSON.stringify(data.draft_json, null, 2))}</div></div>`;
+  } else if (data.critique_json) {
+    const cj = data.critique_json;
+    const verdict = cj.verdict === 'PASS' ? '✅ PASS' : '🔄 REVISE';
+    jsonBlock = `<div class="tr-json"><div class="tr-json-label">⚖️ 審題結果 (Critique JSON)</div><div class="tr-json-block">${esc(JSON.stringify(cj, null, 2))}</div></div>`;
+  }
+
+  const promptId = 'tr-prompt-' + data.agent + '-' + Date.now();
+  return `
+    <div class="tr-meta">
+      <div class="tr-meta-item">提示詞 Tokens：<strong>${promptTokens.toLocaleString()}</strong></div>
+      <div class="tr-meta-item">回應 Tokens：<strong>${respTokens.toLocaleString()}</strong></div>
+      <div class="tr-meta-item">合計：<strong>${(promptTokens + respTokens).toLocaleString()}</strong></div>
+    </div>
+    <div class="tr-response-label">LLM 原始回應</div>
+    <div class="tr-response">${esc(resp)}</div>
+    ${jsonBlock}
+    <div class="tr-prompt-toggle" onclick="trTogglePrompt('${promptId}')">🔍 查看發送的完整提示詞</div>
+    <div class="tr-prompt-block" id="${promptId}">${esc(data.prompt_used || '')}</div>
+  `;
+}
+
+function trTogglePrompt(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+
+async function trStart() {
+  const btn = document.getElementById('tr-btn-start');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 呼叫策略師...';
+  trSetStatus('strategist', '執行中...', 'running');
+  trSetStatus('drafter', '等待策略師', '');
+  trSetStatus('critic', '等待出題員', '');
+  document.getElementById('tr-body-strategist').innerHTML = '';
+  document.getElementById('tr-body-drafter').innerHTML = '';
+  document.getElementById('tr-body-critic').innerHTML = '';
+  document.getElementById('tr-body-strategist').classList.remove('open');
+  document.getElementById('tr-body-drafter').classList.remove('open');
+  document.getElementById('tr-body-critic').classList.remove('open');
+  document.getElementById('tr-btn-drafter').disabled = true;
+  document.getElementById('tr-btn-critic').disabled = true;
+  TR.sessionId = null;
+
+  try {
+    const r = await fetch('/api/test-run/start', { method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}' });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || '未知錯誤');
+
+    TR.sessionId = d.session_id;
+    trSetBodyHtml('strategist', trBuildResultHtml({...d, agent:'strategist'}));
+    trSetStatus('strategist', '完成 ✓', 'done');
+    document.getElementById('tr-btn-drafter').disabled = false;
+  } catch(e) {
+    trSetStatus('strategist', '失敗', '');
+    toast('策略師呼叫失敗：' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '▶ 重新開始 — 運行策略師';
+  }
+}
+
+async function trNext(agent) {
+  if (!TR.sessionId) { toast('請先運行策略師', true); return; }
+  const btn = document.getElementById('tr-btn-' + agent);
+  btn.disabled = true;
+  const labels = { drafter: '出題員', critic: '審題主任' };
+  btn.innerHTML = `<span class="spinner"></span> 呼叫${labels[agent]}...`;
+  trSetStatus(agent, '執行中...', 'running');
+
+  try {
+    const r = await fetch('/api/test-run/next', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ session_id: TR.sessionId, agent }),
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || '未知錯誤');
+
+    trSetBodyHtml(agent, trBuildResultHtml({...d, agent}));
+    trSetStatus(agent, '完成 ✓', 'done');
+    if (agent === 'drafter') {
+      document.getElementById('tr-btn-critic').disabled = false;
+    }
+  } catch(e) {
+    trSetStatus(agent, '失敗', '');
+    toast(`${labels[agent]}呼叫失敗：` + e.message, true);
+    btn.disabled = false;
+  } finally {
+    if (agent === 'drafter') {
+      btn.innerHTML = '▶ 繼續 → 出題員';
+    } else {
+      btn.innerHTML = '▶ 繼續 → 審題主任';
+    }
+  }
+}
+
+function trReset() {
+  if (TR.sessionId) {
+    fetch('/api/test-run/' + TR.sessionId, { method: 'DELETE' }).catch(() => {});
+    TR.sessionId = null;
+  }
+  ['strategist','drafter','critic'].forEach(a => {
+    trSetStatus(a, a === 'strategist' ? '待執行' : (a === 'drafter' ? '等待策略師' : '等待出題員'), '');
+    const body = document.getElementById('tr-body-' + a);
+    if (body) { body.innerHTML = ''; body.classList.remove('open'); }
+  });
+  document.getElementById('tr-btn-start').disabled = false;
+  document.getElementById('tr-btn-start').innerHTML = '▶ 開始 — 運行策略師';
+  document.getElementById('tr-btn-drafter').disabled = true;
+  document.getElementById('tr-btn-critic').disabled = true;
 }
 
 // Keyboard shortcut
