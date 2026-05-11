@@ -40,6 +40,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
   ],
   extra: {
+    ...(config.extra ?? {}),
+    eas: {
+      ...((config.extra as { eas?: { projectId?: string } } | undefined)?.eas ?? {}),
+      projectId:
+        process.env.EAS_PROJECT_ID ??
+        ((config.extra as { eas?: { projectId?: string } } | undefined)?.eas
+          ?.projectId ??
+          "87201f3e-7338-4afd-9c28-0da2bde040e2"),
+    },
     supabaseUrl: process.env.SUPABASE_URL ?? "",
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? "",
     advisorBotName: process.env.DSE_ADVISOR_BOT_NAME ?? "文淵書僮",

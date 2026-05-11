@@ -1,6 +1,14 @@
 {
   "expo": {
     "name": "DSE 文言文 MCQ",
-    "slug": "dsemcq"
+    "slug": "dsemcq",
+    "extra": {
+      "supabaseUrl": "",
+      "supabaseAnonKey": "",
+      "advisorBotName": "文淵書僮",
+      "eas": {
+        "projectId": "87201f3e-7338-4afd-9c28-0da2bde040e2"
+      }
+    }
   }
 }
