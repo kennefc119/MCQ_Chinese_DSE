@@ -1,0 +1,6 @@
+backend/
+school_ws/
+source/
+supabase/
+.env
+*.log
