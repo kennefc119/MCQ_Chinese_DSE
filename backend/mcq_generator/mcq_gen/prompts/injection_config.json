@@ -1,0 +1,14 @@
+{
+  "drafter": {
+    "reference_block": true,
+    "school_ws_block": true
+  },
+  "drafter_revision": {
+    "reference_block": false,
+    "school_ws_block": false
+  },
+  "critic": {
+    "reference_block": true,
+    "school_ws_block": true
+  }
+}

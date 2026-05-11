@@ -10,7 +10,7 @@
   "spec_json": {
     "label": "題目規格",
     "description": "策略師輸出的題目需求規格，包含 passage、difficulty、skill_tested、special_notes、reasoning 等欄位。由前一個 agent（策略師）在執行時生成。",
-    "agents": ["drafter", "critic"],
+    "agents": ["drafter", "drafter_revision", "critic"],
     "source_type": "runtime",
     "editable": false,
     "example": "{ \"passage\": \"p09\", \"difficulty\": \"中\", \"skill_tested\": \"修辭手法\", \"special_notes\": \"...\", \"reasoning\": \"...\" }"
@@ -18,7 +18,7 @@
   "passage_text": {
     "label": "主篇章原文",
     "description": "指定篇章的完整課文，從 Supabase dsemcq_passages 表直接查詢（按篇章 ID 匹配）。",
-    "agents": ["drafter", "critic"],
+    "agents": ["drafter", "drafter_revision", "critic"],
     "source_type": "db",
     "editable": false,
     "example": "（課文全文，例如《岳陽樓記》原文...）"
@@ -26,7 +26,7 @@
   "cross_text_section": {
     "label": "跨篇章原文區塊",
     "description": "跨篇章比較題時，第二篇的完整課文（含 Markdown 標題）。若非跨篇章題則為空字符串。來源：Supabase dsemcq_passages 表。",
-    "agents": ["drafter", "critic"],
+    "agents": ["drafter", "drafter_revision", "critic"],
     "source_type": "db",
     "editable": false,
     "example": "\n\n## 跨篇章原文（第二篇）\n（課文全文...）"
@@ -34,7 +34,7 @@
   "reference_block": {
     "label": "DSE 真題參考",
     "description": "近年 DSE 考試中針對本篇章的真實 MC 題目，從 source/ 目錄讀取。若無對應真題則為空字符串。",
-    "agents": ["drafter"],
+    "agents": ["drafter", "critic"],
     "source_type": "file_path",
     "editable": false,
     "example": "\n\n## 近年 DSE 真題參考（MC 題）\n以下是 2020–2025 年 DSE 考試中針對本篇章的真實 MC 題目..."
@@ -49,8 +49,8 @@
   },
   "closing_section": {
     "label": "收尾指令",
-    "description": "初次出題模式：drafter_user_closing_initial.md。修改模式：drafter_user_closing_revision.md（含審題意見）。兩個變體均可在此編輯器中編輯。",
-    "agents": ["drafter"],
+    "description": "初次出題模式：drafter_user_closing_initial.md。修改模式：drafter_user_closing_revision.md（僅含最終輸出指示，審題意見已直接嵌入主模板）。兩個變體均可在此編輯器中編輯。",
+    "agents": ["drafter", "drafter_revision"],
     "source_type": "editable_prompt",
     "editable": true,
     "closing_files": {
@@ -61,7 +61,7 @@
   },
   "prev_draft_json": {
     "label": "之前草稿（修改模式）",
-    "description": "出題員上一次的草稿 JSON，在修改模式下由執行環境注入（drafter_user_closing_revision.md 中使用）。",
+    "description": "出題員上一次的草稿 JSON，在修改模式下由執行環境注入（直接嵌入於 drafter_revision_prompt.md）。",
     "agents": ["drafter_revision"],
     "source_type": "runtime",
     "editable": false,

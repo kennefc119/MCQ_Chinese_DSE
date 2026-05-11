@@ -46,6 +46,7 @@ class CycleState(TypedDict, total=False):
     # 輸入
     db_stats: DBStats
     dry_run: bool
+    forced_passage: str | None  # 管理員指定篇章；None 表示讓策略師自行決定
 
     # Agent 1 輸出
     spec: Spec
@@ -111,7 +112,10 @@ def node_load_stats(state: CycleState) -> dict[str, Any]:
 
 
 def node_strategist(state: CycleState) -> dict[str, Any]:
-    spec = run_strategist(stats=state.get("db_stats"))
+    spec = run_strategist(
+        stats=state.get("db_stats"),
+        forced_passage=state.get("forced_passage"),
+    )
     qid = _make_question_id(spec.passage)
     return {"spec": spec, "question_id": qid, "iteration": 0, "draft_history": []}
 
@@ -268,6 +272,7 @@ def run_pipeline(
         initial_state: CycleState = {
             "db_stats": initial_stats,
             "dry_run": dry_run,
+            "forced_passage": passage,
             "iteration": 0,
             "draft_history": [],
         }

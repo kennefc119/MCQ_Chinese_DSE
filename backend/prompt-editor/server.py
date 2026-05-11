@@ -46,9 +46,15 @@ _AGENT_PROMPTS: dict[str, dict] = {
         "filename": "drafter_prompt.md",
         "description": "根據規格和篇章原文撰寫 MC 題目草稿。",
     },
+    "drafter_revision": {
+        "label": "出題員 iter 2+ (Drafter — 修改版)",
+        "order": 3,
+        "filename": "drafter_revision_prompt.md",
+        "description": "修改模式提示詞：無參考資料及工作紙，含上輪草稿及審題意見。",
+    },
     "critic": {
         "label": "審題主任 (Critic)",
-        "order": 3,
+        "order": 4,
         "filename": "critic_prompt.md",
         "description": "審核出題員的草稿，給出 PASS 或 REVISE 判決。",
     },
@@ -68,6 +74,18 @@ _CLOSING_PROMPTS: dict[str, dict] = {
         "filename": "drafter_user_closing_revision.md",
         "variant": "revision",
     },
+}
+
+# ---------------------------------------------------------------------------
+# Injection matrix config — which optional variables are active per agent
+# ---------------------------------------------------------------------------
+_INJECTION_CONFIG_FILE = _PROMPTS_DIR / "injection_config.json"
+_TICKABLE_VARS = ["reference_block", "school_ws_block"]
+_TICKABLE_AGENTS = ["drafter", "drafter_revision", "critic"]
+_DEFAULT_INJECTION_CONFIG: dict[str, dict] = {
+    "drafter":          {"reference_block": True,  "school_ws_block": True},
+    "drafter_revision": {"reference_block": False, "school_ws_block": False},
+    "critic":           {"reference_block": True,  "school_ws_block": True},
 }
 
 # ---------------------------------------------------------------------------
@@ -93,6 +111,66 @@ def _load_variables() -> dict:
 
 def _find_vars_in_text(text: str) -> list[str]:
     return list(dict.fromkeys(re.findall(r"\{\{(\w+)\}\}", text)))
+
+
+# ---------------------------------------------------------------------------
+# Injection config helpers
+# ---------------------------------------------------------------------------
+
+def _load_injection_config() -> dict:
+    if _INJECTION_CONFIG_FILE.exists():
+        try:
+            return json.loads(_INJECTION_CONFIG_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {k: dict(v) for k, v in _DEFAULT_INJECTION_CONFIG.items()}
+
+
+def _save_injection_config(config: dict) -> None:
+    _INJECTION_CONFIG_FILE.write_text(
+        json.dumps(config, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+
+
+def _derive_config_from_templates() -> dict:
+    """Derive injection config by scanning each template for {{var}} presence."""
+    config: dict = {}
+    for agent_key in _TICKABLE_AGENTS:
+        meta = _AGENT_PROMPTS.get(agent_key)
+        if not meta:
+            continue
+        content = _read(meta["filename"])
+        config[agent_key] = {
+            var: f"{{{{{var}}}}}" in content for var in _TICKABLE_VARS
+        }
+    return config
+
+
+def _insert_var_in_template(content: str, var_name: str) -> str:
+    """Insert {{var_name}} at a sensible position in the prompt template."""
+    placeholder = f"{{{{{var_name}}}}}"
+    if placeholder in content:
+        return content  # Already present
+    # Try to insert before these markers (first match wins)
+    for marker in ["{{closing_section}}", "{{draft_json}}"]:
+        if marker in content:
+            return content.replace(marker, f"{placeholder}\n{marker}", 1)
+    # Insert before the last top-level ## section header
+    lines = content.split("\n")
+    for i in range(len(lines) - 1, -1, -1):
+        if lines[i].startswith("## "):
+            lines.insert(i, placeholder)
+            return "\n".join(lines)
+    # Fallback: append at end
+    return content + f"\n{placeholder}"
+
+
+def _remove_var_from_template(content: str, var_name: str) -> str:
+    """Remove all lines that consist solely of {{var_name}}."""
+    placeholder = f"{{{{{var_name}}}}}"
+    lines = content.split("\n")
+    lines = [ln for ln in lines if ln.strip() != placeholder]
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
@@ -131,6 +209,7 @@ def api_data():
         "agent_prompts": agent_prompts,
         "closing_prompts": closing_prompts,
         "variables": variables,
+        "injection_config": _load_injection_config(),
     })
 
 
@@ -159,7 +238,58 @@ def api_save():
 
     if errors:
         return jsonify({"ok": False, "saved": saved, "errors": errors}), 400
-    return jsonify({"ok": True, "saved": saved})
+    # Re-derive injection config from updated templates and persist
+    config = _derive_config_from_templates()
+    _save_injection_config(config)
+    return jsonify({"ok": True, "saved": saved, "injection_config": config})
+
+
+# ---------------------------------------------------------------------------
+# Injection Matrix API
+# ---------------------------------------------------------------------------
+
+@app.get("/api/injection-config")
+def api_injection_config_get():
+    """Return current injection config (derived from template files)."""
+    return jsonify(_derive_config_from_templates())
+
+
+@app.post("/api/injection-config")
+def api_injection_config_post():
+    """
+    Toggle a single tickable variable for a single agent.
+    Body: {"agent_key": "drafter", "var_name": "reference_block", "enabled": true}
+    Returns updated config + new template content for the affected agent.
+    """
+    body = request.get_json(force=True)
+    agent_key = body.get("agent_key", "")
+    var_name = body.get("var_name", "")
+    enabled = bool(body.get("enabled", True))
+
+    if agent_key not in _TICKABLE_AGENTS:
+        return jsonify({"ok": False, "error": f"Not a tickable agent: {agent_key}"}), 400
+    if var_name not in _TICKABLE_VARS:
+        return jsonify({"ok": False, "error": f"Not a tickable var: {var_name}"}), 400
+
+    meta = _AGENT_PROMPTS.get(agent_key)
+    if not meta:
+        return jsonify({"ok": False, "error": f"Agent not found: {agent_key}"}), 404
+
+    content = _read(meta["filename"])
+    if enabled:
+        content = _insert_var_in_template(content, var_name)
+    else:
+        content = _remove_var_from_template(content, var_name)
+    _write(meta["filename"], content)
+
+    config = _derive_config_from_templates()
+    _save_injection_config(config)
+
+    return jsonify({
+        "ok": True,
+        "config": config,
+        "updated_agents": {agent_key: content},
+    })
 
 
 # ---------------------------------------------------------------------------

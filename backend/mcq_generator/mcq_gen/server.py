@@ -15,6 +15,7 @@ import structlog
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 from .db.stats import fetch_db_stats
@@ -35,6 +36,18 @@ app.add_middleware(
 )
 
 _PASSAGES_FILE = Path(__file__).parent.parent / "data" / "passages.json"
+_DASHBOARD_FILE = Path(__file__).parent.parent / "dashboard.html"
+
+
+# ─── Root: serve dashboard ───────────────────────────────────────────────────
+
+
+@app.get("/", response_class=HTMLResponse)
+def serve_dashboard() -> HTMLResponse:
+    """Serve the MCQ Generator dashboard HTML."""
+    if not _DASHBOARD_FILE.exists():
+        raise HTTPException(status_code=404, detail="dashboard.html not found")
+    return HTMLResponse(content=_DASHBOARD_FILE.read_text(encoding="utf-8"))
 
 
 # ─── Request / Response models ────────────────────────────────────────────────
@@ -56,22 +69,43 @@ class AssembleRequest(BaseModel):
 
 @app.get("/api/passages")
 def list_passages() -> list[dict[str, Any]]:
-    """Return all cached passages (run `mcq-gen fetch-passages` first)."""
-    if not _PASSAGES_FILE.exists():
-        raise HTTPException(
-            status_code=404,
-            detail="passages.json 不存在 — 請先執行 `mcq-gen fetch-passages`",
+    """Return passages from Supabase dsemcq_passages (source of truth)."""
+    from .db.client import get_supabase
+    sb = get_supabase()
+    try:
+        resp = (
+            sb.table("dsemcq_passages")
+            .select("id,title,author,dynasty")
+            .order("id")
+            .execute()
         )
-    passages: dict[str, Any] = json.loads(_PASSAGES_FILE.read_text(encoding="utf-8"))
-    return [
-        {
-            "id": k,
-            "title": v.get("title", k),
-            "author": v.get("author", ""),
-            "dynasty": v.get("dynasty", ""),
-        }
-        for k, v in passages.items()
-    ]
+        rows = resp.data or []
+        return [
+            {
+                "id": r.get("id", ""),
+                "title": r.get("title", r.get("id", "")),
+                "author": r.get("author", ""),
+                "dynasty": r.get("dynasty", ""),
+            }
+            for r in rows
+        ]
+    except Exception as exc:
+        # Fallback to local cache if Supabase is unavailable
+        if _PASSAGES_FILE.exists():
+            passages: dict[str, Any] = json.loads(_PASSAGES_FILE.read_text(encoding="utf-8"))
+            return [
+                {
+                    "id": k,
+                    "title": v.get("title", k),
+                    "author": v.get("author", ""),
+                    "dynasty": v.get("dynasty", ""),
+                }
+                for k, v in passages.items()
+            ]
+        raise HTTPException(
+            status_code=503,
+            detail=f"無法連接 Supabase: {exc}",
+        ) from exc
 
 
 @app.get("/api/stats")

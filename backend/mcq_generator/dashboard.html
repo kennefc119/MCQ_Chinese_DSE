@@ -441,16 +441,7 @@
       </div>
     </div>
 
-    <div class="form-group">
-      <div class="toggle-row">
-        <span>Dry Run（不寫入 DB）</span>
-        <label class="toggle">
-          <input type="checkbox" id="dryRun" checked>
-          <span class="slider"></span>
-        </label>
-      </div>
-      <div class="hint" id="dryHint">⚠ 已開啟：題目不會寫入 Supabase</div>
-    </div>
+    <input type="hidden" id="dryRun" value="false">
 
     <button class="btn-gen" id="genBtn" onclick="generate()">
       <span id="genIco">⚡</span>
@@ -473,15 +464,7 @@
     <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:8px;">
       將現有題目自動組合為練習題（5條）、測驗（10條）、模擬考試（20條）
     </div>
-    <div class="form-group">
-      <div class="toggle-row">
-        <span>Dry Run（不寫入 DB）</span>
-        <label class="toggle">
-          <input type="checkbox" id="assembleDry" checked>
-          <span class="slider"></span>
-        </label>
-      </div>
-    </div>
+    <input type="hidden" id="assembleDry" value="false">
     <div style="font-size:11px;color:var(--muted);margin:6px 0 4px;">組合策略：</div>
     <div style="font-size:11px;display:flex;flex-direction:column;gap:4px;margin-bottom:8px;">
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
@@ -516,11 +499,9 @@
   <div class="s-section" style="border-bottom:none;flex:1;">
     <h3>使用說明</h3>
     <div style="font-size:11px;color:var(--muted);line-height:1.7;">
-      1. 先啟動伺服器：<br>
-      <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--accent);">mcq-gen serve</code><br><br>
-      2. 確認 <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--accent);">.env</code> 含有效金鑰<br><br>
-      3. Dry Run 先測試正確性<br><br>
-      4. 關閉 Dry Run 後正式寫入 DB
+      1. 確認 <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--accent);">.env</code> 含有效金鑰<br><br>
+      2. 選擇篇章（或留空讓策略師決定）<br><br>
+      3. 點擊「開始生成題目」，題目自動寫入 DB
     </div>
   </div>
 </aside>
@@ -591,12 +572,14 @@ async function init() {
 async function loadPassages() {
   try {
     const r = await fetch(`${API}/api/passages`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const list = await r.json();
     const sel = document.getElementById('passageSel');
     list.forEach(p => {
       const o = document.createElement('option');
       o.value = p.id;
-      o.textContent = `${p.id}  ${p.title || ''}`;
+      const author = p.author ? `　${p.author}` : '';
+      o.textContent = `[${p.id}] ${p.title || p.id}${author}`;
       sel.appendChild(o);
     });
     setConn('ok', `已連接（${list.length} 篇課文）`);
@@ -641,7 +624,7 @@ function renderStats(s) {
 // ── Generate ──────────────────────────────────────────────────────────────────
 async function generate() {
   const passage = document.getElementById('passageSel').value || null;
-  const dryRun  = document.getElementById('dryRun').checked;
+  const dryRun  = false;
   const count   = parseInt(document.getElementById('batchCount').value, 10) || 1;
 
   setBusy(true);
@@ -868,7 +851,7 @@ async function assemblePreview() {
 }
 
 async function assemble() {
-  const dryRun = document.getElementById('assembleDry').checked;
+  const dryRun = false;
   const strategies = [];
   if (document.getElementById('stratPassage').checked)   strategies.push('passage');
   if (document.getElementById('stratSkill').checked)     strategies.push('skill');
@@ -937,10 +920,6 @@ function setConn(state, text) {
   el.className = `conn-pill ${state}`;
   document.getElementById('connTxt').textContent = text;
 }
-
-document.getElementById('dryRun').addEventListener('change', function() {
-  document.getElementById('dryHint').style.display = this.checked ? '' : 'none';
-});
 
 // ── Add result card ───────────────────────────────────────────────────────────
 function addResult(data, dryRun, batchIdx, batchTotal) {

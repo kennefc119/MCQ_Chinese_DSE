@@ -7,8 +7,7 @@
 1. **規格 (spec)**：包含 passage、cross_passage、difficulty、skill_tested、special_notes
 2. **篇章原文 (passage_text)**：完整課文（必要時附第二篇）
 3. **MC 題目質素準則 (mc_question_criteria.md)**：必須符合的出題要求及排除準則
-4. **教師版工作紙 (school_ws/)**：本篇章的學校官方工作紙，包含詞語解釋、篇章結構、重點問答及歷屆 DSE 試題
-5. **(若為重寫)** 之前的 draft 及審題主任的修改意見 `revision_instructions`
+4. **(修改模式)** 之前的 draft 及審題主任的修改意見 `revision_instructions`
 
 # 深度整合與參考機制 (Crucial Alignment)
 ## 1. 萃取「教師版工作紙」(school_ws/) 的核心價值
@@ -116,7 +115,16 @@
 ## 主篇章原文
 
 {{passage_text}}{{cross_text_section}}
-{{reference_block}}
-{{school_ws_block}}
+
+## 上一輪草稿及審題意見
+
+### 你之前的草稿
+```json
+{{prev_draft_json}}
+```
+
+**評分**: {{critique_score}}/10
+**評語**: {{critique_comments}}
+**修改指示**: {{critique_instructions}}
 
 {{closing_section}}
