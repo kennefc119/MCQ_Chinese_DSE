@@ -1,7 +1,7 @@
 """
 CLI 入口 — typer app。
 用法：
-  mcq-gen run --count 20
+  mcq-gen run --count 100
   mcq-gen run --count 5 --passage p09
   mcq-gen run --count 3 --dry-run
   mcq-gen stats

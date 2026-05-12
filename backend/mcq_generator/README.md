@@ -23,8 +23,8 @@ cp .env.example .env           # 填入 OPENAI_API_KEY 和 SUPABASE_SERVICE_KEY
 ## 使用
 
 ```bash
-# 一次生成 20 條
-mcq-gen run --count 20
+# 一次生成 100 條
+mcq-gen run --count 100
 
 # 限定篇章
 mcq-gen run --count 5 --passage p09

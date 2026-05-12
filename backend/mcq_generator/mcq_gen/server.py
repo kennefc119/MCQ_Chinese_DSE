@@ -56,7 +56,7 @@ def serve_dashboard() -> HTMLResponse:
 class GenerateRequest(BaseModel):
     passage_id: str | None = None
     dry_run: bool = True
-    count: int = 1   # 1–20 questions per batch
+    count: int = 1   # 1–100 questions per batch
 
 
 class AssembleRequest(BaseModel):
@@ -121,7 +121,7 @@ def generate(req: GenerateRequest) -> dict[str, Any]:
     Run N pipeline cycles (1–20 questions).
     Returns all saved questions + full LLM call traces for each.
     """
-    count = max(1, min(20, req.count))
+    count = max(1, min(100, req.count))
     reset_traces()
     log.info("generate_start", passage=req.passage_id, dry_run=req.dry_run, count=count)
 
