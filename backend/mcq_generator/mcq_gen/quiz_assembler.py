@@ -1,18 +1,17 @@
 """
-Quiz Assembler — groups active questions into quiz records by three strategies:
+Quiz Assembler — groups active questions into quiz records by two modes:
 
-  passage   : questions from the same passage (per-篇章)
-  skill     : questions sharing a skill/topic tag (cross-passage)
-              e.g. 修辭手法 練習題, 內容理解 綜合測驗
-  difficulty: questions at the same difficulty level (cross-passage)
-              e.g. 難度三 練習題
+  by_passage : questions from the same passage; prefer all-different skills per quiz
+  by_skill   : questions sharing a skill tag (cross-passage)
 
-  exam      : 20 best questions across ≥3 passages (score≥8, always)
+Difficulty distribution targets per quiz type:
+  exercise (5q)  : ~70% easy (4q) + ~30% middle (1q)
+  quiz     (10q) : 40% easy (4q)  + 60% middle (6q)
+  exam     (20q) : 3 easy -> fill middle -> hard fills remainder
 
-Assembly thresholds per quiz type:
-  exercise : ≥5  questions · score≥6 · no time limit · open access
-  quiz     : ≥10 questions · score≥7 · 20-min limit  · needs 10 pts
-  exam     : ≥20 questions · score≥8 · 45-min limit  · needs 50 pts
+Global repeat constraint (applied independently per pool type):
+  Each question may appear in at most MAX_REPEAT=2 quizzes of the same type.
+  A question can appear <=2x in exercises AND <=2x in quizzes AND <=2x in exams.
 
 Each run always re-assembles ALL matching quizzes (upserts by id).
 Existing quiz IDs are preserved so FK references stay intact.
@@ -20,7 +19,7 @@ Existing quiz IDs are preserved so FK references stay intact.
 from __future__ import annotations
 
 import uuid
-from collections import defaultdict
+from collections import Counter, defaultdict
 from typing import Any
 
 import structlog
@@ -29,11 +28,11 @@ from .db.client import get_supabase
 
 log = structlog.get_logger(__name__)
 
-# ─── Thresholds & settings ────────────────────────────────────────────────────
+# --- Constants ---------------------------------------------------------------
 
 EXERCISE_Q = 5
-QUIZ_Q = 10
-EXAM_Q = 20
+QUIZ_Q     = 10
+EXAM_Q     = 20
 
 EXERCISE_MIN_SCORE = 6
 QUIZ_MIN_SCORE     = 7
@@ -42,7 +41,14 @@ EXAM_MIN_SCORE     = 8
 QUIZ_DURATION_S = 20 * 60   # 20 min
 EXAM_DURATION_S = 45 * 60   # 45 min
 
-# ─── Label maps ───────────────────────────────────────────────────────────────
+MAX_REPEAT = 2   # max appearances per question within the same quiz-type pool
+
+# Difficulty integer values (must match dsemcq_questions.difficulty)
+EASY = 2
+MID  = 3
+HARD = 4
+
+# --- Metadata maps -----------------------------------------------------------
 
 TAG_LABEL: dict[str, str] = {
     "t-meaning":       "字詞解釋",
@@ -57,51 +63,61 @@ TAG_LABEL: dict[str, str] = {
 
 DIFF_LABEL: dict[int, str] = {1: "一", 2: "二", 3: "三", 4: "四", 5: "五"}
 
-# ── Metadata tables ────────────────────────────────────────────────────────────
-
-# Card accent colours — match the seed palette
 COLOR_HEX: dict[str, str] = {
     "exercise": "#E8D5B7",   # warm beige
     "quiz":     "#B5D5C5",   # soft green
     "exam":     "#C9B1D9",   # soft purple
 }
 
-# Subject area label per passage (DSE 12 prescribed texts + fallback)
 PASSAGE_SUBJECT: dict[str, str] = {
-    "p01": "先秦哲學",   # 論語     春秋
-    "p02": "先秦哲學",   # 孟子     戰國
-    "p03": "先秦哲學",   # 莊子     戰國
-    "p04": "先秦哲學",   # 荀子     戰國
-    "p05": "史傳文學",   # 廉頗藺相如 西漢
-    "p06": "史傳文學",   # 出師表    三國
-    "p07": "唐宋散文",   # 師說     唐
-    "p08": "唐宋散文",   # 始得西山  唐
-    "p09": "唐宋散文",   # 岳陽樓記  北宋
-    "p10": "唐宋散文",   # 六國論    北宋
-    "p11": "詩詞",       # 唐詩三首
-    "p12": "詩詞",       # 宋詞三首
+    "p01": "先秦哲學",  "p02": "先秦哲學",  "p03": "先秦哲學",  "p04": "先秦哲學",
+    "p05": "史傳文學",  "p06": "史傳文學",
+    "p07": "唐宋散文",  "p08": "唐宋散文",  "p09": "唐宋散文",  "p10": "唐宋散文",
+    "p11": "詩詞",      "p12": "詩詞",
 }
 
-# Human-readable duration per quiz type
 EST_LABEL: dict[str, str] = {
     "exercise": "約 5 分鐘",
     "quiz":     "20 分鐘",
     "exam":     "45 分鐘",
 }
 
+_QUIZ_META: dict[str, dict] = {
+    "exercise": dict(
+        duration_seconds=None, max_attempts=None,
+        pass_score=60, points_reward=5, min_points_required=0,
+    ),
+    "quiz": dict(
+        duration_seconds=QUIZ_DURATION_S, max_attempts=3,
+        pass_score=70, points_reward=15, min_points_required=10,
+    ),
+    "exam": dict(
+        duration_seconds=EXAM_DURATION_S, max_attempts=2,
+        pass_score=60, points_reward=50, min_points_required=50,
+    ),
+}
 
-def _cover_url(seed: str) -> str:
-    return f"https://picsum.photos/seed/{seed}/600/400"
+_MIN_SCORE: dict[str, int] = {
+    "exercise": EXERCISE_MIN_SCORE,
+    "quiz":     QUIZ_MIN_SCORE,
+    "exam":     EXAM_MIN_SCORE,
+}
 
+_N_QUESTIONS: dict[str, int] = {
+    "exercise": EXERCISE_Q,
+    "quiz":     QUIZ_Q,
+    "exam":     EXAM_Q,
+}
 
-# ─── Helpers ─────────────────────────────────────────────────────────────────
+# --- Helpers -----------------------------------------------------------------
+
 
 def _new_quiz_id() -> str:
     return f"quiz-ai-{uuid.uuid4().hex[:8]}"
 
 
 def _passage_label(passage_id: str) -> str:
-    """Convert 'p07' → '篇章07'."""
+    """Convert 'p07' -> '篇章07'."""
     return f"篇章{passage_id[1:]}" if passage_id.startswith("p") else passage_id
 
 
@@ -110,19 +126,93 @@ def _score(r: dict) -> int:
     return r.get("critique_score") or 7
 
 
-def _build_pool(rows: list[dict], min_score: int,
-                key_fn) -> dict[str, list[str]]:
+def _cover_url(seed: str) -> str:
+    return f"https://picsum.photos/seed/{seed}/600/400"
+
+
+def _primary_skill(r: dict) -> str | None:
+    """First non-comparison tag; falls back to first tag if all are comparison."""
+    tags = r.get("tags") or []
+    non_cmp = [t for t in tags if t != "t-comparison"]
+    if non_cmp:
+        return non_cmp[0]
+    return tags[0] if tags else None
+
+
+def _diff_targets(quiz_type: str, n: int) -> tuple[int, int]:
     """
-    Group question IDs by key_fn(row), filtered to score >= min_score.
-    key_fn must return a list of keys (one question can go into multiple groups).
+    Returns (n_easy, n_mid) slots for this quiz type.
+    For exams: n_mid = n - n_easy (fill middle; hard fills remainder via _pick_questions).
     """
-    pool: dict[str, list[str]] = defaultdict(list)
-    for r in rows:
-        if _score(r) >= min_score:
-            for k in key_fn(r):
-                if k:
-                    pool[k].append(r["id"])
-    return pool
+    if quiz_type == "exercise":
+        n_easy = round(n * 0.7)     # 4 out of 5
+    elif quiz_type == "quiz":
+        n_easy = round(n * 0.4)     # 4 out of 10
+    else:                            # exam
+        n_easy = round(n * 0.15)    # 3 out of 20
+    return (n_easy, n - n_easy)
+
+
+# --- Question picker ---------------------------------------------------------
+
+
+def _pick_questions(
+    candidates: list[dict],
+    n: int,
+    n_easy: int,
+    n_mid: int,
+    diverse_skills: bool,
+) -> list[dict] | None:
+    """
+    Pick exactly `n` questions from `candidates` targeting the difficulty split.
+
+    Phases:
+      1. Pick up to n_easy easy questions (distinct skills if diverse_skills)
+      2. Pick up to n_mid  middle questions (distinct skills if diverse_skills)
+      3. Fill remainder from any difficulty (distinct skills if diverse_skills)
+      4. If still short and diverse_skills=True, relax the skill constraint
+
+    Returns None when fewer than n candidates exist.
+    """
+    if len(candidates) < n:
+        return None
+
+    easy = [r for r in candidates if r.get("difficulty") == EASY]
+    mid  = [r for r in candidates if r.get("difficulty") == MID]
+    hard = [r for r in candidates if r.get("difficulty") == HARD]
+
+    selected: list[dict] = []
+    selected_ids: set[str] = set()
+    used_skills: set[str] = set()
+
+    def _take(pool: list[dict], limit: int, check_skill: bool) -> None:
+        count = 0
+        for r in pool:
+            if count >= limit:
+                break
+            if r["id"] in selected_ids:
+                continue
+            if check_skill:
+                sk = _primary_skill(r)
+                if not sk or sk in used_skills:
+                    continue
+                used_skills.add(sk)
+            selected.append(r)
+            selected_ids.add(r["id"])
+            count += 1
+
+    _take(easy, n_easy, diverse_skills)
+    _take(mid,  n_mid,  diverse_skills)
+    _take(easy + mid + hard, n - len(selected), diverse_skills)
+
+    # Phase 4: relax skill diversity if still short
+    if len(selected) < n and diverse_skills:
+        _take(easy + mid + hard, n - len(selected), False)
+
+    return selected if len(selected) >= n else None
+
+
+# --- Record builder ----------------------------------------------------------
 
 
 def _make_record(
@@ -133,72 +223,185 @@ def _make_record(
     passage_id: str | None,
     difficulty: int,
     question_ids: list[str],
-    duration_seconds: int | None,
-    max_attempts: int | None,
-    pass_score: int,
-    points_reward: int,
-    min_points_required: int,
     cover_image_url: str,
-    color_hex: str,
-    estimated_duration_label: str,
     subject_area: str,
     existing_id_map: dict[tuple, str],
     summary: dict[str, int],
 ) -> dict:
     key = (passage_id, quiz_type, title)
-    existing_id = existing_id_map.get(key)
+    meta = _QUIZ_META[quiz_type]
     record = {
-        "id":                       existing_id or _new_quiz_id(),
+        "id":                       existing_id_map.get(key) or _new_quiz_id(),
         "type":                     quiz_type,
         "title":                    title,
         "description":              description,
         "cover_image_url":          cover_image_url,
         "passage_id":               passage_id,
         "difficulty":               difficulty,
-        "duration_seconds":         duration_seconds,
-        "max_attempts":             max_attempts,
-        "pass_score":               pass_score,
-        "points_reward":            points_reward,
-        "min_points_required":      min_points_required,
-        "color_hex":                color_hex,
-        "estimated_duration_label": estimated_duration_label,
+        "color_hex":                COLOR_HEX[quiz_type],
+        "estimated_duration_label": EST_LABEL[quiz_type],
         "subject_area":             subject_area,
         "is_published":             True,
         "question_ids":             question_ids,
-        # scheduled_start / scheduled_end: left NULL (manually-scheduled exams only)
-        # prerequisite_quiz_id: left NULL (optional game mechanic, managed separately)
+        **meta,
     }
-    if existing_id:
+    if existing_id_map.get(key):
         summary["updated"] += 1
     elif quiz_type == "exercise":
         summary["exercises"] += 1
     elif quiz_type == "quiz":
         summary["quizzes"] += 1
-    elif quiz_type == "exam":
+    else:
         summary["exams"] += 1
     return record
 
 
-# ─── Core ─────────────────────────────────────────────────────────────────────
+# --- Description text helpers ------------------------------------------------
+
+
+def _passage_desc(quiz_type: str, label: str, n: int, min_score: int) -> str:
+    if quiz_type == "exercise":
+        return f"精選 {n} 條關於{label}的基礎練習題（評分 >= {min_score}/10）"
+    if quiz_type == "quiz":
+        return f"共 {n} 條{label}綜合測驗，限時 20 分鐘（評分 >= {min_score}/10）"
+    return f"共 {n} 條{label}模擬考試，限時 45 分鐘（評分 >= {min_score}/10）"
+
+
+def _skill_desc(quiz_type: str, label: str, n: int, min_score: int) -> str:
+    if quiz_type == "exercise":
+        return f"跨篇章精選 {n} 條【{label}】練習題（評分 >= {min_score}/10）"
+    if quiz_type == "quiz":
+        return f"跨篇章 {n} 條【{label}】綜合測驗，限時 20 分鐘（評分 >= {min_score}/10）"
+    return f"跨篇章 {n} 條【{label}】模擬考試，限時 45 分鐘（評分 >= {min_score}/10）"
+
+
+# --- Assembly per quiz type --------------------------------------------------
+
+
+def _assemble_type(
+    quiz_type: str,
+    all_rows: list[dict],
+    existing_id_map: dict[tuple, str],
+    summary: dict[str, int],
+) -> list[dict]:
+    """
+    Assemble by-passage and by-skill quizzes for a single quiz_type.
+    usage_counts starts fresh so the resulting set satisfies MAX_REPEAT independently.
+    """
+    min_score = _MIN_SCORE[quiz_type]
+    n         = _N_QUESTIONS[quiz_type]
+    n_easy, n_mid = _diff_targets(quiz_type, n)
+
+    eligible = [r for r in all_rows if _score(r) >= min_score]
+
+    # Track how many times each question has been placed in this type's quizzes
+    usage_counts: Counter = Counter()
+
+    records: list[dict] = []
+
+    # -- By-passage -----------------------------------------------------------
+    by_passage: dict[str, list[dict]] = defaultdict(list)
+    for r in eligible:
+        pid = r.get("passage_id") or "unknown"
+        by_passage[pid].append(r)
+
+    for pid in sorted(by_passage.keys()):
+        passage_rows = by_passage[pid]
+        label = _passage_label(pid)
+        subj  = PASSAGE_SUBJECT.get(pid, "文言文")
+        slot  = 1
+
+        while True:
+            available = [r for r in passage_rows if usage_counts[r["id"]] < MAX_REPEAT]
+            selected  = _pick_questions(available, n, n_easy, n_mid, diverse_skills=True)
+            if selected is None:
+                break
+
+            base_title = (
+                f"{label} 練習題"   if quiz_type == "exercise" else
+                f"{label} 綜合測驗" if quiz_type == "quiz"     else
+                f"{label} 模擬考試"
+            )
+            title = base_title if slot == 1 else f"{base_title} ({slot})"
+
+            records.append(_make_record(
+                quiz_type=quiz_type,
+                title=title,
+                description=_passage_desc(quiz_type, label, n, min_score),
+                passage_id=pid,
+                difficulty=EASY,
+                question_ids=[r["id"] for r in selected],
+                cover_image_url=_cover_url(f"passage_{pid}_{quiz_type}_{slot}"),
+                subject_area=subj,
+                existing_id_map=existing_id_map,
+                summary=summary,
+            ))
+            for r in selected:
+                usage_counts[r["id"]] += 1
+            slot += 1
+
+    # -- By-skill -------------------------------------------------------------
+    by_skill: dict[str, list[dict]] = defaultdict(list)
+    for r in eligible:
+        sk = _primary_skill(r)
+        if sk:
+            by_skill[sk].append(r)
+
+    for tag_id in sorted(by_skill.keys()):
+        skill_rows  = by_skill[tag_id]
+        skill_label = TAG_LABEL.get(tag_id, tag_id)
+        img_slug    = tag_id.replace("t-", "skill_")
+        slot        = 1
+
+        while True:
+            available = [r for r in skill_rows if usage_counts[r["id"]] < MAX_REPEAT]
+            selected  = _pick_questions(available, n, n_easy, n_mid, diverse_skills=False)
+            if selected is None:
+                break
+
+            base_title = (
+                f"{skill_label} 練習題"   if quiz_type == "exercise" else
+                f"{skill_label} 綜合測驗" if quiz_type == "quiz"     else
+                f"{skill_label} 模擬考試"
+            )
+            title = base_title if slot == 1 else f"{base_title} ({slot})"
+
+            records.append(_make_record(
+                quiz_type=quiz_type,
+                title=title,
+                description=_skill_desc(quiz_type, skill_label, n, min_score),
+                passage_id=None,
+                difficulty=EASY,
+                question_ids=[r["id"] for r in selected],
+                cover_image_url=_cover_url(f"{img_slug}_{quiz_type}_{slot}"),
+                subject_area=skill_label,
+                existing_id_map=existing_id_map,
+                summary=summary,
+            ))
+            for r in selected:
+                usage_counts[r["id"]] += 1
+            slot += 1
+
+    return records
+
+
+# --- Main entry point --------------------------------------------------------
+
 
 def assemble_quizzes(
     dry_run: bool = False,
     strategies: list[str] | None = None,
 ) -> dict[str, Any]:
     """
-    Fetch all active questions, apply assembly rules for the requested strategies,
-    and upsert quiz rows into dsemcq_quizzes.
+    Fetch all active questions, assemble quiz records by passage and by skill
+    for each quiz type (exercise, quiz, exam), then upsert into dsemcq_quizzes.
 
-    strategies: list containing any of 'passage', 'skill', 'difficulty'.
-                Default: all three.
+    strategies: kept for API compatibility; both passage and skill groupings are
+                always applied for all quiz types regardless of this parameter.
     Returns a summary dict.
     """
-    if strategies is None:
-        strategies = ["passage", "skill", "difficulty"]
-
     sb = get_supabase()
 
-    # 1. All active questions
     rows = (
         sb.table("dsemcq_questions")
         .select("id,passage_id,difficulty,critique_score")
@@ -206,15 +409,13 @@ def assemble_quizzes(
         .execute()
         .data or []
     )
-
     if not rows:
         log.warning("assemble_no_active_questions")
         return {"exercises": 0, "quizzes": 0, "exams": 0, "updated": 0,
                 "total_new": 0, "dry_run": dry_run}
 
-    # 2. Fetch skill tags for all active questions
+    # Attach skill tags
     q_ids = [r["id"] for r in rows]
-    # Supabase in_() accepts a list
     tag_rows = (
         sb.table("dsemcq_question_tags")
         .select("question_id,tag_id")
@@ -228,7 +429,7 @@ def assemble_quizzes(
     for r in rows:
         r["tags"] = q_tags.get(r["id"], [])
 
-    # 3. Existing quizzes → id map keyed by (passage_id, type, title)
+    # Load existing quiz IDs for stable upsert (preserves FK references)
     existing = (
         sb.table("dsemcq_quizzes")
         .select("id,title,passage_id,type")
@@ -243,192 +444,15 @@ def assemble_quizzes(
     summary: dict[str, int] = {"exercises": 0, "quizzes": 0, "exams": 0, "updated": 0}
     to_upsert: list[dict] = []
 
-    # ── Strategy: passage ─────────────────────────────────────────────────────
-    if "passage" in strategies:
-        ex_pool   = _build_pool(rows, EXERCISE_MIN_SCORE,
-                                lambda r: [r.get("passage_id") or "unknown"])
-        quiz_pool = _build_pool(rows, QUIZ_MIN_SCORE,
-                                lambda r: [r.get("passage_id") or "unknown"])
+    # Assemble each quiz type independently (each has its own repeat budget)
+    for quiz_type in ("exercise", "quiz", "exam"):
+        records = _assemble_type(quiz_type, rows, existing_id_map, summary)
+        to_upsert.extend(records)
+        log.info(f"assembled_{quiz_type}", count=len(records))
 
-        for pid in sorted(set(list(ex_pool) + list(quiz_pool))):
-            label = _passage_label(pid)
-            subj  = PASSAGE_SUBJECT.get(pid, "文言文")
-
-            if len(ex_pool.get(pid, [])) >= EXERCISE_Q:
-                to_upsert.append(_make_record(
-                    quiz_type="exercise",
-                    title=f"{label} 練習題",
-                    description=(
-                        f"精選 {EXERCISE_Q} 條關於{label}的基礎練習題"
-                        f"（評分 ≥ {EXERCISE_MIN_SCORE}/10）"
-                    ),
-                    passage_id=pid, difficulty=2,
-                    question_ids=ex_pool[pid][:EXERCISE_Q],
-                    duration_seconds=None, max_attempts=None,
-                    pass_score=60, points_reward=5, min_points_required=0,
-                    cover_image_url=_cover_url(f"passage_{pid}_ex"),
-                    color_hex=COLOR_HEX["exercise"],
-                    estimated_duration_label=EST_LABEL["exercise"],
-                    subject_area=subj,
-                    existing_id_map=existing_id_map, summary=summary,
-                ))
-
-            if len(quiz_pool.get(pid, [])) >= QUIZ_Q:
-                to_upsert.append(_make_record(
-                    quiz_type="quiz",
-                    title=f"{label} 綜合測驗",
-                    description=(
-                        f"共 {QUIZ_Q} 條{label}綜合測驗，限時 20 分鐘"
-                        f"（評分 ≥ {QUIZ_MIN_SCORE}/10）"
-                    ),
-                    passage_id=pid, difficulty=3,
-                    question_ids=quiz_pool[pid][:QUIZ_Q],
-                    duration_seconds=QUIZ_DURATION_S, max_attempts=3,
-                    pass_score=70, points_reward=15, min_points_required=10,
-                    cover_image_url=_cover_url(f"passage_{pid}_quiz"),
-                    color_hex=COLOR_HEX["quiz"],
-                    estimated_duration_label=EST_LABEL["quiz"],
-                    subject_area=subj,
-                    existing_id_map=existing_id_map, summary=summary,
-                ))
-
-    # ── Strategy: skill (tag-based, cross-passage) ────────────────────────────
-    if "skill" in strategies:
-        skill_ex_pool   = _build_pool(rows, EXERCISE_MIN_SCORE,
-                                      lambda r: r.get("tags", []))
-        skill_quiz_pool = _build_pool(rows, QUIZ_MIN_SCORE,
-                                      lambda r: r.get("tags", []))
-
-        for tag_id in sorted(set(list(skill_ex_pool) + list(skill_quiz_pool))):
-            label = TAG_LABEL.get(tag_id, tag_id)
-            # Normalise tag to a short slug for the image seed (strip "t-")
-            img_slug = tag_id.replace("t-", "skill_")
-
-            if len(skill_ex_pool.get(tag_id, [])) >= EXERCISE_Q:
-                to_upsert.append(_make_record(
-                    quiz_type="exercise",
-                    title=f"{label} 練習題",
-                    description=(
-                        f"跨篇章精選 {EXERCISE_Q} 條【{label}】練習題"
-                        f"（評分 ≥ {EXERCISE_MIN_SCORE}/10）"
-                    ),
-                    passage_id=None, difficulty=2,
-                    question_ids=skill_ex_pool[tag_id][:EXERCISE_Q],
-                    duration_seconds=None, max_attempts=None,
-                    pass_score=60, points_reward=5, min_points_required=0,
-                    cover_image_url=_cover_url(f"{img_slug}_ex"),
-                    color_hex=COLOR_HEX["exercise"],
-                    estimated_duration_label=EST_LABEL["exercise"],
-                    subject_area=label,
-                    existing_id_map=existing_id_map, summary=summary,
-                ))
-
-            if len(skill_quiz_pool.get(tag_id, [])) >= QUIZ_Q:
-                to_upsert.append(_make_record(
-                    quiz_type="quiz",
-                    title=f"{label} 綜合測驗",
-                    description=(
-                        f"跨篇章 {QUIZ_Q} 條【{label}】綜合測驗，限時 20 分鐘"
-                        f"（評分 ≥ {QUIZ_MIN_SCORE}/10）"
-                    ),
-                    passage_id=None, difficulty=3,
-                    question_ids=skill_quiz_pool[tag_id][:QUIZ_Q],
-                    duration_seconds=QUIZ_DURATION_S, max_attempts=3,
-                    pass_score=70, points_reward=15, min_points_required=10,
-                    cover_image_url=_cover_url(f"{img_slug}_quiz"),
-                    color_hex=COLOR_HEX["quiz"],
-                    estimated_duration_label=EST_LABEL["quiz"],
-                    subject_area=label,
-                    existing_id_map=existing_id_map, summary=summary,
-                ))
-
-    # ── Strategy: difficulty (cross-passage) ─────────────────────────────────
-    if "difficulty" in strategies:
-        diff_ex_pool   = _build_pool(rows, EXERCISE_MIN_SCORE,
-                                     lambda r: [str(r.get("difficulty") or 2)])
-        diff_quiz_pool = _build_pool(rows, QUIZ_MIN_SCORE,
-                                     lambda r: [str(r.get("difficulty") or 2)])
-
-        for d_str in sorted(set(list(diff_ex_pool) + list(diff_quiz_pool))):
-            d_int = int(d_str)
-            label = f"難度{DIFF_LABEL.get(d_int, d_str)}"
-
-            if len(diff_ex_pool.get(d_str, [])) >= EXERCISE_Q:
-                to_upsert.append(_make_record(
-                    quiz_type="exercise",
-                    title=f"{label} 練習題",
-                    description=(
-                        f"跨篇章精選 {EXERCISE_Q} 條{label}練習題"
-                        f"（評分 ≥ {EXERCISE_MIN_SCORE}/10）"
-                    ),
-                    passage_id=None, difficulty=d_int,
-                    question_ids=diff_ex_pool[d_str][:EXERCISE_Q],
-                    duration_seconds=None, max_attempts=None,
-                    pass_score=60, points_reward=5, min_points_required=0,
-                    cover_image_url=_cover_url(f"diff_{d_str}_ex"),
-                    color_hex=COLOR_HEX["exercise"],
-                    estimated_duration_label=EST_LABEL["exercise"],
-                    subject_area="文言文",
-                    existing_id_map=existing_id_map, summary=summary,
-                ))
-
-            if len(diff_quiz_pool.get(d_str, [])) >= QUIZ_Q:
-                to_upsert.append(_make_record(
-                    quiz_type="quiz",
-                    title=f"{label} 綜合測驗",
-                    description=(
-                        f"跨篇章 {QUIZ_Q} 條{label}綜合測驗，限時 20 分鐘"
-                        f"（評分 ≥ {QUIZ_MIN_SCORE}/10）"
-                    ),
-                    passage_id=None, difficulty=d_int,
-                    question_ids=diff_quiz_pool[d_str][:QUIZ_Q],
-                    duration_seconds=QUIZ_DURATION_S, max_attempts=3,
-                    pass_score=70, points_reward=15, min_points_required=10,
-                    cover_image_url=_cover_url(f"diff_{d_str}_quiz"),
-                    color_hex=COLOR_HEX["quiz"],
-                    estimated_duration_label=EST_LABEL["quiz"],
-                    subject_area="文言文",
-                    existing_id_map=existing_id_map, summary=summary,
-                ))
-
-    # ── Exam: always (cross-passage, score≥8, needs ≥3 passages × ≥5 Qs) ─────
-    exam_pool = _build_pool(rows, EXAM_MIN_SCORE,
-                            lambda r: [r.get("passage_id") or "unknown"])
-    exam_candidates = [
-        (pid, qids) for pid, qids in sorted(exam_pool.items()) if len(qids) >= 5
-    ]
-    if len(exam_candidates) >= 3:
-        exam_qids: list[str] = []
-        per_p = EXAM_Q // len(exam_candidates)
-        remainder = EXAM_Q % len(exam_candidates)
-        for i, (_, qids) in enumerate(exam_candidates):
-            take = per_p + (1 if i < remainder else 0)
-            exam_qids.extend(qids[:take])
-            if len(exam_qids) >= EXAM_Q:
-                break
-        exam_qids = exam_qids[:EXAM_Q]
-        to_upsert.append(_make_record(
-            quiz_type="exam",
-            title="DSE 中文 模擬考試",
-            description=(
-                f"涵蓋 {len(exam_candidates)} 篇課文，共 {len(exam_qids)} 條模擬 DSE 閱讀理解題，"
-                f"限時 45 分鐘，滿分率 60% 合格（評分 ≥ {EXAM_MIN_SCORE}/10）"
-            ),
-            passage_id=None, difficulty=4,
-            question_ids=exam_qids,
-            duration_seconds=EXAM_DURATION_S, max_attempts=2,
-            pass_score=60, points_reward=50, min_points_required=50,
-            cover_image_url=_cover_url("exam_mock_dse"),
-            color_hex=COLOR_HEX["exam"],
-            estimated_duration_label=EST_LABEL["exam"],
-            subject_area="全卷",
-            existing_id_map=existing_id_map, summary=summary,
-        ))
-
-    # ── Write or dry-run ──────────────────────────────────────────────────────
     if not dry_run and to_upsert:
         sb.table("dsemcq_quizzes").upsert(to_upsert, on_conflict="id").execute()
-        log.info("quizzes_assembled", **summary, strategies=strategies)
+        log.info("quizzes_assembled", **summary)
     else:
         log.info("assemble_dry_run", to_upsert=len(to_upsert), **summary)
 
@@ -436,6 +460,5 @@ def assemble_quizzes(
         **summary,
         "total_new": summary["exercises"] + summary["quizzes"] + summary["exams"],
         "dry_run": dry_run,
-        "strategies": strategies,
+        "strategies": ["passage", "skill"],
     }
-

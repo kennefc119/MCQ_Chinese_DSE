@@ -462,7 +462,8 @@
   <div class="s-section">
     <h3>測驗組合</h3>
     <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:8px;">
-      將現有題目自動組合為練習題（5條）、測驗（10條）、模擬考試（20條）
+      將現有題目自動組合為練習題（5條）、測驗（10條）、模擬考試（20條）。
+      按篇章（技能多樣化）和按技能（跨篇章）兩種模式，每種類型最多重複 2 次。
     </div>
     <input type="hidden" id="assembleDry" value="false">
     <div style="font-size:11px;color:var(--muted);margin:6px 0 4px;">組合策略：</div>
@@ -484,6 +485,8 @@
     </button>
     <button class="btn-sm" id="previewBtn" onclick="assemblePreview()"
       style="margin-top:6px;">🔬 預覽（診斷題目分佈）</button>
+    <button class="btn-sm" id="dismissBtn" onclick="dismissAll()"
+      style="margin-top:6px;background:var(--red);color:#fff;border-color:var(--red);">🗑 清除所有組卷</button>
     <div id="assembleResult" style="display:none;margin-top:10px;font-size:12px;
       background:var(--surface2);border-radius:6px;padding:10px;line-height:1.8;"></div>
   </div>
@@ -901,6 +904,27 @@ async function assemble() {
 }
 
 // ── UI helpers ────────────────────────────────────────────────────────────────
+async function dismissAll() {
+  if (!confirm('確定要刪除所有組卷記錄嗎？此操作無法復原。')) return;
+  const btn = document.getElementById('dismissBtn');
+  btn.disabled = true;
+  btn.textContent = '刪除中...';
+  try {
+    const r = await fetch(`${API}/api/dismiss-all-quizzes`, { method: 'POST' });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    const el = document.getElementById('assembleResult');
+    el.style.display = 'block';
+    el.innerHTML = `<span style="color:var(--red)">🗑 ${d.message}</span>`;
+    loadStats();
+  } catch(e) {
+    showErr(`清除失敗：${e.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🗑 清除所有組卷';
+  }
+}
+
 function setBusy(on) {
   document.getElementById('genBtn').disabled = on;
   document.getElementById('genIco').innerHTML = on ? '<div class="spin"></div>' : '⚡';

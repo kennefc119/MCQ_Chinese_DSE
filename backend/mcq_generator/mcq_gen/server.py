@@ -264,6 +264,30 @@ def db_check() -> dict[str, Any]:
     return result
 
 
+@app.post("/api/dismiss-all-quizzes")
+def dismiss_all_quizzes() -> dict[str, Any]:
+    """
+    Hard-delete ALL rows from dsemcq_quizzes.
+    Use this to wipe the assembled quiz pool so a fresh assemble run starts clean.
+    """
+    from .db.client import get_supabase
+    sb = get_supabase()
+    try:
+        count_resp = (
+            sb.table("dsemcq_quizzes")
+            .select("id", count="exact")
+            .limit(1)
+            .execute()
+        )
+        count = count_resp.count or 0
+        sb.table("dsemcq_quizzes").delete().neq("id", "").execute()
+        log.info("dismissed_all_quizzes", deleted=count)
+        return {"deleted": count, "message": f"已刪除 {count} 條組卷記錄"}
+    except Exception as exc:
+        log.error("dismiss_all_error", error=str(exc))
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
 @app.post("/api/assemble")
 def assemble(req: AssembleRequest) -> dict[str, Any]:
     """
