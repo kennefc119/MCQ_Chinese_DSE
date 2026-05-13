@@ -21,19 +21,22 @@ type Rt = RouteProp<AppStackParamList, "QuizResult">;
 
 export default function QuizResultScreen() {
   const nav = useNavigation<Nav>();
-  const { quizId, attemptId } = useRoute<Rt>().params;
+  const { quizId, attemptId, attemptSnapshot } = useRoute<Rt>().params;
   const { user } = useAuth();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [attempt, setAttempt] = useState<Attempt | null>(null);
+  const [attempt, setAttempt] = useState<Attempt | null>(
+    attemptSnapshot ? (JSON.parse(attemptSnapshot) as Attempt) : null,
+  );
 
   useEffect(() => {
     (async () => {
       const q = await getQuiz(quizId);
       if (!q) return;
       setQuiz(q);
-      setQuestions(await getQuestionsForResult(q));
-      if (user) {
+      setQuestions(await getQuestionsForResult(q, attemptId));
+      // Only fetch attempt from DB if we don't already have a snapshot
+      if (!attemptSnapshot && user) {
         const all = await listUserAttempts(user.id);
         setAttempt(all.find((a) => a.id === attemptId) || null);
       }

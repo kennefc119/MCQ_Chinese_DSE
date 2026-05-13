@@ -56,13 +56,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    (async () => {
+    if (!isSupabaseConfigured) {
+      // Offline / demo mode: restore profile from SecureStore only
+      SecureStore.getItemAsync(PROFILE_KEY)
+        .then((cached) => { if (cached) setUser(JSON.parse(cached)); })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+      return;
+    }
+
+    // 1. Subscribe to Supabase auth state changes FIRST so we never miss events.
+    //    This fires with the current session on mount (INITIAL_SESSION / SIGNED_IN).
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_OUT" || !session) {
+        // Clear profile unless we're in guest/demo mode
+        setIsGuest((g) => {
+          if (!g) setUser(null);
+          return g;
+        });
+        setLoading(false);
+        return;
+      }
+      // Session is valid — fetch the fresh profile from DB, fall back to SecureStore cache
       try {
-        const cached = await SecureStore.getItemAsync(PROFILE_KEY);
+        const { data: profile } = await supabase
+          .from("dsemcq_profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        if (profile) {
+          await persist(profile as Profile);
+        } else {
+          // Profile not yet created (user in registration flow) — keep any cached profile
+          const cached = await SecureStore.getItemAsync(PROFILE_KEY).catch(() => null);
+          if (cached) setUser(JSON.parse(cached));
+        }
+      } catch {
+        // Network error — fall back to SecureStore cache so app stays usable offline
+        const cached = await SecureStore.getItemAsync(PROFILE_KEY).catch(() => null);
         if (cached) setUser(JSON.parse(cached));
-      } catch {}
+      }
       setLoading(false);
-    })();
+    });
+
+    // 2. Kick off session restoration from ExpoSecureStoreAdapter.
+    //    getSession() reads the persisted JWT from storage and populates the in-memory
+    //    session.  Without this explicit call the session isn't guaranteed to be loaded
+    //    before the first DB mutation (signups/attempts inserts), causing auth.uid() to
+    //    return null and RLS to reject the insert.
+    supabase.auth.getSession().catch(() => {});
+
+    return () => { subscription.unsubscribe(); };
   }, []);
 
   const persist = async (p: Profile | null) => {

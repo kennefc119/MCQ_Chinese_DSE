@@ -73,6 +73,8 @@ export interface Quiz {
   is_published: boolean;
   question_ids: string[];
   created_at: string;
+  /** Sequential variation index within quizzes sharing the same title. Null when the title is unique. */
+  title_id: number | null;
 }
 
 export interface Attempt {

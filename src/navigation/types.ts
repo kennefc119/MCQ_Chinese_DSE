@@ -21,7 +21,7 @@ export type AppStackParamList = {
   Tabs: NavigatorScreenParams<MainTabsParamList>;
   QuizDetail: { quizId: string };
   QuizRunner: { quizId: string; attemptId: string };
-  QuizResult: { attemptId: string; quizId: string };
+  QuizResult: { attemptId: string; quizId: string; attemptSnapshot?: string };
   PsychTest: { testId: string };
   PsychResult: { testId: string; resultCode: string };
   Inbox: undefined;

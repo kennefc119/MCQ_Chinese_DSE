@@ -165,6 +165,12 @@ function QuizTile({ item, onPress, passageName }: { item: Quiz; onPress: () => v
         difficulty={item.difficulty}
         locked={locked}
       />
+      {/* Variation pill — only shown when title_id is set (duplicate title exists) */}
+      {item.title_id != null && (
+        <View style={styles.titleIdPill}>
+          <Text style={styles.titleIdPillText}>#{item.title_id}</Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 }
@@ -400,6 +406,7 @@ export default function ExploreScreen() {
   const [filterDifficulty, setFilterDifficulty] = useState<number | null>(null);
   const [filterPassageId, setFilterPassageId] = useState<string | null>(null);
   const [filterMinPoints, setFilterMinPoints] = useState<number | null>(null);
+  const [filterTitle, setFilterTitle] = useState<string | null>(null);
   const [filterExpanded, setFilterExpanded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -430,7 +437,20 @@ export default function ExploreScreen() {
     [passages],
   );
 
-  const allFiltersCleared = filterType === "all" && filterDifficulty === null && filterPassageId === null && filterMinPoints === null;
+  const allFiltersCleared = filterType === "all" && filterDifficulty === null && filterPassageId === null && filterMinPoints === null && filterTitle === null;
+
+  // Sorted unique quiz titles for the title filter
+  const uniqueQuizTitles = useMemo<string[]>(() => {
+    const seen = new Set<string>();
+    const titles: string[] = [];
+    for (const item of items) {
+      if (item.kind === "quiz" && !seen.has(item.data.title)) {
+        seen.add(item.data.title);
+        titles.push(item.data.title);
+      }
+    }
+    return titles.sort((a, b) => a.localeCompare(b, "zh-HK"));
+  }, [items]);
 
   const filteredItems = useMemo<FeedItem[]>(() => {
     return items.filter((item) => {
@@ -440,9 +460,10 @@ export default function ExploreScreen() {
       if (filterDifficulty !== null && q.difficulty !== filterDifficulty) return false;
       if (filterPassageId !== null && (q as any).passage_id !== filterPassageId) return false;
       if (filterMinPoints !== null && q.min_points_required > filterMinPoints) return false;
+      if (filterTitle !== null && q.title !== filterTitle) return false;
       return true;
     });
-  }, [items, filterType, filterDifficulty, filterPassageId, filterMinPoints, allFiltersCleared]);
+  }, [items, filterType, filterDifficulty, filterPassageId, filterMinPoints, filterTitle, allFiltersCleared]);
 
   const openFeed = (indexInFiltered: number) => {
     setFeedIndex(indexInFiltered);
@@ -558,6 +579,29 @@ export default function ExploreScreen() {
               </TouchableOpacity>
             ))}
           </ScrollView>
+          {/* Title */}
+          {uniqueQuizTitles.length > 0 && (
+            <>
+              <Text style={styles.filterLabel}>標題</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row", gap: 6, paddingBottom: 4 }}>
+                <TouchableOpacity
+                  style={[styles.filterChip, filterTitle === null && styles.filterChipActive]}
+                  onPress={() => setFilterTitle(null)}
+                >
+                  <Text style={[styles.filterChipText, filterTitle === null && styles.filterChipTextActive]}>全部</Text>
+                </TouchableOpacity>
+                {uniqueQuizTitles.map((t) => (
+                  <TouchableOpacity
+                    key={t}
+                    style={[styles.filterChip, filterTitle === t && styles.filterChipActive]}
+                    onPress={() => setFilterTitle(filterTitle === t ? null : t)}
+                  >
+                    <Text style={[styles.filterChipText, filterTitle === t && styles.filterChipTextActive]} numberOfLines={1}>{t}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </>
+          )}
         </View>
       )}
 
@@ -869,6 +913,26 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
   },
   feedCounter: { color: "#FFFFFF", fontSize: 14, fontWeight: "600" },
+
+  // variation pill
+  titleIdPill: {
+    position: "absolute",
+    bottom: 6,
+    left: 6,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    borderRadius: 8,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.30)",
+  },
+  titleIdPillText: {
+    color: "#FFFFFF",
+    fontSize: 9,
+    fontWeight: "700" as const,
+    lineHeight: 11,
+    includeFontPadding: false,
+  },
 
   // filter bar
   filterRow: { flexGrow: 0 },

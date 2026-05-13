@@ -112,6 +112,20 @@ _N_QUESTIONS: dict[str, int] = {
 # --- Helpers -----------------------------------------------------------------
 
 
+_CN_DIGITS = "零一二三四五六七八九"
+
+def _to_chinese_num(n: int) -> str:
+    """Convert positive integer to traditional Chinese number string (1-99)."""
+    if n <= 0:
+        return str(n)
+    if n < 10:
+        return _CN_DIGITS[n]
+    if n < 20:
+        return ("十" if n == 10 else f"十{_CN_DIGITS[n % 10]}")
+    tens, ones = divmod(n, 10)
+    return f"{_CN_DIGITS[tens]}十" + (_CN_DIGITS[ones] if ones else "")
+
+
 def _new_quiz_id() -> str:
     return f"quiz-ai-{uuid.uuid4().hex[:8]}"
 
@@ -283,10 +297,13 @@ def _assemble_type(
     all_rows: list[dict],
     existing_id_map: dict[tuple, str],
     summary: dict[str, int],
+    passage_titles: dict[str, str] | None = None,
 ) -> list[dict]:
     """
     Assemble by-passage and by-skill quizzes for a single quiz_type.
     usage_counts starts fresh so the resulting set satisfies MAX_REPEAT independently.
+    passage_titles: mapping of passage_id -> title from dsemcq_passages; used as
+                    the human-readable label in quiz titles/descriptions.
     """
     min_score = _MIN_SCORE[quiz_type]
     n         = _N_QUESTIONS[quiz_type]
@@ -299,6 +316,8 @@ def _assemble_type(
 
     records: list[dict] = []
 
+    _ptitles = passage_titles or {}
+
     # -- By-passage -----------------------------------------------------------
     by_passage: dict[str, list[dict]] = defaultdict(list)
     for r in eligible:
@@ -307,7 +326,7 @@ def _assemble_type(
 
     for pid in sorted(by_passage.keys()):
         passage_rows = by_passage[pid]
-        label = _passage_label(pid)
+        label = (_ptitles.get(pid) or _passage_label(pid)).removesuffix("（節錄）").strip()
         subj  = PASSAGE_SUBJECT.get(pid, "文言文")
         slot  = 1
 
@@ -317,12 +336,7 @@ def _assemble_type(
             if selected is None:
                 break
 
-            base_title = (
-                f"{label} 練習題"   if quiz_type == "exercise" else
-                f"{label} 綜合測驗" if quiz_type == "quiz"     else
-                f"{label} 模擬考試"
-            )
-            title = base_title if slot == 1 else f"{base_title} ({slot})"
+            title = label
 
             records.append(_make_record(
                 quiz_type=quiz_type,
@@ -359,12 +373,7 @@ def _assemble_type(
             if selected is None:
                 break
 
-            base_title = (
-                f"{skill_label} 練習題"   if quiz_type == "exercise" else
-                f"{skill_label} 綜合測驗" if quiz_type == "quiz"     else
-                f"{skill_label} 模擬考試"
-            )
-            title = base_title if slot == 1 else f"{base_title} ({slot})"
+            title = skill_label
 
             records.append(_make_record(
                 quiz_type=quiz_type,
@@ -429,10 +438,19 @@ def assemble_quizzes(
     for r in rows:
         r["tags"] = q_tags.get(r["id"], [])
 
+    # Fetch real passage titles (id -> title) so quiz cards show proper names
+    passage_title_rows = (
+        sb.table("dsemcq_passages")
+        .select("id,title")
+        .execute()
+        .data or []
+    )
+    passage_titles: dict[str, str] = {p["id"]: p["title"] for p in passage_title_rows}
+
     # Load existing quiz IDs for stable upsert (preserves FK references)
     existing = (
         sb.table("dsemcq_quizzes")
-        .select("id,title,passage_id,type")
+        .select("id,title,passage_id,type,title_id")
         .execute()
         .data or []
     )
@@ -440,15 +458,44 @@ def assemble_quizzes(
         (e.get("passage_id"), e.get("type"), e.get("title")): e["id"]
         for e in existing
     }
+    # quiz_id -> existing title_id (None means unset or NULL in DB)
+    existing_title_id_map: dict[str, int | None] = {
+        e["id"]: e.get("title_id") for e in existing
+    }
 
     summary: dict[str, int] = {"exercises": 0, "quizzes": 0, "exams": 0, "updated": 0}
     to_upsert: list[dict] = []
 
     # Assemble each quiz type independently (each has its own repeat budget)
     for quiz_type in ("exercise", "quiz", "exam"):
-        records = _assemble_type(quiz_type, rows, existing_id_map, summary)
+        records = _assemble_type(quiz_type, rows, existing_id_map, summary, passage_titles)
         to_upsert.extend(records)
         log.info(f"assembled_{quiz_type}", count=len(records))
+
+    # ── Assign stable title_id for quizzes that share the same title ─────────
+    # Group assembled records by title.
+    title_groups: dict[str, list[dict]] = defaultdict(list)
+    for record in to_upsert:
+        title_groups[record["title"]].append(record)
+
+    for _title, group in title_groups.items():
+        if len(group) > 1:
+            # Gather pre-existing title_id assignments so they are preserved.
+            assigned: dict[str, int] = {}  # quiz_id -> title_id
+            for record in group:
+                tid = existing_title_id_map.get(record["id"])
+                if tid is not None:
+                    assigned[record["id"]] = tid
+            next_id = max(assigned.values(), default=0) + 1
+            for record in group:
+                if record["id"] not in assigned:
+                    assigned[record["id"]] = next_id
+                    next_id += 1
+            for record in group:
+                record["title_id"] = assigned[record["id"]]
+        else:
+            # Unique title — clear any stale title_id.
+            group[0]["title_id"] = None
 
     if not dry_run and to_upsert:
         sb.table("dsemcq_quizzes").upsert(to_upsert, on_conflict="id").execute()

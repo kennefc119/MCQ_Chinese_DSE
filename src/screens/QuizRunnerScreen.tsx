@@ -171,7 +171,7 @@ export default function QuizRunnerScreen() {
       }
     }
     setSubmitting(false);
-    nav.replace("QuizResult", { attemptId, quizId });
+    nav.replace("QuizResult", { attemptId: result.id, quizId, attemptSnapshot: JSON.stringify(result) });
   };
 
   const fmtTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;

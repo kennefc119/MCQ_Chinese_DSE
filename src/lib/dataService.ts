@@ -49,15 +49,18 @@ export async function getQuestionsForQuiz(quiz: Quiz): Promise<Question[]> {
 
   // Try anti-cheat RPC first (hides is_correct during play)
   const { data: rpcData, error: rpcError } = await supabase.rpc("get_quiz_for_attempt", { p_quiz_id: quiz.id });
-  if (rpcError) console.warn("[dsemcq] getQuestionsForQuiz RPC error:", rpcError.message);
+  if (rpcError) console.warn("[dsemcq] getQuestionsForQuiz RPC error:", rpcError.code, rpcError.message);
 
   const rpcQuestions = (rpcData as Question[]) ?? [];
   if (rpcQuestions.length > 0) return rpcQuestions;
 
-  // Fallback: direct query — used when RPC returns empty (e.g. is_active mismatch, permission issue)
-  console.warn("[dsemcq] getQuestionsForQuiz: RPC returned empty, falling back to direct query");
+  // Fallback: direct query — used when RPC returns empty (e.g. permission issue, stale plan)
+  console.warn("[dsemcq] getQuestionsForQuiz: RPC returned empty (rpcError:", rpcError?.message ?? "none", ") — falling back to direct query for quiz", quiz.id, "with", quiz.question_ids.length, "question_ids");
   const ids = quiz.question_ids;
-  if (ids.length === 0) return [];
+  if (ids.length === 0) {
+    console.warn("[dsemcq] getQuestionsForQuiz: quiz.question_ids is empty for quiz", quiz.id);
+    return [];
+  }
 
   const [{ data: qRows, error: qErr }, { data: optRows, error: optErr }] = await Promise.all([
     supabase.from("dsemcq_questions").select("*").in("id", ids),
@@ -68,8 +71,10 @@ export async function getQuestionsForQuiz(quiz: Quiz): Promise<Question[]> {
       .order("id"),
   ]);
 
-  if (qErr) console.warn("[dsemcq] getQuestionsForQuiz fallback questions error:", qErr.message);
-  if (optErr) console.warn("[dsemcq] getQuestionsForQuiz fallback options error:", optErr.message);
+  if (qErr) console.warn("[dsemcq] getQuestionsForQuiz fallback questions error:", qErr.code, qErr.message);
+  if (optErr) console.warn("[dsemcq] getQuestionsForQuiz fallback options error:", optErr.code, optErr.message);
+
+  console.warn("[dsemcq] getQuestionsForQuiz fallback: fetched", qRows?.length ?? 0, "questions and", optRows?.length ?? 0, "options for", ids.length, "ids");
 
   const optsByQ: Record<string, QuestionOption[]> = {};
   for (const o of optRows ?? []) {
@@ -83,17 +88,42 @@ export async function getQuestionsForQuiz(quiz: Quiz): Promise<Question[]> {
     .map((q) => ({ ...q, options: optsByQ[q.id] ?? [] } as Question));
 }
 
-// Returns questions with REAL is_correct values by querying tables directly (bypasses the
-// anti-cheat RPC that hides is_correct=false during the quiz).
-export async function getQuestionsForResult(quiz: Quiz): Promise<Question[]> {
+// Returns questions with REAL is_correct values for the result screen.
+// For local attempts (ID starts with "attempt-"), the options returned by getQuestionsForQuiz
+// have is_correct=false (anti-cheat). We re-fetch from the DB if possible, otherwise the
+// caller must supply the pre-loaded questions via the `localQuestions` parameter.
+export async function getQuestionsForResult(
+  quiz: Quiz,
+  attemptId?: string,
+  localQuestions?: Question[],
+): Promise<Question[]> {
+  // For a purely local attempt, re-use the questions that were loaded during the quiz run.
+  // They have is_correct=false from the anti-cheat RPC, so we need the direct DB query;
+  // but if the DB is unreachable, fall back to seed data so at least the review renders.
   if (!isSupabaseConfigured) {
     return quiz.question_ids.map((qid) => SEED_QUESTIONS.find((q) => q.id === qid)!).filter(Boolean);
   }
 
+  // Try the result RPC first: SECURITY DEFINER bypasses table-level privilege requirements
+  // and reveals real is_correct values only for submitted/expired attempts.
+  if (attemptId && !attemptId.startsWith("attempt-")) {
+    const { data: rpcData, error: rpcError } = await supabase.rpc("get_quiz_for_result", {
+      p_quiz_id: quiz.id,
+      p_attempt_id: attemptId,
+    });
+    if (rpcError) {
+      console.warn("[dsemcq] getQuestionsForResult RPC error:", rpcError.code, rpcError.message);
+    } else {
+      const rpcQuestions = (rpcData as Question[]) ?? [];
+      if (rpcQuestions.length > 0) return rpcQuestions;
+      console.warn("[dsemcq] getQuestionsForResult: RPC returned empty for attempt", attemptId);
+    }
+  }
+
+  // Fallback: direct table query (requires table-level grant on dsemcq_questions / dsemcq_question_options)
   const ids = quiz.question_ids;
   if (ids.length === 0) return [];
 
-  // Query questions and options in parallel
   const [{ data: qRows, error: qErr }, { data: optRows, error: optErr }] = await Promise.all([
     supabase.from("dsemcq_questions").select("*").in("id", ids),
     supabase
@@ -222,17 +252,21 @@ export async function signUpForQuiz(userId: string, quizId: string) {
     memory.signups.push(signup);
     return signup;
   }
+  // Use the live auth user id from the session rather than the cached profile id
+  // to prevent RLS violations when the SecureStore profile has become stale.
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const liveUserId = authUser?.id ?? userId;
   const { data, error } = await supabase
     .from("dsemcq_user_quiz_signups")
     .upsert(
-      { user_id: userId, quiz_id: quizId, signed_up_at: new Date().toISOString() },
+      { user_id: liveUserId, quiz_id: quizId, signed_up_at: new Date().toISOString() },
       { onConflict: "user_id,quiz_id" }
     )
     .select()
     .single();
   if (error) {
     console.warn("[dsemcq] signUpForQuiz error:", error.message);
-    return { id: "", user_id: userId, quiz_id: quizId, signed_up_at: new Date().toISOString() } as QuizSignup;
+    return { id: "", user_id: liveUserId, quiz_id: quizId, signed_up_at: new Date().toISOString() } as QuizSignup;
   }
   return data as QuizSignup;
 }
@@ -255,10 +289,13 @@ export async function startAttempt(userId: string, quiz: Quiz): Promise<Attempt>
     memory.attempts.push(localAttempt);
     return localAttempt;
   }
+  // Use the live auth user id to prevent RLS violations from a stale cached profile.
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const liveUserId = authUser?.id ?? userId;
   const { data, error } = await supabase
     .from("dsemcq_attempts")
     .insert({
-      user_id: userId,
+      user_id: liveUserId,
       quiz_id: quiz.id,
       total: quiz.question_ids.length,
       status: "in_progress",
@@ -285,14 +322,19 @@ export async function saveAnswer(attemptId: string, questionId: string, optionId
     .upsert({ attempt_id: attemptId, question_id: questionId, selected_option_id: optionId });
 }
 
+/** Returns true when the attempt was stored locally (RLS prevented DB insert). */
+const isLocalAttemptId = (id: string) => id.startsWith("attempt-");
+
 export async function submitAttempt(
   attemptId: string,
   answers: Record<string, string>,
   questions: Question[],
   timeSpent: number,
 ): Promise<Attempt> {
-  // Demo mode: calculate score locally (seed questions have correct is_correct values)
-  if (!isSupabaseConfigured) {
+  // Local-only path: no Supabase configured, OR the attempt was never persisted to DB
+  // (e.g. startAttempt hit an RLS violation and fell back to a local "attempt-xxx" ID).
+  // In both cases we score locally using the options already loaded during the quiz.
+  if (!isSupabaseConfigured || isLocalAttemptId(attemptId)) {
     let correct = 0;
     for (const q of questions) {
       const sel = answers[q.id];

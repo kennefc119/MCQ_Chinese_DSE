@@ -23,6 +23,7 @@ export const SEED_QUIZZES: Quiz[] = [
     is_published: true,
     question_ids: questionsForPassage("p01"),
     created_at: new Date().toISOString(),
+    title_id: null,
   },
   {
     id: "quiz-quiz-mengzi-xunzi",
@@ -42,6 +43,7 @@ export const SEED_QUIZZES: Quiz[] = [
     is_published: true,
     question_ids: [...questionsForPassage("p02"), ...questionsForPassage("p04")],
     created_at: new Date().toISOString(),
+    title_id: null,
   },
   {
     id: "quiz-exam-tang-song",
@@ -66,6 +68,7 @@ export const SEED_QUIZZES: Quiz[] = [
       ...questionsForPassage("p10"),
     ],
     created_at: new Date().toISOString(),
+    title_id: null,
   },
   {
     id: "quiz-exercise-poetry",
@@ -85,6 +88,7 @@ export const SEED_QUIZZES: Quiz[] = [
     is_published: true,
     question_ids: [...questionsForPassage("p11"), ...questionsForPassage("p12")],
     created_at: new Date().toISOString(),
+    title_id: null,
   },
   {
     id: "quiz-quiz-zhuangzi",
@@ -104,6 +108,7 @@ export const SEED_QUIZZES: Quiz[] = [
     is_published: true,
     question_ids: questionsForPassage("p03"),
     created_at: new Date().toISOString(),
+    title_id: null,
   },
   {
     id: "quiz-exam-full-mock",
@@ -123,5 +128,6 @@ export const SEED_QUIZZES: Quiz[] = [
     is_published: true,
     question_ids: SEED_QUESTIONS.map((q) => q.id),
     created_at: new Date().toISOString(),
+    title_id: null,
   },
 ];
