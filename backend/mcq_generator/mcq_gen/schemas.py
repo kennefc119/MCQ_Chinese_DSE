@@ -11,9 +11,11 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class Difficulty(str, Enum):
-    EASY = "淺"
-    MEDIUM = "中"
-    HARD = "深"
+    VERY_EASY = "最淺"   # difficulty = 1
+    EASY = "淺"          # difficulty = 2
+    MEDIUM = "中"        # difficulty = 3
+    HARD = "深"          # difficulty = 4
+    VERY_HARD = "最深"   # difficulty = 5
 
 
 class Skill(str, Enum):

@@ -55,8 +55,10 @@ def serve_dashboard() -> HTMLResponse:
 
 class GenerateRequest(BaseModel):
     passage_id: str | None = None
+    forced_difficulty: int | None = None   # 1-5; None = 讓策略師自行決定
+    forced_skill: str | None = None        # Skill enum 字串（如「修辭手法」）；None = 自行決定
     dry_run: bool = True
-    count: int = 1   # 1–100 questions per batch
+    count: int = 1   # 1–20 questions per batch
 
 
 class AssembleRequest(BaseModel):
@@ -65,6 +67,13 @@ class AssembleRequest(BaseModel):
 
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
+
+
+@app.get("/api/skills")
+def list_skills() -> list[dict[str, str]]:
+    """Return all available 考核能力 (skill) options for the dashboard."""
+    from .schemas import Skill
+    return [{"value": s.value, "label": s.value} for s in Skill]
 
 
 @app.get("/api/passages")
@@ -126,7 +135,13 @@ def generate(req: GenerateRequest) -> dict[str, Any]:
     log.info("generate_start", passage=req.passage_id, dry_run=req.dry_run, count=count)
 
     try:
-        results = run_pipeline(count=count, passage=req.passage_id, dry_run=req.dry_run)
+        results = run_pipeline(
+            count=count,
+            passage=req.passage_id,
+            difficulty=req.forced_difficulty,
+            skill=req.forced_skill,
+            dry_run=req.dry_run,
+        )
     except Exception as exc:
         log.error("generate_error", error=str(exc))
         raise HTTPException(status_code=500, detail=str(exc)) from exc

@@ -16,11 +16,28 @@ const memory = {
 
 export const localStore = memory;
 
+// ── Difficulty computation ────────────────────────────────────────────────
+// difficulty is no longer stored on dsemcq_quizzes; it is computed by averaging
+// dsemcq_questions.difficulty for all question_ids in the quiz, rounded to the
+// nearest integer. Minimum value is 1.
+function applyComputedDifficulty(quizzes: Quiz[], diffMap: Record<string, number>): Quiz[] {
+  return quizzes.map((quiz) => {
+    const diffs = quiz.question_ids
+      .map((id) => diffMap[id])
+      .filter((d): d is number => typeof d === "number");
+    const difficulty = diffs.length > 0
+      ? Math.round(diffs.reduce((sum, d) => sum + d, 0) / diffs.length)
+      : 1;
+    return { ...quiz, difficulty };
+  });
+}
+
 // ── Public API (works in both demo + Supabase mode) ─────────────────────
 export async function listQuizzes(): Promise<Quiz[]> {
   if (!isSupabaseConfigured) {
     console.warn("[dsemcq] listQuizzes: Supabase not configured — returning seed data");
-    return SEED_QUIZZES;
+    const diffMap = Object.fromEntries(SEED_QUESTIONS.map((q) => [q.id, q.difficulty]));
+    return applyComputedDifficulty(SEED_QUIZZES, diffMap);
   }
   const { data, error } = await supabase
     .from("dsemcq_quizzes")
@@ -32,14 +49,34 @@ export async function listQuizzes(): Promise<Quiz[]> {
     return [];
   }
   console.warn(`[dsemcq] listQuizzes: returned ${data?.length ?? 0} rows`);
-  return (data as Quiz[]) ?? [];
+  const quizzes = (data as Quiz[]) ?? [];
+  const allIds = [...new Set(quizzes.flatMap((q) => q.question_ids))];
+  if (allIds.length === 0) return quizzes;
+  const { data: qRows } = await supabase
+    .from("dsemcq_questions")
+    .select("id, difficulty")
+    .in("id", allIds);
+  const diffMap = Object.fromEntries((qRows ?? []).map((r: { id: string; difficulty: number }) => [r.id, r.difficulty]));
+  return applyComputedDifficulty(quizzes, diffMap);
 }
 
 export async function getQuiz(id: string): Promise<Quiz | null> {
-  if (!isSupabaseConfigured) return SEED_QUIZZES.find((q) => q.id === id) ?? null;
+  if (!isSupabaseConfigured) {
+    const quiz = SEED_QUIZZES.find((q) => q.id === id) ?? null;
+    if (!quiz) return null;
+    const diffMap = Object.fromEntries(SEED_QUESTIONS.map((q) => [q.id, q.difficulty]));
+    return applyComputedDifficulty([quiz], diffMap)[0] ?? null;
+  }
   const { data, error } = await supabase.from("dsemcq_quizzes").select("*").eq("id", id).maybeSingle();
   if (error) console.warn("[dsemcq] getQuiz error:", error.message);
-  return data as Quiz | null;
+  const quiz = data as Quiz | null;
+  if (!quiz) return null;
+  const { data: qRows } = await supabase
+    .from("dsemcq_questions")
+    .select("id, difficulty")
+    .in("id", quiz.question_ids);
+  const diffMap = Object.fromEntries((qRows ?? []).map((r: { id: string; difficulty: number }) => [r.id, r.difficulty]));
+  return applyComputedDifficulty([quiz], diffMap)[0] ?? null;
 }
 
 export async function getQuestionsForQuiz(quiz: Quiz): Promise<Question[]> {
@@ -413,6 +450,57 @@ export async function submitAttempt(
     return { ...base, ...update } as Attempt;
   }
   return data as Attempt;
+}
+
+// ── Question analytics metadata (for skills radar) ─────────────────────
+// Returns per-question tag IDs and the correct option ID, sourced from Supabase
+// (or seed data in demo mode). Used by DiscoverSelfScreen to compute skill accuracy.
+export interface QuestionAnalyticsMeta {
+  tagIds: string[];
+  correctOptionId: string | null;
+}
+
+export async function fetchQuestionAnalyticsData(
+  questionIds: string[],
+): Promise<Record<string, QuestionAnalyticsMeta>> {
+  if (questionIds.length === 0) return {};
+
+  if (!isSupabaseConfigured) {
+    // Demo mode: build from seed data (maintains existing behaviour)
+    const meta: Record<string, QuestionAnalyticsMeta> = {};
+    for (const id of questionIds) {
+      const q = SEED_QUESTIONS.find((sq) => sq.id === id);
+      if (!q) continue;
+      const correctOpt = q.options.find((o) => o.is_correct);
+      meta[id] = { tagIds: q.tag_ids ?? [], correctOptionId: correctOpt?.id ?? null };
+    }
+    return meta;
+  }
+
+  const [{ data: tagRows, error: tagErr }, { data: optRows, error: optErr }] = await Promise.all([
+    supabase
+      .from("dsemcq_question_tags")
+      .select("question_id, tag_id")
+      .in("question_id", questionIds),
+    supabase
+      .from("dsemcq_question_options")
+      .select("id, question_id")
+      .in("question_id", questionIds)
+      .eq("is_correct", true),
+  ]);
+
+  if (tagErr) console.warn("[dsemcq] fetchQuestionAnalyticsData tags error:", tagErr.message);
+  if (optErr) console.warn("[dsemcq] fetchQuestionAnalyticsData options error:", optErr.message);
+
+  const meta: Record<string, QuestionAnalyticsMeta> = {};
+  for (const id of questionIds) meta[id] = { tagIds: [], correctOptionId: null };
+  for (const row of tagRows ?? []) {
+    meta[row.question_id]?.tagIds.push(row.tag_id);
+  }
+  for (const row of optRows ?? []) {
+    if (meta[row.question_id]) meta[row.question_id].correctOptionId = row.id;
+  }
+  return meta;
 }
 
 export async function listUserAttempts(userId: string): Promise<Attempt[]> {

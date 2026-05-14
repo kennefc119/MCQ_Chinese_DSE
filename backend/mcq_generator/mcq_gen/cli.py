@@ -45,6 +45,15 @@ def run(
     passage: Optional[str] = typer.Option(
         None, "--passage", "-p", help="限定篇章 ID，例如 p09（預設由策略師自動選）"
     ),
+    difficulty: Optional[int] = typer.Option(
+        None, "--difficulty", "-d",
+        help="強制難度 1-5（1=最淺, 2=淺, 3=中, 4=深, 5=最深）；預設由策略師自動選",
+        min=1, max=5,
+    ),
+    skill: Optional[str] = typer.Option(
+        None, "--skill", "-s",
+        help="強制考核能力（例如：修辭手法）；可選：字詞解釋/內容理解/主旨歸納/修辭手法/人物分析/句式語法/背景知識/跨篇章比較",
+    ),
     dry_run: bool = typer.Option(False, "--dry-run", help="生成但不寫入 Supabase"),
 ) -> None:
     """執行出題 pipeline，生成 N 條 MC 題目。"""
@@ -53,6 +62,17 @@ def run(
     console.print(f"   目標數量: [yellow]{count}[/yellow]")
     if passage:
         console.print(f"   指定篇章: [yellow]{passage}[/yellow]")
+    if difficulty:
+        diff_labels = {1: "最淺①", 2: "淺②", 3: "中③", 4: "深④", 5: "最深⑤"}
+        console.print(f"   強制難度: [yellow]{diff_labels.get(difficulty, difficulty)}[/yellow]")
+    if skill:
+        # Validate skill value
+        from .schemas import Skill
+        valid_skills = {s.value for s in Skill}
+        if skill not in valid_skills:
+            console.print(f"[red]❌ 無效考核能力「{skill}」，可選：{' / '.join(valid_skills)}[/red]")
+            raise typer.Exit(1)
+        console.print(f"   強制考核能力: [yellow]{skill}[/yellow]")
     if dry_run:
         console.print(f"   [red]⚠ Dry-run 模式 — 不會寫入 Supabase[/red]")
     console.print(f"   Run ID: [dim]{run_id}[/dim]\n")
@@ -69,7 +89,13 @@ def run(
     from .graph import run_pipeline
 
     try:
-        results = run_pipeline(count=count, passage=passage, dry_run=dry_run)
+        results = run_pipeline(
+            count=count,
+            passage=passage,
+            difficulty=difficulty,
+            skill=skill,
+            dry_run=dry_run,
+        )
     except Exception as exc:
         console.print(f"[red]❌ Pipeline 錯誤: {exc}[/red]")
         log.exception("pipeline_error")

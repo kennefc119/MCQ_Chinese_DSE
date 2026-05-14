@@ -10,14 +10,15 @@ Difficulty distribution targets per quiz type:
   exam     (20q) : 3 easy -> fill middle -> hard fills remainder
 
 Global repeat constraint (applied independently per pool type):
-  Each question may appear in at most MAX_REPEAT=2 quizzes of the same type.
-  A question can appear <=2x in exercises AND <=2x in quizzes AND <=2x in exams.
+  exercises : each question appears in at most 1 exercise (no repeats).
+  quiz/exam : each question may appear in at most 2 quizzes / 2 exams of the same type.
 
 Each run always re-assembles ALL matching quizzes (upserts by id).
 Existing quiz IDs are preserved so FK references stay intact.
 """
 from __future__ import annotations
 
+import random
 import uuid
 from collections import Counter, defaultdict
 from typing import Any
@@ -41,7 +42,11 @@ EXAM_MIN_SCORE     = 8
 QUIZ_DURATION_S = 20 * 60   # 20 min
 EXAM_DURATION_S = 45 * 60   # 45 min
 
-MAX_REPEAT = 2   # max appearances per question within the same quiz-type pool
+# Max appearances per question within the same quiz-type pool (exercises: no repeats)
+_MAX_REPEAT: dict[str, int] = {"exercise": 1, "quiz": 2, "exam": 2}
+
+# S3 cover image base URL (images are publicly accessible)
+S3_BASE_URL = "https://tb6-mood.s3.ap-southeast-2.amazonaws.com/dse_chi/"
 
 # Difficulty integer values (must match dsemcq_questions.difficulty)
 EASY = 2
@@ -140,8 +145,63 @@ def _score(r: dict) -> int:
     return r.get("critique_score") or 7
 
 
-def _cover_url(seed: str) -> str:
-    return f"https://picsum.photos/seed/{seed}/600/400"
+def _fetch_s3_image_count() -> int:
+    """
+    Probe the S3 folder with HEAD requests to count sequential PNG images
+    (1.png, 2.png, ...).  Uses binary search so it scales efficiently as the
+    folder grows.  Requires only public read (GetObject) access — no AWS
+    credentials needed.
+    """
+    import httpx
+
+    def _exists(n: int) -> bool:
+        try:
+            r = httpx.head(f"{S3_BASE_URL}{n}.png", timeout=5)
+            return r.status_code == 200
+        except Exception:
+            return False
+
+    if not _exists(1):
+        log.warning("s3_cover_image_1_not_found", url=f"{S3_BASE_URL}1.png")
+        return 1
+
+    # Exponential scan to find an upper bound, then binary-search for the last image
+    lo, hi = 1, 1
+    while _exists(hi):
+        hi *= 2
+
+    while lo < hi - 1:
+        mid = (lo + hi) // 2
+        if _exists(mid):
+            lo = mid
+        else:
+            hi = mid
+
+    log.info("s3_cover_image_count", count=lo)
+    return lo
+
+
+class CoverImagePicker:
+    """
+    Assigns cover images from the S3 folder in a shuffled order, exhausting
+    all available images before repeating.  One instance is created per quiz
+    type so each type gets its own independent shuffle.
+    """
+
+    def __init__(self, image_count: int) -> None:
+        self._total = max(image_count, 1)
+        self._queue: list[int] = []
+        self._refill()
+
+    def _refill(self) -> None:
+        indices = list(range(1, self._total + 1))
+        random.shuffle(indices)
+        self._queue = indices
+
+    def next(self) -> str:
+        if not self._queue:
+            self._refill()
+        return f"{S3_BASE_URL}{self._queue.pop()}.png"
 
 
 def _primary_skill(r: dict) -> str | None:
@@ -298,13 +358,18 @@ def _assemble_type(
     existing_id_map: dict[tuple, str],
     summary: dict[str, int],
     passage_titles: dict[str, str] | None = None,
+    picker: "CoverImagePicker | None" = None,
+    existing_cover_map: "dict[str, str] | None" = None,
 ) -> list[dict]:
     """
     Assemble by-passage and by-skill quizzes for a single quiz_type.
-    usage_counts starts fresh so the resulting set satisfies MAX_REPEAT independently.
+    usage_counts starts fresh so the resulting set satisfies _MAX_REPEAT independently.
     passage_titles: mapping of passage_id -> title from dsemcq_passages; used as
                     the human-readable label in quiz titles/descriptions.
+    picker: CoverImagePicker for this quiz type; assigns S3 cover images.
+    existing_cover_map: quiz_id -> current cover_image_url; stable covers are preserved.
     """
+    max_repeat = _MAX_REPEAT[quiz_type]
     min_score = _MIN_SCORE[quiz_type]
     n         = _N_QUESTIONS[quiz_type]
     n_easy, n_mid = _diff_targets(quiz_type, n)
@@ -317,6 +382,19 @@ def _assemble_type(
     records: list[dict] = []
 
     _ptitles = passage_titles or {}
+    _cover_map = existing_cover_map or {}
+
+    def _pick_cover(passage_id: str | None, title: str) -> str:
+        """Return stable S3 cover if the quiz already exists, else pick next."""
+        if picker is None:
+            return f"{S3_BASE_URL}1.png"
+        key = (passage_id, quiz_type, title)
+        existing_id = existing_id_map.get(key)
+        if existing_id:
+            existing = _cover_map.get(existing_id, "")
+            if existing.startswith(S3_BASE_URL):
+                return existing
+        return picker.next()
 
     # -- By-passage -----------------------------------------------------------
     by_passage: dict[str, list[dict]] = defaultdict(list)
@@ -328,10 +406,9 @@ def _assemble_type(
         passage_rows = by_passage[pid]
         label = (_ptitles.get(pid) or _passage_label(pid)).removesuffix("（節錄）").strip()
         subj  = PASSAGE_SUBJECT.get(pid, "文言文")
-        slot  = 1
 
         while True:
-            available = [r for r in passage_rows if usage_counts[r["id"]] < MAX_REPEAT]
+            available = [r for r in passage_rows if usage_counts[r["id"]] < max_repeat]
             selected  = _pick_questions(available, n, n_easy, n_mid, diverse_skills=True)
             if selected is None:
                 break
@@ -345,14 +422,13 @@ def _assemble_type(
                 passage_id=pid,
                 difficulty=EASY,
                 question_ids=[r["id"] for r in selected],
-                cover_image_url=_cover_url(f"passage_{pid}_{quiz_type}_{slot}"),
+                cover_image_url=_pick_cover(pid, title),
                 subject_area=subj,
                 existing_id_map=existing_id_map,
                 summary=summary,
             ))
             for r in selected:
                 usage_counts[r["id"]] += 1
-            slot += 1
 
     # -- By-skill -------------------------------------------------------------
     by_skill: dict[str, list[dict]] = defaultdict(list)
@@ -364,11 +440,9 @@ def _assemble_type(
     for tag_id in sorted(by_skill.keys()):
         skill_rows  = by_skill[tag_id]
         skill_label = TAG_LABEL.get(tag_id, tag_id)
-        img_slug    = tag_id.replace("t-", "skill_")
-        slot        = 1
 
         while True:
-            available = [r for r in skill_rows if usage_counts[r["id"]] < MAX_REPEAT]
+            available = [r for r in skill_rows if usage_counts[r["id"]] < max_repeat]
             selected  = _pick_questions(available, n, n_easy, n_mid, diverse_skills=False)
             if selected is None:
                 break
@@ -382,14 +456,13 @@ def _assemble_type(
                 passage_id=None,
                 difficulty=EASY,
                 question_ids=[r["id"] for r in selected],
-                cover_image_url=_cover_url(f"{img_slug}_{quiz_type}_{slot}"),
+                cover_image_url=_pick_cover(None, title),
                 subject_area=skill_label,
                 existing_id_map=existing_id_map,
                 summary=summary,
             ))
             for r in selected:
                 usage_counts[r["id"]] += 1
-            slot += 1
 
     return records
 
@@ -450,7 +523,7 @@ def assemble_quizzes(
     # Load existing quiz IDs for stable upsert (preserves FK references)
     existing = (
         sb.table("dsemcq_quizzes")
-        .select("id,title,passage_id,type,title_id")
+        .select("id,title,passage_id,type,title_id,cover_image_url")
         .execute()
         .data or []
     )
@@ -462,13 +535,25 @@ def assemble_quizzes(
     existing_title_id_map: dict[str, int | None] = {
         e["id"]: e.get("title_id") for e in existing
     }
+    # quiz_id -> existing cover_image_url (for stable cover preservation)
+    existing_cover_map: dict[str, str] = {
+        e["id"]: (e.get("cover_image_url") or "")
+        for e in existing
+    }
+
+    # Discover how many cover images exist in S3 (once per run)
+    s3_image_count = _fetch_s3_image_count()
 
     summary: dict[str, int] = {"exercises": 0, "quizzes": 0, "exams": 0, "updated": 0}
     to_upsert: list[dict] = []
 
-    # Assemble each quiz type independently (each has its own repeat budget)
+    # Assemble each quiz type independently (each has its own repeat budget + image shuffle)
     for quiz_type in ("exercise", "quiz", "exam"):
-        records = _assemble_type(quiz_type, rows, existing_id_map, summary, passage_titles)
+        picker = CoverImagePicker(s3_image_count)
+        records = _assemble_type(
+            quiz_type, rows, existing_id_map, summary, passage_titles,
+            picker=picker, existing_cover_map=existing_cover_map,
+        )
         to_upsert.extend(records)
         log.info(f"assembled_{quiz_type}", count=len(records))
 

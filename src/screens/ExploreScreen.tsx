@@ -18,11 +18,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, spacing, typography, QUIZ_TYPE_COLORS, QUIZ_TYPE_LABEL } from "../theme";
-import { Quiz, TipCard, Passage } from "../types/database";
-import { listQuizzes, listTipCards, listPassages, signUpForQuiz, startAttempt } from "../lib/dataService";
+import { Quiz, TipCard, Passage, Attempt } from "../types/database";
+import { listQuizzes, listTipCards, listPassages, signUpForQuiz, startAttempt, listUserAttempts } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
 import { extractSkillFromTitle, getQuizTypeSuffix } from "../lib/quizDisplayUtils";
+import { GestureDetector, Gesture } from "react-native-gesture-handler";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
@@ -35,6 +36,20 @@ export const TILE_WIDTH =
   (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS;
 export const TILE_HEIGHT = TILE_WIDTH * 1.4;
 export const FEED_IMAGE_HEIGHT = SCREEN_HEIGHT * 0.5;
+
+/** Remove parenthetical suffixes (half-width and full-width) from a title, e.g. "(節錄)" or "（節錄）". */
+function stripParens(title: string): string {
+  return title.replace(/\s*[\(（][^)）]*[\)）]/g, "").trim();
+}
+
+/** Fisher-Yates in-place shuffle. */
+function shuffleArray<T>(arr: T[]): T[] {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
 
 export const TIP_CATEGORY_LABEL: Record<TipCard["category"], string> = {
   exam_tip: "考試貼士",
@@ -133,7 +148,7 @@ function VerticalTileInfo({
   );
 }
 
-function QuizTile({ item, onPress, passageName }: { item: Quiz; onPress: () => void; passageName?: string }) {
+function QuizTile({ item, onPress, passageName, status }: { item: Quiz; onPress: () => void; passageName?: string; status?: "passed" | "failed" }) {
   const { user, isGuest } = useAuth();
   const pointsLocked = item.min_points_required > (user?.wenyuan_points ?? 0);
   const tierLocked = !isGuest && !!user && user.subscription_tier !== "premium" && item.type !== "exercise";
@@ -141,15 +156,27 @@ function QuizTile({ item, onPress, passageName }: { item: Quiz; onPress: () => v
   const badgeColor = QUIZ_TYPE_COLORS[item.type] ?? colors.primary;
   const skillName = !passageName ? extractSkillFromTitle(item.title) : undefined;
   const heroText = passageName ?? skillName;
+  const displayTitle = stripParens(heroText ?? item.title);
 
   return (
     <TouchableOpacity
-      style={[styles.tile, { width: TILE_WIDTH, height: TILE_HEIGHT }]}
+      style={[
+        styles.tile,
+        { width: TILE_WIDTH, height: TILE_HEIGHT },
+        status === "failed" && styles.tileFailed,
+      ]}
       activeOpacity={0.85}
       onPress={onPress}
     >
       {item.cover_image_url ? (
-        <Image source={{ uri: item.cover_image_url }} style={StyleSheet.absoluteFill} contentFit="cover" />
+        <Image
+          source={{ uri: item.cover_image_url }}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={150}
+          recyclingKey={item.id}
+        />
       ) : (
         <View style={[StyleSheet.absoluteFill, styles.tilePlaceholder]} />
       )}
@@ -157,8 +184,17 @@ function QuizTile({ item, onPress, passageName }: { item: Quiz; onPress: () => v
         colors={["transparent", "rgba(0,0,0,0.85)"]}
         style={StyleSheet.absoluteFill}
       />
+      {/* Passed overlay — greyed tint + 成功 chop */}
+      {status === "passed" && (
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <View style={styles.tilePassedOverlay} />
+          <View style={styles.tilePassedChopWrap}>
+            <Text style={styles.tilePassedChop}>成{"\n"}功</Text>
+          </View>
+        </View>
+      )}
       {/* Vertical title (1 or 2 columns) */}
-      <TileVerticalTitle title={heroText ?? item.title} />
+      <TileVerticalTitle title={displayTitle} />
       <VerticalTileInfo
         categoryLabel={QUIZ_TYPE_LABEL[item.type] ?? item.type}
         categoryBgColor={badgeColor}
@@ -185,7 +221,14 @@ function TipTile({ item, onPress }: { item: TipCard; onPress: () => void }) {
       onPress={onPress}
     >
       {item.image_url ? (
-        <Image source={{ uri: item.image_url }} style={StyleSheet.absoluteFill} contentFit="cover" />
+        <Image
+          source={{ uri: item.image_url }}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={150}
+          recyclingKey={item.id}
+        />
       ) : (
         <View style={[StyleSheet.absoluteFill, styles.tilePlaceholderTip]} />
       )}
@@ -214,7 +257,7 @@ function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () 
   // Hero text: passage name OR skill name; strip it from feedTitle to avoid repetition
   const skillName = !passageName ? extractSkillFromTitle(item.title) : undefined;
   const heroText = passageName ?? skillName;
-  const feedDisplayTitle = heroText ? getQuizTypeSuffix(item.title, heroText) : item.title;
+  const feedDisplayTitle = stripParens(heroText ? getQuizTypeSuffix(item.title, heroText) : item.title);
 
   const onJoin = async () => {
     if (!user) return;
@@ -276,14 +319,21 @@ function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () 
     <View style={styles.feedPage}>
       <View style={styles.feedImageWrap}>
         {item.cover_image_url ? (
-          <Image source={{ uri: item.cover_image_url }} style={StyleSheet.absoluteFill} contentFit="cover" />
+          <Image
+            source={{ uri: item.cover_image_url }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            transition={200}
+            priority="high"
+          />
         ) : (
           <View style={[StyleSheet.absoluteFill, styles.tilePlaceholder]} />
         )}
         <LinearGradient colors={["transparent", colors.background]} style={StyleSheet.absoluteFill} />
       </View>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.feedInfoContent}>
-        <View style={[styles.badge, { backgroundColor: badgeColor, alignSelf: "flex-start", marginBottom: spacing.sm }]}>
+        <View style={[styles.badge, { position: "relative", top: 0, left: 0, backgroundColor: badgeColor, alignSelf: "flex-start", marginBottom: spacing.sm }]}>
           <Text style={styles.badgeText}>{QUIZ_TYPE_LABEL[item.type] ?? item.type}</Text>
         </View>
         {heroText ? (
@@ -373,14 +423,21 @@ function TipFeedPage({ item }: { item: TipCard }) {
     <View style={styles.feedPage}>
       <View style={styles.feedImageWrap}>
         {item.image_url ? (
-          <Image source={{ uri: item.image_url }} style={StyleSheet.absoluteFill} contentFit="cover" />
+          <Image
+            source={{ uri: item.image_url }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            transition={200}
+            priority="high"
+          />
         ) : (
           <View style={[StyleSheet.absoluteFill, styles.tilePlaceholderTip]} />
         )}
         <LinearGradient colors={["transparent", colors.background]} style={StyleSheet.absoluteFill} />
       </View>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.feedInfoContent}>
-        <View style={[styles.badge, { backgroundColor: colors.accent, alignSelf: "flex-start", marginBottom: spacing.sm }]}>
+        <View style={[styles.badge, { position: "relative", top: 0, left: 0, backgroundColor: colors.accent, alignSelf: "flex-start", marginBottom: spacing.sm }]}>
           <Text style={styles.badgeText}>{label}</Text>
         </View>
         <Text style={styles.feedTipLabel}>學習提示卡</Text>
@@ -396,10 +453,11 @@ function TipFeedPage({ item }: { item: TipCard }) {
 export default function ExploreScreen() {
   const [items, setItems] = useState<FeedItem[]>([]);
   const [passages, setPassages] = useState<Passage[]>([]);
+  const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [feedVisible, setFeedVisible] = useState(false);
   const [feedIndex, setFeedIndex] = useState(0);
   const feedRef = useRef<FlatList<FeedItem>>(null);
-  const { loading: authLoading } = useAuth();
+  const { loading: authLoading, user } = useAuth();
 
   // Filter states
   const [filterType, setFilterType] = useState<string>("all");
@@ -407,12 +465,19 @@ export default function ExploreScreen() {
   const [filterPassageId, setFilterPassageId] = useState<string | null>(null);
   const [filterMinPoints, setFilterMinPoints] = useState<number | null>(null);
   const [filterTitle, setFilterTitle] = useState<string | null>(null);
+  const [filterCompletion, setFilterCompletion] = useState<"passed" | "failed" | null>(null);
   const [filterExpanded, setFilterExpanded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = async () => {
-    const [quizzes, tips, passageList] = await Promise.all([listQuizzes(), listTipCards(), listPassages()]);
-    setItems(interleave(quizzes, tips));
+    const [quizzes, tips, passageList, userAttempts] = await Promise.all([
+      listQuizzes(),
+      listTipCards(),
+      listPassages(),
+      user ? listUserAttempts(user.id) : Promise.resolve([]),
+    ]);
+    setAttempts(userAttempts);
+    setItems(interleave(shuffleArray([...quizzes]), tips));
     setPassages(passageList);
   };
 
@@ -437,16 +502,32 @@ export default function ExploreScreen() {
     [passages],
   );
 
-  const allFiltersCleared = filterType === "all" && filterDifficulty === null && filterPassageId === null && filterMinPoints === null && filterTitle === null;
+  const allFiltersCleared = filterType === "all" && filterDifficulty === null && filterPassageId === null && filterMinPoints === null && filterTitle === null && filterCompletion === null;
 
-  // Sorted unique quiz titles for the title filter
+  // Build pass/fail status map per quiz (best attempt wins: passed beats failed)
+  const quizStatusMap = useMemo<Record<string, "passed" | "failed">>(() => {
+    const map: Record<string, "passed" | "failed"> = {};
+    for (const a of attempts) {
+      if (a.status !== "submitted" || a.score === null) continue;
+      // Find the quiz to get its pass_score threshold
+      const quiz = items.find((it) => it.kind === "quiz" && it.data.id === a.quiz_id);
+      const passScore = quiz?.kind === "quiz" ? (quiz.data.pass_score ?? 60) : 60;
+      const pct = a.total > 0 ? (a.score / a.total) * 100 : 0;
+      const result: "passed" | "failed" = pct >= passScore ? "passed" : "failed";
+      // "passed" takes priority over "failed"
+      if (map[a.quiz_id] !== "passed") map[a.quiz_id] = result;
+    }
+    return map;
+  }, [attempts, items]);
+
+  // Sorted unique quiz titles (stripped of parens) for the title filter
   const uniqueQuizTitles = useMemo<string[]>(() => {
     const seen = new Set<string>();
     const titles: string[] = [];
     for (const item of items) {
-      if (item.kind === "quiz" && !seen.has(item.data.title)) {
-        seen.add(item.data.title);
-        titles.push(item.data.title);
+      if (item.kind === "quiz") {
+        const t = stripParens(item.data.title);
+        if (!seen.has(t)) { seen.add(t); titles.push(t); }
       }
     }
     return titles.sort((a, b) => a.localeCompare(b, "zh-HK"));
@@ -460,10 +541,11 @@ export default function ExploreScreen() {
       if (filterDifficulty !== null && q.difficulty !== filterDifficulty) return false;
       if (filterPassageId !== null && (q as any).passage_id !== filterPassageId) return false;
       if (filterMinPoints !== null && q.min_points_required > filterMinPoints) return false;
-      if (filterTitle !== null && q.title !== filterTitle) return false;
+      if (filterTitle !== null && stripParens(q.title) !== filterTitle) return false;
+      if (filterCompletion !== null && quizStatusMap[q.id] !== filterCompletion) return false;
       return true;
     });
-  }, [items, filterType, filterDifficulty, filterPassageId, filterMinPoints, filterTitle, allFiltersCleared]);
+  }, [items, filterType, filterDifficulty, filterPassageId, filterMinPoints, filterTitle, filterCompletion, quizStatusMap, allFiltersCleared]);
 
   const openFeed = (indexInFiltered: number) => {
     setFeedIndex(indexInFiltered);
@@ -474,6 +556,18 @@ export default function ExploreScreen() {
   };
 
   const closeFeed = () => setFeedVisible(false);
+
+  // Horizontal swipe (left or right) anywhere on the feed dismisses the modal.
+  // .failOffsetY prevents this gesture from stealing vertical scrolls from the paging FlatList.
+  const swipeToCloseFeed = Gesture.Pan()
+    .activeOffsetX([-25, 25])
+    .failOffsetY([-10, 10])
+    .runOnJS(true)
+    .onEnd((e) => {
+      if (Math.abs(e.translationX) > 60 || Math.abs(e.velocityX) > 500) {
+        closeFeed();
+      }
+    });
 
   const getPassageName = (passageId?: string | null): string | undefined => {
     const title = passageId ? passageMap[passageId]?.title : undefined;
@@ -487,7 +581,7 @@ export default function ExploreScreen() {
   const renderGridItem = ({ item, index }: { item: FeedItem; index: number }) => {
     const passageName = item.kind === "quiz" ? getPassageName((item.data as any).passage_id) : undefined;
     if (item.kind === "quiz") {
-      return <QuizTile item={item.data} onPress={() => openFeed(index)} passageName={passageName} />;
+      return <QuizTile item={item.data} onPress={() => openFeed(index)} passageName={passageName} status={quizStatusMap[item.data.id]} />;
     }
     return <TipTile item={item.data} onPress={() => openFeed(index)} />;
   };
@@ -514,8 +608,10 @@ export default function ExploreScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Filter row 1: type chips */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={styles.filterRowContent}>
+      {/* Filter section: chips row + optional expanded panel */}
+      <View>
+        {/* Filter row 1: type chips */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={styles.filterRowContent}>
         <TouchableOpacity style={[styles.filterChip, filterType === "all" && styles.filterChipActive]} onPress={() => setFilterType("all")}>
           <Text style={[styles.filterChipText, filterType === "all" && styles.filterChipTextActive]}>全部</Text>
         </TouchableOpacity>
@@ -528,11 +624,11 @@ export default function ExploreScreen() {
           <Ionicons name={filterExpanded ? "chevron-up" : "chevron-down"} size={10} color={filterExpanded ? colors.background : colors.textSecondary} />
           <Text style={[styles.filterChipText, filterExpanded && styles.filterChipTextActive]}> 篩選</Text>
         </TouchableOpacity>
-      </ScrollView>
+        </ScrollView>
 
-      {/* Filter row 2: expanded difficulty / passage / min points */}
-      {filterExpanded && (
-        <View style={styles.filterExpanded}>
+        {/* Filter row 2: expanded difficulty / passage / min points */}
+        {filterExpanded && (
+          <View style={styles.filterExpanded}>
           {/* Difficulty */}
           <Text style={styles.filterLabel}>難度</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row", gap: 6, paddingBottom: 4 }}>
@@ -579,6 +675,28 @@ export default function ExploreScreen() {
               </TouchableOpacity>
             ))}
           </ScrollView>
+          {/* Completion status */}
+          <Text style={styles.filterLabel}>完成狀態</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row", gap: 6, paddingBottom: 4 }}>
+            <TouchableOpacity
+              style={[styles.filterChip, filterCompletion === null && styles.filterChipActive]}
+              onPress={() => setFilterCompletion(null)}
+            >
+              <Text style={[styles.filterChipText, filterCompletion === null && styles.filterChipTextActive]}>全部</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.filterChip, filterCompletion === "passed" && styles.filterChipActive, filterCompletion === "passed" && { backgroundColor: "rgba(220,60,60,0.75)" }]}
+              onPress={() => setFilterCompletion(filterCompletion === "passed" ? null : "passed")}
+            >
+              <Text style={[styles.filterChipText, filterCompletion === "passed" && styles.filterChipTextActive]}>✓ 已通過</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.filterChip, filterCompletion === "failed" && styles.filterChipActive, filterCompletion === "failed" && { backgroundColor: "rgba(180,40,40,0.55)", borderColor: "rgba(220,60,60,0.80)" }]}
+              onPress={() => setFilterCompletion(filterCompletion === "failed" ? null : "failed")}
+            >
+              <Text style={[styles.filterChipText, filterCompletion === "failed" && styles.filterChipTextActive]}>✗ 未通過</Text>
+            </TouchableOpacity>
+          </ScrollView>
           {/* Title */}
           {uniqueQuizTitles.length > 0 && (
             <>
@@ -602,10 +720,12 @@ export default function ExploreScreen() {
               </ScrollView>
             </>
           )}
-        </View>
-      )}
+          </View>
+        )}
+      </View>
 
       <FlatList
+        style={{ flex: 1 }}
         data={filteredItems}
         keyExtractor={(it) => `${it.kind}:${it.data.id}`}
         numColumns={GRID_COLS}
@@ -613,6 +733,11 @@ export default function ExploreScreen() {
         columnWrapperStyle={styles.gridRow}
         renderItem={renderGridItem}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+        // Lazy rendering: only mount tiles near the viewport
+        initialNumToRender={6}
+        maxToRenderPerBatch={9}
+        windowSize={5}
+        removeClippedSubviews
       />
 
       <Modal
@@ -621,8 +746,9 @@ export default function ExploreScreen() {
         statusBarTranslucent
         onRequestClose={closeFeed}
       >
-        <View style={styles.feedContainer}>
-          <FlatList
+        <GestureDetector gesture={swipeToCloseFeed}>
+          <View style={styles.feedContainer}>
+            <FlatList
             ref={feedRef}
             data={filteredItems}
             keyExtractor={(it) => `feed:${it.kind}:${it.data.id}`}
@@ -638,24 +764,29 @@ export default function ExploreScreen() {
               setFeedIndex(idx);
             }}
             renderItem={renderFeedPage}
+            // Only keep the current page + one neighbour on each side rendered
+            initialNumToRender={1}
+            maxToRenderPerBatch={2}
+            windowSize={3}
           />
           {/* Overlay — pointerEvents="box-none" lets swipes pass to FlatList */}
-          <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-            <SafeAreaView style={styles.feedOverlay} edges={["top"]} pointerEvents="box-none">
-              <View style={styles.feedTopBar} pointerEvents="auto">
-                <TouchableOpacity style={styles.feedBtn} activeOpacity={0.7} onPress={closeFeed}>
-                  <Ionicons name="close" size={22} color="#FFFFFF" />
-                </TouchableOpacity>
-                <Text style={styles.feedCounter}>
-                  {feedIndex + 1} / {filteredItems.length}
-                </Text>
-                <TouchableOpacity style={styles.feedBtn} activeOpacity={0.7} onPress={closeFeed}>
-                  <Ionicons name="grid" size={20} color="#FFFFFF" />
-                </TouchableOpacity>
-              </View>
-            </SafeAreaView>
+            <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+              <SafeAreaView style={styles.feedOverlay} edges={["top"]} pointerEvents="box-none">
+                <View style={styles.feedTopBar} pointerEvents="auto">
+                  <TouchableOpacity style={styles.feedBtn} activeOpacity={0.7} onPress={closeFeed}>
+                    <Ionicons name="close" size={22} color="#FFFFFF" />
+                  </TouchableOpacity>
+                  <Text style={styles.feedCounter}>
+                    {feedIndex + 1} / {filteredItems.length}
+                  </Text>
+                  <TouchableOpacity style={styles.feedBtn} activeOpacity={0.7} onPress={closeFeed}>
+                    <Ionicons name="grid" size={20} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+              </SafeAreaView>
+            </View>
           </View>
-        </View>
+        </GestureDetector>
       </Modal>
     </SafeAreaView>
   );
@@ -692,6 +823,37 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     justifyContent: "flex-end",
     padding: 6,
+  },
+  tileFailed: {
+    borderWidth: 1.5,
+    borderColor: "rgba(220, 60, 60, 0.80)",
+  },
+  tilePassedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(18, 18, 18, 0.52)",
+  },
+  tilePassedChopWrap: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tilePassedChop: {
+    color: "rgba(220, 60, 60, 0.78)",
+    fontSize: 26,
+    fontWeight: "900",
+    textAlign: "center",
+    lineHeight: 28,
+    letterSpacing: 2,
+    borderWidth: 2,
+    borderColor: "rgba(220, 60, 60, 0.78)",
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    includeFontPadding: false,
   },
   tilePlaceholder: { backgroundColor: colors.surfaceAlt },
   tilePlaceholderTip: { backgroundColor: "#2A1A2A" },
@@ -935,7 +1097,7 @@ const styles = StyleSheet.create({
   },
 
   // filter bar
-  filterRow: { flexGrow: 0 },
+  filterRow: { flexGrow: 0, flexShrink: 0 },
   filterRowContent: { flexDirection: "row", paddingHorizontal: GRID_PADDING, paddingVertical: 4, gap: 4 },
   filterChip: {
     flexDirection: "row",
@@ -952,6 +1114,7 @@ const styles = StyleSheet.create({
   filterChipText: { color: colors.textSecondary, fontSize: 12, lineHeight: 16, includeFontPadding: false },
   filterChipTextActive: { color: "#FFFFFF", fontWeight: "700" },
   filterExpanded: {
+    paddingTop: 4,
     paddingHorizontal: GRID_PADDING,
     paddingBottom: 8,
     backgroundColor: colors.surface,

@@ -7,8 +7,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, typography } from "../theme";
 import { PsychTest, Attempt, Quiz, Passage } from "../types/database";
-import { listPsychTests, listUserAttempts, listQuizzes, listPassages, listUserPsychResults } from "../lib/dataService";
-import { SEED_QUESTIONS } from "../data/seedQuestions";
+import { listPsychTests, listUserAttempts, listQuizzes, listPassages, listUserPsychResults, fetchQuestionAnalyticsData, QuestionAnalyticsMeta } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
 import RadarChart from "../components/RadarChart";
@@ -32,9 +31,6 @@ const SKILL_TAGS = [
   { id: "t-comparison",   label: "跨篇章比較" },
 ] as const;
 
-// Seed question lookup for per-tag accuracy analysis
-const SEED_Q_MAP = Object.fromEntries(SEED_QUESTIONS.map((q) => [q.id, q]));
-
 export default function DiscoverSelfScreen() {
   const nav = useNavigation<Nav>();
   const { user } = useAuth();
@@ -47,6 +43,7 @@ export default function DiscoverSelfScreen() {
   const [quizzes, setQuizzes]   = useState<Quiz[]>([]);
   const [passages, setPassages] = useState<Passage[]>([]);
   const [userPsychResults, setUserPsychResults] = useState<Record<string, { result_code: string; completed_at: string }>>({});
+  const [questionMeta, setQuestionMeta] = useState<Record<string, QuestionAnalyticsMeta>>({});
 
   useEffect(() => {
     listPsychTests().then(setTests);
@@ -55,10 +52,16 @@ export default function DiscoverSelfScreen() {
 
   useFocusEffect(useCallback(() => {
     if (!user) return;
-    Promise.all([listUserAttempts(user.id), listQuizzes(), listUserPsychResults(user.id)]).then(([as, qs, pr]) => {
-      setAttempts(as.filter((a) => a.status === "submitted"));
+    Promise.all([listUserAttempts(user.id), listQuizzes(), listUserPsychResults(user.id)]).then(async ([as, qs, pr]) => {
+      const submitted = as.filter((a) => a.status === "submitted");
+      setAttempts(submitted);
       setQuizzes(qs);
       setUserPsychResults(pr);
+      const allQuestionIds = [...new Set(submitted.flatMap((a) => Object.keys(a.answers ?? {})))];
+      if (allQuestionIds.length > 0) {
+        const meta = await fetchQuestionAnalyticsData(allQuestionIds);
+        setQuestionMeta(meta);
+      }
     });
   }, [user]));
 
@@ -90,11 +93,10 @@ export default function DiscoverSelfScreen() {
 
     for (const attempt of attempts) {
       for (const [questionId, selectedOptionId] of Object.entries(attempt.answers ?? {})) {
-        const q = SEED_Q_MAP[questionId];
-        if (!q) continue;
-        const correctOpt = q.options.find((o) => o.is_correct);
-        const isCorrect = correctOpt?.id === selectedOptionId;
-        for (const tagId of q.tag_ids ?? []) {
+        const meta = questionMeta[questionId];
+        if (!meta) continue;
+        const isCorrect = meta.correctOptionId === selectedOptionId;
+        for (const tagId of meta.tagIds) {
           correct[tagId] = (correct[tagId] ?? 0) + (isCorrect ? 1 : 0);
           total[tagId]   = (total[tagId]   ?? 0) + 1;
         }
@@ -108,7 +110,7 @@ export default function DiscoverSelfScreen() {
       return Math.round((correct[t.id] ?? 0) / tot * 100);
     });
     return { skillAxes: axes, skillValues: values };
-  }, [attempts]);
+  }, [attempts, questionMeta]);
 
   const hasData = attempts.length >= 3;
 

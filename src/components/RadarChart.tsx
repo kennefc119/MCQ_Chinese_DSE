@@ -9,9 +9,13 @@ interface Props {
   size?: number;    // kept for backwards compat (square charts)
   width?: number;   // override size for width
   height?: number;  // override size for height
+  /** Minimum visual radius for any axis, as a 0–100 value. Axes with a calculated
+   *  score below this threshold are still drawn at this radius so the polygon
+   *  is never invisible. Data values are unchanged. Default: 8. */
+  minValue?: number;
 }
 
-export default function RadarChart({ axes, values, color, size = 200, width, height }: Props) {
+export default function RadarChart({ axes, values, color, size = 200, width, height, minValue = 8 }: Props) {
   const n = axes.length;
   if (n < 3 || values.length < n) return null;
 
@@ -30,20 +34,23 @@ export default function RadarChart({ axes, values, color, size = 200, width, hei
   const px = (r: number, i: number) => cx + r * Math.cos(angle(i));
   const py = (r: number, i: number) => cy + r * Math.sin(angle(i));
 
+  // Apply a minimum visual floor so zero-score axes still show a small polygon
+  const visualValues = values.map((v) => Math.max(v, minValue));
+
   const gridPolygons = Array.from({ length: levels }, (_, lvl) => {
     const r = (radius * (lvl + 1)) / levels;
     return Array.from({ length: n }, (_, i) => `${px(r, i)},${py(r, i)}`).join(" ");
   });
 
   const dataPoints = Array.from({ length: n }, (_, i) => {
-    const r = (values[i] / 100) * radius;
+    const r = (visualValues[i] / 100) * radius;
     return `${px(r, i)},${py(r, i)}`;
   }).join(" ");
 
   // Vertex positions for dots
   const vertexPoints = Array.from({ length: n }, (_, i) => ({
-    x: px((values[i] / 100) * radius, i),
-    y: py((values[i] / 100) * radius, i),
+    x: px((visualValues[i] / 100) * radius, i),
+    y: py((visualValues[i] / 100) * radius, i),
   }));
 
   return (

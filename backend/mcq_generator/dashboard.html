@@ -433,6 +433,25 @@
     </div>
 
     <div class="form-group">
+      <label>難度 <span style="font-size:10px;color:var(--muted);">（留空讓策略師決定）</span></label>
+      <select id="difficultySel">
+        <option value="">⚙ 自動（策略師決定）</option>
+        <option value="1">① 最淺</option>
+        <option value="2">② 淺</option>
+        <option value="3">③ 中</option>
+        <option value="4">④ 深</option>
+        <option value="5">⑤ 最深</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>考核能力 <span style="font-size:10px;color:var(--muted);">（留空讓策略師決定）</span></label>
+      <select id="skillSel">
+        <option value="">⚙ 自動（策略師決定）</option>
+      </select>
+    </div>
+
+    <div class="form-group">
       <label>批量生成數量</label>
       <div style="display:flex;gap:8px;align-items:center;">
         <input type="number" id="batchCount" min="1" max="100" value="1"
@@ -569,7 +588,7 @@ const AGENTS = {
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 async function init() {
-  await Promise.all([loadPassages(), loadStats()]);
+  await Promise.all([loadPassages(), loadSkills(), loadStats()]);
 }
 
 async function loadPassages() {
@@ -589,6 +608,21 @@ async function loadPassages() {
   } catch {
     setConn('err', '無法連接本地伺服器');
   }
+}
+
+async function loadSkills() {
+  try {
+    const r = await fetch(`${API}/api/skills`);
+    if (!r.ok) return;
+    const list = await r.json();
+    const sel = document.getElementById('skillSel');
+    list.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s.value;
+      o.textContent = s.label;
+      sel.appendChild(o);
+    });
+  } catch { /* silently ignore — options stay empty */ }
 }
 
 async function loadStats() {
@@ -626,7 +660,11 @@ function renderStats(s) {
 
 // ── Generate ──────────────────────────────────────────────────────────────────
 async function generate() {
-  const passage = document.getElementById('passageSel').value || null;
+  const passage   = document.getElementById('passageSel').value || null;
+  const diffVal   = document.getElementById('difficultySel').value;
+  const skillVal  = document.getElementById('skillSel').value;
+  const forcedDifficulty = diffVal  ? parseInt(diffVal, 10) : null;
+  const forcedSkill      = skillVal || null;
   const dryRun  = false;
   const count   = parseInt(document.getElementById('batchCount').value, 10) || 1;
 
@@ -656,7 +694,7 @@ async function generate() {
       const r = await fetch(`${API}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passage_id: passage, dry_run: dryRun, count: 1 }),
+        body: JSON.stringify({ passage_id: passage, forced_difficulty: forcedDifficulty, forced_skill: forcedSkill, dry_run: dryRun, count: 1 }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.detail || `HTTP ${r.status}`);

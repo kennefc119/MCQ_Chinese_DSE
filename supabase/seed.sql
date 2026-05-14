@@ -462,7 +462,7 @@ ON CONFLICT (question_id, tag_id) DO NOTHING;
 -- ── 6. Quizzes ────────────────────────────────────────────────
 INSERT INTO dsemcq_quizzes (
   id, type, title, description, cover_image_url, passage_id,
-  difficulty, duration_seconds, max_attempts, pass_score,
+  duration_seconds, max_attempts, pass_score,
   points_reward, min_points_required, is_published,
   question_ids, featured, order_no, color_hex,
   estimated_duration_label, subject_area
@@ -470,24 +470,24 @@ INSERT INTO dsemcq_quizzes (
 (
   'quiz-exercise-lunyu', 'exercise', '《論語》入門練習',
   '從《論仁、論孝、論君子》入手，溫習儒家修身之道。建議考前必做。',
-  'https://picsum.photos/seed/lunyu/600/400', 'p01',
-  1, null, null, 60, 5, 0, true,
+  'https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?w=600&h=400&fit=crop&auto=format', 'p01',
+  null, null, 60, 5, 0, true,
   ARRAY['q-p01-1','q-p01-2','q-p01-3','q-p01-4'],
   true, 1, '#E8D5B7', '約 5 分鐘', '先秦哲學'
 ),
 (
   'quiz-quiz-mengzi-xunzi', 'quiz', '《孟子》《荀子》小測',
   '綜合〈魚我所欲也〉與〈勸學〉的句意理解測驗。限時 12 分鐘。',
-  'https://picsum.photos/seed/mengzi/600/400', null,
-  3, 720, 3, 70, 15, 0, true,
+  'https://images.unsplash.com/photo-1540541338578-3e930212cb39?w=600&h=400&fit=crop&auto=format', null,
+  720, 3, 70, 15, 0, true,
   ARRAY['q-p02-1','q-p02-2','q-p02-3','q-p02-4','q-p04-1','q-p04-2','q-p04-3','q-p04-4'],
   false, 2, '#B5D5C5', '12 分鐘', '先秦哲學'
 ),
 (
   'quiz-exam-tang-song', 'exam', '唐宋古文模擬試',
   '綜合考核〈師說〉、〈始得西山宴遊記〉、〈岳陽樓記〉、〈六國論〉，模擬 DSE 試題。30 分鐘，僅限一次。',
-  'https://picsum.photos/seed/tangsong/600/400', null,
-  4, 1800, 1, 75, 30, 20, true,
+  'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&h=400&fit=crop&auto=format', null,
+  1800, 1, 75, 30, 20, true,
   ARRAY['q-p07-1','q-p07-2','q-p07-3','q-p07-4',
         'q-p08-1','q-p08-2','q-p08-3','q-p08-4',
         'q-p09-1','q-p09-2','q-p09-3','q-p09-4',
@@ -497,24 +497,24 @@ INSERT INTO dsemcq_quizzes (
 (
   'quiz-exercise-poetry', 'exercise', '唐詩宋詞綜合練習',
   '鑑賞唐宋詩詞名句，掌握詩風與修辭。',
-  'https://picsum.photos/seed/poetry/600/400', null,
-  2, null, null, 60, 8, 0, true,
+  'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop&auto=format', null,
+  null, null, 60, 8, 0, true,
   ARRAY['q-p11-1','q-p11-2','q-p11-3','q-p11-4','q-p12-1','q-p12-2','q-p12-3','q-p12-4'],
   false, 4, '#F4C2C2', '約 8 分鐘', '詩詞'
 ),
 (
   'quiz-quiz-zhuangzi', 'quiz', '《莊子．逍遙遊》專題測驗',
   '深入理解莊子「無用之用」與逍遙之境。',
-  'https://picsum.photos/seed/zhuangzi/600/400', 'p03',
-  3, 600, 3, 70, 12, 5, true,
+  'https://images.unsplash.com/photo-1591608197523-1bfb24e9a3c1?w=600&h=400&fit=crop&auto=format', 'p03',
+  600, 3, 70, 12, 5, true,
   ARRAY['q-p03-1','q-p03-2','q-p03-3','q-p03-4'],
   false, 5, '#A8D8EA', '10 分鐘', '先秦哲學'
 ),
 (
   'quiz-exam-full-mock', 'exam', 'DSE 文言文全卷模擬',
   '覆蓋十二篇指定篇章的綜合模擬試。需累積 50 文淵點解鎖。',
-  'https://picsum.photos/seed/fullmock/600/400', null,
-  5, 2700, 1, 75, 60, 50, true,
+  'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=600&h=400&fit=crop&auto=format', null,
+  2700, 1, 75, 60, 50, true,
   ARRAY['q-p01-1','q-p01-2','q-p01-3','q-p01-4',
         'q-p02-1','q-p02-2','q-p02-3','q-p02-4',
         'q-p03-1','q-p03-2','q-p03-3','q-p03-4',
@@ -541,37 +541,37 @@ INSERT INTO dsemcq_tip_cards (
   '1) 先朗讀全文三遍
 2) 逐句默寫，遇錯即時查證
 3) 隔日重默，鞏固記憶。',
-  'https://picsum.photos/seed/dsemcq-tip-1/900/1400',
+  'https://tb6-mood.s3.ap-southeast-2.amazonaws.com/dse_chi/2.png',
   'study', 1, true, 2, '立即試試'
 ),
 (
   'tip-2', '🧘 考前焦慮怎麼辦？', '4-7-8 呼吸法',
   '深呼吸 4-7-8：吸 4 秒、屏 7 秒、呼 8 秒。連續做 3 輪，可以快速降低心率。',
-  'https://picsum.photos/seed/dsemcq-tip-2/900/1400',
+  'https://tb6-mood.s3.ap-southeast-2.amazonaws.com/dse_chi/6.png',
   'wellness', 2, true, 1, '了解更多'
 ),
 (
   'tip-3', '📚 答題策略：先易後難', 'DSE 文言文必讀',
   'DSE 文言文選擇題建議先掃讀篇章，再逐題作答。遇到不懂的字詞，先做下一題，最後回頭重看。',
-  'https://picsum.photos/seed/dsemcq-tip-3/900/1400',
+  'https://tb6-mood.s3.ap-southeast-2.amazonaws.com/dse_chi/4.png',
   'exam_tip', 3, true, 2, '查看更多技巧'
 ),
 (
   'tip-4', '💤 睡眠勝過熬夜', '考前必讀',
   '考試前一晚睡足 7 小時，比熬夜多看一篇文章更有效。記憶會在睡眠中鞏固。',
-  'https://picsum.photos/seed/dsemcq-tip-4/900/1400',
+  'https://tb6-mood.s3.ap-southeast-2.amazonaws.com/dse_chi/1.png',
   'rest', 4, true, 1, '了解睡眠科學'
 ),
 (
   'tip-5', '🎯 主旨歸納法', '讀通文言文',
   '讀畢一篇文言文，試用一句話概括其中心思想。若做不到，代表還沒讀通。',
-  'https://picsum.photos/seed/dsemcq-tip-5/900/1400',
+  'https://tb6-mood.s3.ap-southeast-2.amazonaws.com/dse_chi/5.png',
   'study', 5, true, 2, '開始練習'
 ),
 (
   'tip-6', '⏰ 番茄鐘學習法', '高效溫習',
   '專注 25 分鐘，休息 5 分鐘。每四個番茄鐘長休 15 分鐘。比馬拉松式溫習更有效率。',
-  'https://picsum.photos/seed/dsemcq-tip-6/900/1400',
+  'https://tb6-mood.s3.ap-southeast-2.amazonaws.com/dse_chi/3.png',
   'study', 6, true, 2, '試試看'
 )
 ON CONFLICT (id) DO NOTHING;

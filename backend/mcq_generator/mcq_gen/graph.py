@@ -47,6 +47,8 @@ class CycleState(TypedDict, total=False):
     db_stats: DBStats
     dry_run: bool
     forced_passage: str | None  # 管理員指定篇章；None 表示讓策略師自行決定
+    forced_difficulty: int | None  # 管理員指定難度 1-5；None 表示讓策略師自行決定
+    forced_skill: str | None       # 管理員指定考核能力（Skill enum value）；None 表示讓策略師自行決定
 
     # Agent 1 輸出
     spec: Spec
@@ -66,10 +68,14 @@ class CycleState(TypedDict, total=False):
 # ─── Helper ──────────────────────────────────────────────────────────────────
 
 _DIFF_TO_INT = {
+    Difficulty.VERY_EASY: 1,
     Difficulty.EASY: 2,
     Difficulty.MEDIUM: 3,
     Difficulty.HARD: 4,
+    Difficulty.VERY_HARD: 5,
 }
+
+_INT_TO_DIFF = {v: k for k, v in _DIFF_TO_INT.items()}
 
 
 def _make_question_id(passage_id: str) -> str:
@@ -115,6 +121,8 @@ def node_strategist(state: CycleState) -> dict[str, Any]:
     spec = run_strategist(
         stats=state.get("db_stats"),
         forced_passage=state.get("forced_passage"),
+        forced_difficulty=state.get("forced_difficulty"),
+        forced_skill=state.get("forced_skill"),
     )
     qid = _make_question_id(spec.passage)
     return {"spec": spec, "question_id": qid, "iteration": 0, "draft_history": []}
@@ -245,6 +253,8 @@ def build_cycle_graph() -> Any:
 def run_pipeline(
     count: int = 1,
     passage: str | None = None,
+    difficulty: int | None = None,
+    skill: str | None = None,
     dry_run: bool = False,
 ) -> list[SavedQuestion]:
     """
@@ -253,6 +263,8 @@ def run_pipeline(
     Args:
         count:      要生成的題目數量
         passage:    若指定，覆蓋策略師的選擇（用於測試或補特定篇章）
+        difficulty: 若指定（1-5），強制策略師使用此難度，篇章由策略師智能選取
+        skill:      若指定（Skill enum 值，如「修辭手法」），強制策略師使用此考核能力
         dry_run:    True 時生成但不寫入 DB
 
     Returns:
@@ -273,6 +285,8 @@ def run_pipeline(
             "db_stats": initial_stats,
             "dry_run": dry_run,
             "forced_passage": passage,
+            "forced_difficulty": difficulty,
+            "forced_skill": skill,
             "iteration": 0,
             "draft_history": [],
         }
