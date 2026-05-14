@@ -22,7 +22,7 @@ import { Quiz, TipCard, Passage, Attempt } from "../types/database";
 import { listQuizzes, listTipCards, listPassages, signUpForQuiz, startAttempt, listUserAttempts } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
-import { extractSkillFromTitle, getQuizTypeSuffix } from "../lib/quizDisplayUtils";
+import { extractSkillFromTitle, getQuizTypeSuffix, SKILL_LABELS, SkillLabel } from "../lib/quizDisplayUtils";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
@@ -157,6 +157,7 @@ function QuizTile({ item, onPress, passageName, status }: { item: Quiz; onPress:
   const skillName = !passageName ? extractSkillFromTitle(item.title) : undefined;
   const heroText = passageName ?? skillName;
   const displayTitle = stripParens(heroText ?? item.title);
+  const [tileImgFailed, setTileImgFailed] = useState(false);
 
   return (
     <TouchableOpacity
@@ -168,7 +169,7 @@ function QuizTile({ item, onPress, passageName, status }: { item: Quiz; onPress:
       activeOpacity={0.85}
       onPress={onPress}
     >
-      {item.cover_image_url ? (
+      {item.cover_image_url && !tileImgFailed ? (
         <Image
           source={{ uri: item.cover_image_url }}
           style={StyleSheet.absoluteFill}
@@ -176,6 +177,7 @@ function QuizTile({ item, onPress, passageName, status }: { item: Quiz; onPress:
           cachePolicy="memory-disk"
           transition={150}
           recyclingKey={item.id}
+          onError={() => setTileImgFailed(true)}
         />
       ) : (
         <View style={[StyleSheet.absoluteFill, styles.tilePlaceholder]} />
@@ -253,6 +255,7 @@ function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () 
   const badgeColor = QUIZ_TYPE_COLORS[item.type] ?? colors.primary;
   const durationMins = item.duration_seconds ? Math.round(item.duration_seconds / 60) : null;
   const [loading, setLoading] = useState(false);
+  const [tileImgFailed, setTileImgFailed] = useState(false);
 
   // Hero text: passage name OR skill name; strip it from feedTitle to avoid repetition
   const skillName = !passageName ? extractSkillFromTitle(item.title) : undefined;
@@ -318,7 +321,7 @@ function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () 
   return (
     <View style={styles.feedPage}>
       <View style={styles.feedImageWrap}>
-        {item.cover_image_url ? (
+        {item.cover_image_url && !tileImgFailed ? (
           <Image
             source={{ uri: item.cover_image_url }}
             style={StyleSheet.absoluteFill}
@@ -326,6 +329,7 @@ function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () 
             cachePolicy="memory-disk"
             transition={200}
             priority="high"
+            onError={() => setTileImgFailed(true)}
           />
         ) : (
           <View style={[StyleSheet.absoluteFill, styles.tilePlaceholder]} />
@@ -464,7 +468,7 @@ export default function ExploreScreen() {
   const [filterDifficulty, setFilterDifficulty] = useState<number | null>(null);
   const [filterPassageId, setFilterPassageId] = useState<string | null>(null);
   const [filterMinPoints, setFilterMinPoints] = useState<number | null>(null);
-  const [filterTitle, setFilterTitle] = useState<string | null>(null);
+  const [filterSkill, setFilterSkill] = useState<SkillLabel | null>(null);
   const [filterCompletion, setFilterCompletion] = useState<"passed" | "failed" | null>(null);
   const [filterExpanded, setFilterExpanded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -502,7 +506,7 @@ export default function ExploreScreen() {
     [passages],
   );
 
-  const allFiltersCleared = filterType === "all" && filterDifficulty === null && filterPassageId === null && filterMinPoints === null && filterTitle === null && filterCompletion === null;
+  const allFiltersCleared = filterType === "all" && filterDifficulty === null && filterPassageId === null && filterMinPoints === null && filterSkill === null && filterCompletion === null;
 
   // Build pass/fail status map per quiz (best attempt wins: passed beats failed)
   const quizStatusMap = useMemo<Record<string, "passed" | "failed">>(() => {
@@ -520,19 +524,6 @@ export default function ExploreScreen() {
     return map;
   }, [attempts, items]);
 
-  // Sorted unique quiz titles (stripped of parens) for the title filter
-  const uniqueQuizTitles = useMemo<string[]>(() => {
-    const seen = new Set<string>();
-    const titles: string[] = [];
-    for (const item of items) {
-      if (item.kind === "quiz") {
-        const t = stripParens(item.data.title);
-        if (!seen.has(t)) { seen.add(t); titles.push(t); }
-      }
-    }
-    return titles.sort((a, b) => a.localeCompare(b, "zh-HK"));
-  }, [items]);
-
   const filteredItems = useMemo<FeedItem[]>(() => {
     return items.filter((item) => {
       if (item.kind === "tip") return allFiltersCleared;
@@ -540,12 +531,12 @@ export default function ExploreScreen() {
       if (filterType !== "all" && q.type !== filterType) return false;
       if (filterDifficulty !== null && q.difficulty !== filterDifficulty) return false;
       if (filterPassageId !== null && (q as any).passage_id !== filterPassageId) return false;
+      if (filterSkill !== null && extractSkillFromTitle(q.title) !== filterSkill) return false;
       if (filterMinPoints !== null && q.min_points_required > filterMinPoints) return false;
-      if (filterTitle !== null && stripParens(q.title) !== filterTitle) return false;
       if (filterCompletion !== null && quizStatusMap[q.id] !== filterCompletion) return false;
       return true;
     });
-  }, [items, filterType, filterDifficulty, filterPassageId, filterMinPoints, filterTitle, filterCompletion, quizStatusMap, allFiltersCleared]);
+  }, [items, filterType, filterDifficulty, filterPassageId, filterSkill, filterMinPoints, filterCompletion, quizStatusMap, allFiltersCleared]);
 
   const openFeed = (indexInFiltered: number) => {
     setFeedIndex(indexInFiltered);
@@ -561,7 +552,7 @@ export default function ExploreScreen() {
   // .failOffsetY prevents this gesture from stealing vertical scrolls from the paging FlatList.
   const swipeToCloseFeed = Gesture.Pan()
     .activeOffsetX([-25, 25])
-    .failOffsetY([-10, 10])
+    .failOffsetY([-5, 5])
     .runOnJS(true)
     .onEnd((e) => {
       if (Math.abs(e.translationX) > 60 || Math.abs(e.velocityX) > 500) {
@@ -660,6 +651,22 @@ export default function ExploreScreen() {
               </ScrollView>
             </>
           )}
+          {/* Skill */}
+          <Text style={styles.filterLabel}>考核能力</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row", gap: 6, paddingBottom: 4 }}>
+            <TouchableOpacity style={[styles.filterChip, filterSkill === null && styles.filterChipActive]} onPress={() => setFilterSkill(null)}>
+              <Text style={[styles.filterChipText, filterSkill === null && styles.filterChipTextActive]}>全部</Text>
+            </TouchableOpacity>
+            {SKILL_LABELS.map((sk) => (
+              <TouchableOpacity
+                key={sk}
+                style={[styles.filterChip, filterSkill === sk && styles.filterChipActive]}
+                onPress={() => setFilterSkill(filterSkill === sk ? null : sk)}
+              >
+                <Text style={[styles.filterChipText, filterSkill === sk && styles.filterChipTextActive]}>{sk}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
           {/* Min points unlock */}
           <Text style={styles.filterLabel}>最高解鎖要求</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row", gap: 6, paddingBottom: 4 }}>
@@ -697,29 +704,6 @@ export default function ExploreScreen() {
               <Text style={[styles.filterChipText, filterCompletion === "failed" && styles.filterChipTextActive]}>✗ 未通過</Text>
             </TouchableOpacity>
           </ScrollView>
-          {/* Title */}
-          {uniqueQuizTitles.length > 0 && (
-            <>
-              <Text style={styles.filterLabel}>標題</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row", gap: 6, paddingBottom: 4 }}>
-                <TouchableOpacity
-                  style={[styles.filterChip, filterTitle === null && styles.filterChipActive]}
-                  onPress={() => setFilterTitle(null)}
-                >
-                  <Text style={[styles.filterChipText, filterTitle === null && styles.filterChipTextActive]}>全部</Text>
-                </TouchableOpacity>
-                {uniqueQuizTitles.map((t) => (
-                  <TouchableOpacity
-                    key={t}
-                    style={[styles.filterChip, filterTitle === t && styles.filterChipActive]}
-                    onPress={() => setFilterTitle(filterTitle === t ? null : t)}
-                  >
-                    <Text style={[styles.filterChipText, filterTitle === t && styles.filterChipTextActive]} numberOfLines={1}>{t}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </>
-          )}
           </View>
         )}
       </View>
@@ -752,7 +736,9 @@ export default function ExploreScreen() {
             ref={feedRef}
             data={filteredItems}
             keyExtractor={(it) => `feed:${it.kind}:${it.data.id}`}
-            pagingEnabled
+            snapToInterval={SCREEN_HEIGHT}
+            snapToAlignment="start"
+            decelerationRate="fast"
             showsVerticalScrollIndicator={false}
             getItemLayout={(_, i) => ({
               length: SCREEN_HEIGHT,

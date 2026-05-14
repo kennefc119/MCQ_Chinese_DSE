@@ -163,7 +163,7 @@ def _fetch_s3_image_count() -> int:
 
     if not _exists(1):
         log.warning("s3_cover_image_1_not_found", url=f"{S3_BASE_URL}1.png")
-        return 1
+        return 0  # no images in bucket — callers must handle None cover
 
     # Exponential scan to find an upper bound, then binary-search for the last image
     lo, hi = 1, 1
@@ -186,19 +186,23 @@ class CoverImagePicker:
     Assigns cover images from the S3 folder in a shuffled order, exhausting
     all available images before repeating.  One instance is created per quiz
     type so each type gets its own independent shuffle.
+    Returns None when no images are available in the bucket.
     """
 
     def __init__(self, image_count: int) -> None:
-        self._total = max(image_count, 1)
+        self._total = max(image_count, 0)
         self._queue: list[int] = []
-        self._refill()
+        if self._total > 0:
+            self._refill()
 
     def _refill(self) -> None:
         indices = list(range(1, self._total + 1))
         random.shuffle(indices)
         self._queue = indices
 
-    def next(self) -> str:
+    def next(self) -> str | None:
+        if self._total == 0:
+            return None
         if not self._queue:
             self._refill()
         return f"{S3_BASE_URL}{self._queue.pop()}.png"
@@ -295,14 +299,14 @@ def _make_record(
     title: str,
     description: str,
     passage_id: str | None,
-    difficulty: int,
     question_ids: list[str],
-    cover_image_url: str,
+    cover_image_url: str | None,
     subject_area: str,
     existing_id_map: dict[tuple, str],
     summary: dict[str, int],
+    title_id: int,          # 1-based sequence within (passage/skill, quiz_type)
 ) -> dict:
-    key = (passage_id, quiz_type, title)
+    key = (passage_id, quiz_type, title, title_id)
     meta = _QUIZ_META[quiz_type]
     record = {
         "id":                       existing_id_map.get(key) or _new_quiz_id(),
@@ -311,12 +315,12 @@ def _make_record(
         "description":              description,
         "cover_image_url":          cover_image_url,
         "passage_id":               passage_id,
-        "difficulty":               difficulty,
         "color_hex":                COLOR_HEX[quiz_type],
         "estimated_duration_label": EST_LABEL[quiz_type],
         "subject_area":             subject_area,
         "is_published":             True,
         "question_ids":             question_ids,
+        "title_id":                 title_id,
         **meta,
     }
     if existing_id_map.get(key):
@@ -384,28 +388,33 @@ def _assemble_type(
     _ptitles = passage_titles or {}
     _cover_map = existing_cover_map or {}
 
-    def _pick_cover(passage_id: str | None, title: str) -> str:
-        """Return stable S3 cover if the quiz already exists, else pick next."""
-        if picker is None:
-            return f"{S3_BASE_URL}1.png"
-        key = (passage_id, quiz_type, title)
+    def _pick_cover(passage_id: str | None, title: str, title_id: int) -> str | None:
+        """Return stable cover if the quiz already exists, else pick next from S3.
+        Preserves any non-empty existing URL (Unsplash, S3, or custom).
+        Returns None when the S3 bucket has no images.
+        """
+        key = (passage_id, quiz_type, title, title_id)
         existing_id = existing_id_map.get(key)
         if existing_id:
             existing = _cover_map.get(existing_id, "")
-            if existing.startswith(S3_BASE_URL):
+            if existing:  # preserve any non-empty URL regardless of origin
                 return existing
+        if picker is None:
+            return None
         return picker.next()
 
     # -- By-passage -----------------------------------------------------------
     by_passage: dict[str, list[dict]] = defaultdict(list)
     for r in eligible:
-        pid = r.get("passage_id") or "unknown"
-        by_passage[pid].append(r)
+        pid = r.get("passage_id")
+        if pid:   # skip cross-passage questions (passage_id=None) — they belong in by_skill only
+            by_passage[pid].append(r)
 
     for pid in sorted(by_passage.keys()):
         passage_rows = by_passage[pid]
         label = (_ptitles.get(pid) or _passage_label(pid)).removesuffix("（節錄）").strip()
         subj  = PASSAGE_SUBJECT.get(pid, "文言文")
+        seq   = 0
 
         while True:
             available = [r for r in passage_rows if usage_counts[r["id"]] < max_repeat]
@@ -413,6 +422,7 @@ def _assemble_type(
             if selected is None:
                 break
 
+            seq  += 1
             title = label
 
             records.append(_make_record(
@@ -420,17 +430,21 @@ def _assemble_type(
                 title=title,
                 description=_passage_desc(quiz_type, label, n, min_score),
                 passage_id=pid,
-                difficulty=EASY,
                 question_ids=[r["id"] for r in selected],
-                cover_image_url=_pick_cover(pid, title),
+                cover_image_url=_pick_cover(pid, title, seq),
                 subject_area=subj,
                 existing_id_map=existing_id_map,
                 summary=summary,
+                title_id=seq,
             ))
             for r in selected:
                 usage_counts[r["id"]] += 1
 
     # -- By-skill -------------------------------------------------------------
+    # Each grouping has its own independent repeat budget:
+    # a question may appear once inside passage groups AND once inside skill groups.
+    usage_counts = Counter()
+
     by_skill: dict[str, list[dict]] = defaultdict(list)
     for r in eligible:
         sk = _primary_skill(r)
@@ -440,6 +454,7 @@ def _assemble_type(
     for tag_id in sorted(by_skill.keys()):
         skill_rows  = by_skill[tag_id]
         skill_label = TAG_LABEL.get(tag_id, tag_id)
+        seq         = 0
 
         while True:
             available = [r for r in skill_rows if usage_counts[r["id"]] < max_repeat]
@@ -447,6 +462,7 @@ def _assemble_type(
             if selected is None:
                 break
 
+            seq  += 1
             title = skill_label
 
             records.append(_make_record(
@@ -454,12 +470,12 @@ def _assemble_type(
                 title=title,
                 description=_skill_desc(quiz_type, skill_label, n, min_score),
                 passage_id=None,
-                difficulty=EASY,
                 question_ids=[r["id"] for r in selected],
-                cover_image_url=_pick_cover(None, title),
+                cover_image_url=_pick_cover(None, title, seq),
                 subject_area=skill_label,
                 existing_id_map=existing_id_map,
                 summary=summary,
+                title_id=seq,
             ))
             for r in selected:
                 usage_counts[r["id"]] += 1
@@ -527,14 +543,16 @@ def assemble_quizzes(
         .execute()
         .data or []
     )
-    existing_id_map: dict[tuple, str] = {
-        (e.get("passage_id"), e.get("type"), e.get("title")): e["id"]
-        for e in existing
-    }
-    # quiz_id -> existing title_id (None means unset or NULL in DB)
-    existing_title_id_map: dict[str, int | None] = {
-        e["id"]: e.get("title_id") for e in existing
-    }
+    existing_id_map: dict[tuple, str] = {}
+    for e in existing:
+        tid = e.get("title_id")
+        # Primary key includes title_id so each quiz instance has a unique stable ID
+        existing_id_map[(e.get("passage_id"), e.get("type"), e.get("title"), tid)] = e["id"]
+        # Backward compat: old single quizzes stored with title_id=None also map to seq=1
+        if tid is None:
+            existing_id_map.setdefault(
+                (e.get("passage_id"), e.get("type"), e.get("title"), 1), e["id"]
+            )
     # quiz_id -> existing cover_image_url (for stable cover preservation)
     existing_cover_map: dict[str, str] = {
         e["id"]: (e.get("cover_image_url") or "")
@@ -557,30 +575,16 @@ def assemble_quizzes(
         to_upsert.extend(records)
         log.info(f"assembled_{quiz_type}", count=len(records))
 
-    # ── Assign stable title_id for quizzes that share the same title ─────────
-    # Group assembled records by title.
-    title_groups: dict[str, list[dict]] = defaultdict(list)
+    # ── Normalise title_id: single quiz for a (type, title) combo → None ─────
+    # Multiple quizzes keep their seq-based title_ids (1, 2, 3…) already set
+    # by _make_record so the frontend can label them "師說 ①", "師說 ②" etc.
+    title_groups: dict[tuple, list[dict]] = defaultdict(list)
     for record in to_upsert:
-        title_groups[record["title"]].append(record)
+        title_groups[(record["type"], record["title"])].append(record)
 
-    for _title, group in title_groups.items():
-        if len(group) > 1:
-            # Gather pre-existing title_id assignments so they are preserved.
-            assigned: dict[str, int] = {}  # quiz_id -> title_id
-            for record in group:
-                tid = existing_title_id_map.get(record["id"])
-                if tid is not None:
-                    assigned[record["id"]] = tid
-            next_id = max(assigned.values(), default=0) + 1
-            for record in group:
-                if record["id"] not in assigned:
-                    assigned[record["id"]] = next_id
-                    next_id += 1
-            for record in group:
-                record["title_id"] = assigned[record["id"]]
-        else:
-            # Unique title — clear any stale title_id.
-            group[0]["title_id"] = None
+    for group in title_groups.values():
+        if len(group) == 1:
+            group[0]["title_id"] = None   # only one — no numbering needed
 
     if not dry_run and to_upsert:
         sb.table("dsemcq_quizzes").upsert(to_upsert, on_conflict="id").execute()

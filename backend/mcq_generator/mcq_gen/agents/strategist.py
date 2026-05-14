@@ -53,9 +53,22 @@ def _build_prompt(
             f"不得自行選擇其他考核能力。請優先選擇在此能力下最缺題的篇章（若篇章未被指定）。"
         )
     note = "\n\n".join(notes) + "\n\n" if notes else ""
+
+    # Build a clean stats view: show only active-question counts so the LLM
+    # reasons consistently. `total` here means active questions only.
+    stats_for_llm = {
+        "total_active_questions": stats.total_active,
+        "total_inactive_questions": stats.total_inactive,
+        "by_passage": stats.by_passage,
+        "by_difficulty": stats.by_difficulty,
+        "by_skill": stats.by_skill,
+        "cross_passage_count": stats.cross_passage_count,
+        "needs_review_count": stats.needs_review_count,
+    }
+
     return render_template(
         _PROMPT_PATH,
-        stats_json=json.dumps(stats.model_dump(), ensure_ascii=False, indent=2),
+        stats_json=json.dumps(stats_for_llm, ensure_ascii=False, indent=2),
         forced_constraints_note=note,
     )
 

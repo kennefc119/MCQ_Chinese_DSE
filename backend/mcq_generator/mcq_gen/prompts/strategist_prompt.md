@@ -70,7 +70,7 @@
 {{forced_constraints_note}}
 以下是現有題庫的分佈統計，請根據此分析決定下一條 MC 題目的規格。
 
-## 現有題庫統計
+## 現有題庫統計（僅計算 is_active = true 的有效題目）
 ```json
 {{stats_json}}
 ```

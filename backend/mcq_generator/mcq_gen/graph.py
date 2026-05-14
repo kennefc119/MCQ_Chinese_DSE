@@ -196,7 +196,10 @@ def route_after_critic(state: CycleState) -> str:
     critique: Critique = state["critique"]
     iteration: int = state.get("iteration", 1)  # already incremented in node_critic
 
-    if critique.verdict == Verdict.PASS:
+    # Hard gate: score < 7 can never be PASS regardless of what the LLM returned
+    is_pass = critique.verdict == Verdict.PASS and critique.score >= 7
+
+    if is_pass:
         log.info("routing_to_save", score=critique.score)
         return "save"
 

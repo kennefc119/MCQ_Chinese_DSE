@@ -28,6 +28,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     "expo-font",
     "expo-secure-store",
+    "expo-notifications",
     [
       "expo-build-properties",
       {
@@ -52,5 +53,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supabaseUrl: process.env.SUPABASE_URL ?? "",
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? "",
     advisorBotName: process.env.DSE_ADVISOR_BOT_NAME ?? "文淵書僮",
+    // Optional: direct FastAPI base URL (only used if you bypass the Edge Function).
+    // Production should leave this empty and rely on the dsemcq-mcq-proxy edge function.
+    generatorUrl: process.env.EXPO_PUBLIC_GENERATOR_URL ?? "",
   },
 });

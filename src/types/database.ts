@@ -176,3 +176,94 @@ export interface AdvisorMessageRecord {
   bot_reply: string;
   created_at: string;
 }
+
+// ─── Admin feature types ────────────────────────────────────────────────────
+
+export type AnnouncementType = "info" | "warning" | "success";
+
+export interface Announcement {
+  id: string;
+  title: string;
+  body: string;
+  type: AnnouncementType;
+  sent_by: string | null;
+  sent_at: string;
+  push_sent: boolean;
+  recipients: number;
+}
+
+export interface PushToken {
+  user_id: string;
+  expo_push_token: string;
+  platform: string | null;
+  updated_at: string;
+}
+
+export interface VisitEvent {
+  id: string;
+  device_id: string;
+  user_id: string | null;
+  event_type: string;
+  platform: string | null;
+  occurred_at: string;
+}
+
+export interface LoginEvent {
+  id: string;
+  user_id: string;
+  occurred_at: string;
+  platform: string | null;
+}
+
+/** Aggregated metrics across a time window (e.g. last 7 days). */
+export interface UsageWindowMetrics {
+  windowDays: number;
+  activeUsers: number;      // distinct users with quiz attempts in window
+  newUsers: number;         // distinct profiles created in window
+  loginEvents: number;      // raw login_events count
+  visitorDevices: number;   // distinct device_id without user_id in window
+  chatUsers: number;        // distinct users who sent advisor messages in window
+  chatMessages: number;     // total advisor exchanges (user+bot pairs) in window
+}
+
+/** A single quiz attempt summary for the user-history admin view. */
+export interface AttemptHistoryItem {
+  attempt_id: string;
+  quiz_id: string;
+  quiz_title: string;
+  passage_id: string | null;
+  passage_title: string | null;
+  score: number | null;
+  total: number;
+  percentage: number;        // 0-100; -1 if not yet scored
+  status: "in_progress" | "submitted" | "expired";
+  started_at: string;
+  submitted_at: string | null;
+  time_spent_seconds: number | null;
+}
+
+/** Per-skill (tag) aggregate for a single user. */
+export interface UserSkillStat {
+  tag_id: string;
+  tag_label: string;
+  attempted: number;
+  correct: number;
+  accuracy: number;          // 0-1
+}
+
+/** Per-difficulty aggregate for a single user. */
+export interface UserDifficultyStat {
+  difficulty: number;        // 1-5
+  attempted: number;
+  correct: number;
+  accuracy: number;
+}
+
+/** Per-passage aggregate for a single user. */
+export interface UserPassageStat {
+  passage_id: string;
+  passage_title: string;
+  attempted: number;
+  correct: number;
+  accuracy: number;
+}

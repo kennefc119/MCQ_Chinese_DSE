@@ -16,9 +16,11 @@ log = structlog.get_logger(__name__)
 
 # 難度文字 → 數值
 _DIFF_TO_INT = {
+    Difficulty.VERY_EASY: 1,
     Difficulty.EASY: 2,
     Difficulty.MEDIUM: 3,
     Difficulty.HARD: 4,
+    Difficulty.VERY_HARD: 5,
 }
 
 # Skill → tag_id

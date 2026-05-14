@@ -184,7 +184,7 @@
     .btn-sm:hover { color: var(--text); }
 
     /* ── Main ────────────────────────────────────────────────────────────── */
-    .main { flex: 1; overflow-y: auto; padding: 20px 24px; }
+    .main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
 
     .main-hdr {
       display: flex;
@@ -407,6 +407,70 @@
       word-break: break-word;
       font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
     }
+
+    /* ── Main tabs ───────────────────────────────────────────────────────── */
+    .main-tabs {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+    .main-tab {
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .12s, border-color .12s;
+      user-select: none;
+    }
+    .main-tab:hover { color: var(--text); }
+    .main-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .main-panel { display: none; flex: 1; overflow-y: auto; padding: 16px; }
+    .main-panel.on { display: block; }
+
+    /* ── Overview table ──────────────────────────────────────────────────── */
+    .ov-wrap { overflow-x: auto; }
+    .ov-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 700px; }
+    .ov-table th {
+      background: var(--surface2);
+      color: var(--muted);
+      font-weight: 600;
+      padding: 8px 10px;
+      text-align: left;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+    }
+    .ov-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .ov-table tbody tr.passage-row:hover { background: var(--surface2); }
+    .ov-table tbody tr.passage-row { cursor: pointer; }
+    .ov-table tbody tr.detail-row > td { background: var(--surface); padding: 0; }
+    .ov-detail { display: none; padding: 10px 14px 14px; }
+    .ov-detail.open { display: block; }
+    .ov-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+    .ov-sub-title { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .ov-skill-row { display: flex; align-items: center; margin-bottom: 3px; font-size: 11px; gap: 6px; }
+    .ov-skill-lbl { width: 76px; white-space: nowrap; color: var(--text); flex-shrink: 0; }
+    .ov-skill-bar-wrap { flex: 1; height: 5px; background: var(--surface3); border-radius: 3px; }
+    .ov-skill-bar { height: 100%; background: var(--accent); border-radius: 3px; }
+    .ov-skill-n { min-width: 22px; text-align: right; color: var(--muted); font-weight: 600; }
+    .ov-diff-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; color: var(--muted); }
+    .ov-diff-row .ov-num { color: var(--text); font-weight: 600; }
+    .ov-zero { color: var(--dim) !important; }
+    .quiz-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; padding: 2px 8px; border-radius: 20px;
+      margin-right: 3px; white-space: nowrap;
+    }
+    .qp-ex   { background: rgba(63,185,80,.12);   color: var(--green); }
+    .qp-quiz { background: rgba(88,166,255,.12);  color: var(--accent); }
+    .qp-exam { background: rgba(188,140,255,.12); color: var(--purple); }
+    .ov-expand-icon { margin-right: 6px; font-size: 11px; color: var(--dim); transition: transform .2s; display: inline-block; }
+    tr.passage-row.expanded .ov-expand-icon { transform: rotate(90deg); }
+    .ov-reload-btn { font-size: 11px; padding: 3px 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--muted); cursor: pointer; }
+    .ov-reload-btn:hover { color: var(--text); }
   </style>
 </head>
 <body>
@@ -530,50 +594,64 @@
 
 <!-- ── MAIN ───────────────────────────────────────────────────────────────── -->
 <main class="main">
-  <div class="main-hdr">
-    <h2>生成歷史</h2>
-    <span class="badge" id="countBadge">0 次</span>
+
+  <!-- Top-level tabs -->
+  <div class="main-tabs">
+    <div class="main-tab active" id="mtab-history" onclick="switchMainTab('history')">📜 生成歷史 <span class="badge" id="countBadge" style="margin-left:6px;">0 次</span></div>
+    <div class="main-tab" id="mtab-overview" onclick="switchMainTab('overview')">📊 題庫總覽</div>
   </div>
 
-  <div class="err-banner" id="errBanner"></div>
+  <!-- Panel: 生成歷史 -->
+  <div class="main-panel on" id="mpanel-history">
+    <div class="err-banner" id="errBanner"></div>
 
-  <div class="loading-card" id="loadCard">
-    <div style="font-size:26px;">🤖</div>
-    <div style="font-size:14px;color:var(--muted);margin-top:8px;">Agents 正在運行中，請稍候...</div>
-    <div class="steps">
-      <span class="step-pill" id="sp1">🎯 策略師</span>
-      <span style="color:var(--dim);align-self:center;">→</span>
-      <span class="step-pill" id="sp2">✏️ 出題員</span>
-      <span style="color:var(--dim);align-self:center;">→</span>
-      <span class="step-pill" id="sp3">🔍 審題主任</span>
+    <div class="loading-card" id="loadCard">
+      <div style="font-size:26px;">🤖</div>
+      <div style="font-size:14px;color:var(--muted);margin-top:8px;">Agents 正在運行中，請稍候...</div>
+      <div class="steps">
+        <span class="step-pill" id="sp1">🎯 策略師</span>
+        <span style="color:var(--dim);align-self:center;">→</span>
+        <span class="step-pill" id="sp2">✏️ 出題員</span>
+        <span style="color:var(--dim);align-self:center;">→</span>
+        <span class="step-pill" id="sp3">🔍 審題主任</span>
+      </div>
+      <div class="loading-bar"><div class="loading-fill"></div></div>
+      <div style="font-size:11px;color:var(--dim);margin-top:8px;">約需 30–90 秒，視乎網絡及 LLM 回應速度</div>
     </div>
-    <div class="loading-bar"><div class="loading-fill"></div></div>
-    <div style="font-size:11px;color:var(--dim);margin-top:8px;">約需 30–90 秒，視乎網絡及 LLM 回應速度</div>
-  </div>
 
-  <div class="empty" id="emptyState">
-    <div class="ico">📖</div>
-    <p>
-      尚未生成任何題目<br>
-      點擊「開始生成題目」即可啟動三 Agent Pipeline<br>
-      （請確保 <code>mcq-gen serve</code> 已在另一終端視窗運行）
-    </p>
-  </div>
-
-  <div id="progressWrap" class="progress-wrap" style="display:none;">
-    <div class="progress-meta">
-      <span id="progressLabel" style="color:var(--text);font-weight:600;">0 / 0 已完成</span>
-      <span id="progressPct" style="color:var(--accent);font-weight:700;">0%</span>
+    <div class="empty" id="emptyState">
+      <div class="ico">📖</div>
+      <p>
+        尚未生成任何題目<br>
+        點擊「開始生成題目」即可啟動三 Agent Pipeline<br>
+        （請確保 <code>mcq-gen serve</code> 已在另一終端視窗運行）
+      </p>
     </div>
-    <div class="progress-track">
-      <div id="progressFill" class="progress-fill"></div>
+
+    <div id="progressWrap" class="progress-wrap" style="display:none;">
+      <div class="progress-meta">
+        <span id="progressLabel" style="color:var(--text);font-weight:600;">0 / 0 已完成</span>
+        <span id="progressPct" style="color:var(--accent);font-weight:700;">0%</span>
+      </div>
+      <div class="progress-track">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+      <div style="font-size:11px;color:var(--dim);margin-top:5px;" id="progressSub">正在生成...</div>
     </div>
-    <div style="font-size:11px;color:var(--dim);margin-top:5px;" id="progressSub">正在生成...</div>
+
+    <div id="batchSummary" class="batch-summary" style="display:none;"></div>
+    <div id="results"></div>
   </div>
 
-  <div id="batchSummary" class="batch-summary" style="display:none;"></div>
-
-  <div id="results"></div>
+  <!-- Panel: 題庫總覽 -->
+  <div class="main-panel" id="mpanel-overview">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+      <span style="font-size:14px;font-weight:700;">題庫總覽</span>
+      <button class="ov-reload-btn" onclick="loadBreakdown()">🔄 重新載入</button>
+      <span id="ovStatus" style="font-size:11px;color:var(--muted);"></span>
+    </div>
+    <div id="ovContent"><div style="color:var(--dim);font-size:12px;">載入中...</div></div>
+  </div>
 </main>
 
 <script>
@@ -585,6 +663,17 @@ const AGENTS = {
   Draft:    { lbl: '出題員',   em: '✏️', cls: 'ab-Draft'    },
   Critique: { lbl: '審題主任', em: '🔍', cls: 'ab-Critique' },
 };
+
+// ── Main tab switch ───────────────────────────────────────────────────────────
+function switchMainTab(name) {
+  ['history','overview'].forEach(n => {
+    document.getElementById(`mtab-${n}`).classList.toggle('active', n === name);
+    document.getElementById(`mpanel-${n}`).classList.toggle('on', n === name);
+  });
+  if (name === 'overview' && document.getElementById('ovContent').textContent.includes('載入中')) {
+    loadBreakdown();
+  }
+}
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 async function init() {
@@ -636,21 +725,171 @@ async function loadStats() {
   }
 }
 
+// ── Breakdown (題庫總覽) ───────────────────────────────────────────────────────
+const SKILL_ORDER = ['字詞解釋','內容理解','主旨歸納','修辭手法','人物分析','句式語法','背景知識','跨篇章比較'];
+const DIFF_ORDER  = ['最淺','淺','中','深','最深'];
+
+async function loadBreakdown() {
+  const status = document.getElementById('ovStatus');
+  const content = document.getElementById('ovContent');
+  status.textContent = '載入中...';
+  try {
+    const r = await fetch(`${API}/api/breakdown`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d = await r.json();
+    renderBreakdown(d);
+    status.textContent = `${d.passages.length} 篇課文`;
+  } catch(e) {
+    content.innerHTML = `<div style="color:var(--red);font-size:12px;">❌ 無法載入：${e.message}</div>`;
+    status.textContent = '';
+  }
+}
+
+function renderBreakdown(d) {
+  const passages = d.passages || [];
+  const cross    = d.cross_passage || null;
+
+  // Compute max active questions for bar scaling
+  const maxActive = Math.max(1, ...passages.map(p => p.questions.active));
+
+  const skillMaxMap = {};
+  SKILL_ORDER.forEach(sk => {
+    skillMaxMap[sk] = Math.max(1, ...passages.map(p => (p.questions.by_skill || {})[sk] || 0));
+  });
+
+  function quizPills(qz) {
+    const parts = [];
+    if (qz.exercise) parts.push(`<span class="quiz-pill qp-ex">🏋 練習 ${qz.exercise}</span>`);
+    if (qz.quiz)     parts.push(`<span class="quiz-pill qp-quiz">📝 測驗 ${qz.quiz}</span>`);
+    if (qz.exam)     parts.push(`<span class="quiz-pill qp-exam">🎓 模擬 ${qz.exam}</span>`);
+    return parts.length ? parts.join('') : '<span style="color:var(--dim);font-size:11px;">—</span>';
+  }
+
+  function detailHtml(p, rowIdx) {
+    const qs = p.questions;
+    const bySkill = qs.by_skill || {};
+    const byDiff  = qs.by_difficulty || {};
+    const skillRows = SKILL_ORDER.map(sk => {
+      const n = bySkill[sk] || 0;
+      const pct = qs.active > 0 ? Math.round(n / qs.active * 100) : 0;
+      return `<div class="ov-skill-row">
+        <span class="ov-skill-lbl">${sk}</span>
+        <div class="ov-skill-bar-wrap"><div class="ov-skill-bar" style="width:${pct}%"></div></div>
+        <span class="ov-skill-n ${n === 0 ? 'ov-zero' : ''}">${n}</span>
+      </div>`;
+    }).join('');
+    const diffRows = DIFF_ORDER.map(d => {
+      const n = byDiff[d] || 0;
+      return `<div class="ov-diff-row"><span>${d}</span><span class="ov-num ${n===0?'ov-zero':''}">${n}</span></div>`;
+    }).join('');
+    return `
+      <div class="ov-detail" id="detail-${rowIdx}">
+        <div class="ov-detail-grid">
+          <div>
+            <div class="ov-sub-title">考核能力分佈（有效題）</div>
+            ${skillRows}
+          </div>
+          <div>
+            <div class="ov-sub-title">難度分佈（有效題）</div>
+            ${diffRows}
+            <div style="margin-top:10px;">
+              <div class="ov-sub-title">組卷統計</div>
+              ${quizPills(p.quizzes)}
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  let rows = '';
+  passages.forEach((p, i) => {
+    const barW = Math.round(p.questions.active / maxActive * 100);
+    const total = p.questions.total;
+    const active = p.questions.active;
+    const inactive = total - active;
+    const inactiveLabel = inactive > 0 ? ` <span style="color:var(--dim);font-size:10px;">(+${inactive} 停用)</span>` : '';
+    const qzTotal = (p.quizzes.exercise || 0) + (p.quizzes.quiz || 0) + (p.quizzes.exam || 0);
+    rows += `
+      <tr class="passage-row" onclick="toggleOvDetail(${i}, this)">
+        <td><span class="ov-expand-icon">▶</span>${esc(p.passage_title)}<div style="font-size:10px;color:var(--dim);margin-top:1px;">${esc(p.passage_id)}</div></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:7px;">
+            <div style="flex:1;height:6px;background:var(--surface3);border-radius:3px;min-width:60px;">
+              <div style="height:100%;width:${barW}%;background:var(--accent);border-radius:3px;"></div>
+            </div>
+            <span style="font-weight:700;color:var(--text);min-width:22px;">${active}</span>${inactiveLabel}
+          </div>
+        </td>
+        <td>${quizPills(p.quizzes)}</td>
+        <td style="color:${qzTotal>0?'var(--text)':'var(--dim)'};font-weight:600;">${qzTotal || '—'}</td>
+      </tr>
+      <tr class="detail-row"><td colspan="4">${detailHtml(p, i)}</td></tr>`;
+  });
+
+  // Cross-passage row
+  if (cross && (cross.questions.total > 0 || cross.quizzes.exercise + cross.quizzes.quiz + cross.quizzes.exam > 0)) {
+    const cp = cross;
+    const cpQzTotal = (cp.quizzes.exercise||0)+(cp.quizzes.quiz||0)+(cp.quizzes.exam||0);
+    rows += `
+      <tr class="passage-row" onclick="toggleOvDetail('cp', this)">
+        <td><span class="ov-expand-icon">▶</span>跨篇章<div style="font-size:10px;color:var(--dim);margin-top:1px;">cross_passage</div></td>
+        <td><span style="font-weight:700;color:var(--text);">${cp.questions.active}</span><span style="color:var(--dim);font-size:10px;"> / ${cp.questions.total} 題</span></td>
+        <td>${quizPills(cp.quizzes)}</td>
+        <td style="color:${cpQzTotal>0?'var(--text)':'var(--dim)'};font-weight:600;">${cpQzTotal||'—'}</td>
+      </tr>
+      <tr class="detail-row"><td colspan="4">${detailHtml({...cp, passage_id:'cross_passage',passage_title:'跨篇章'}, 'cp')}</td></tr>`;
+  }
+
+  document.getElementById('ovContent').innerHTML = `
+    <div class="ov-wrap">
+      <table class="ov-table">
+        <thead>
+          <tr>
+            <th style="width:220px;">篇章</th>
+            <th style="width:180px;">有效題數</th>
+            <th>組卷</th>
+            <th style="width:70px;">組卷總數</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:var(--dim);">點擊篇章行可展開考核能力及難度分佈詳情</div>
+  `;
+}
+
+function toggleOvDetail(idx, row) {
+  const detail = document.getElementById(`detail-${idx}`);
+  if (!detail) return;
+  const open = detail.classList.toggle('open');
+  row.classList.toggle('expanded', open);
+}
+
+
+
 function renderStats(s) {
-  const diffLabels = {'1':'淺①','2':'淺②','3':'中③','4':'深④','5':'深⑤'};
+  const inactive = s.total_inactive ?? 0;
+  const active   = s.total_active ?? s.total;
+  const inactiveSuffix = inactive > 0
+    ? ` <span style="font-size:11px;color:var(--muted);font-weight:400">(+${inactive} 停用)</span>`
+    : '';
+  // 難度固定排序：最淺 → 淺 → 中 → 深 → 最深
+  const diffOrder = ['最淺', '淺', '中', '深', '最深'];
   let h = `
     <div class="stat-grid">
-      <div class="stat-box"><div class="stat-val">${s.total}</div><div class="stat-lbl">總題數</div></div>
+      <div class="stat-box"><div class="stat-val">${active}${inactiveSuffix}</div><div class="stat-lbl">有效題數</div></div>
       <div class="stat-box"><div class="stat-val">${s.cross_passage_count}</div><div class="stat-lbl">跨篇章</div></div>
       <div class="stat-box"><div class="stat-val" style="color:var(--yellow)">${s.needs_review_count}</div><div class="stat-lbl">待審核</div></div>
     </div>
-    <div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:4px;">難度分佈</div>
+    <div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:4px;">難度分佈（有效題）</div>
     <div class="stat-rows">
   `;
-  Object.entries(s.by_difficulty || {}).sort().forEach(([d,n]) =>
-    h += `<div class="stat-row"><span>${diffLabels[d]||d}</span><span class="v">${n}</span></div>`
-  );
-  h += `</div><div style="font-size:10px;color:var(--muted);font-weight:600;margin:8px 0 4px;">考核能力</div><div class="stat-rows">`;
+  const byDiff = s.by_difficulty || {};
+  diffOrder.forEach(d => {
+    if (d in byDiff)
+      h += `<div class="stat-row"><span>${d}</span><span class="v">${byDiff[d]}</span></div>`;
+  });
+  h += `</div><div style="font-size:10px;color:var(--muted);font-weight:600;margin:8px 0 4px;">考核能力（有效題）</div><div class="stat-rows">`;
   Object.entries(s.by_skill || {}).forEach(([sk,n]) =>
     h += `<div class="stat-row"><span>${sk}</span><span class="v">${n}</span></div>`
   );

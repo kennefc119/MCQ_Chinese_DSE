@@ -76,8 +76,8 @@ export default function QuizRunnerScreen() {
         setQuestions(qs);
         if (q.duration_seconds) setSecondsLeft(q.duration_seconds);
 
-        // Preload passages for exercises only
-        if (q.type === "exercise") {
+        // Preload passages for exercises and quizzes (exams have no passage reference)
+        if (q.type === "exercise" || q.type === "quiz") {
           const ids = new Set<string>();
           if (q.passage_id) ids.add(q.passage_id);
           for (const qst of qs) {
@@ -129,7 +129,7 @@ export default function QuizRunnerScreen() {
   // Passages relevant to the current question (exercise mode only).
   // Must be declared BEFORE any early returns to satisfy Rules of Hooks.
   const curPassages = useMemo<Passage[]>(() => {
-    if (!quiz || quiz.type !== "exercise") return [];
+    if (!quiz || quiz.type === "exam") return [];
     const cur = displayQuestions[idx];
     if (!cur) return [];
     const ids = new Set<string>();

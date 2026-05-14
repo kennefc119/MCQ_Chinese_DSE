@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import * as SecureStore from "expo-secure-store";
 import { Profile, Gender } from "../types/database";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
+import { logLogin, logVisit, getDeviceId, getPlatform } from "../lib/adminService";
+import { registerForPushNotifications } from "../lib/pushNotifications";
 
 const PROFILE_KEY = "dsemcq_profile";
 
@@ -9,6 +11,8 @@ interface AuthContextValue {
   user: Profile | null;
   loading: boolean;
   isGuest: boolean;
+  /** True when user.role === 'admin'. */
+  isAdmin: boolean;
   signInWithEmail: (email: string) => Promise<{ ok: boolean; error?: string }>;
   signInWithPassword: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   verifyOtp: (email: string, code: string) => Promise<{ ok: boolean; needsRegister: boolean; error?: string }>;
@@ -139,6 +143,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .maybeSingle();
     if (!profile) return { ok: true, needsRegister: true };
     await persist(profile as Profile);
+    void logLogin(data.user.id, getPlatform());
+    void registerForPushNotifications(data.user.id);
     return { ok: true, needsRegister: false };
   };
 
@@ -203,6 +209,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!profile) return { ok: false, error: "找不到用戶資料" };
     setIsGuest(false);
     await persist(profile as Profile);
+    // fire-and-forget admin instrumentation
+    void logLogin(data.user.id, getPlatform());
+    void registerForPushNotifications(data.user.id);
     return { ok: true };
   };
 
@@ -216,12 +225,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await persist(DEMO_PROFILE);
   };
 
+  // ── Visit logging: log once per app launch (guest or signed-in) ────────
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const deviceId = await getDeviceId();
+        if (cancelled) return;
+        await logVisit(deviceId, user?.id ?? null, getPlatform());
+      } catch {
+        /* never block UI for analytics */
+      }
+    })();
+    return () => { cancelled = true; };
+    // Re-fire when user transitions from null/guest -> signed-in so we capture
+    // the device id linked to the user.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // ── Push registration: when an authenticated user is loaded, ensure their
+  //     Expo push token is registered. No-op for guests / demo.
+  useEffect(() => {
+    if (!user || user.id === "demo-user" || user.id === "guest-user") return;
+    void registerForPushNotifications(user.id);
+  }, [user?.id]);
+
+  const isAdmin = user?.role === "admin";
+
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
         isGuest,
+        isAdmin,
         signInWithEmail,
         signInWithPassword,
         verifyOtp,

@@ -112,8 +112,6 @@ export default function DiscoverSelfScreen() {
     return { skillAxes: axes, skillValues: values };
   }, [attempts, questionMeta]);
 
-  const hasData = attempts.length >= 3;
-
   const ListHeader = (
     <View>
       <View style={styles.header}>
@@ -124,8 +122,8 @@ export default function DiscoverSelfScreen() {
       {/* ── Passage radar ─────────────────────────── */}
       <View style={styles.analyticsCard}>
         <Text style={styles.analyticsTitle}>篇章掌握度</Text>
-        <Text style={styles.analyticsHint}>各篇章答題平均得分率（完成 3 次以上練習後更新）</Text>
-        {hasData && passages.length === 12 ? (
+        <Text style={styles.analyticsHint}>各篇章答題平均得分率</Text>
+        {passages.length === 12 ? (
           <View style={styles.chartCenter}>
             <RadarChart
               axes={passageAxes}
@@ -137,9 +135,7 @@ export default function DiscoverSelfScreen() {
           </View>
         ) : (
           <View style={styles.placeholder}>
-            <Text style={styles.placeholderText}>
-              {passages.length < 12 ? "載入篇章中…" : "完成 3 次以上練習後顯示篇章雷達圖"}
-            </Text>
+            <Text style={styles.placeholderText}>載入篇章中…</Text>
           </View>
         )}
       </View>
@@ -148,21 +144,15 @@ export default function DiscoverSelfScreen() {
       <View style={styles.analyticsCard}>
         <Text style={styles.analyticsTitle}>能力分析</Text>
         <Text style={styles.analyticsHint}>各語文能力答題正確率（基於種子題庫）</Text>
-        {hasData ? (
-          <View style={styles.chartCenter}>
-            <RadarChart
-              axes={skillAxes}
-              values={skillValues}
-              color={colors.accent}
-              width={CHART_W}
-              height={Math.round(CHART_W * 0.85)}
-            />
-          </View>
-        ) : (
-          <View style={styles.placeholder}>
-            <Text style={styles.placeholderText}>完成 3 次以上練習後顯示能力雷達圖</Text>
-          </View>
-        )}
+        <View style={styles.chartCenter}>
+          <RadarChart
+            axes={skillAxes}
+            values={skillValues}
+            color={colors.accent}
+            width={CHART_W}
+            height={Math.round(CHART_W * 0.85)}
+          />
+        </View>
       </View>
 
       <Text style={styles.sectionLabel}>心理小測驗</Text>

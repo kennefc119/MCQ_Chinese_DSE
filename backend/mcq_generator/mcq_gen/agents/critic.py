@@ -9,6 +9,7 @@ from pathlib import Path
 
 import structlog
 
+from ..db.stems import fetch_existing_stems
 from ..dse_reference import format_reference_block
 from ..llm import chat_structured
 from ..passage_db import get_passage_body
@@ -58,6 +59,23 @@ def _build_prompt(spec: Spec, draft: Draft, cross_text: str | None, passage_text
                 ref_parts.append(f"### 跨篇章參考（{spec.cross_passage}）\n{cross_ref}")
     reference_block = ("\n\n" + "\n\n".join(ref_parts)) if ref_parts else ""
 
+    # ── Existing stems for duplicate-detection ──────────────────────────────
+    # For cross-passage questions both passages are checked; otherwise only primary.
+    passage_ids = [spec.passage]
+    if spec.cross_passage and spec.skill_tested.value == "跨篇章比較":
+        passage_ids.append(spec.cross_passage)
+
+    stems = fetch_existing_stems(passage_ids, spec.skill_tested.value)
+    if stems:
+        numbered = "\n".join(f"{i + 1}. {s}" for i, s in enumerate(stems))
+        existing_stems_block = (
+            f"\n\n## 現有題庫（同篇章 × 考核能力：{spec.skill_tested.value}）"
+            f"\n以下為題庫中已有的相同篇章及相同考核能力的 MC 題幹（共 {len(stems)} 條）。"
+            f"請對照草稿進行重複性審查，如有高度重疊須扣分並要求修改：\n\n{numbered}\n"
+        )
+    else:
+        existing_stems_block = ""
+
     return render_template(
         _PROMPT_PATH,
         spec_json=spec.model_dump_json(indent=2),
@@ -65,6 +83,7 @@ def _build_prompt(spec: Spec, draft: Draft, cross_text: str | None, passage_text
         cross_text_section=cross_text_section,
         school_ws_block=school_ws_block,
         reference_block=reference_block,
+        existing_stems_block=existing_stems_block,
         draft_json=draft.model_dump_json(indent=2),
     )
 

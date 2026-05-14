@@ -8,14 +8,15 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
 import structlog
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 
 from .db.stats import fetch_db_stats
@@ -34,6 +35,26 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ─── Shared-secret middleware (for /api/* called from the mobile app via the
+#     dsemcq-mcq-proxy Edge Function). When MCQ_ADMIN_SECRET is set in the
+#     environment, every /api/* request must carry a matching X-Admin-Secret
+#     header. Requests without the env var (local dashboard use) are unaffected.
+# ────────────────────────────────────────────────────────────────────────────
+_ADMIN_SECRET = os.getenv("MCQ_ADMIN_SECRET", "").strip()
+
+
+@app.middleware("http")
+async def admin_secret_guard(request: Request, call_next):
+    # Only guard JSON API routes; leave dashboard / static fetches open
+    if _ADMIN_SECRET and request.url.path.startswith("/api/"):
+        provided = request.headers.get("x-admin-secret", "")
+        # Allow CORS preflight through without the secret
+        if request.method != "OPTIONS" and provided != _ADMIN_SECRET:
+            return JSONResponse({"detail": "forbidden"}, status_code=403)
+    return await call_next(request)
+
 
 _PASSAGES_FILE = Path(__file__).parent.parent / "data" / "passages.json"
 _DASHBOARD_FILE = Path(__file__).parent.parent / "dashboard.html"
@@ -122,6 +143,121 @@ def get_stats() -> dict[str, Any]:
     """Return current DB question distribution stats."""
     stats = fetch_db_stats()
     return stats.model_dump()
+
+
+@app.get("/api/breakdown")
+def get_breakdown() -> dict[str, Any]:
+    """
+    Return a per-passage breakdown suitable for the 題庫總覽 tab:
+      • questions.total / active / by_skill / by_difficulty  (active questions only)
+      • quizzes.exercise / quiz / exam                       (published quizzes by type)
+    Also includes a special 'cross_passage' bucket for questions without a passage.
+    """
+    from .db.client import get_supabase
+    from .db.stats import _DIFFICULTY_MAP, _TAG_TO_SKILL
+    from collections import defaultdict
+
+    sb = get_supabase()
+
+    # 1. Passages (for labels)
+    passage_rows = (
+        sb.table("dsemcq_passages").select("id,title").execute().data or []
+    )
+    passage_label: dict[str, str] = {r["id"]: r.get("title", r["id"]) for r in passage_rows}
+
+    # 2. All questions + active flag
+    q_rows = (
+        sb.table("dsemcq_questions")
+        .select("id,passage_id,difficulty,is_active")
+        .execute()
+        .data or []
+    )
+
+    # 3. Question → skill tags
+    tag_rows = (
+        sb.table("dsemcq_question_tags").select("question_id,tag_id").execute().data or []
+    )
+    q_tags: dict[str, list[str]] = defaultdict(list)
+    for t in tag_rows:
+        q_tags[t["question_id"]].append(t["tag_id"])
+
+    # 4. Published quizzes (type + passage_id)
+    quiz_rows = (
+        sb.table("dsemcq_quizzes")
+        .select("id,type,passage_id,is_published")
+        .execute()
+        .data or []
+    )
+
+    # Aggregate questions per passage
+    PassageBucket = lambda: {
+        "total": 0, "active": 0,
+        "by_skill": defaultdict(int),
+        "by_difficulty": {"最淺": 0, "淺": 0, "中": 0, "深": 0, "最深": 0},
+    }
+    q_buckets: dict[str, Any] = defaultdict(PassageBucket)
+
+    for q in q_rows:
+        pid = q.get("passage_id") or "__cross__"
+        b = q_buckets[pid]
+        b["total"] += 1
+        active = q.get("is_active", True)
+        if not active:
+            continue
+        b["active"] += 1
+        diff_label = _DIFFICULTY_MAP.get(q.get("difficulty") or 2, None)
+        if diff_label:
+            b["by_difficulty"][diff_label.value] = b["by_difficulty"].get(diff_label.value, 0) + 1
+        for tag_id in q_tags.get(q["id"], []):
+            skill = _TAG_TO_SKILL.get(tag_id)
+            if skill:
+                b["by_skill"][skill.value] += 1
+
+    # Aggregate quizzes per passage
+    # quiz_counts[passage_id][type] = count
+    quiz_counts: dict[str, dict[str, int]] = defaultdict(lambda: {"exercise": 0, "quiz": 0, "exam": 0})
+    for qz in quiz_rows:
+        pid = qz.get("passage_id") or "__cross__"
+        qtype = qz.get("type", "")
+        if qtype in quiz_counts[pid]:
+            quiz_counts[pid][qtype] += 1
+
+    # Build result list — all known passages first, then any extra from q_buckets
+    seen_pids: set[str] = set()
+    result_passages = []
+
+    ordered_pids = [r["id"] for r in passage_rows] + [
+        pid for pid in q_buckets if pid not in {r["id"] for r in passage_rows} and pid != "__cross__"
+    ]
+
+    for pid in ordered_pids:
+        seen_pids.add(pid)
+        b = q_buckets.get(pid, PassageBucket())
+        result_passages.append({
+            "passage_id": pid,
+            "passage_title": passage_label.get(pid, pid),
+            "questions": {
+                "total": b["total"],
+                "active": b["active"],
+                "by_skill": dict(b["by_skill"]),
+                "by_difficulty": b["by_difficulty"],
+            },
+            "quizzes": quiz_counts.get(pid, {"exercise": 0, "quiz": 0, "exam": 0}),
+        })
+
+    # Cross-passage bucket
+    cb = q_buckets.get("__cross__", PassageBucket())
+    cross = {
+        "questions": {
+            "total": cb["total"],
+            "active": cb["active"],
+            "by_skill": dict(cb["by_skill"]),
+            "by_difficulty": cb["by_difficulty"],
+        },
+        "quizzes": quiz_counts.get("__cross__", {"exercise": 0, "quiz": 0, "exam": 0}),
+    }
+
+    return {"passages": result_passages, "cross_passage": cross}
 
 
 @app.post("/api/generate")

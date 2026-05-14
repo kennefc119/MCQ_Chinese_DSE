@@ -79,8 +79,15 @@ class Critique(BaseModel):
     revision_instructions: str = Field(
         "", description="REVISE 時必須提供可執行指示；PASS 時可為空"
     )
+    duplication_check: str = Field(
+        "",
+        description=(
+            "重複性審查結果：說明草稿與哪條現有題幹相似（引述題幹首 10–15 字）及重疊程度；"
+            "若無現有題幹可比對或完全無重疊，填 '無重疊'"
+        ),
+    )
 
-    @field_validator("revision_instructions", "comments", mode="before")
+    @field_validator("revision_instructions", "comments", "duplication_check", mode="before")
     @classmethod
     def coerce_list_to_str(cls, v: Any) -> str:
         """LLM occasionally returns a list instead of a string — join it."""
@@ -96,6 +103,8 @@ class DBStats(BaseModel):
     """現存題庫的維度分佈統計。"""
 
     total: int
+    total_active: int = 0
+    total_inactive: int = 0
     by_passage: dict[str, int] = Field(default_factory=dict)
     by_difficulty: dict[str, int] = Field(default_factory=dict)
     by_skill: dict[str, int] = Field(default_factory=dict)

@@ -102,6 +102,7 @@
 - 全程使用**繁體中文**。
 - 引用課文時，盡量使用原句字詞，避免改寫成現代漢語。
 - 若 spec 為跨篇章題，題幹和解釋必須明確同時涉及兩篇。
+- ❌ **嚴禁在任何輸出欄位（question_stem、options、explanation）中出現篇章 ID**（如 p01、p09、p12 等）。若需提及篇章，只可使用篇章標題（如「{{passage_title}}」），不可出現任何內部編號。
 
 # 隱蔽來源原則 (Source Concealment Rule)：
 嚴禁在任何輸出欄位（包括題幹 question_stem、選項 options 及解釋 explanation）中，直接提及或暴露你的參考來源。絕對不能出現諸如「根據教師版工作紙」、「參考 DSE 歷屆試題」、「工作紙指出」、「正如摘要所述」等字眼。題目及解釋必須以獨立、客觀的學術口吻撰寫，猶如一道真實出現在公開試卷上的原創題目。
@@ -118,5 +119,5 @@
 {{passage_text}}{{cross_text_section}}
 {{reference_block}}
 {{school_ws_block}}
-
+{{existing_stems_block}}
 {{closing_section}}

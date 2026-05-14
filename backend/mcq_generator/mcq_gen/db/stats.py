@@ -12,11 +12,11 @@ log = structlog.get_logger(__name__)
 # 策略師需要的是 by_skill（按 tag_id 計）和 by_difficulty（按 difficulty 數值計）
 
 _DIFFICULTY_MAP = {
-    1: Difficulty.EASY,
+    1: Difficulty.VERY_EASY,
     2: Difficulty.EASY,
     3: Difficulty.MEDIUM,
     4: Difficulty.HARD,
-    5: Difficulty.HARD,
+    5: Difficulty.VERY_HARD,
 }
 
 # tag_id → Skill 對應
@@ -36,10 +36,10 @@ def fetch_db_stats() -> DBStats:
     """從 Supabase 讀取現存題目（包括 seed + agent 生成），計算分佈統計。"""
     sb = get_supabase()
 
-    # 抓所有題目（只要 id, passage_id, difficulty, source）
+    # 抓所有題目（含 is_active 欄位）
     questions_resp = (
         sb.table("dsemcq_questions")
-        .select("id, passage_id, difficulty, source")
+        .select("id, passage_id, difficulty, source, is_active")
         .execute()
     )
     questions = questions_resp.data or []
@@ -58,13 +58,36 @@ def fetch_db_stats() -> DBStats:
         q_tags.setdefault(row["question_id"], []).append(row["tag_id"])
 
     total = len(questions)
+    total_active = 0
+    total_inactive = 0
+    # 難度分佈及能力分佈只計算有效題目（is_active=True）
     by_passage: dict[str, int] = {}
-    by_difficulty: dict[str, int] = {"淺": 0, "中": 0, "深": 0}
+    by_difficulty: dict[str, int] = {
+        Difficulty.VERY_EASY.value: 0,
+        Difficulty.EASY.value: 0,
+        Difficulty.MEDIUM.value: 0,
+        Difficulty.HARD.value: 0,
+        Difficulty.VERY_HARD.value: 0,
+    }
     by_skill: dict[str, int] = {s.value: 0 for s in Skill}
     cross_passage_count = 0
     needs_review_count = 0
 
     for q in questions:
+        active = q.get("is_active", True)  # 預設視為有效
+        if active:
+            total_active += 1
+        else:
+            total_inactive += 1
+
+        source = q.get("source") or ""
+        if "needs-review" in source:
+            needs_review_count += 1
+
+        # 以下統計只計 active 題目
+        if not active:
+            continue
+
         pid = q.get("passage_id") or "unknown"
         by_passage[pid] = by_passage.get(pid, 0) + 1
 
@@ -79,12 +102,10 @@ def fetch_db_stats() -> DBStats:
             if tag_id == "t-comparison":
                 cross_passage_count += 1
 
-        source = q.get("source") or ""
-        if "needs-review" in source:
-            needs_review_count += 1
-
     stats = DBStats(
         total=total,
+        total_active=total_active,
+        total_inactive=total_inactive,
         by_passage=by_passage,
         by_difficulty=by_difficulty,
         by_skill=by_skill,

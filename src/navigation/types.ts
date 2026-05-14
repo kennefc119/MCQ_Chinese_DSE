@@ -15,6 +15,7 @@ export type MainTabsParamList = {
   Advisor: { initialMessage?: string } | undefined;
   Discover: undefined;
   Profile: undefined;
+  Admin: undefined;
 };
 
 export type AppStackParamList = {
@@ -28,6 +29,7 @@ export type AppStackParamList = {
   Subscription: undefined;
   PassageView: { passageId: string };
   Admin: undefined;
+  AdminUserDetail: { userId: string };
   PointHistory: undefined;
   StudyHistory: undefined;
   Legal: { type: "terms" | "privacy" };

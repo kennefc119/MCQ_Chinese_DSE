@@ -8,6 +8,8 @@ import CalendarScreen from "../screens/CalendarScreen";
 import AdvisorChatScreen from "../screens/AdvisorChatScreen";
 import DiscoverSelfScreen from "../screens/DiscoverSelfScreen";
 import ProfileScreen from "../screens/ProfileScreen";
+import AdminHubScreen from "../screens/AdminHubScreen";
+import { useAuth } from "../context/AuthContext";
 
 const Tab = createBottomTabNavigator<MainTabsParamList>();
 
@@ -23,6 +25,7 @@ const tabIcon =
   );
 
 export default function MainTabs() {
+  const { isAdmin } = useAuth();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -65,6 +68,13 @@ export default function MainTabs() {
         component={ProfileScreen}
         options={{ title: "我", tabBarIcon: tabIcon("person-outline", "person") }}
       />
+      {isAdmin && (
+        <Tab.Screen
+          name="Admin"
+          component={AdminHubScreen}
+          options={{ title: "管理", tabBarIcon: tabIcon("shield-outline", "shield") }}
+        />
+      )}
     </Tab.Navigator>
   );
 }
