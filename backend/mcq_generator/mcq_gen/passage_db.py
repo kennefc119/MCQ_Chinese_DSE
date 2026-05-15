@@ -7,6 +7,7 @@ are a direct .eq("id", passage_id) call — no title fuzzy-matching needed.
 from __future__ import annotations
 
 import structlog
+from functools import lru_cache
 
 from .db.client import get_supabase
 
@@ -50,3 +51,21 @@ def get_passage_title(passage_id: str) -> str:
     )
     rows = resp.data or []
     return rows[0].get("title", passage_id) if rows else passage_id
+
+
+@lru_cache(maxsize=1)
+def _title_to_id_map() -> dict[str, str]:
+    """Build a title → passage_id reverse-lookup from the DB. Cached for process lifetime."""
+    sb = get_supabase()
+    rows = (
+        sb.table("dsemcq_passages")
+        .select("id,title")
+        .execute()
+        .data or []
+    )
+    return {r["title"]: r["id"] for r in rows}
+
+
+def get_passage_id_by_title(title: str) -> str | None:
+    """Return the passage_id for a given passage title, or None if not found."""
+    return _title_to_id_map().get(title)

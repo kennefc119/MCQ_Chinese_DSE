@@ -188,6 +188,12 @@ def run_drafter(
         model=settings.drafter_bot,
     )
 
+    # Always override mapped_spec with the authoritative Spec from the Strategist.
+    # The LLM echo in the JSON output is unreliable (may hallucinate passage titles
+    # instead of IDs). The model_validator in Draft already fixes parse-time failures,
+    # but this ensures the final object always reflects the real spec.
+    draft.mapped_spec = spec
+
     log.info(
         "drafter_done",
         passage=spec.passage,

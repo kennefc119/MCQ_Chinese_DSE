@@ -1,10 +1,11 @@
 """Pydantic 資料模型 — 貫穿三個 agent 的標準資料格式。"""
 from __future__ import annotations
 
+import re as _re
 from enum import Enum
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 # ─── 共用列舉 ───────────────────────────────────────────────────────────────
@@ -65,6 +66,28 @@ class Draft(BaseModel):
     question_stem: str
     options: list[DraftOption]  # 恰好 4 個；恰好一個 is_correct=True
     mapped_spec: Spec
+
+    @model_validator(mode="before")
+    @classmethod
+    def _fix_mapped_spec_passage(cls, data: Any) -> Any:
+        """Auto-correct LLM hallucination: if mapped_spec.passage is a passage title
+        instead of a p##-format ID, look up the real ID so Pydantic doesn't reject it.
+        This runs *before* nested Spec validation, so no ValidationError is raised.
+        """
+        if not isinstance(data, dict):
+            return data
+        ms = data.get("mapped_spec")
+        if not isinstance(ms, dict):
+            return data
+        passage = str(ms.get("passage", ""))
+        if passage and not _re.match(r"^p\d{2}$", passage):
+            # Local import avoids circular dependency at module load time
+            from .passage_db import get_passage_id_by_title  # noqa: PLC0415
+            fixed = get_passage_id_by_title(passage)
+            if fixed:
+                data = dict(data)
+                data["mapped_spec"] = {**ms, "passage": fixed}
+        return data
 
 
 # ─── Agent 3 輸出 ────────────────────────────────────────────────────────────
