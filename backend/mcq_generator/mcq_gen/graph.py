@@ -34,7 +34,6 @@ from .schemas import (
     SavedQuestion,
     Skill,
     Spec,
-    Verdict,
 )
 
 log = structlog.get_logger(__name__)
@@ -196,8 +195,9 @@ def route_after_critic(state: CycleState) -> str:
     critique: Critique = state["critique"]
     iteration: int = state.get("iteration", 1)  # already incremented in node_critic
 
-    # Hard gate: score < 7 can never be PASS regardless of what the LLM returned
-    is_pass = critique.verdict == Verdict.PASS and critique.score >= 7
+    # Score is authoritative: score >= 7 → PASS, regardless of what the LLM wrote for verdict.
+    # This handles the LLM contradiction where it gives score=8 but verdict=REVISE.
+    is_pass = critique.score >= 7
 
     if is_pass:
         log.info("routing_to_save", score=critique.score)
