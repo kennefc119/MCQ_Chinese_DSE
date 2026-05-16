@@ -2,6 +2,21 @@
   "expo": {
     "name": "DSE 文言文 MCQ",
     "slug": "dsemcq",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "icon": "./assets/icon.png"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
     "extra": {
       "supabaseUrl": "",
       "supabaseAnonKey": "",
