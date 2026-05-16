@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "DSE 文言文 MCQ",
-    "slug": "dsemcq",
+    "name": "文淵DSE",
+    "slug": "文淵DSE",
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash-icon.png",
