@@ -10,6 +10,7 @@ import { useAuth } from "../context/AuthContext";
 import Button from "../components/Button";
 import Icon, { IconName } from "../components/Icon";
 import SealMark from "../components/SealMark";
+import ContentContainer from "../components/ContentContainer";
 import { AppStackParamList } from "../navigation/types";
 
 type Nav = NativeStackNavigationProp<AppStackParamList, "QuizDetail">;
@@ -85,6 +86,7 @@ export default function QuizDetailScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["bottom"]}>
+      <ContentContainer>
       <ScrollView>
         {quiz.cover_image_url && <Image source={{ uri: quiz.cover_image_url }} style={styles.cover} />}
         <View style={styles.body}>
@@ -117,6 +119,7 @@ export default function QuizDetailScreen() {
           <Button title="返回" variant="ghost" onPress={() => nav.goBack()} />
         </View>
       </ScrollView>
+      </ContentContainer>
     </SafeAreaView>
   );
 }

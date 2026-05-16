@@ -10,6 +10,7 @@ import GuestGuard from "../components/GuestGuard";
 import Icon, { IconName } from "../components/Icon";
 import SealMark from "../components/SealMark";
 import InkDivider from "../components/InkDivider";
+import ContentContainer from "../components/ContentContainer";
 import { AppStackParamList } from "../navigation/types";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
@@ -51,6 +52,7 @@ export default function ProfileScreen() {
   return (
     <GuestGuard>
       <SafeAreaView style={styles.safe} edges={["top"]}>
+      <ContentContainer>
       <ScrollView contentContainerStyle={{ padding: spacing.md }}>
         <View style={styles.hero}>
           <View style={styles.avatar}>
@@ -90,6 +92,7 @@ export default function ProfileScreen() {
         <View style={{ height: spacing.lg }} />
         <Button title="登出" variant="ghost" onPress={onSignOut} />
       </ScrollView>
+      </ContentContainer>
     </SafeAreaView>
     </GuestGuard>
   );

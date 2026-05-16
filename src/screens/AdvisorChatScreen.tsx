@@ -7,6 +7,7 @@ import { colors, spacing, typography } from "../theme";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { MainTabsParamList } from "../navigation/types";
+import ContentContainer from "../components/ContentContainer";
 
 interface Msg { id: string; role: "user" | "assistant"; text: string }
 
@@ -169,6 +170,7 @@ export default function AdvisorChatScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
+      <ContentContainer>
       <View style={styles.header}>
         <Text style={styles.title}>{BOT_NAME}</Text>
         <Text style={styles.subtitle}>文言文溫習・應試策略・情緒調節</Text>
@@ -222,6 +224,7 @@ export default function AdvisorChatScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+      </ContentContainer>
     </SafeAreaView>
   );
 }

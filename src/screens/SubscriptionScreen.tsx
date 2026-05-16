@@ -5,6 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import { colors, spacing, typography } from "../theme";
 import Button from "../components/Button";
 import { useAuth } from "../context/AuthContext";
+import ContentContainer from "../components/ContentContainer";
 import SUB from "../content/subscriptionContent.json";
 
 export default function SubscriptionScreen() {
@@ -14,6 +15,7 @@ export default function SubscriptionScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+      <ContentContainer>
       <ScrollView contentContainerStyle={{ padding: spacing.md }}>
         <Text style={styles.title}>{SUB.pageTitle}</Text>
         <Text style={styles.subtitle}>{SUB.pageSubtitle}</Text>
@@ -38,6 +40,7 @@ export default function SubscriptionScreen() {
 
         <Text style={styles.note}>{SUB.note}</Text>
       </ScrollView>
+      </ContentContainer>
     </SafeAreaView>
   );
 }

@@ -15,9 +15,6 @@ const Tab = createBottomTabNavigator<MainTabsParamList>();
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
-// Tab icons use Ionicons with paired outline / filled variants. Active state
-// fills the icon and tints it cinnabar — focus is communicated by weight, not
-// just colour, so the bar reads cleanly even in glance-mode.
 const tabIcon =
   (outline: IoniconName, filled: IoniconName) =>
   ({ focused, color }: { focused: boolean; color: string }) => (
@@ -26,6 +23,7 @@ const tabIcon =
 
 export default function MainTabs() {
   const { isAdmin } = useAuth();
+
   return (
     <Tab.Navigator
       screenOptions={{

@@ -11,6 +11,7 @@ import { listPsychTests, listUserAttempts, listQuizzes, listPassages, listUserPs
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
 import RadarChart from "../components/RadarChart";
+import { TABLET_BREAKPOINT, CONTENT_MAX_WIDTH } from "../hooks/useDeviceType";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
@@ -35,8 +36,11 @@ export default function DiscoverSelfScreen() {
   const nav = useNavigation<Nav>();
   const { user } = useAuth();
   const { width: screenWidth } = useWindowDimensions();
+  const isTablet = screenWidth >= TABLET_BREAKPOINT;
+  // On iPad, the sidebar takes 220px. Clamp chart container to CONTENT_MAX_WIDTH.
+  const contentWidth = isTablet ? Math.min(screenWidth, CONTENT_MAX_WIDTH) : screenWidth;
   // Available width inside analyticsCard (FlatList padding + card padding = 4×spacing.md)
-  const CHART_W = screenWidth - spacing.md * 4;
+  const CHART_W = contentWidth - spacing.md * 4;
 
   const [tests, setTests]       = useState<PsychTest[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);

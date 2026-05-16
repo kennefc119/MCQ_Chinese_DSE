@@ -9,7 +9,9 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "icon": "./assets/icon.png"
+      "icon": "./assets/icon.png",
+      "supportsTablet": true,
+      "requiresFullScreen": false
     },
     "android": {
       "adaptiveIcon": {

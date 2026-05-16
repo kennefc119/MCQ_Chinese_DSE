@@ -9,7 +9,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: "portrait",
   userInterfaceStyle: "dark",
   ios: {
-    supportsTablet: false,
+    supportsTablet: true,
     bundleIdentifier: "com.dsemcq.app",
     infoPlist: {
       CFBundleURLTypes: [{ CFBundleURLSchemes: ["dsemcq"] }],

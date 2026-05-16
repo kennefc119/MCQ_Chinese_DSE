@@ -5,7 +5,7 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Dimensions,
+  useWindowDimensions,
   Modal,
   ScrollView,
   Alert,
@@ -28,15 +28,25 @@ import { GestureDetector, Gesture } from "react-native-gesture-handler";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-
-export const GRID_COLS = 3;
 export const GRID_GAP = 8;
 export const GRID_PADDING = 12;
-export const TILE_WIDTH =
-  (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS;
-export const TILE_HEIGHT = TILE_WIDTH * 1.4;
-export const FEED_IMAGE_HEIGHT = SCREEN_HEIGHT * 0.5;
+
+const PHONE_COLS = 3;
+const TABLET_COLS = 5;
+const TABLET_BREAKPOINT = 768;
+
+/** Compute tile + feed dimensions from current window size. */
+function computeGridMetrics(width: number, height: number) {
+  const cols = width >= TABLET_BREAKPOINT ? TABLET_COLS : PHONE_COLS;
+  const tileWidth = (width - GRID_PADDING * 2 - GRID_GAP * (cols - 1)) / cols;
+  return {
+    gridCols: cols,
+    tileWidth,
+    tileHeight: tileWidth * 1.4,
+    feedPageHeight: height,
+    feedImageHeight: height * 0.5,
+  };
+}
 
 /** Remove parenthetical suffixes (half-width and full-width) from a title, e.g. "(節錄)" or "（節錄）". */
 function stripParens(title: string): string {
@@ -149,7 +159,7 @@ function VerticalTileInfo({
   );
 }
 
-function QuizTile({ item, onPress, passageName, status }: { item: Quiz; onPress: () => void; passageName?: string; status?: "passed" | "failed" }) {
+function QuizTile({ item, onPress, passageName, status, tileWidth, tileHeight }: { item: Quiz; onPress: () => void; passageName?: string; status?: "passed" | "failed"; tileWidth: number; tileHeight: number }) {
   const { user, isGuest } = useAuth();
   const pointsLocked = item.min_points_required > (user?.wenyuan_points ?? 0);
   const tierLocked = !isGuest && !!user && user.subscription_tier !== "premium" && item.type !== "exercise";
@@ -164,7 +174,7 @@ function QuizTile({ item, onPress, passageName, status }: { item: Quiz; onPress:
     <TouchableOpacity
       style={[
         styles.tile,
-        { width: TILE_WIDTH, height: TILE_HEIGHT },
+        { width: tileWidth, height: tileHeight },
         status === "failed" && styles.tileFailed,
       ]}
       activeOpacity={0.85}
@@ -214,12 +224,12 @@ function QuizTile({ item, onPress, passageName, status }: { item: Quiz; onPress:
   );
 }
 
-function TipTile({ item, onPress }: { item: TipCard; onPress: () => void }) {
+function TipTile({ item, onPress, tileWidth, tileHeight }: { item: TipCard; onPress: () => void; tileWidth: number; tileHeight: number }) {
   const label = TIP_CATEGORY_LABEL[item.category] ?? item.category;
 
   return (
     <TouchableOpacity
-      style={[styles.tile, { width: TILE_WIDTH, height: TILE_HEIGHT }]}
+      style={[styles.tile, { width: tileWidth, height: tileHeight }]}
       activeOpacity={0.85}
       onPress={onPress}
     >
@@ -250,6 +260,8 @@ function TipTile({ item, onPress }: { item: TipCard; onPress: () => void }) {
 }
 
 function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () => void; passageName?: string }) {
+  const { width, height } = useWindowDimensions();
+  const { feedPageHeight, feedImageHeight } = computeGridMetrics(width, height);
   const { user, isGuest } = useAuth();
   const nav = useNavigation<Nav>();
   const locked = item.min_points_required > (user?.wenyuan_points ?? 0);
@@ -320,8 +332,8 @@ function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () 
   const difficultyLabel = ["", "基礎", "初階", "中等", "進階", "挑戰"][item.difficulty] ?? "—";
 
   return (
-    <View style={styles.feedPage}>
-      <View style={styles.feedImageWrap}>
+    <View style={[styles.feedPage, { height: feedPageHeight }]}>
+      <View style={[styles.feedImageWrap, { height: feedImageHeight }]}>
         {item.cover_image_url && !tileImgFailed ? (
           <Image
             source={{ uri: item.cover_image_url }}
@@ -421,12 +433,14 @@ function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () 
 }
 
 function TipFeedPage({ item }: { item: TipCard }) {
+  const { width, height } = useWindowDimensions();
+  const { feedPageHeight, feedImageHeight } = computeGridMetrics(width, height);
   const label = TIP_CATEGORY_LABEL[item.category] ?? item.category;
   const lines = item.body.split("\n").filter(Boolean);
 
   return (
-    <View style={styles.feedPage}>
-      <View style={styles.feedImageWrap}>
+    <View style={[styles.feedPage, { height: feedPageHeight }]}>
+      <View style={[styles.feedImageWrap, { height: feedImageHeight }]}>
         {item.image_url ? (
           <Image
             source={{ uri: item.image_url }}
@@ -456,6 +470,9 @@ function TipFeedPage({ item }: { item: TipCard }) {
 }
 
 export default function ExploreScreen() {
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const { gridCols, tileWidth, tileHeight, feedPageHeight, feedImageHeight } = computeGridMetrics(screenWidth, screenHeight);
+
   const [items, setItems] = useState<FeedItem[]>([]);
   const [passages, setPassages] = useState<Passage[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
@@ -602,9 +619,9 @@ export default function ExploreScreen() {
   const renderGridItem = ({ item, index }: { item: FeedItem; index: number }) => {
     const passageName = item.kind === "quiz" ? getPassageName((item.data as any).passage_id) : undefined;
     if (item.kind === "quiz") {
-      return <QuizTile item={item.data} onPress={() => openFeed(index)} passageName={passageName} status={quizStatusMap[item.data.id]} />;
+      return <QuizTile item={item.data} onPress={() => openFeed(index)} passageName={passageName} status={quizStatusMap[item.data.id]} tileWidth={tileWidth} tileHeight={tileHeight} />;
     }
-    return <TipTile item={item.data} onPress={() => openFeed(index)} />;
+    return <TipTile item={item.data} onPress={() => openFeed(index)} tileWidth={tileWidth} tileHeight={tileHeight} />;
   };
 
   const renderFeedPage = ({ item }: { item: FeedItem }) => {
@@ -739,10 +756,11 @@ export default function ExploreScreen() {
       </View>
 
       <FlatList
+        key={gridCols}
         style={{ flex: 1 }}
         data={filteredItems}
         keyExtractor={(it) => `${it.kind}:${it.data.id}`}
-        numColumns={GRID_COLS}
+        numColumns={gridCols}
         contentContainerStyle={styles.gridContent}
         columnWrapperStyle={styles.gridRow}
         renderItem={renderGridItem}
@@ -766,17 +784,17 @@ export default function ExploreScreen() {
             ref={feedRef}
             data={filteredItems}
             keyExtractor={(it) => `feed:${it.kind}:${it.data.id}`}
-            snapToInterval={SCREEN_HEIGHT}
+            snapToInterval={feedPageHeight}
             snapToAlignment="start"
             decelerationRate="fast"
             showsVerticalScrollIndicator={false}
             getItemLayout={(_, i) => ({
-              length: SCREEN_HEIGHT,
-              offset: SCREEN_HEIGHT * i,
+              length: feedPageHeight,
+              offset: feedPageHeight * i,
               index: i,
             })}
             onMomentumScrollEnd={(e) => {
-              const idx = Math.round(e.nativeEvent.contentOffset.y / SCREEN_HEIGHT);
+              const idx = Math.round(e.nativeEvent.contentOffset.y / feedPageHeight);
               setFeedIndex(idx);
             }}
             renderItem={renderFeedPage}
@@ -1017,8 +1035,8 @@ const styles = StyleSheet.create({
 
   // feed modal
   feedContainer: { flex: 1, backgroundColor: colors.background },
-  feedPage: { height: SCREEN_HEIGHT, backgroundColor: colors.background },
-  feedImageWrap: { height: FEED_IMAGE_HEIGHT, overflow: "hidden" },
+  feedPage: { backgroundColor: colors.background },
+  feedImageWrap: { overflow: "hidden" },
   feedInfoContent: { padding: spacing.md, paddingBottom: 120 },
   feedTitle: { ...typography.heading, color: colors.textPrimary, marginBottom: spacing.sm },
   feedPassageTitle: {

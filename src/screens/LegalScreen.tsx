@@ -7,6 +7,7 @@ import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { colors, spacing, typography } from "../theme";
 import Icon from "../components/Icon";
 import InkDivider from "../components/InkDivider";
+import ContentContainer from "../components/ContentContainer";
 import { TERMS_SECTIONS, TERMS_LAST_UPDATED } from "../content/termsContent";
 import { PRIVACY_SECTIONS, PRIVACY_LAST_UPDATED } from "../content/privacyContent";
 
@@ -23,6 +24,7 @@ export default function LegalScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+      <ContentContainer>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => nav.goBack()} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Icon name="chevron-back" size="md" color={colors.ink} />
@@ -53,6 +55,7 @@ export default function LegalScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+      </ContentContainer>
     </SafeAreaView>
   );
 }
