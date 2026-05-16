@@ -52,7 +52,13 @@ export default function DiscoverSelfScreen() {
 
   useFocusEffect(useCallback(() => {
     if (!user) return;
-    Promise.all([listUserAttempts(user.id), listQuizzes(), listUserPsychResults(user.id)]).then(async ([as, qs, pr]) => {
+    const deadline = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("load_timeout")), 8000)
+    );
+    Promise.race([
+      Promise.all([listUserAttempts(user.id), listQuizzes(), listUserPsychResults(user.id)]),
+      deadline,
+    ]).then(async ([as, qs, pr]) => {
       const submitted = as.filter((a) => a.status === "submitted");
       setAttempts(submitted);
       setQuizzes(qs);
@@ -62,6 +68,8 @@ export default function DiscoverSelfScreen() {
         const meta = await fetchQuestionAnalyticsData(allQuestionIds);
         setQuestionMeta(meta);
       }
+    }).catch(() => {
+      // Timed out or network error — analytics stay empty; screen remains usable
     });
   }, [user]));
 

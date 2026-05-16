@@ -69,9 +69,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Safety deadline: on iOS cold start with an expired stored token the Supabase SDK
+    // acquires a JS-level auth lock to refresh the token.  That lock can block
+    // onAuthStateChange from ever firing, keeping loading=true forever.
+    // After 8 s we force-clear the spinner so the user reaches the login screen.
+    let resolved = false;
+    const deadline = setTimeout(() => {
+      if (!resolved) setLoading(false);
+    }, 8000);
+
     // 1. Subscribe to Supabase auth state changes FIRST so we never miss events.
     //    This fires with the current session on mount (INITIAL_SESSION / SIGNED_IN).
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      resolved = true;
+      clearTimeout(deadline);
       if (event === "SIGNED_OUT" || !session) {
         // Clear profile unless we're in guest/demo mode
         setIsGuest((g) => {
@@ -110,7 +121,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     //    return null and RLS to reject the insert.
     supabase.auth.getSession().catch(() => {});
 
-    return () => { subscription.unsubscribe(); };
+    return () => {
+      clearTimeout(deadline);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const persist = async (p: Profile | null) => {

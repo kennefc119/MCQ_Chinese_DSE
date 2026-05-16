@@ -10,6 +10,7 @@ import {
   ScrollView,
   Alert,
   RefreshControl,
+  AppState,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -473,17 +474,35 @@ export default function ExploreScreen() {
   const [filterExpanded, setFilterExpanded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Always-current ref so the AppState listener never captures a stale closure.
+  const loadRef = useRef<() => Promise<void>>(async () => {});
+  const appStateRef = useRef(AppState.currentState);
+
   const load = async () => {
-    const [quizzes, tips, passageList, userAttempts] = await Promise.all([
-      listQuizzes(),
-      listTipCards(),
-      listPassages(),
-      user ? listUserAttempts(user.id) : Promise.resolve([]),
-    ]);
-    setAttempts(userAttempts);
-    setItems(interleave(shuffleArray([...quizzes]), tips));
-    setPassages(passageList);
+    const deadline = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("load_timeout")), 8000)
+    );
+    try {
+      const [quizzes, tips, passageList, userAttempts] = await Promise.race([
+        Promise.all([
+          listQuizzes(),
+          listTipCards(),
+          listPassages(),
+          user ? listUserAttempts(user.id) : Promise.resolve([]),
+        ]),
+        deadline,
+      ]);
+      setAttempts(userAttempts);
+      setItems(interleave(shuffleArray([...quizzes]), tips));
+      setPassages(passageList);
+    } catch {
+      // Timed out or network error — grid stays empty; pull-to-refresh to retry
+    }
   };
+
+  // Keep ref current on every render so the AppState handler always calls the
+  // latest load() (which closes over the current user).
+  loadRef.current = load;
 
   useEffect(() => {
     if (authLoading) return;
@@ -495,6 +514,17 @@ export default function ExploreScreen() {
     run();
     return () => { mounted = false; };
   }, [authLoading]);
+
+  // Re-fetch silently whenever the app returns from background.
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (nextState) => {
+      if (appStateRef.current.match(/inactive|background/) && nextState === "active") {
+        loadRef.current();
+      }
+      appStateRef.current = nextState;
+    });
+    return () => sub.remove();
+  }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
