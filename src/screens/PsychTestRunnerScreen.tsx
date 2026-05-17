@@ -10,6 +10,7 @@ import {
   Animated,
   Easing,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -144,10 +145,21 @@ export default function PsychTestRunnerScreen() {
   };
 
   if (done) {
+    const heroUri = done.mood_image_url ?? test?.cover_image_url ?? null;
     return (
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <ScrollView contentContainerStyle={styles.resultBody}>
-          <Text style={styles.resultEmoji}>{done.emoji}</Text>
+          {heroUri ? (
+            <Image
+              source={{ uri: heroUri }}
+              style={styles.resultHeroImage}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              transition={200}
+            />
+          ) : (
+            <Text style={styles.resultEmoji}>{done.emoji}</Text>
+          )}
           <Text style={styles.resultTitle}>{done.title}</Text>
           <Text style={styles.resultDesc}>{done.description}</Text>
 
@@ -289,6 +301,13 @@ const styles = StyleSheet.create({
   // ── Result ──────────────────────────────────────────────────────────────────
   resultBody: { padding: spacing.lg },
   resultEmoji: { fontSize: 80, textAlign: "center", marginVertical: spacing.lg },
+  resultHeroImage: {
+    width: "100%",
+    height: 220,
+    borderRadius: 16,
+    marginBottom: spacing.md,
+    overflow: "hidden",
+  },
   resultTitle: { ...typography.title, color: colors.primary, textAlign: "center", marginBottom: spacing.sm },
   resultDesc: {
     ...typography.body,

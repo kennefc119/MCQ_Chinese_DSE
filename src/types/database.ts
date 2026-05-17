@@ -133,6 +133,7 @@ export interface PsychTest {
   color_hex?: string;
   position?: number;
   featured?: boolean;
+  cover_image_url?: string | null;
 }
 
 export interface PsychQuestion {
@@ -153,6 +154,8 @@ export interface PsychResultMapping {
   weaknesses?: string[];
   famous_quote?: string;
   study_tips?: string[];
+  // Per-result mood image. Falls back to the test's cover_image_url in the UI.
+  mood_image_url?: string | null;
 }
 
 export interface PsychUserResult {

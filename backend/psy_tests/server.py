@@ -44,8 +44,11 @@ You MUST output ONLY a single valid JSON object — no markdown fences, no expla
 The JSON schema is:
 {
   "id": "psy-<slug>-v1",
+  "slug": "<slug>",
   "title": "Chinese title",
   "description": "Chinese subtitle / description",
+  "icon_name": "brain",
+  "estimated_minutes": 3,
   "color_hex": "#XXXXXX",
   "position": <integer 1-99>,
   "is_active": true,
@@ -65,10 +68,10 @@ The JSON schema is:
     {
       "code": "<result_code>",
       "title": "Result title in Traditional Chinese",
-      "description": "Detailed description in Traditional Chinese",
+      "description": "Detailed description in Traditional Chinese (3+ sentences)",
       "emoji": "🏛️",
-      "historical_figure": "Brief descriptor",
-      "historical_background": "Background info in Traditional Chinese",
+      "historical_figure": "Brief descriptor (optional — omit key if not applicable)",
+      "historical_background": "Background in Traditional Chinese (optional)",
       "strengths": ["strength1", "strength2"],
       "weaknesses": ["weakness1"],
       "famous_quote": "A famous quote or motto",
@@ -77,101 +80,40 @@ The JSON schema is:
     }
   ]
 }
+Allowed icon_name values: brain, heart, book, star, compass, lightbulb, target, puzzle, shield, flame.
+Scoring rule: each answer increments the chosen score_key counter; the result code with the highest tally wins.
 """.strip()
 
-_DIMENSION_SCHEMA_HINT = """
-You MUST output ONLY a single valid JSON object — no markdown fences, no explanation text.
-For dimension-based scoring, each option increments a specific dimension score.
-The final result is determined by the highest-scoring dimension.
-The JSON schema is:
-{
-  "id": "psy-<slug>-v1",
-  "title": "Chinese title",
-  "description": "Chinese subtitle / description",
-  "color_hex": "#XXXXXX",
-  "position": <integer 1-99>,
-  "is_active": true,
-  "featured": false,
-  "questions": [
-    {
-      "q": "Question text in Traditional Chinese",
-      "options": [
-        {"label": "A", "text": "Option text in Traditional Chinese", "score_key": "<dimension_code>"},
-        {"label": "B", "text": "...", "score_key": "<dimension_code>"},
-        {"label": "C", "text": "...", "score_key": "<dimension_code>"},
-        {"label": "D", "text": "...", "score_key": "<dimension_code>"}
-      ]
-    }
-  ],
-  "results": [
-    {
-      "code": "<dimension_code>",
-      "title": "Dimension title in Traditional Chinese",
-      "description": "Detailed description in Traditional Chinese",
-      "emoji": "📚",
-      "strengths": ["strength1", "strength2"],
-      "weaknesses": ["weakness1"],
-      "study_tips": ["tip1", "tip2", "tip3"],
-      "scoring": {"<dimension_code>": 1}
-    }
-  ]
-}
-""".strip()
-
-
-def _build_system_prompt(test_type: str, question_count: int, result_count: int, custom_prompt: str) -> str:
+def _build_system_prompt(hint: str, question_count: int, result_count: int) -> str:
+    """Build the LLM system prompt from a free-form hint."""
     base = (
         "You are an expert educational psychologist creating personality and learning assessments "
         "for Hong Kong secondary school students (DSE level). "
         "All question and result content MUST be in Traditional Chinese (繁體中文). "
         "Make the test engaging, culturally relevant, and educationally valuable.\n\n"
     )
-
-    if test_type == "character-match":
-        type_prompt = (
-            f"Create a character-matching personality test that matches students to famous historical Chinese figures. "
-            f"Generate exactly {question_count} questions and exactly {result_count} historical figure results. "
-            "Each question should have 4 options (A, B, C, D). Each option's score_key must map to one of the result codes. "
-            "Choose historically significant figures from Chinese history (e.g. 諸葛亮, 武則天, 蘇軾, 屈原, 王昭君, 藺相如). "
-            "Questions should probe personality traits like leadership, creativity, resilience, wisdom, loyalty. "
-            f"{_SCHEMA_HINT}"
-        )
-    elif test_type == "study-style":
-        type_prompt = (
-            f"Create a learning/study style assessment for DSE students. "
-            f"Generate exactly {question_count} questions and exactly {result_count} learning style dimensions. "
-            "Each question should have 4 options (A, B, C, D). "
-            "Use dimension-based scoring: options increment dimension scores, final result = highest dimension. "
-            "Learning style dimensions should cover: visual/auditory/kinesthetic/reading-writing styles, "
-            "deep vs surface learning, collaborative vs solitary learning, etc. "
-            f"{_DIMENSION_SCHEMA_HINT}"
-        )
-    elif test_type == "career-inclination":
-        type_prompt = (
-            f"Create a career inclination assessment for DSE students exploring future paths. "
-            f"Generate exactly {question_count} questions and exactly {result_count} career type results. "
-            "Each question should have 4 options (A, B, C, D). "
-            "Use dimension-based scoring: options increment career dimension scores, final result = highest dimension. "
-            "Career types should be relevant to HK students: 理工科技, 商業金融, 人文社科, 創意藝術, 醫療護理, 教育服務, etc. "
-            "Include actionable study_tips referencing specific DSE subjects relevant to each career path. "
-            f"{_DIMENSION_SCHEMA_HINT}"
-        )
-    else:
-        raise ValueError(f"Unknown test_type: {test_type}")
-
-    extra = f"\n\nAdditional instructions: {custom_prompt}" if custom_prompt and custom_prompt.strip() else ""
-    return base + type_prompt + extra
+    direction = (
+        f"Test direction from the content editor:\n{hint.strip()}\n\n"
+        if hint.strip()
+        else "Create an original and engaging personality test appropriate for HK DSE students.\n\n"
+    )
+    constraints = (
+        f"Generate exactly {question_count} questions and exactly {result_count} result types. "
+        "Each question must have exactly 4 options (A, B, C, D). "
+        "Each option's score_key must map to one of the result codes. "
+        "Scoring: the result code with the highest tally across all chosen options wins.\n\n"
+    )
+    return base + direction + constraints + _SCHEMA_HINT
 
 
 # ─── Request / Response models ────────────────────────────────────────────────
 
 
 class GenerateRequest(BaseModel):
-    test_type: str  # "character-match" | "study-style" | "career-inclination"
+    hint: str = ""  # Free-form test direction sent directly to the LLM
     question_count: int = 10
     result_count: int = 5
     bot_name: str = "Claude-3.7-Sonnet"
-    custom_prompt: str = ""
 
 
 class PushRequest(BaseModel):
@@ -231,12 +173,10 @@ def list_tests() -> list[dict[str, Any]]:
 @app.post("/api/generate")
 async def generate(req: GenerateRequest) -> dict[str, Any]:
     """Call Poe API to generate a psych test JSON."""
-    question_count = max(5, min(settings.max_questions, req.question_count))
-    result_count = max(3, min(10, req.result_count))
+    question_count = max(5, min(100, req.question_count))
+    result_count = max(3, min(100, req.result_count))
 
-    system_prompt = _build_system_prompt(
-        req.test_type, question_count, result_count, req.custom_prompt
-    )
+    system_prompt = _build_system_prompt(req.hint, question_count, result_count)
 
     bot_name = req.bot_name or settings.psy_bot_name
 
@@ -250,10 +190,9 @@ async def generate(req: GenerateRequest) -> dict[str, Any]:
             {
                 "role": "user",
                 "content": (
-                    f"請生成一個完整的心理測驗 JSON。"
-                    f"測驗類型：{req.test_type}，"
-                    f"問題數量：{question_count} 題，"
-                    f"結果類型：{result_count} 種。"
+                    f"請根據以下方向，為香港DSE學生生成一個完整的心理測驗 JSON。\n"
+                    f"方向：{req.hint or '自由發揮，創作一個適合DSE學生的有趣心理測驗'}\n"
+                    f"問題數量：{question_count} 題，結果類型：{result_count} 種。\n"
                     f"直接輸出 JSON，不要任何其他文字或 markdown 符號。"
                 ),
             },
@@ -310,15 +249,20 @@ def push_test(req: PushRequest) -> dict[str, Any]:
             detail=f"Missing required fields: {missing}",
         )
 
+    questions = test.get("questions", [])
     row = {
         "id": test["id"],
+        "slug": test.get("slug") or test["id"],
         "title": test.get("title"),
         "description": test.get("description"),
+        "icon_name": test.get("icon_name", "brain"),
+        "question_count": len(questions) if isinstance(questions, list) else test.get("question_count", 0),
+        "estimated_minutes": test.get("estimated_minutes", 3),
         "is_active": test.get("is_active", False),
         "color_hex": test.get("color_hex"),
         "position": test.get("position"),
         "featured": test.get("featured", False),
-        "questions": test.get("questions", []),
+        "questions": questions,
         "results": test.get("results", []),
     }
 
@@ -362,6 +306,32 @@ def toggle_active(test_id: str) -> dict[str, Any]:
         current = resp.data.get("is_active", False) if resp.data else False
         sb.table("dsemcq_psych_tests").update({"is_active": not current}).eq("id", test_id).execute()
         return {"success": True, "is_active": not current}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.delete("/api/tests/{test_id}")
+def delete_test(test_id: str) -> dict[str, Any]:
+    """Permanently delete a single psych test and all its user results."""
+    try:
+        sb = _get_supabase()
+        # Delete user results first (relational integrity)
+        sb.table("dsemcq_psych_user_results").delete().eq("test_id", test_id).execute()
+        sb.table("dsemcq_psych_tests").delete().eq("id", test_id).execute()
+        return {"success": True, "deleted_id": test_id}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.delete("/api/tests")
+def delete_all_tests() -> dict[str, Any]:
+    """Permanently delete ALL psych tests and all user results. Use with caution."""
+    try:
+        sb = _get_supabase()
+        # Delete user results first, then tests
+        sb.table("dsemcq_psych_user_results").delete().neq("test_id", "").execute()
+        sb.table("dsemcq_psych_tests").delete().neq("id", "").execute()
+        return {"success": True}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 

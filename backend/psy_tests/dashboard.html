@@ -444,26 +444,11 @@
 
   <!-- Config -->
   <div class="s-section">
-    <h3>API 設定</h3>
+    <h3>Bot 設定</h3>
 
     <div class="form-group">
-      <label>Poe API Key</label>
-      <input type="password" id="cfgPoeKey" placeholder="your_poe_api_key_here" autocomplete="off">
-    </div>
-
-    <div class="form-group">
-      <label>Supabase URL</label>
-      <input type="text" id="cfgSupaUrl" placeholder="https://xxx.supabase.co" autocomplete="off">
-    </div>
-
-    <div class="form-group">
-      <label>Supabase Service Key</label>
-      <input type="password" id="cfgSupaKey" placeholder="service_role_key" autocomplete="off">
-    </div>
-
-    <div class="form-group">
-      <label>PSY Bot Name</label>
-      <input type="text" id="cfgBotName" value="Claude-3.7-Sonnet" autocomplete="off">
+      <label>PSY Bot 名稱</label>
+      <input type="text" id="cfgBotName" value="GPT-5.4-Mini" autocomplete="off">
     </div>
 
     <button class="btn-sm" onclick="saveConfig()" style="width:100%;margin-top:4px;">
@@ -507,40 +492,26 @@
             <h3>測驗設定</h3>
 
             <div class="form-group">
-              <label>測驗類型</label>
-              <select id="testType">
-                <option value="character-match">👤 性格古人配對</option>
-                <option value="study-style">📚 學習風格測驗</option>
-                <option value="career-inclination">🎯 職業傾向測驗</option>
-              </select>
+              <label>測驗方向提示 <span style="color:var(--dim);font-size:10px;">(直接傳給 AI 生成器)</span></label>
+              <textarea id="testHint" rows="6" placeholder="e.g. 探索DSE學生的壓力管理風格，分4種類型：行動派、分析派、逃避派、求助派。&#10;&#10;或：將學生配對到香港文學中的古典角色，如林黛玉、賈寶玉等。&#10;&#10;或：了解學生備考時的決策模式與應對方式。"></textarea>
             </div>
 
             <div class="form-group">
-              <label>問題數量 <span style="color:var(--dim);font-size:10px;">(5–15)</span></label>
+              <label>問題數量 <span style="color:var(--dim);font-size:10px;">(5–100)</span></label>
               <div class="slider-row">
-                <input type="range" id="questionCount" min="5" max="15" value="10"
+                <input type="range" id="questionCount" min="5" max="100" value="10"
                   oninput="document.getElementById('qcVal').textContent=this.value">
                 <span class="slider-val" id="qcVal">10</span>
               </div>
             </div>
 
             <div class="form-group">
-              <label>結果類型數量 <span style="color:var(--dim);font-size:10px;">(3–8)</span></label>
+              <label>結果類型數量 <span style="color:var(--dim);font-size:10px;">(3–100)</span></label>
               <div class="slider-row">
-                <input type="range" id="resultCount" min="3" max="8" value="5"
+                <input type="range" id="resultCount" min="3" max="100" value="5"
                   oninput="document.getElementById('rcVal').textContent=this.value">
                 <span class="slider-val" id="rcVal">5</span>
               </div>
-            </div>
-
-            <div class="form-group">
-              <label>Bot 名稱</label>
-              <input type="text" id="genBotName" value="Claude-3.7-Sonnet">
-            </div>
-
-            <div class="form-group">
-              <label>額外指示 <span style="color:var(--dim);font-size:10px;">(可選)</span></label>
-              <textarea id="customPrompt" rows="3" placeholder="e.g. 請加入更多關於戰國時期的角色..."></textarea>
             </div>
 
             <button class="btn-gen" id="genBtn" onclick="generate()">
@@ -593,7 +564,10 @@
     <div class="tab-panel" id="tab-manage">
       <div class="section-hdr">
         <h3>所有測驗</h3>
-        <button class="btn-sm" onclick="loadManageTests()">🔄 刷新</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-sm" onclick="loadManageTests()">🔄 刷新</button>
+          <button class="btn-danger" onclick="deleteAllTests()" style="padding:4px 10px;font-size:12px;">🗑 刪除全部</button>
+        </div>
       </div>
 
       <div id="manageLoading" style="text-align:center;padding:40px;color:var(--muted);display:none;">
@@ -620,24 +594,12 @@ const API = 'http://127.0.0.1:8766';
 
 // ── Config (localStorage) ─────────────────────────────────────────────────────
 function loadConfig() {
-  const poeKey  = localStorage.getItem('psy_poe_key') || '';
-  const supaUrl = localStorage.getItem('psy_supa_url') || '';
-  const supaKey = localStorage.getItem('psy_supa_key') || '';
-  const botName = localStorage.getItem('psy_bot_name') || 'Claude-3.7-Sonnet';
-
-  document.getElementById('cfgPoeKey').value  = poeKey;
-  document.getElementById('cfgSupaUrl').value = supaUrl;
-  document.getElementById('cfgSupaKey').value = supaKey;
+  const botName = localStorage.getItem('psy_bot_name') || 'GPT-5.4-Mini';
   document.getElementById('cfgBotName').value = botName;
-  document.getElementById('genBotName').value = botName;
 }
 
 function saveConfig() {
-  localStorage.setItem('psy_poe_key',  document.getElementById('cfgPoeKey').value.trim());
-  localStorage.setItem('psy_supa_url', document.getElementById('cfgSupaUrl').value.trim());
-  localStorage.setItem('psy_supa_key', document.getElementById('cfgSupaKey').value.trim());
   localStorage.setItem('psy_bot_name', document.getElementById('cfgBotName').value.trim());
-  document.getElementById('genBotName').value = document.getElementById('cfgBotName').value.trim();
   toast('設定已儲存', 'success');
 }
 
@@ -717,11 +679,10 @@ async function generate() {
   genEmpty.style.display = 'none';
 
   const payload = {
-    test_type:      document.getElementById('testType').value,
+    hint:           document.getElementById('testHint').value.trim(),
     question_count: parseInt(document.getElementById('questionCount').value),
     result_count:   parseInt(document.getElementById('resultCount').value),
-    bot_name:       document.getElementById('genBotName').value.trim() || 'Claude-3.7-Sonnet',
-    custom_prompt:  document.getElementById('customPrompt').value.trim(),
+    bot_name:       document.getElementById('cfgBotName').value.trim() || 'Claude-3.7-Sonnet',
   };
 
   try {
@@ -856,6 +817,7 @@ async function loadManageTests() {
                     <button class="btn-sm" onclick="toggleActive('${esc(t.id)}', ${t.is_active})">
                       ${t.is_active ? '⏸ 停用' : '▶ 啟用'}
                     </button>
+                    <button class="btn-danger" onclick="deleteTest('${esc(t.id)}')" title="永久刪除">🗑</button>
                   </div>
                 </td>
               </tr>
@@ -898,6 +860,32 @@ async function toggleActive(testId, currentActive) {
     refreshTestList();
   } catch (e) {
     toast(`操作失敗：${e.message}`, 'error');
+  }
+}
+
+async function deleteTest(testId) {
+  if (!confirm(`確定要永久刪除「${testId}」及其所有用戶測驗記錄？\n\n此操作不可逆。`)) return;
+  try {
+    const r = await fetch(`${API}/api/tests/${encodeURIComponent(testId)}`, { method: 'DELETE' });
+    if (!r.ok) throw new Error((await r.json()).detail || r.statusText);
+    toast(`已刪除：${testId}`, 'success');
+    loadManageTests();
+    refreshTestList();
+  } catch (e) {
+    toast(`刪除失敗：${e.message}`, 'error');
+  }
+}
+
+async function deleteAllTests() {
+  if (!confirm('⚠️ 確定要永久刪除所有心理測驗及所有用戶測驗記錄？\n\n此操作不可逆，請謹慎！')) return;
+  try {
+    const r = await fetch(`${API}/api/tests`, { method: 'DELETE' });
+    if (!r.ok) throw new Error((await r.json()).detail || r.statusText);
+    toast('已刪除所有測驗及用戶記錄', 'success');
+    loadManageTests();
+    refreshTestList();
+  } catch (e) {
+    toast(`刪除失敗：${e.message}`, 'error');
   }
 }
 

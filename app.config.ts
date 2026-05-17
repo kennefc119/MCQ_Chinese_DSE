@@ -2,7 +2,7 @@ import { ExpoConfig, ConfigContext } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "DSE 文言文 MCQ",
+  name: "文淵DSE",
   slug: "dsemcq",
   version: "1.0.0",
   scheme: "dsemcq",

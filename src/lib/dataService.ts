@@ -1,4 +1,4 @@
-import { Quiz, Question, QuestionOption, Attempt, QuizSignup, InboxMessage, TipCard, PsychTest, PsychUserResult, Passage } from "../types/database";
+import { Quiz, Question, QuestionOption, Attempt, QuizSignup, InboxMessage, TipCard, PsychTest, PsychQuestion, PsychResultMapping, PsychUserResult, Passage } from "../types/database";
 import { isSupabaseConfigured, supabase } from "./supabase";
 import { SEED_QUIZZES } from "../data/seedQuizzes";
 import { SEED_QUESTIONS } from "../data/seedQuestions";
@@ -217,15 +217,72 @@ export async function listTipCards(): Promise<TipCard[]> {
   return data as TipCard[];
 }
 
+/**
+ * Normalise a raw Supabase row into the frontend PsychTest shape.
+ *
+ * The admin tool (backend/psy_tests) generates questions in a legacy format:
+ *   { q: string, options: [{ label: 'A', text: string, score_key: string }] }
+ * The seed data uses:
+ *   { id, text, options: [{ label: string, value: number, dimension?: string }] }
+ * This function handles both.
+ */
+function normalizePsychTest(row: any): PsychTest {
+  const questions: PsychQuestion[] = (row.questions ?? []).map((q: any, qi: number) => {
+    const text: string = q.text ?? q.q ?? "";
+    const id: string = q.id ?? `q${qi + 1}`;
+    const options = (q.options ?? []).map((opt: any) => ({
+      // If opt.text exists the label field holds A/B/C/D (backend format).
+      // Otherwise opt.label IS the display text (seed format).
+      label: opt.text ?? opt.label ?? "",
+      value: typeof opt.value === "number" ? opt.value : 1,
+      dimension: opt.dimension ?? opt.score_key ?? undefined,
+    }));
+    return { id, text, options };
+  });
+
+  const results: PsychResultMapping[] = (row.results ?? []).map((r: any) => ({
+    code: r.code ?? "",
+    title: r.title ?? "",
+    description: r.description ?? "",
+    emoji: r.emoji ?? "",
+    historical_figure: r.historical_figure,
+    historical_background: r.historical_background,
+    strengths: r.strengths,
+    weaknesses: r.weaknesses,
+    famous_quote: r.famous_quote,
+    study_tips: r.study_tips,
+    mood_image_url: r.mood_image_url ?? null,
+  }));
+
+  return {
+    id: row.id,
+    slug: row.slug ?? row.id,
+    title: row.title ?? "",
+    description: row.description ?? "",
+    icon_name: row.icon_name ?? "help-circle",
+    question_count: row.question_count ?? questions.length,
+    estimated_minutes: row.estimated_minutes ?? 3,
+    questions,
+    results,
+    color_hex: row.color_hex,
+    position: row.position,
+    featured: row.featured,
+    cover_image_url: row.cover_image_url ?? null,
+  };
+}
+
 export async function listPsychTests(): Promise<PsychTest[]> {
   if (!isSupabaseConfigured) return SEED_PSYCH_TESTS;
-  const { data, error } = await supabase.from("dsemcq_psych_tests").select("*").eq("is_active", true).order("position");
+  const { data, error } = await supabase
+    .from("dsemcq_psych_tests")
+    .select("*")
+    .eq("is_active", true)
+    .order("position");
   if (error) {
-    console.warn("[dsemcq] listPsychTests error — falling back to seed:", error.message);
-    return SEED_PSYCH_TESTS;
+    console.warn("[dsemcq] listPsychTests error:", error.message);
+    return [];
   }
-  if (!data || data.length === 0) return SEED_PSYCH_TESTS;
-  return data as PsychTest[];
+  return (data ?? []).map(normalizePsychTest);
 }
 
 export async function savePsychResult(userId: string, testId: string, resultCode: string) {
