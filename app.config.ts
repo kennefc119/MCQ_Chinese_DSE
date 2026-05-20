@@ -14,7 +14,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     infoPlist: {
       CFBundleURLTypes: [{ CFBundleURLSchemes: ["dsemcq"] }],
       NSAppTransportSecurity: {
-        NSAllowsArbitraryLoads: true,
         NSAllowsLocalNetworking: true,
       },
     },

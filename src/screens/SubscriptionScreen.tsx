@@ -44,8 +44,14 @@ export default function SubscriptionScreen() {
     });
   }, []);
 
-  // Price string from Apple via RevenueCat; falls back gracefully during load
-  const priceString = monthlyPkg?.product.priceString ?? "HK$68.00";
+  // Price string from Apple via RevenueCat; falls back gracefully during load.
+  // In sandbox Apple sometimes returns a bare number (e.g. "8.99") without a
+  // currency symbol — detect that and prepend the ISO currency code.
+  const rawPrice = monthlyPkg?.product.priceString ?? "HK$68.00";
+  const priceString =
+    /^\d/.test(rawPrice) && monthlyPkg?.product.currencyCode
+      ? `${monthlyPkg.product.currencyCode} ${rawPrice}`
+      : rawPrice;
 
   const handlePurchase = async () => {
     if (!monthlyPkg) return;

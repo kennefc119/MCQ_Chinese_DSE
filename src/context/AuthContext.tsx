@@ -10,6 +10,28 @@ import { rcLogIn, rcLogOut, checkPremiumEntitlement } from "../lib/revenueCat";
 
 const PROFILE_KEY = "dsemcq_profile";
 
+// ── Apple Sign-In nonce helpers ─────────────────────────────────────────────
+// Supabase requires a nonce to verify Apple id_tokens. We generate a random
+// raw nonce, SHA-256 hash it (using Hermes's built-in Web Crypto API), pass
+// the *hashed* version to Apple and the *raw* version to Supabase.
+const generateRawNonce = (): string => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const random = crypto.getRandomValues(new Uint8Array(20));
+  return Array.from(random)
+    .map((b) => chars[b % chars.length])
+    .join("");
+};
+
+const sha256Hex = async (str: string): Promise<string> => {
+  const buf = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(str)
+  );
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+};
+
 interface AuthContextValue {
   user: Profile | null;
   loading: boolean;
@@ -268,11 +290,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (Platform.OS !== "ios") return { ok: false, needsRegister: false, error: "Apple 登入僅支援 iOS" };
     if (!isSupabaseConfigured) return { ok: false, needsRegister: false, error: "Supabase 未設定" };
     try {
+      const rawNonce = generateRawNonce();
+      const hashedNonce = await sha256Hex(rawNonce);
+
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
+        nonce: hashedNonce,
       });
       if (!credential.identityToken) {
         return { ok: false, needsRegister: false, error: "Apple 登入失敗，請重試" };
@@ -280,6 +306,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: "apple",
         token: credential.identityToken,
+        nonce: rawNonce,
       });
       if (error || !data.user) {
         return { ok: false, needsRegister: false, error: error?.message || "Apple 登入失敗" };
