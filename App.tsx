@@ -10,6 +10,10 @@ import {
 import { AuthProvider } from "./src/context/AuthContext";
 import RootNavigator from "./src/navigation/RootNavigator";
 import LoadingScreen from "./src/components/LoadingScreen";
+import { configureRevenueCat } from "./src/lib/revenueCat";
+
+// Initialise RevenueCat once at module load, before any component renders.
+configureRevenueCat();
 
 export default function App() {
   const [fontsLoaded] = useFonts({

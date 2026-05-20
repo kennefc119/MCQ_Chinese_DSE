@@ -4,3 +4,5 @@ source/
 supabase/
 .env
 *.log
+se/
+tools/

@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View, Text, StyleSheet, KeyboardAvoidingView, Platform,
   TouchableOpacity, Alert, TextInput, ActivityIndicator, ScrollView,
 } from "react-native";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -24,9 +25,16 @@ type Panel = "school" | "password" | null;
 
 export default function LoginScreen() {
   const nav = useNavigation<Nav>();
-  const { signInWithEmail, signInWithPassword, enterDemo, enterGuest, demoMode } = useAuth();
+  const { signInWithEmail, signInWithPassword, signInWithApple, enterDemo, enterGuest, demoMode } = useAuth();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [appleAvailable, setAppleAvailable] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS === "ios") {
+      AppleAuthentication.isAvailableAsync().then(setAppleAvailable).catch(() => {});
+    }
+  }, []);
 
   const [activePanel, setActivePanel] = useState<Panel>(null);
 
@@ -56,6 +64,19 @@ export default function LoginScreen() {
       return;
     }
     nav.navigate("Otp", { email: email.trim() });
+  };
+
+  const onAppleSignIn = async () => {
+    const res = await signInWithApple();
+    if (!res.ok) {
+      if (res.error) Alert.alert("Apple 登入失敗", res.error);
+      return;
+    }
+    if (res.needsRegister) {
+      // Pass any name/email Apple provided so Register screen can pre-fill
+      nav.navigate("Register", { email: res.appleEmail ?? "" });
+    }
+    // If not needsRegister, onAuthStateChange in AuthContext handles navigation automatically
   };
 
   const onPasswordLogin = async () => {
@@ -106,6 +127,17 @@ export default function LoginScreen() {
             autoCorrect={false}
           />
           <Button title="發送驗證碼" onPress={onSend} loading={loading} />
+
+          {/* Apple Sign In — shown only on iOS when available; must be as prominent as other options */}
+          {appleAvailable && (
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+              cornerRadius={10}
+              style={styles.appleBtn}
+              onPress={onAppleSignIn}
+            />
+          )}
 
           {/* Divider */}
           <View style={styles.dividerRow}>
@@ -247,6 +279,13 @@ const styles = StyleSheet.create({
   brandWrap: { alignItems: "center", marginBottom: spacing.md },
   title: { ...typography.title, color: colors.ink, textAlign: "center" },
   subtitle: { ...typography.body, color: colors.inkSoft, textAlign: "center", marginTop: spacing.sm },
+
+  // Apple Sign In button
+  appleBtn: {
+    width: "100%",
+    height: 50,
+    marginTop: spacing.sm,
+  },
 
   // Divider
   dividerRow: { flexDirection: "row", alignItems: "center", marginVertical: spacing.lg },

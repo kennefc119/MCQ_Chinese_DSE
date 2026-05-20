@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import * as SecureStore from "expo-secure-store";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { Platform } from "react-native";
 import { Profile, Gender } from "../types/database";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
 import { logLogin, logVisit, getDeviceId, getPlatform } from "../lib/adminService";
 import { registerForPushNotifications } from "../lib/pushNotifications";
+import { rcLogIn, rcLogOut, checkPremiumEntitlement } from "../lib/revenueCat";
 
 const PROFILE_KEY = "dsemcq_profile";
 
@@ -19,6 +22,7 @@ interface AuthContextValue {
   registerProfile: (data: { username: string; gender: Gender; dse_year: number }) => Promise<{ ok: boolean; error?: string }>;
   signOut: () => Promise<void>;
   updateProfile: (patch: Partial<Profile>) => Promise<void>;
+  signInWithApple: () => Promise<{ ok: boolean; needsRegister: boolean; appleFullName?: string; appleEmail?: string; error?: string }>;
   /** demo mode flag for offline preview */
   demoMode: boolean;
   enterDemo: () => Promise<void>;
@@ -101,6 +105,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .maybeSingle();
         if (profile) {
           await persist(profile as Profile);
+          // Sync RC identity on every session restore (covers cold-start, not just explicit sign-in)
+          void syncSubscription(session.user.id, profile as Profile);
         } else {
           // Profile not yet created (user in registration flow) — keep any cached profile
           const cached = await SecureStore.getItemAsync(PROFILE_KEY).catch(() => null);
@@ -133,6 +139,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     else await SecureStore.deleteItemAsync(PROFILE_KEY);
   };
 
+  /**
+   * Checks the user's Apple subscription status via RevenueCat and syncs it
+   * back to Supabase + local state if it differs. Fire-and-forget on sign-in.
+   */
+  const syncSubscription = async (userId: string, currentProfile: Profile) => {
+    await rcLogIn(userId);
+    const isPremium = await checkPremiumEntitlement();
+    const newTier = isPremium ? ("premium" as const) : ("free" as const);
+    if (newTier !== currentProfile.subscription_tier) {
+      const patch = {
+        subscription_tier: newTier,
+        subscription_status: (isPremium ? "active" : "inactive") as Profile["subscription_status"],
+      };
+      if (isSupabaseConfigured) {
+        await supabase.from("dsemcq_profiles").update(patch).eq("id", userId);
+      }
+      await persist({ ...currentProfile, ...patch });
+    }
+  };
+
   const signInWithEmail = async (email: string) => {
     setPendingEmail(email);
     if (!isSupabaseConfigured) return { ok: true };
@@ -159,6 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await persist(profile as Profile);
     void logLogin(data.user.id, getPlatform());
     void registerForPushNotifications(data.user.id);
+    void syncSubscription(data.user.id, profile as Profile);
     return { ok: true, needsRegister: false };
   };
 
@@ -198,6 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     setIsGuest(false);
+    void rcLogOut();
     if (isSupabaseConfigured) await supabase.auth.signOut();
     await persist(null);
   };
@@ -226,7 +254,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // fire-and-forget admin instrumentation
     void logLogin(data.user.id, getPlatform());
     void registerForPushNotifications(data.user.id);
+    void syncSubscription(data.user.id, profile as Profile);
     return { ok: true };
+  };
+
+  const signInWithApple = async (): Promise<{
+    ok: boolean;
+    needsRegister: boolean;
+    appleFullName?: string;
+    appleEmail?: string;
+    error?: string;
+  }> => {
+    if (Platform.OS !== "ios") return { ok: false, needsRegister: false, error: "Apple 登入僅支援 iOS" };
+    if (!isSupabaseConfigured) return { ok: false, needsRegister: false, error: "Supabase 未設定" };
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      if (!credential.identityToken) {
+        return { ok: false, needsRegister: false, error: "Apple 登入失敗，請重試" };
+      }
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: "apple",
+        token: credential.identityToken,
+      });
+      if (error || !data.user) {
+        return { ok: false, needsRegister: false, error: error?.message || "Apple 登入失敗" };
+      }
+      // Apple only returns fullName on the very first sign-in — save it immediately.
+      const appleFullName = [
+        credential.fullName?.givenName,
+        credential.fullName?.familyName,
+      ].filter(Boolean).join(" ") || undefined;
+      const appleEmail = credential.email ?? data.user.email ?? undefined;
+      // Check if the user already has a profile
+      const { data: profile } = await supabase
+        .from("dsemcq_profiles")
+        .select("*")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      if (profile) {
+        setIsGuest(false);
+        await persist(profile as Profile);
+        void logLogin(data.user.id, getPlatform());
+        void registerForPushNotifications(data.user.id);
+        void syncSubscription(data.user.id, profile as Profile);
+        return { ok: true, needsRegister: false };
+      }
+      // New user — caller navigates to Register with pre-filled name/email
+      return { ok: true, needsRegister: true, appleFullName, appleEmail };
+    } catch (e: any) {
+      if (e?.code === "ERR_REQUEST_CANCELED") {
+        return { ok: false, needsRegister: false }; // user dismissed — no error toast
+      }
+      return { ok: false, needsRegister: false, error: e?.message ?? "Apple 登入失敗" };
+    }
   };
 
   const enterGuest = () => {
@@ -275,6 +360,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAdmin,
         signInWithEmail,
         signInWithPassword,
+        signInWithApple,
         verifyOtp,
         registerProfile,
         signOut,

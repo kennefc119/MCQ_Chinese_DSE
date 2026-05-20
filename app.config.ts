@@ -13,6 +13,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundleIdentifier: "com.dsemcq.app",
     infoPlist: {
       CFBundleURLTypes: [{ CFBundleURLSchemes: ["dsemcq"] }],
+      NSAppTransportSecurity: {
+        NSAllowsArbitraryLoads: true,
+        NSAllowsLocalNetworking: true,
+      },
     },
   },
   android: {
@@ -29,6 +33,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-font",
     "expo-secure-store",
     "expo-notifications",
+    "expo-apple-authentication",
     [
       "expo-build-properties",
       {
