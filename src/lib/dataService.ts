@@ -309,17 +309,57 @@ export async function listUserPsychResults(userId: string): Promise<Record<strin
 }
 
 // ── Inbox ────────────────────────────────────────────────────
+/** Prefix used to distinguish broadcast announcement IDs from direct inbox message IDs. */
+const ANN_PREFIX = "ann:";
+
 export async function listInbox(userId: string): Promise<InboxMessage[]> {
   if (!isSupabaseConfigured) return memory.inbox.filter((m) => m.user_id === userId || m.user_id === "demo");
-  const { data } = await supabase
-    .from("dsemcq_inbox")
-    .select("*")
-    .or(`user_id.eq.${userId},user_id.is.null`)
-    .order("created_at", { ascending: false });
-  return (data as InboxMessage[]) ?? [];
+
+  const [
+    { data: inboxData },
+    { data: annData },
+    { data: readsData },
+  ] = await Promise.all([
+    supabase.from("dsemcq_inbox").select("*").or(`user_id.eq.${userId},user_id.is.null`).order("created_at", { ascending: false }),
+    supabase.from("dsemcq_announcements").select("id,title,body,type,sent_at").order("sent_at", { ascending: false }).limit(30),
+    supabase.from("dsemcq_announcement_reads").select("announcement_id").eq("user_id", userId),
+  ]);
+
+  const readIds = new Set(
+    ((readsData ?? []) as { announcement_id: string }[]).map((r) => r.announcement_id)
+  );
+
+  const annMessages: InboxMessage[] = (
+    (annData ?? []) as { id: string; title: string; body: string; type: string; sent_at: string }[]
+  ).map((a) => ({
+    id: `${ANN_PREFIX}${a.id}`,
+    user_id: userId,
+    title: a.title,
+    body: a.body,
+    type: a.type as InboxMessage["type"],
+    read: readIds.has(a.id),
+    created_at: a.sent_at,
+  }));
+
+  const combined = [...((inboxData as InboxMessage[]) ?? []), ...annMessages];
+  combined.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  return combined;
 }
 
-export async function markInboxRead(id: string) {
+export async function markInboxRead(id: string, userId?: string) {
+  if (id.startsWith(ANN_PREFIX)) {
+    const announcementId = id.slice(ANN_PREFIX.length);
+    if (userId && isSupabaseConfigured) {
+      await supabase.from("dsemcq_announcement_reads").upsert(
+        { user_id: userId, announcement_id: announcementId, read_at: new Date().toISOString() },
+        { onConflict: "user_id,announcement_id" }
+      );
+    } else {
+      const m = memory.inbox.find((x) => x.id === id);
+      if (m) m.read = true;
+    }
+    return;
+  }
   if (!isSupabaseConfigured) {
     const m = memory.inbox.find((x) => x.id === id);
     if (m) m.read = true;

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -47,6 +47,23 @@ export default function ProfileScreen() {
       : []),
     { icon: "document-text-outline", label: "使用條款", onPress: () => nav.navigate("Legal", { type: "terms" }) },
     { icon: "shield-checkmark-outline", label: "私隱政策", onPress: () => nav.navigate("Legal", { type: "privacy" }) },
+    { icon: "trash-outline", label: "刪除帳戶", onPress: () => {
+      Alert.alert(
+        "刪除帳戶",
+        "刪除後所有資料將被永久移除。請發送電郵至 cs@keeonz.ai 並提供用戶名稱及電郵地址，本公司將於 30 個工作天內處理。",
+        [
+          { text: "取消", style: "cancel" },
+          {
+            text: "發送刪除申請電郵",
+            style: "destructive",
+            onPress: () =>
+              Linking.openURL(
+                `mailto:cs@keeonz.ai?subject=${encodeURIComponent("帳戶刪除申請")}&body=${encodeURIComponent(`用戶名稱：${user.username}\n電郵地址：${user.email}\n\n請刪除我的帳戶及所有相關資料。`)}`
+              ),
+          },
+        ]
+      );
+    }},
   ];
 
   return (

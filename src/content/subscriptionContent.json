@@ -5,7 +5,7 @@
   "upgradeButtonLabel": "升級至學士版",
   "freePlan": {
     "name": "庶民版",
-    "price": "HK$0 / 月",
+    "price": "免費",
     "perks": [
       "每月 30 次 文淵書僮(AI) 問題",
       "練習題庫（無限）",
@@ -15,7 +15,7 @@
   },
   "premiumPlan": {
     "name": "學士版",
-    "price": "HK$68 / 月",
+    "price": "USD 8.99 / 月",
     "perks": [
       "所有庶民版功能",
       "無限練習，測驗與模擬試",

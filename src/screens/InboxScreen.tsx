@@ -21,7 +21,7 @@ export default function InboxScreen() {
 
   const tap = async (m: InboxMessage) => {
     if (!m.read) {
-      await markInboxRead(m.id);
+      await markInboxRead(m.id, user?.id);
       load();
     }
   };
