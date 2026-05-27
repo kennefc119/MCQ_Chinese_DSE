@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import * as SecureStore from "expo-secure-store";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 import { Profile, Gender } from "../types/database";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
 import { logLogin, logVisit, getDeviceId, getPlatform } from "../lib/adminService";
@@ -153,6 +153,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearTimeout(deadline);
       subscription.unsubscribe();
     };
+  }, []);
+
+  // Re-validate the Supabase session whenever the app returns from background.
+  // On iOS production builds, JS execution is frozen while backgrounded, so the
+  // SDK's internal auto-refresh timer stops. getSession() forces a token check;
+  // if the token is stale the SDK refreshes it and fires TOKEN_REFRESHED which
+  // onAuthStateChange above already handles (re-fetching the profile).
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    const appStateRef = { current: AppState.currentState };
+    const sub = AppState.addEventListener("change", (nextState) => {
+      if (appStateRef.current.match(/inactive|background/) && nextState === "active") {
+        supabase.auth.getSession().catch(() => {});
+      }
+      appStateRef.current = nextState;
+    });
+    return () => sub.remove();
   }, []);
 
   const persist = async (p: Profile | null) => {
