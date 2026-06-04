@@ -283,8 +283,8 @@ function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () 
     }
     if (user.subscription_tier !== "premium" && item.type !== "exercise") {
       Alert.alert(
-        "需要高級版",
-        "測驗及考試功能僅限高級版用戶。免費版可完成所有練習題，升級即可解鎖全部內容。",
+        "需要學士版",
+        "測驗及考試功能僅限學士版用戶。庶民版可完成所有練習題，升級即可解鎖全部內容。",
       );
       return;
     }

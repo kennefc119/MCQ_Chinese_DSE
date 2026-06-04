@@ -104,8 +104,8 @@ export default function AdvisorChatScreen() {
         Alert.alert(
           "本月對話已達上限",
           user.subscription_tier === "premium"
-            ? `高級版每月 ${PREMIUM_MONTHLY_LIMIT} 次已用盡，如需更多請聯絡客服。`
-            : `免費版每月 ${FREE_MONTHLY_LIMIT} 次已用盡，升級至高級版可享每月 ${PREMIUM_MONTHLY_LIMIT} 次。`,
+            ? `學士版每月 ${PREMIUM_MONTHLY_LIMIT} 次已用盡，如需更多請聯絡客服。`
+            : `庶民版每月 ${FREE_MONTHLY_LIMIT} 次已用盡，升級至學士版可享每月 ${PREMIUM_MONTHLY_LIMIT} 次。`,
         );
         return;
       }
@@ -186,7 +186,7 @@ export default function AdvisorChatScreen() {
         {!isGuest && user && monthlyUsed !== null && (() => {
           const limit = user.subscription_tier === "premium" ? PREMIUM_MONTHLY_LIMIT : FREE_MONTHLY_LIMIT;
           const remaining = Math.max(0, limit - monthlyUsed);
-          const tierLabel = user.subscription_tier === "premium" ? "高級版" : "免費版";
+          const tierLabel = user.subscription_tier === "premium" ? "學士版" : "庶民版";
           return (
             <Text style={styles.guestLimit}>
               {tierLabel} · 本月剩餘 {remaining} / {limit} 次

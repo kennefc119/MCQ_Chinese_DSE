@@ -24,6 +24,7 @@ import type { PurchasesPackage } from "react-native-purchases";
 
 const PRIVACY_URL = "https://www.keeonz.ai/zh/legal/privacy/";
 const TERMS_URL = "https://www.keeonz.ai/zh/legal/terms/";
+const EULA_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/";
 
 export default function SubscriptionScreen() {
   const { user, updateProfile } = useAuth();
@@ -155,6 +156,10 @@ export default function SubscriptionScreen() {
             <Text style={styles.legalSep}> · </Text>
             <TouchableOpacity onPress={() => Linking.openURL(PRIVACY_URL)}>
               <Text style={styles.legalLink}>私隱政策</Text>
+            </TouchableOpacity>
+            <Text style={styles.legalSep}> · </Text>
+            <TouchableOpacity onPress={() => Linking.openURL(EULA_URL)}>
+              <Text style={styles.legalLink}>許可協議 (EULA)</Text>
             </TouchableOpacity>
           </View>
 

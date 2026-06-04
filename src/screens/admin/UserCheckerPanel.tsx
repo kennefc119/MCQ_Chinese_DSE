@@ -72,7 +72,7 @@ export default function UserCheckerPanel() {
             <View style={styles.badges}>
               {item.role === "admin" && <Text style={[styles.badge, styles.badgeAdmin]}>管理員</Text>}
               {item.subscription_tier === "premium" && (
-                <Text style={[styles.badge, styles.badgePremium]}>Premium</Text>
+                <Text style={[styles.badge, styles.badgePremium]}>學士版</Text>
               )}
             </View>
           </TouchableOpacity>

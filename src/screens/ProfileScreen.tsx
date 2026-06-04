@@ -92,7 +92,7 @@ export default function ProfileScreen() {
         <View style={styles.card}>
           {ROW("性別", user.gender === "male" ? "男" : user.gender === "female" ? "女" : "其他")}
           {ROW("應考 DSE 年份", `${user.dse_year}`)}
-          {ROW("會員等級", user.subscription_tier === "premium" ? "高級" : "免費")}
+          {ROW("會員等級", user.subscription_tier === "premium" ? "學士版" : "庶民版")}
           {user.role === "admin" && ROW("身份", "管理員")}
         </View>
 

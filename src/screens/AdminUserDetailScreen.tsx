@@ -173,7 +173,7 @@ export default function AdminUserDetailScreen() {
             <KV k="性別" v={genderLabel(profile.gender)} />
             <KV k="DSE 年份" v={String(profile.dse_year)} />
             <KV k="文苑點數" v={(profile.wenyuan_points ?? 0).toLocaleString()} />
-            <KV k="訂閱" v={`${profile.subscription_tier} / ${profile.subscription_status}`} />
+            <KV k="訂閱" v={`${profile.subscription_tier === "premium" ? "學士版" : "庶民版"} / ${profile.subscription_status === "active" ? "生效中" : "未生效"}`} />
             <KV k="身分" v={profile.role === "admin" ? "管理員" : "一般用戶"} />
             <KV k="註冊日期" v={new Date(profile.created_at).toLocaleDateString("zh-Hant")} />
           </View>
@@ -192,7 +192,7 @@ export default function AdminUserDetailScreen() {
 
           <Text style={[styles.label, { marginTop: spacing.md }]}>訂閱等級</Text>
           <Toggle
-            options={[{ k: "free", l: "Free" }, { k: "premium", l: "Premium" }]}
+            options={[{ k: "free", l: "庶民版" }, { k: "premium", l: "學士版" }]}
             value={tier}
             onChange={(v) => setTier(v as "free" | "premium")}
           />
