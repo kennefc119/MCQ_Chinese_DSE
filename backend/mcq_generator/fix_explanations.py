@@ -23,7 +23,7 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="repla
 sys.path.insert(0, str(Path(__file__).parent))
 
 from mcq_gen.config import settings
-from mcq_gen.db.client import get_supabase
+from mcq_gen.db.client import fetch_all, get_supabase
 from mcq_gen.llm import chat_structured
 
 from pydantic import BaseModel
@@ -79,11 +79,9 @@ def main(apply: bool) -> None:
     sb = get_supabase()
 
     print("Fetching questions…")
-    q_rows = (
+    q_rows = fetch_all(
         sb.table("dsemcq_questions")
         .select("id, stem, explanation")
-        .execute()
-        .data or []
     )
     print(f"  Total questions: {len(q_rows)}")
 
@@ -93,14 +91,13 @@ def main(apply: bool) -> None:
         return
 
     print("Fetching options…")
-    opt_rows = (
+    q_id_set = set(q_ids)
+    all_opt_rows = fetch_all(
         sb.table("dsemcq_question_options")
         .select("id, question_id, text, is_correct, label")
-        .in_("question_id", q_ids)
         .order("id")
-        .execute()
-        .data or []
     )
+    opt_rows = [o for o in all_opt_rows if o["question_id"] in q_id_set]
 
     # Group options by question_id, sorted by ID (preserves A/B/C/D order for old questions)
     opts_by_q: dict[str, list[dict]] = {}

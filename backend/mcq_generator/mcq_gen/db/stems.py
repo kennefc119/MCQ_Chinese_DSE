@@ -1,7 +1,7 @@
 """Query existing question stems for duplicate-detection injection into the critic prompt."""
 from __future__ import annotations
 
-from .client import get_supabase
+from .client import fetch_all, get_supabase
 
 # Mirrors the mapping in writer.py — kept local to avoid circular imports.
 _SKILL_TO_TAG: dict[str, str] = {
@@ -45,27 +45,21 @@ def fetch_existing_stems(
     sb = get_supabase()
 
     # 1. All question IDs that carry this skill tag
-    tag_rows = (
+    tag_rows = fetch_all(
         sb.table("dsemcq_question_tags")
         .select("question_id")
         .eq("tag_id", tag_id)
-        .execute()
-        .data
-        or []
     )
     tagged_ids: set[str] = {r["question_id"] for r in tag_rows}
     if not tagged_ids:
         return []
 
     # 2. Active questions belonging to the target passages
-    q_rows = (
+    q_rows = fetch_all(
         sb.table("dsemcq_questions")
         .select("id,stem")
         .in_("passage_id", passage_ids)
         .eq("is_active", True)
-        .execute()
-        .data
-        or []
     )
 
     # 3. Intersect: passage-filtered questions that also carry the right skill tag

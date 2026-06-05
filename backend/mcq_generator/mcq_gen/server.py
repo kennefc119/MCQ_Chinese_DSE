@@ -153,40 +153,36 @@ def get_breakdown() -> dict[str, Any]:
       • quizzes.exercise / quiz / exam                       (published quizzes by type)
     Also includes a special 'cross_passage' bucket for questions without a passage.
     """
-    from .db.client import get_supabase
+    from .db.client import fetch_all, get_supabase
     from .db.stats import _DIFFICULTY_MAP, _TAG_TO_SKILL
     from collections import defaultdict
 
     sb = get_supabase()
 
     # 1. Passages (for labels)
-    passage_rows = (
-        sb.table("dsemcq_passages").select("id,title").execute().data or []
+    passage_rows = fetch_all(
+        sb.table("dsemcq_passages").select("id,title")
     )
     passage_label: dict[str, str] = {r["id"]: r.get("title", r["id"]) for r in passage_rows}
 
     # 2. All questions + active flag
-    q_rows = (
+    q_rows = fetch_all(
         sb.table("dsemcq_questions")
         .select("id,passage_id,difficulty,is_active")
-        .execute()
-        .data or []
     )
 
     # 3. Question → skill tags
-    tag_rows = (
-        sb.table("dsemcq_question_tags").select("question_id,tag_id").execute().data or []
+    tag_rows = fetch_all(
+        sb.table("dsemcq_question_tags").select("question_id,tag_id")
     )
     q_tags: dict[str, list[str]] = defaultdict(list)
     for t in tag_rows:
         q_tags[t["question_id"]].append(t["tag_id"])
 
     # 4. Published quizzes (type + passage_id)
-    quiz_rows = (
+    quiz_rows = fetch_all(
         sb.table("dsemcq_quizzes")
         .select("id,type,passage_id,is_published")
-        .execute()
-        .data or []
     )
 
     # Aggregate questions per passage
@@ -299,66 +295,81 @@ def generate(req: GenerateRequest) -> dict[str, Any]:
 def assemble_preview() -> dict[str, Any]:
     """
     Show a dry-run breakdown of what the assembler sees:
-    total active questions, per-passage counts per pool, and what would be assembled.
-    Does NOT write to the database.
+    per (passage, skill) group counts per pool, and how many quiz instances
+    each group would produce.  Does NOT write to the database.
     """
-    from .db.client import get_supabase
+    from .db.client import fetch_all, get_supabase
     from .quiz_assembler import (
         EXERCISE_MIN_SCORE, EXERCISE_Q,
         QUIZ_MIN_SCORE, QUIZ_Q,
         EXAM_MIN_SCORE, EXAM_Q,
+        TAG_LABEL, _KEEP_RATIO,
         _passage_label,
     )
     from collections import defaultdict
 
     sb = get_supabase()
-    rows = (
+    rows = fetch_all(
         sb.table("dsemcq_questions")
         .select("id,passage_id,difficulty,critique_score,is_active")
-        .execute()
-        .data or []
     )
+    tag_rows = fetch_all(
+        sb.table("dsemcq_question_tags")
+        .select("question_id,tag_id")
+    )
+
+    # Build question → tags map
+    q_tags: dict[str, list[str]] = defaultdict(list)
+    for t in tag_rows:
+        q_tags[t["question_id"]].append(t["tag_id"])
 
     total = len(rows)
     active = [r for r in rows if r.get("is_active")]
     inactive = total - len(active)
 
     def _score(r):
-        return r.get("critique_score") or 7  # NULL treated as 7
+        return r.get("critique_score") or 7
 
-    def _pool(min_score):
-        p = defaultdict(list)
+    def _pools_by_group(min_score):
+        """Group eligible active questions by (passage_id, tag_id)."""
+        groups: dict[tuple[str, str], list[str]] = defaultdict(list)
         for r in active:
             if _score(r) >= min_score:
                 pid = r.get("passage_id") or "unknown"
-                p[pid].append(r["id"])
-        return p
+                for tag in q_tags.get(r["id"], []):
+                    groups[(pid, tag)].append(r["id"])
+        return groups
 
-    ex_pool   = _pool(EXERCISE_MIN_SCORE)
-    quiz_pool = _pool(QUIZ_MIN_SCORE)
-    exam_pool = _pool(EXAM_MIN_SCORE)
+    ex_groups   = _pools_by_group(EXERCISE_MIN_SCORE)
+    quiz_groups = _pools_by_group(QUIZ_MIN_SCORE)
+    exam_groups = _pools_by_group(EXAM_MIN_SCORE)
 
-    # Per-passage summary
-    all_pids = sorted(set(
-        list(ex_pool.keys()) + list(quiz_pool.keys()) + list(exam_pool.keys())
+    # Per (passage, skill) summary
+    all_keys = sorted(set(
+        list(ex_groups.keys()) + list(quiz_groups.keys()) + list(exam_groups.keys())
     ))
-    passages = []
-    for pid in all_pids:
-        ec = len(ex_pool.get(pid, []))
-        qc = len(quiz_pool.get(pid, []))
-        xc = len(exam_pool.get(pid, []))
-        passages.append({
+    groups_summary = []
+    for (pid, tag_id) in all_keys:
+        ec = len(ex_groups.get((pid, tag_id), []))
+        qc = len(quiz_groups.get((pid, tag_id), []))
+        xc = len(exam_groups.get((pid, tag_id), []))
+        skill_label = TAG_LABEL.get(tag_id, tag_id)
+        # After filtering: exercise keeps 50%, quiz keeps 75%, exam keeps 100%
+        ex_after = max(1, round(ec * _KEEP_RATIO["exercise"])) if ec else 0
+        qz_after = max(1, round(qc * _KEEP_RATIO["quiz"])) if qc else 0
+        groups_summary.append({
             "passage_id": pid,
             "label": _passage_label(pid),
-            f"exercise_pool (need {EXERCISE_Q})": ec,
-            f"quiz_pool (need {QUIZ_Q})": qc,
-            f"exam_pool (need 5)": xc,
-            "would_make_exercise": ec >= EXERCISE_Q,
-            "would_make_quiz": qc >= QUIZ_Q,
+            "skill": skill_label,
+            "exercise_pool": ec,
+            "exercise_after_filter": ex_after,
+            "exercise_instances": ex_after // EXERCISE_Q,
+            "quiz_pool": qc,
+            "quiz_after_filter": qz_after,
+            "quiz_instances": qz_after // QUIZ_Q,
+            "exam_pool": xc,
+            "exam_instances": xc // EXAM_Q,
         })
-
-    exam_eligible = [pid for pid, qids in exam_pool.items() if len(qids) >= 5]
-    would_make_exam = len(exam_eligible) >= 3
 
     score_dist: dict[str, int] = {}
     for r in active:
@@ -370,13 +381,11 @@ def assemble_preview() -> dict[str, Any]:
         "active_questions": len(active),
         "inactive_questions": inactive,
         "score_distribution": dict(sorted(score_dist.items())),
-        "passages": passages,
-        "would_make_exam": would_make_exam,
-        "exam_eligible_passages": exam_eligible,
+        "groups": groups_summary,
         "thresholds": {
-            "exercise": f"≥{EXERCISE_Q} questions with score≥{EXERCISE_MIN_SCORE} per passage",
-            "quiz":     f"≥{QUIZ_Q} questions with score≥{QUIZ_MIN_SCORE} per passage",
-            "exam":     f"≥3 passages each with ≥5 questions at score≥{EXAM_MIN_SCORE}",
+            "exercise": f"≥{EXERCISE_Q} questions with score≥{EXERCISE_MIN_SCORE} per (passage,skill), keep 50%",
+            "quiz":     f"≥{QUIZ_Q} questions with score≥{QUIZ_MIN_SCORE} per (passage,skill), keep 75%",
+            "exam":     f"≥{EXAM_Q} questions with score≥{EXAM_MIN_SCORE} per (passage,skill), no filter",
         },
     }
 

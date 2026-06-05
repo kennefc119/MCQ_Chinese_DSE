@@ -4,7 +4,7 @@ from __future__ import annotations
 import structlog
 
 from ..schemas import DBStats, Difficulty, Skill
-from .client import get_supabase
+from .client import fetch_all, get_supabase
 
 log = structlog.get_logger(__name__)
 
@@ -36,21 +36,17 @@ def fetch_db_stats() -> DBStats:
     """從 Supabase 讀取現存題目（包括 seed + agent 生成），計算分佈統計。"""
     sb = get_supabase()
 
-    # 抓所有題目（含 is_active 欄位）
-    questions_resp = (
+    # 抓所有題目（含 is_active 欄位）— 使用分頁避免 1000 筆上限
+    questions = fetch_all(
         sb.table("dsemcq_questions")
         .select("id, passage_id, difficulty, source, is_active")
-        .execute()
     )
-    questions = questions_resp.data or []
 
-    # 抓所有 question-tag 關係
-    tags_resp = (
+    # 抓所有 question-tag 關係 — 使用分頁避免 1000 筆上限
+    tag_rows = fetch_all(
         sb.table("dsemcq_question_tags")
         .select("question_id, tag_id")
-        .execute()
     )
-    tag_rows = tags_resp.data or []
 
     # question_id → [tag_id]
     q_tags: dict[str, list[str]] = {}
