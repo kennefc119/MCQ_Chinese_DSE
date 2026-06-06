@@ -52,10 +52,11 @@ export async function listQuizzes(): Promise<Quiz[]> {
   const quizzes = (data as Quiz[]) ?? [];
   const allIds = [...new Set(quizzes.flatMap((q) => q.question_ids))];
   if (allIds.length === 0) return quizzes;
-  const { data: qRows } = await supabase
+  const { data: qRows, error: qErr } = await supabase
     .from("dsemcq_questions")
     .select("id, difficulty")
     .in("id", allIds);
+  if (qErr) console.warn("[dsemcq] listQuizzes difficulty query error:", qErr.message);
   const diffMap = Object.fromEntries((qRows ?? []).map((r: { id: string; difficulty: number }) => [r.id, r.difficulty]));
   return applyComputedDifficulty(quizzes, diffMap);
 }
@@ -71,10 +72,11 @@ export async function getQuiz(id: string): Promise<Quiz | null> {
   if (error) console.warn("[dsemcq] getQuiz error:", error.message);
   const quiz = data as Quiz | null;
   if (!quiz) return null;
-  const { data: qRows } = await supabase
+  const { data: qRows, error: qErr } = await supabase
     .from("dsemcq_questions")
     .select("id, difficulty")
     .in("id", quiz.question_ids);
+  if (qErr) console.warn("[dsemcq] getQuiz difficulty query error:", qErr.message);
   const diffMap = Object.fromEntries((qRows ?? []).map((r: { id: string; difficulty: number }) => [r.id, r.difficulty]));
   return applyComputedDifficulty([quiz], diffMap)[0] ?? null;
 }

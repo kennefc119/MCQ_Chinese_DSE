@@ -25,7 +25,6 @@ _THRESHOLDS = {
 }
 
 _TYPE_LABEL = {"exercise": "練習", "quiz": "測驗", "exam": "模擬試卷"}
-_TYPE_DIFF  = {"exercise": 2, "quiz": 3, "exam": 4}
 
 
 def _short_uuid() -> str:
@@ -107,7 +106,6 @@ def _create_quiz(sb, passage_id: str | None, quiz_type: str, questions: list[dic
         "description":  f"由 AI 自動生成的{_TYPE_LABEL[quiz_type]}（agent-quiz-builder）",
         "type":         quiz_type,           # enum: 'exercise' | 'quiz' | 'exam'
         "passage_id":   passage_id,
-        "difficulty":   _TYPE_DIFF[quiz_type],
         "question_ids": [q["id"] for q in questions],  # text[]
         "is_published": False,               # 預設不公開，需人工審核後啟用
     }
