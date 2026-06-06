@@ -49,6 +49,14 @@ _KEEP_RATIO: dict[str, float] = {
     "exam":     1.00,   # no filter
 }
 
+# Allowed difficulty range for questions in each quiz type.
+# Questions outside the range are excluded before assembly.
+_DIFF_RANGE: dict[str, tuple[int, int]] = {
+    "exercise": (1, 3),   # stars 1-3
+    "quiz":     (2, 4),   # stars 2-4
+    "exam":     (3, 5),   # stars 3-5
+}
+
 # S3 cover image base URL (images are publicly accessible)
 S3_BASE_URL = "https://tb6-mood.s3.ap-southeast-2.amazonaws.com/dse_chi/"
 
@@ -334,7 +342,12 @@ def _assemble_type(
     n          = _N_QUESTIONS[quiz_type]
     keep_ratio = _KEEP_RATIO[quiz_type]
 
-    eligible = [r for r in all_rows if _score(r) >= min_score]
+    diff_lo, diff_hi = _DIFF_RANGE[quiz_type]
+    eligible = [
+        r for r in all_rows
+        if _score(r) >= min_score
+        and diff_lo <= r.get("difficulty", 3) <= diff_hi
+    ]
 
     if rng is None:
         rng = random.Random()
@@ -371,8 +384,23 @@ def _assemble_type(
         # Apply keep-ratio filter (removes difficult questions first, then random)
         filtered = _filter_pool(pool, keep_ratio, rng)
 
-        # Shuffle so each run produces different combinations
-        rng.shuffle(filtered)
+        # ── Stratified shuffle: interleave difficulty levels for variety ──
+        by_diff: dict[int, list[dict]] = defaultdict(list)
+        for q in filtered:
+            by_diff[q.get("difficulty", 3)].append(q)
+        for bucket in by_diff.values():
+            rng.shuffle(bucket)
+
+        # Round-robin across difficulty levels (low → high, repeat) so each
+        # slice of N questions gets a spread of difficulties.
+        stratified: list[dict] = []
+        diff_keys = sorted(by_diff.keys())
+        buckets = {k: list(by_diff[k]) for k in diff_keys}
+        while any(buckets.values()):
+            for k in diff_keys:
+                if buckets[k]:
+                    stratified.append(buckets[k].pop(0))
+        filtered = stratified
 
         # Create as many non-overlapping instances as possible
         n_instances = len(filtered) // n
@@ -387,7 +415,6 @@ def _assemble_type(
             batch = filtered[i * n : (i + 1) * n]
             seq   = i + 1
             title = f"{label}【{skill_label}】"
-
             records.append(_make_record(
                 quiz_type=quiz_type,
                 title=title,
