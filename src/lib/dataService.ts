@@ -32,6 +32,28 @@ function applyComputedDifficulty(quizzes: Quiz[], diffMap: Record<string, number
   });
 }
 
+// Fetch question difficulties in batches to avoid URL length limits.
+// Supabase .in() sends IDs as GET query params; large arrays exceed the ~8KB URL cap.
+const BATCH_SIZE = 200;
+async function fetchDifficultyMap(ids: string[]): Promise<Record<string, number>> {
+  if (!isSupabaseConfigured) {
+    return Object.fromEntries(SEED_QUESTIONS.map((q) => [q.id, q.difficulty]));
+  }
+  const diffMap: Record<string, number> = {};
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    const batch = ids.slice(i, i + BATCH_SIZE);
+    const { data: qRows, error: qErr } = await supabase
+      .from("dsemcq_questions")
+      .select("id, difficulty")
+      .in("id", batch);
+    if (qErr) console.warn("[dsemcq] fetchDifficultyMap batch error:", qErr.message);
+    for (const r of (qRows ?? []) as { id: string; difficulty: number }[]) {
+      diffMap[r.id] = r.difficulty;
+    }
+  }
+  return diffMap;
+}
+
 // ── Public API (works in both demo + Supabase mode) ─────────────────────
 export async function listQuizzes(): Promise<Quiz[]> {
   if (!isSupabaseConfigured) {
@@ -52,12 +74,7 @@ export async function listQuizzes(): Promise<Quiz[]> {
   const quizzes = (data as Quiz[]) ?? [];
   const allIds = [...new Set(quizzes.flatMap((q) => q.question_ids))];
   if (allIds.length === 0) return quizzes;
-  const { data: qRows, error: qErr } = await supabase
-    .from("dsemcq_questions")
-    .select("id, difficulty")
-    .in("id", allIds);
-  if (qErr) console.warn("[dsemcq] listQuizzes difficulty query error:", qErr.message);
-  const diffMap = Object.fromEntries((qRows ?? []).map((r: { id: string; difficulty: number }) => [r.id, r.difficulty]));
+  const diffMap = await fetchDifficultyMap(allIds);
   return applyComputedDifficulty(quizzes, diffMap);
 }
 
@@ -72,12 +89,7 @@ export async function getQuiz(id: string): Promise<Quiz | null> {
   if (error) console.warn("[dsemcq] getQuiz error:", error.message);
   const quiz = data as Quiz | null;
   if (!quiz) return null;
-  const { data: qRows, error: qErr } = await supabase
-    .from("dsemcq_questions")
-    .select("id, difficulty")
-    .in("id", quiz.question_ids);
-  if (qErr) console.warn("[dsemcq] getQuiz difficulty query error:", qErr.message);
-  const diffMap = Object.fromEntries((qRows ?? []).map((r: { id: string; difficulty: number }) => [r.id, r.difficulty]));
+  const diffMap = await fetchDifficultyMap(quiz.question_ids);
   return applyComputedDifficulty([quiz], diffMap)[0] ?? null;
 }
 
