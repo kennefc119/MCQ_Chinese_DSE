@@ -56,7 +56,7 @@ def _qid(passage_id: str) -> str:
 # How many questions (from the start of QUESTIONS) are already in the DB.
 # The script will only process QUESTIONS[PROCESSED_UP_TO:] by default.
 # Update this number after each successful upload.
-PROCESSED_UP_TO = 2021  # Batches 1-68 (p01-p10 all + p11 6skills, 2021 questions)
+PROCESSED_UP_TO = 2311  # Batches 1-77 (p01-p12 all 7skills + 50 cross-passage, 2311 questions)
 
 QUESTIONS: list[dict] = [
     # ── Q1  p01  淺  字詞解釋  (kept — no overlap) ────────────────────────
@@ -38913,31 +38913,5601 @@ QUESTIONS: list[dict] = [
         ],
         "critique_score": 10,
     },
+
+    # =====================================================================
+    # Batch 69 – p11 × 背景知識 × 30 questions
+    # Passage: 出師表（諸葛亮）
+    # Skill: t-context
+    # Key background: 諸葛亮生平(181-234), 三國鼎立, 蜀漢建興五年(227),
+    #   劉備/劉禪, 三顧茅廬, 白帝城託孤, 北伐, 表的體裁,
+    #   先漢後漢/桓靈, 五丈原, 益州, 南中平定
+    # Difficulty distribution: 最淺5, 淺8, 中10, 深5, 最深2
+    # =====================================================================
+
+    # ── B69-Q01  p11  最淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "最淺",
+        "skill": "背景知識",
+        "stem": "《出師表》的作者是誰？",
+        "options": [
+            {"text": "諸葛亮——字孔明，瑯琊陽都人（今山東），三國時期蜀漢丞相兼軍事家。他是劉備的首席謀士，被後世尊為忠臣和智者的典範", "is_correct": True,
+             "explanation": "此選項正確。作者是諸葛亮，蜀漢丞相。"},
+            {"text": "劉備", "is_correct": False,
+             "explanation": "此選項錯誤。劉備是先帝，不是作者。"},
+            {"text": "劉禪", "is_correct": False,
+             "explanation": "此選項錯誤。劉禪是接收對象（後主）。"},
+            {"text": "曹操", "is_correct": False,
+             "explanation": "此選項錯誤。曹操是魏國的人物。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B69-Q02  p11  最淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "最淺",
+        "skill": "背景知識",
+        "stem": "《出師表》寫於甚麼時代背景？",
+        "options": [
+            {"text": "三國時期蜀漢建興五年（公元227年）——天下三分（魏、蜀、吳鼎立），蜀漢國力最弱。先帝劉備已逝世四年，後主劉禪即位。諸葛亮準備率兵北伐曹魏，臨行前上表後主", "is_correct": True,
+             "explanation": "此選項正確。寫於227年北伐前夕。"},
+            {"text": "漢朝", "is_correct": False,
+             "explanation": "此選項錯誤。寫於三國時期，不是漢朝。"},
+            {"text": "唐朝", "is_correct": False,
+             "explanation": "此選項錯誤。寫於三國時期。"},
+            {"text": "宋朝", "is_correct": False,
+             "explanation": "此選項錯誤。寫於三國時期。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B69-Q03  p11  最淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "最淺",
+        "skill": "背景知識",
+        "stem": "「表」是甚麼體裁？",
+        "options": [
+            {"text": "「表」是古代臣子向皇帝呈上的一種奏章（公文），用來表白心跡、陳述意見或提出建議。「表」的語氣通常恭敬而懇切，因為是下對上的文書", "is_correct": True,
+             "explanation": "此選項正確。「表」是臣對君的奏章。"},
+            {"text": "詩歌", "is_correct": False,
+             "explanation": "此選項錯誤。「表」是散文體裁的公文。"},
+            {"text": "小說", "is_correct": False,
+             "explanation": "此選項錯誤。「表」是公文。"},
+            {"text": "日記", "is_correct": False,
+             "explanation": "此選項錯誤。「表」是上呈皇帝的公文。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B69-Q04  p11  最淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "最淺",
+        "skill": "背景知識",
+        "stem": "「三顧茅廬」指的是甚麼事件？",
+        "options": [
+            {"text": "劉備三次親自到諸葛亮居住的草廬（茅廬）拜訪，請他出山輔佐。前兩次諸葛亮不在（或未見客），第三次才見面。劉備的誠意打動了諸葛亮，於是答應出山效力。這是中國歷史上「禮賢下士」的著名典故", "is_correct": True,
+             "explanation": "此選項正確。三顧茅廬是劉備三次拜訪諸葛亮。"},
+            {"text": "諸葛亮拜訪劉備", "is_correct": False,
+             "explanation": "此選項錯誤。是劉備主動拜訪諸葛亮。"},
+            {"text": "三次戰爭", "is_correct": False,
+             "explanation": "此選項錯誤。是三次拜訪，不是戰爭。"},
+            {"text": "與曹操有關", "is_correct": False,
+             "explanation": "此選項錯誤。是劉備和諸葛亮之間的事。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B69-Q05  p11  最淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "最淺",
+        "skill": "背景知識",
+        "stem": "文中的「先帝」和「後主」分別指誰？",
+        "options": [
+            {"text": "「先帝」——劉備（字玄德），蜀漢的開國皇帝，諡號昭烈皇帝，已去世。「後主」——劉禪（字公嗣），劉備的兒子，繼承皇位。「先帝」是尊稱已故皇帝，「後主」是後世對劉禪的稱呼", "is_correct": True,
+             "explanation": "此選項正確。先帝是劉備，後主是劉禪。"},
+            {"text": "先帝是曹操", "is_correct": False,
+             "explanation": "此選項錯誤。先帝是蜀漢的劉備。"},
+            {"text": "後主是劉備", "is_correct": False,
+             "explanation": "此選項錯誤。劉備是先帝，後主是他的兒子劉禪。"},
+            {"text": "不知道", "is_correct": False,
+             "explanation": "此選項錯誤。先帝劉備，後主劉禪。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B69-Q06  p11  淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "淺",
+        "skill": "背景知識",
+        "stem": "「益州疲弊」中的「益州」在哪裏？為甚麼說「疲弊」？",
+        "options": [
+            {"text": "「益州」——今四川一帶，是蜀漢的核心領土。「疲弊」原因：①蜀漢只佔有益州一州之地，面對魏國（佔有中原和北方大片領土）和吳國（佔有江東），國小力弱；②連年征戰消耗國力；③先帝夷陵之戰大敗，損失慘重。因此蜀漢在三國中國力最弱", "is_correct": True,
+             "explanation": "此選項正確。益州在今四川，蜀漢國小力弱。"},
+            {"text": "益州是魏國的地方", "is_correct": False,
+             "explanation": "此選項錯誤。益州是蜀漢的核心領土。"},
+            {"text": "蜀漢國力很強", "is_correct": False,
+             "explanation": "此選項錯誤。蜀漢在三國中最弱。"},
+            {"text": "益州在北方", "is_correct": False,
+             "explanation": "此選項錯誤。益州在今四川（西南方）。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B69-Q07  p11  淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "淺",
+        "skill": "背景知識",
+        "stem": "「白帝城託孤」是甚麼歷史事件？",
+        "options": [
+            {"text": "劉備在夷陵之戰（伐吳）大敗後，退守白帝城（今重慶奉節），病重垂危。臨終前召諸葛亮到白帝城，把國家大事和兒子劉禪託付給他，囑咐劉禪「以父事之」（像對待父親一樣對待諸葛亮）。這就是文中「故臨崩寄臣以大事也」所指的事件", "is_correct": True,
+             "explanation": "此選項正確。劉備臨終在白帝城託孤給諸葛亮。"},
+            {"text": "諸葛亮病死的地方", "is_correct": False,
+             "explanation": "此選項錯誤。諸葛亮病死在五丈原。白帝城是劉備託孤的地方。"},
+            {"text": "北伐出發地", "is_correct": False,
+             "explanation": "此選項錯誤。白帝城是劉備臨終託孤的地方。"},
+            {"text": "曹操的城", "is_correct": False,
+             "explanation": "此選項錯誤。白帝城在蜀漢境內。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B69-Q08  p11  淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "淺",
+        "skill": "背景知識",
+        "stem": "「五月渡瀘，深入不毛」指的是甚麼歷史事件？",
+        "options": [
+            {"text": "指諸葛亮南征——蜀漢建興三年（225年），諸葛亮率軍南下平定南中地區（今雲南、貴州一帶）的叛亂。五月份渡過瀘水（今金沙江），深入荒蕪之地。南中平定後，諸葛亮才安心準備北伐", "is_correct": True,
+             "explanation": "此選項正確。指225年平定南中叛亂。"},
+            {"text": "北伐", "is_correct": False,
+             "explanation": "此選項錯誤。南征是向南方平叛，不是北伐。"},
+            {"text": "夷陵之戰", "is_correct": False,
+             "explanation": "此選項錯誤。夷陵之戰是劉備的戰役。"},
+            {"text": "與曹魏的戰爭", "is_correct": False,
+             "explanation": "此選項錯誤。是向南方平定叛亂。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B69-Q09  p11  淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "淺",
+        "skill": "背景知識",
+        "stem": "文中提到的「桓帝」和「靈帝」屬於哪個朝代？為甚麼被視為昏君？",
+        "options": [
+            {"text": "東漢（後漢）末年的皇帝。桓帝（132-168）和靈帝（156-189）被視為昏君的原因：①親信宦官——讓宦官專權，朝政腐敗；②迫害賢臣——黨錮之禍，大量忠良被殺害或禁錮；③導致東漢覆滅——他們的昏庸統治直接導致天下大亂、群雄割據", "is_correct": True,
+             "explanation": "此選項正確。桓靈是東漢末年的昏君，親信宦官。"},
+            {"text": "西漢皇帝", "is_correct": False,
+             "explanation": "此選項錯誤。是東漢末年的皇帝。"},
+            {"text": "蜀漢皇帝", "is_correct": False,
+             "explanation": "此選項錯誤。是東漢皇帝。"},
+            {"text": "他們是好皇帝", "is_correct": False,
+             "explanation": "此選項錯誤。他們是導致東漢覆滅的昏君。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B69-Q10  p11  淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "淺",
+        "skill": "背景知識",
+        "stem": "「天下三分」指的是哪三個政權？",
+        "options": [
+            {"text": "魏、蜀、吳三國鼎立：①魏國——曹操建立（其子曹丕正式稱帝），佔據北方中原，國力最強；②蜀漢——劉備建立，佔據益州（四川），國力最弱；③吳國——孫權建立，佔據江東（長江下游），國力居中", "is_correct": True,
+             "explanation": "此選項正確。魏蜀吳三國鼎立。"},
+            {"text": "只有兩個政權", "is_correct": False,
+             "explanation": "此選項錯誤。三國鼎立——魏、蜀、吳。"},
+            {"text": "魏、蜀、秦", "is_correct": False,
+             "explanation": "此選項錯誤。是魏、蜀、吳，不是秦。"},
+            {"text": "與漢朝無關", "is_correct": False,
+             "explanation": "此選項錯誤。蜀漢自稱漢朝正統。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B69-Q11  p11  淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "淺",
+        "skill": "背景知識",
+        "stem": "諸葛亮的「北伐」要討伐的對象是誰？",
+        "options": [
+            {"text": "曹魏（魏國）——曹操家族建立的政權，佔據北方中原。諸葛亮認為曹魏是「奸凶」（篡奪漢室的逆賊），北伐的目的是「北定中原，攘除奸凶，興復漢室，還於舊都」——消滅曹魏，恢復漢朝統治", "is_correct": True,
+             "explanation": "此選項正確。北伐對象是曹魏。"},
+            {"text": "吳國", "is_correct": False,
+             "explanation": "此選項錯誤。北伐討伐的是北方的曹魏。"},
+            {"text": "南方少數民族", "is_correct": False,
+             "explanation": "此選項錯誤。南征已經完成，北伐針對曹魏。"},
+            {"text": "沒有明確對象", "is_correct": False,
+             "explanation": "此選項錯誤。明確針對曹魏。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B69-Q12  p11  淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "淺",
+        "skill": "背景知識",
+        "stem": "諸葛亮生平的主要經歷有哪些？",
+        "options": [
+            {"text": "①181年出生於瑯琊（今山東），早年喪父；②隱居南陽隆中，躬耕讀書；③207年劉備三顧茅廬，出山輔佐（時年27歲）；④助劉備聯合孫權，赤壁之戰大敗曹操；⑤幫助劉備取得荊州、益州，建立蜀漢；⑥223年劉備託孤，受命輔政；⑦225年南征平定南中；⑧227年上《出師表》，開始北伐；⑨234年病逝於五丈原（今陝西），終年54歲", "is_correct": True,
+             "explanation": "此選項正確。從隱居到北伐病逝的完整經歷。"},
+            {"text": "只知道三顧茅廬", "is_correct": False,
+             "explanation": "此選項錯誤。有從出生到去世的完整經歷。"},
+            {"text": "諸葛亮活到80歲", "is_correct": False,
+             "explanation": "此選項錯誤。諸葛亮54歲病逝。"},
+            {"text": "諸葛亮是魏國人", "is_correct": False,
+             "explanation": "此選項錯誤。諸葛亮是蜀漢丞相。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B69-Q13  p11  淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "淺",
+        "skill": "背景知識",
+        "stem": "「先漢」和「後漢」分別指甚麼？",
+        "options": [
+            {"text": "「先漢」——西漢（前206年-公元8年），由劉邦建立，定都長安。早期（文帝、景帝、武帝）親賢遠佞，國力強盛。「後漢」——東漢（25-220年），由劉秀建立，定都洛陽。末期（桓帝、靈帝）親小人遠賢臣，導致覆滅。蜀漢自稱繼承漢朝正統", "is_correct": True,
+             "explanation": "此選項正確。先漢是西漢，後漢是東漢。"},
+            {"text": "先漢是東漢", "is_correct": False,
+             "explanation": "此選項錯誤。先漢是西漢，後漢是東漢。"},
+            {"text": "是同一個朝代", "is_correct": False,
+             "explanation": "此選項錯誤。西漢和東漢是兩個不同的朝代。"},
+            {"text": "與蜀漢無關", "is_correct": False,
+             "explanation": "此選項錯誤。蜀漢自稱漢朝正統。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B69-Q14  p11  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "諸葛亮為甚麼選擇在建興五年（227年）北伐？當時的形勢如何？",
+        "options": [
+            {"text": "選擇原因：①南方已平定——225年南征成功，消除了後顧之憂；②軍備充足——「兵甲已足」；③時間緊迫——蜀漢國小力弱，不宜久拖，以攻為守才有出路；④劉備去世已四年——國內政局穩定，可以出征。形勢：三國中蜀漢最弱，魏國最強。如果不主動進攻，國力差距只會越來越大", "is_correct": True,
+             "explanation": "此選項正確。南方已定、兵甲已足、以攻為守。"},
+            {"text": "隨意選擇的", "is_correct": False,
+             "explanation": "此選項錯誤。有多方面的戰略考量。"},
+            {"text": "形勢很好", "is_correct": False,
+             "explanation": "此選項錯誤。蜀漢國力最弱，形勢嚴峻。"},
+            {"text": "劉禪要求的", "is_correct": False,
+             "explanation": "此選項錯誤。是諸葛亮主動規劃的。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B69-Q15  p11  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "「受任於敗軍之際，奉命於危難之間」指的是哪個歷史事件？",
+        "options": [
+            {"text": "最可能指赤壁之戰前後或更早期劉備兵敗的時期——劉備在曹操大軍追擊下多次大敗，諸葛亮在這種危急時刻接受委任。也有學者認為指的是劉備在荊州時期的危難處境。「爾來二十有一年矣」說明從受命到寫《出師表》已經二十一年（約206-207年出山→227年）", "is_correct": True,
+             "explanation": "此選項正確。指劉備兵敗危急時期諸葛亮受命。"},
+            {"text": "指夷陵之戰", "is_correct": False,
+             "explanation": "此選項錯誤。夷陵之戰是223年，時間不符。"},
+            {"text": "指北伐", "is_correct": False,
+             "explanation": "此選項錯誤。北伐是227年開始，但受命是二十一年前。"},
+            {"text": "沒有歷史依據", "is_correct": False,
+             "explanation": "此選項錯誤。有明確的歷史事件對應。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B69-Q16  p11  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "劉備託孤時除了把國事交給諸葛亮，還說了甚麼重要的話？",
+        "options": [
+            {"text": "據《三國志》記載，劉備對諸葛亮說：「君才十倍曹丕，必能安國，終定大事。若嗣子可輔，輔之；如其不才，君可自取。」——意思是如果劉禪值得輔佐就輔佐，如果他沒有才能你可以取而代之。這番話表現了劉備對諸葛亮的極大信任，也給了諸葛亮極大的權力。諸葛亮跪拜流涕說會竭盡全力輔佐", "is_correct": True,
+             "explanation": "此選項正確。劉備甚至授權諸葛亮可以取代劉禪。"},
+            {"text": "沒有說其他話", "is_correct": False,
+             "explanation": "此選項錯誤。劉備說了極其重要的話。"},
+            {"text": "劉備不信任諸葛亮", "is_correct": False,
+             "explanation": "此選項錯誤。託孤之言表現了最大的信任。"},
+            {"text": "要求諸葛亮退隱", "is_correct": False,
+             "explanation": "此選項錯誤。恰恰相反——要求他全權輔政。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B69-Q17  p11  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "文中提到的郭攸之、費禕、董允和向寵，他們的歷史結局如何？",
+        "options": [
+            {"text": "①費禕——後來成為蜀漢丞相，是蜀漢後期的重要人物，253年被降將郭循暗殺；②董允——擔任侍中，以直諫著稱，死後受到追念；③郭攸之——歷史記載較少，但據說為人謙和；④向寵——擔任中領軍，233年在征討南蠻時戰死。諸葛亮推薦的人才大多忠心耿耿，證明了他知人善任", "is_correct": True,
+             "explanation": "此選項正確。這些人才大多忠心效力到最後。"},
+            {"text": "全部叛變", "is_correct": False,
+             "explanation": "此選項錯誤。他們大多忠心耿耿。"},
+            {"text": "沒有歷史記載", "is_correct": False,
+             "explanation": "此選項錯誤。有歷史記載。"},
+            {"text": "都活到蜀漢滅亡", "is_correct": False,
+             "explanation": "此選項錯誤。費禕被暗殺，向寵戰死。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B69-Q18  p11  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "諸葛亮的北伐最終結果如何？",
+        "options": [
+            {"text": "未能成功——諸葛亮先後進行了五次北伐（228-234年），但都未能攻下中原。最後一次北伐時（234年），諸葛亮在五丈原（今陝西寶雞）與魏國司馬懿對峙，因積勞成疾病逝，終年54歲。「出師未捷身先死，長使英雄淚滿襟」（杜甫詩）正是對此的感嘆", "is_correct": True,
+             "explanation": "此選項正確。五次北伐未成功，病逝五丈原。"},
+            {"text": "成功了", "is_correct": False,
+             "explanation": "此選項錯誤。北伐最終未能成功。"},
+            {"text": "諸葛亮回到蜀漢", "is_correct": False,
+             "explanation": "此選項錯誤。諸葛亮病死在五丈原。"},
+            {"text": "只北伐了一次", "is_correct": False,
+             "explanation": "此選項錯誤。先後進行了五次北伐。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B69-Q19  p11  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "「興復漢室，還於舊都」中的「舊都」指的是哪裏？",
+        "options": [
+            {"text": "洛陽或長安——西漢定都長安（今西安），東漢定都洛陽。蜀漢自稱繼承漢朝正統，「還於舊都」意思是恢復漢朝後回到舊都（洛陽或長安）。這是諸葛亮北伐的終極目標", "is_correct": True,
+             "explanation": "此選項正確。「舊都」指漢朝的舊都洛陽或長安。"},
+            {"text": "成都", "is_correct": False,
+             "explanation": "此選項錯誤。成都是蜀漢的都城，不是「舊都」。"},
+            {"text": "南京", "is_correct": False,
+             "explanation": "此選項錯誤。漢朝的舊都是長安和洛陽。"},
+            {"text": "不知道", "is_correct": False,
+             "explanation": "此選項錯誤。是長安或洛陽。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B69-Q20  p11  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "蜀漢自稱「漢室」正統的依據是甚麼？",
+        "options": [
+            {"text": "主要依據：①劉備是漢室宗親——劉備自稱中山靖王劉勝之後，是漢朝皇室的後代；②曹丕篡漢稱帝（220年）——蜀漢認為曹魏是篡位的逆臣，不是正統；③蜀漢國號為「漢」——以恢復漢室為己任。因此諸葛亮把曹魏稱為「奸凶」（奸詐的逆賊），北伐是為了恢復漢朝正統", "is_correct": True,
+             "explanation": "此選項正確。劉備的漢室宗親身份是主要依據。"},
+            {"text": "沒有依據", "is_correct": False,
+             "explanation": "此選項錯誤。有血統和政治合法性的依據。"},
+            {"text": "蜀漢不自稱漢室", "is_correct": False,
+             "explanation": "此選項錯誤。蜀漢國號就是「漢」。"},
+            {"text": "曹魏是正統", "is_correct": False,
+             "explanation": "此選項錯誤。蜀漢認為曹魏是篡位者。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B69-Q21  p11  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "「表」這種體裁在中國文學史上有哪些著名作品？",
+        "options": [
+            {"text": "著名的「表」：①諸葛亮《出師表》——最著名的表文，忠臣典範；②李密《陳情表》——以孝情打動晉武帝，推辭入朝；③諸葛亮《後出師表》——第二次北伐前的表文（真偽有爭議）。「表」的文學價值：以真情實感為核心——「讀諸葛亮《出師表》不落淚者不忠，讀李密《陳情表》不落淚者不孝」", "is_correct": True,
+             "explanation": "此選項正確。《出師表》和《陳情表》是最著名的表文。"},
+            {"text": "沒有其他表文", "is_correct": False,
+             "explanation": "此選項錯誤。還有《陳情表》等著名表文。"},
+            {"text": "表不重要", "is_correct": False,
+             "explanation": "此選項錯誤。表在中國文學史上有重要地位。"},
+            {"text": "表與文學無關", "is_correct": False,
+             "explanation": "此選項錯誤。表是重要的文學體裁。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B69-Q22  p11  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "文中「南方已定」具體指甚麼？對北伐有甚麼意義？",
+        "options": [
+            {"text": "「南方已定」指225年諸葛亮南征平定南中地區（今雲南、貴州、四川南部）的叛亂。南中各族首領（包括孟獲）歸順蜀漢。對北伐的意義：①消除後顧之憂——南方不再有叛亂威脅；②獲得人力物資——南中提供兵源和物資；③穩定後方——出征時不用擔心後方不穩。「南方已定」是北伐的重要前提條件", "is_correct": True,
+             "explanation": "此選項正確。南征平定南中是北伐的前提。"},
+            {"text": "與北伐無關", "is_correct": False,
+             "explanation": "此選項錯誤。南方已定是北伐的重要前提。"},
+            {"text": "南方是指吳國", "is_correct": False,
+             "explanation": "此選項錯誤。此處指南中地區（雲貴），不是吳國。"},
+            {"text": "南方沒有平定", "is_correct": False,
+             "explanation": "此選項錯誤。225年已經平定。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B69-Q23  p11  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "諸葛亮的「隆中對」與《出師表》有甚麼關係？",
+        "options": [
+            {"text": "「隆中對」是207年劉備三顧茅廬時，諸葛亮為劉備分析天下形勢並提出戰略規劃——先取荊州、益州作根據地，再聯合孫權對抗曹操，待時機成熟北伐中原。《出師表》正是這個長期戰略的實施階段：荊州已失（關羽被殺），但益州已得；孫吳結盟；南方已定；現在要執行最後一步——北伐中原。兩篇文章相隔二十年，體現了諸葛亮始終如一的戰略", "is_correct": True,
+             "explanation": "此選項正確。《出師表》是「隆中對」戰略的執行階段。"},
+            {"text": "沒有關係", "is_correct": False,
+             "explanation": "此選項錯誤。《出師表》是「隆中對」戰略的延續。"},
+            {"text": "「隆中對」是北伐後寫的", "is_correct": False,
+             "explanation": "此選項錯誤。「隆中對」在前（207年），《出師表》在後（227年）。"},
+            {"text": "兩篇是同一年寫的", "is_correct": False,
+             "explanation": "此選項錯誤。相隔二十年。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B69-Q24  p11  深  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "深",
+        "skill": "背景知識",
+        "stem": "從歷史角度看，諸葛亮的北伐是否明智？",
+        "options": [
+            {"text": "有正反兩面觀點：①支持方——以攻為守的策略是合理的：蜀漢國力最弱，如果不主動進攻，時間拖久國力差距只會加大，最終被動挨打；北伐可以維持軍隊戰鬥力和國內士氣；②質疑方——蜀漢國小力弱，北伐消耗大量國力，多次出師未捷，加速了蜀漢的衰亡。整體評價：諸葛亮的北伐在戰略上有其必要性，但受限於客觀條件（地理、國力、人才），難以成功", "is_correct": True,
+             "explanation": "此選項正確。北伐有其戰略必要性，但受客觀條件限制。"},
+            {"text": "完全明智", "is_correct": False,
+             "explanation": "此選項過於簡單。需要考慮正反兩面。"},
+            {"text": "完全不明智", "is_correct": False,
+             "explanation": "此選項過於偏激。以攻為守有其道理。"},
+            {"text": "不需要討論", "is_correct": False,
+             "explanation": "此選項錯誤。討論北伐的明智與否有助於理解歷史。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B69-Q25  p11  深  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "深",
+        "skill": "背景知識",
+        "stem": "劉禪在諸葛亮死後的表現如何？這與《出師表》的預感有甚麼關聯？",
+        "options": [
+            {"text": "劉禪的表現：①早期——在蔣琬、費禕等賢臣輔佐下，蜀漢尚能維持；②後期——親信宦官黃皓，朝政腐敗，「親小人遠賢臣」——正是諸葛亮最擔心的情況；③263年——魏國伐蜀，劉禪投降，蜀漢滅亡。與《出師表》的關聯：諸葛亮反覆強調「親賢遠佞」，正是預見到後主可能親小人。歷史證明，諸葛亮的擔憂完全應驗", "is_correct": True,
+             "explanation": "此選項正確。劉禪後來果然親小人，應驗了諸葛亮的擔憂。"},
+            {"text": "劉禪成為明君", "is_correct": False,
+             "explanation": "此選項錯誤。劉禪後來親信宦官，蜀漢滅亡。"},
+            {"text": "與出師表無關", "is_correct": False,
+             "explanation": "此選項錯誤。劉禪的結局正應驗了諸葛亮的擔憂。"},
+            {"text": "蜀漢沒有滅亡", "is_correct": False,
+             "explanation": "此選項錯誤。263年蜀漢被魏國所滅。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B69-Q26  p11  深  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "深",
+        "skill": "背景知識",
+        "stem": "《出師表》在後世有甚麼影響？為甚麼被稱為千古名文？",
+        "options": [
+            {"text": "影響深遠：①成為忠臣典範——歷代忠臣以諸葛亮為楷模；②杜甫詩「出師未捷身先死，長使英雄淚滿襟」傳頌千古；③南宋文天祥、岳飛等愛國人士深受感動；④「鞠躬盡瘁，死而後已」成為成語；⑤陸游「出師一表真名世，千載誰堪伯仲間」讚譽。被稱為千古名文的原因：①人格力量——忠誠與擔當的精神超越時代；②文學價值——情理兼備，語言精煉；③悲劇色彩——北伐未成，更添感人力量", "is_correct": True,
+             "explanation": "此選項正確。人格、文學和悲劇性使之成為千古名文。"},
+            {"text": "沒有影響", "is_correct": False,
+             "explanation": "此選項錯誤。影響極其深遠。"},
+            {"text": "只有文學價值", "is_correct": False,
+             "explanation": "此選項錯誤。還有巨大的精神影響。"},
+            {"text": "後世不重視", "is_correct": False,
+             "explanation": "此選項錯誤。歷代文人武將都深受感動。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B69-Q27  p11  深  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "深",
+        "skill": "背景知識",
+        "stem": "從政治學角度看，諸葛亮的雙重身份（丞相+託孤大臣）有甚麼挑戰？",
+        "options": [
+            {"text": "挑戰：①權力過大容易招致猜忌——丞相掌握軍政大權，加上託孤大臣的身份，實際上是蜀漢的最高決策者；②年輕的後主可能感到威脅——諸葛亮的權威超過了皇帝本人；③內外都有人離間——宮中的人可能在後主面前說諸葛亮的壞話；④北伐帶兵在外——手握重兵遠離朝廷，更容易被猜疑。這正是諸葛亮在文中反覆表白忠心的原因——需要消除後主和朝臣的猜疑", "is_correct": True,
+             "explanation": "此選項正確。雙重身份帶來了權力、猜忌和離間的挑戰。"},
+            {"text": "沒有挑戰", "is_correct": False,
+             "explanation": "此選項錯誤。雙重身份帶來了多重挑戰。"},
+            {"text": "諸葛亮想篡權", "is_correct": False,
+             "explanation": "此選項錯誤。歷史證明諸葛亮忠心不二。"},
+            {"text": "後主不在意", "is_correct": False,
+             "explanation": "此選項錯誤。諸葛亮需要主動消除猜疑。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B69-Q28  p11  深  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "深",
+        "skill": "背景知識",
+        "stem": "「鞠躬盡瘁，死而後已」出自何處？與《出師表》有甚麼關係？",
+        "options": [
+            {"text": "出自《後出師表》——一般認為是諸葛亮在第二次北伐前（228年）所寫（真偽有爭議）。原句是「鞠躬盡瘁，死而後已」——竭盡全力，到死才停止。與《出師表》的關係：①是同一種精神——在《出師表》中已經表現出來（「夙夜憂歎」「恐託付不效」「治臣之罪」等）；②兩篇互為補充——《出師表》偏重建議和感恩，《後出師表》偏重分析北伐的必要性和決心", "is_correct": True,
+             "explanation": "此選項正確。「鞠躬盡瘁」出自《後出師表》，與《出師表》精神一致。"},
+            {"text": "出自《出師表》本文", "is_correct": False,
+             "explanation": "此選項錯誤。出自《後出師表》。"},
+            {"text": "與諸葛亮無關", "is_correct": False,
+             "explanation": "此選項錯誤。是諸葛亮的名句。"},
+            {"text": "出自杜甫詩", "is_correct": False,
+             "explanation": "此選項錯誤。出自《後出師表》。杜甫的名句是「出師未捷身先死」。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B69-Q29  p11  最深  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "最深",
+        "skill": "背景知識",
+        "stem": "有史家認為蜀漢的滅亡是歷史必然，諸葛亮無力改變。結合《出師表》的背景，你如何看待這個觀點？",
+        "options": [
+            {"text": "支持「必然」的論據：①地理和國力劣勢——益州偏遠，人口和經濟遠不及魏國中原；②人才儲備不足——蜀漢人才日漸凋零（「蜀中無大將，廖化作先鋒」）；③北伐消耗國力——多次出師未果，加速衰亡。反面論據：①諸葛亮的治理延長了蜀漢壽命——沒有他蜀漢可能更早滅亡；②「以攻為守」雖未成功，但維持了士氣和存在感。從《出師表》可見：諸葛亮清醒地認識到困難（「益州疲弊」），但仍選擇行動——「知其不可而為之」的精神超越了成敗", "is_correct": True,
+             "explanation": "此選項正確。客觀條件限制下，諸葛亮的精神超越了成敗。"},
+            {"text": "完全是必然", "is_correct": False,
+             "explanation": "此選項過於簡單。需要考慮諸葛亮的努力和精神。"},
+            {"text": "諸葛亮可以改變", "is_correct": False,
+             "explanation": "此選項過於樂觀。客觀條件限制很大。"},
+            {"text": "不需要討論", "is_correct": False,
+             "explanation": "此選項錯誤。這是理解歷史的重要問題。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B69-Q30  p11  最深  背景知識  ────────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "最深",
+        "skill": "背景知識",
+        "stem": "比較《出師表》的歷史背景與現代社會，諸葛亮的忠誠觀念在今天是否仍有價值？",
+        "options": [
+            {"text": "仍有價值但需要轉化理解：①責任感——諸葛亮對國家和人民的責任感，放在今天就是對社會和職業的責任感，不因困難而退縮；②知恩圖報——人與人之間的信任和感恩是永恆的價值，不限於君臣關係；③鞠躬盡瘁——全心全意投入工作和使命的精神，在任何時代都值得敬佩；④不追求私利——淡泊名利、以公益為先的態度，在今天的領導者身上同樣珍貴。需要轉化的：封建忠君思想需要轉化為對國家和人民的忠誠，而非個人效忠", "is_correct": True,
+             "explanation": "此選項正確。核心精神有現代價值，但需要轉化封建忠君的部分。"},
+            {"text": "完全過時", "is_correct": False,
+             "explanation": "此選項錯誤。責任感和知恩圖報等價值超越時代。"},
+            {"text": "完全適用", "is_correct": False,
+             "explanation": "此選項錯誤。封建忠君思想需要轉化。"},
+            {"text": "與現代無關", "is_correct": False,
+             "explanation": "此選項錯誤。核心精神有跨時代的價值。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # =====================================================================
+    # Batch 70 – p12 × 字詞解釋 × 30 questions
+    # Passage: 宋詞三首（蘇軾〈念奴嬌·赤壁懷古〉、李清照〈聲聲慢·秋情〉、
+    #          辛棄疾〈青玉案·元夕〉）
+    # Skill: t-meaning
+    # Difficulty distribution: 最淺5, 淺8, 中10, 深5, 最深2
+    # =====================================================================
+
+    # ── B70-Q01  p12  最淺  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "字詞解釋",
+        "stem": "《念奴嬌》中「人道是、三國周郎赤壁」的「人道是」是甚麼意思？",
+        "options": [
+            {"text": "人們說——「人道是」即人們傳說、相傳的意思，表示這個說法並非作者親自考證，而是轉述當地的傳聞", "is_correct": True,
+             "explanation": "此選項正確。「人道是」即人們說。"},
+            {"text": "人的道德", "is_correct": False,
+             "explanation": "此選項錯誤。「道」在此處解作「說」。"},
+            {"text": "人的道路", "is_correct": False,
+             "explanation": "此選項錯誤。「道」在此處不是道路的意思。"},
+            {"text": "做人的道理", "is_correct": False,
+             "explanation": "此選項錯誤。「人道是」是「人們說是」的意思。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B70-Q02  p12  最淺  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "字詞解釋",
+        "stem": "《念奴嬌》中「早生華髮」的「華髮」是甚麼意思？",
+        "options": [
+            {"text": "花白的頭髮——「華」通「花」，指黑白相間的花白頭髮，表示年華老去", "is_correct": True,
+             "explanation": "此選項正確。「華髮」即花白的頭髮。"},
+            {"text": "華麗的頭髮", "is_correct": False,
+             "explanation": "此選項錯誤。「華」通「花」，不是華麗的意思。"},
+            {"text": "長長的頭髮", "is_correct": False,
+             "explanation": "此選項錯誤。「華髮」指花白的頭髮。"},
+            {"text": "剛長出來的頭髮", "is_correct": False,
+             "explanation": "此選項錯誤。「華髮」指花白的頭髮，暗示衰老。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B70-Q03  p12  最淺  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "字詞解釋",
+        "stem": "《聲聲慢》中「乍暖還寒時候，最難將息」的「將息」是甚麼意思？",
+        "options": [
+            {"text": "調養休息——「將息」是保養身體、調養休息的意思", "is_correct": True,
+             "explanation": "此選項正確。「將息」即調養休息。"},
+            {"text": "將要休息", "is_correct": False,
+             "explanation": "此選項錯誤。「將息」是一個固定詞語，意思是調養。"},
+            {"text": "停止呼吸", "is_correct": False,
+             "explanation": "此選項錯誤。「將息」指調養休息。"},
+            {"text": "等待消息", "is_correct": False,
+             "explanation": "此選項錯誤。「將息」與消息無關。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B70-Q04  p12  最淺  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "字詞解釋",
+        "stem": "《青玉案》中「驀然回首」的「驀然」是甚麼意思？",
+        "options": [
+            {"text": "突然、忽然——「驀然」是出乎意料、突然間的意思", "is_correct": True,
+             "explanation": "此選項正確。「驀然」即突然。"},
+            {"text": "慢慢地", "is_correct": False,
+             "explanation": "此選項錯誤。「驀然」是突然的意思。"},
+            {"text": "默默地", "is_correct": False,
+             "explanation": "此選項錯誤。「驀」不是「默」。"},
+            {"text": "無奈地", "is_correct": False,
+             "explanation": "此選項錯誤。「驀然」是突然、忽然的意思。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B70-Q05  p12  最淺  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "字詞解釋",
+        "stem": "《青玉案》中「燈火闌珊處」的「闌珊」是甚麼意思？",
+        "options": [
+            {"text": "零落、暗淡——「闌珊」指燈火稀疏、零落的樣子", "is_correct": True,
+             "explanation": "此選項正確。「闌珊」即暗淡零落。"},
+            {"text": "燦爛輝煌", "is_correct": False,
+             "explanation": "此選項錯誤。「闌珊」是暗淡零落，恰恰相反。"},
+            {"text": "搖擺不定", "is_correct": False,
+             "explanation": "此選項錯誤。「闌珊」指零落暗淡。"},
+            {"text": "溫暖明亮", "is_correct": False,
+             "explanation": "此選項錯誤。「闌珊」指燈火稀疏零落。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B70-Q06  p12  淺  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "字詞解釋",
+        "stem": "《念奴嬌》中「一尊還酹江月」的「酹」是甚麼意思？",
+        "options": [
+            {"text": "把酒灑在地上祭奠——「酹」是古代以酒灑地或灑向對象的祭祀動作", "is_correct": True,
+             "explanation": "此選項正確。「酹」即以酒灑地祭奠。"},
+            {"text": "飲酒", "is_correct": False,
+             "explanation": "此選項錯誤。「酹」是灑酒祭奠，不是飲酒。"},
+            {"text": "釀酒", "is_correct": False,
+             "explanation": "此選項錯誤。「酹」是祭奠動作。"},
+            {"text": "斟酒", "is_correct": False,
+             "explanation": "此選項錯誤。「酹」是灑酒祭奠。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B70-Q07  p12  淺  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "字詞解釋",
+        "stem": "《念奴嬌》中「羽扇綸巾」的「綸巾」是甚麼意思？",
+        "options": [
+            {"text": "青絲製成的頭巾——「綸巾」是用青絲帶編織的頭巾，是古代儒將的裝束", "is_correct": True,
+             "explanation": "此選項正確。「綸巾」是青絲頭巾。"},
+            {"text": "金屬頭盔", "is_correct": False,
+             "explanation": "此選項錯誤。「綸巾」是絲巾，不是頭盔。"},
+            {"text": "一種武器", "is_correct": False,
+             "explanation": "此選項錯誤。「綸巾」是頭飾。"},
+            {"text": "一種樂器", "is_correct": False,
+             "explanation": "此選項錯誤。「綸巾」是頭巾。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B70-Q08  p12  淺  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "字詞解釋",
+        "stem": "《念奴嬌》中「故壘西邊」的「故壘」是甚麼意思？",
+        "options": [
+            {"text": "舊時的營壘——「故」指舊時、從前；「壘」指營壘、堡壘，即古代的軍事營地遺址", "is_correct": True,
+             "explanation": "此選項正確。「故壘」即舊時的營壘。"},
+            {"text": "故鄉的城牆", "is_correct": False,
+             "explanation": "此選項錯誤。「故壘」指舊營壘，不是故鄉。"},
+            {"text": "堅固的石堆", "is_correct": False,
+             "explanation": "此選項錯誤。「故壘」指舊時的營壘。"},
+            {"text": "破敗的房屋", "is_correct": False,
+             "explanation": "此選項錯誤。「壘」是營壘，不是房屋。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B70-Q09  p12  淺  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "字詞解釋",
+        "stem": "《聲聲慢》中「怎敵他晚來風急」的「敵」是甚麼意思？",
+        "options": [
+            {"text": "抵擋、抵禦——「敵」在此處解作抵擋，指淡酒不能抵禦晚風的寒冷", "is_correct": True,
+             "explanation": "此選項正確。「敵」即抵擋。"},
+            {"text": "敵人", "is_correct": False,
+             "explanation": "此選項錯誤。「敵」在此處是動詞，不是名詞。"},
+            {"text": "仇視", "is_correct": False,
+             "explanation": "此選項錯誤。「敵」在此處解作抵擋。"},
+            {"text": "攻擊", "is_correct": False,
+             "explanation": "此選項錯誤。「敵」在此處解作抵禦。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B70-Q10  p12  淺  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "字詞解釋",
+        "stem": "《聲聲慢》中「憔悴損」的「損」是甚麼意思？",
+        "options": [
+            {"text": "極、非常——「損」在此處用作補語，表示程度之深，即極其憔悴", "is_correct": True,
+             "explanation": "此選項正確。「損」表示程度深，即極其。"},
+            {"text": "損壞", "is_correct": False,
+             "explanation": "此選項錯誤。「損」在此處不是損壞的意思。"},
+            {"text": "減少", "is_correct": False,
+             "explanation": "此選項錯誤。「損」在此處表示程度之深。"},
+            {"text": "受傷", "is_correct": False,
+             "explanation": "此選項錯誤。「損」在此處表示極其。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B70-Q11  p12  淺  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "字詞解釋",
+        "stem": "《聲聲慢》中「這次第，怎一箇愁字了得」的「次第」是甚麼意思？",
+        "options": [
+            {"text": "光景、情形——「次第」指眼前所見的種種光景、情形", "is_correct": True,
+             "explanation": "此選項正確。「次第」即光景、情形。"},
+            {"text": "次序", "is_correct": False,
+             "explanation": "此選項錯誤。「次第」在此處解作光景。"},
+            {"text": "第二次", "is_correct": False,
+             "explanation": "此選項錯誤。「次第」是一個詞，不是分開理解。"},
+            {"text": "弟弟", "is_correct": False,
+             "explanation": "此選項錯誤。「次第」是光景的意思。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B70-Q12  p12  淺  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "字詞解釋",
+        "stem": "《青玉案》中「眾裏尋他千百度」的「度」是甚麼意思？",
+        "options": [
+            {"text": "次、回——「度」在此處是量詞，指尋找了千百次", "is_correct": True,
+             "explanation": "此選項正確。「度」即次、回。"},
+            {"text": "度過", "is_correct": False,
+             "explanation": "此選項錯誤。「度」在此處是量詞。"},
+            {"text": "溫度", "is_correct": False,
+             "explanation": "此選項錯誤。「度」在此處不是計量單位。"},
+            {"text": "氣度", "is_correct": False,
+             "explanation": "此選項錯誤。「度」在此處解作次數。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B70-Q13  p12  淺  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "字詞解釋",
+        "stem": "《青玉案》中「笑語盈盈暗香去」的「盈盈」是甚麼意思？",
+        "options": [
+            {"text": "含情脈脈的樣子——「盈盈」形容儀態美好、含情脈脈", "is_correct": True,
+             "explanation": "此選項正確。「盈盈」即含情脈脈。"},
+            {"text": "滿溢出來", "is_correct": False,
+             "explanation": "此選項錯誤。「盈盈」在此處形容含情脈脈的神態。"},
+            {"text": "營營碌碌", "is_correct": False,
+             "explanation": "此選項錯誤。「盈盈」是含情脈脈的意思。"},
+            {"text": "嘻嘻哈哈", "is_correct": False,
+             "explanation": "此選項錯誤。「盈盈」形容溫柔含蓄的樣子。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B70-Q14  p12  中  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "字詞解釋",
+        "stem": "《念奴嬌》中「浪淘盡、千古風流人物」的「風流人物」是甚麼意思？",
+        "options": [
+            {"text": "傑出不凡的英雄人物——「風流」在古文中指卓越超群、才華出眾，「風流人物」指歷史上有才華、有功業的傑出人物", "is_correct": True,
+             "explanation": "此選項正確。「風流人物」指傑出的英雄人物。"},
+            {"text": "放蕩不羈的人", "is_correct": False,
+             "explanation": "此選項錯誤。「風流」在此處不是放蕩的意思。"},
+            {"text": "隨波逐流的人", "is_correct": False,
+             "explanation": "此選項錯誤。「風流」在此處指才華出眾。"},
+            {"text": "風度翩翩但無才的人", "is_correct": False,
+             "explanation": "此選項錯誤。「風流人物」指有才華有功業的傑出人物。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B70-Q15  p12  中  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "字詞解釋",
+        "stem": "《念奴嬌》中「檣櫓灰飛煙滅」的「檣櫓」是甚麼意思？",
+        "options": [
+            {"text": "桅杆和船槳——「檣」指船上的桅杆，「櫓」指船槳，此處以「檣櫓」借代曹軍的戰船（整個船隊）", "is_correct": True,
+             "explanation": "此選項正確。「檣櫓」是桅杆和船槳，借代戰船。"},
+            {"text": "城牆", "is_correct": False,
+             "explanation": "此選項錯誤。「檣櫓」是船的部件。"},
+            {"text": "旗幟", "is_correct": False,
+             "explanation": "此選項錯誤。「檣」是桅杆，「櫓」是船槳。"},
+            {"text": "武器", "is_correct": False,
+             "explanation": "此選項錯誤。「檣櫓」指船的桅杆和船槳。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B70-Q16  p12  中  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "字詞解釋",
+        "stem": "《念奴嬌》中「故國神遊」的「故國」是甚麼意思？",
+        "options": [
+            {"text": "古戰場——「故國」在此處指昔日的赤壁戰場（舊地），而非指故鄉或國家", "is_correct": True,
+             "explanation": "此選項正確。「故國」指赤壁古戰場。"},
+            {"text": "故鄉", "is_correct": False,
+             "explanation": "此選項錯誤。「故國」在此處指赤壁舊地。"},
+            {"text": "亡國", "is_correct": False,
+             "explanation": "此選項錯誤。「故國」指舊地、古戰場。"},
+            {"text": "蜀國", "is_correct": False,
+             "explanation": "此選項錯誤。「故國」指赤壁古戰場。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B70-Q17  p12  中  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "字詞解釋",
+        "stem": "《念奴嬌》中「雄姿英發」的「英發」是甚麼意思？",
+        "options": [
+            {"text": "神采煥發——「英發」形容精神抖擻、神采飛揚的樣子，與「雄姿」合用描寫周瑜英偉的外表和氣度", "is_correct": True,
+             "explanation": "此選項正確。「英發」即神采煥發。"},
+            {"text": "出發打仗", "is_correct": False,
+             "explanation": "此選項錯誤。「英發」是形容詞，不是動詞。"},
+            {"text": "頭髮很長", "is_correct": False,
+             "explanation": "此選項錯誤。「發」在此處不是頭髮的意思。"},
+            {"text": "發怒的樣子", "is_correct": False,
+             "explanation": "此選項錯誤。「英發」是神采煥發，不是發怒。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B70-Q18  p12  中  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "字詞解釋",
+        "stem": "《聲聲慢》中「如今有誰堪摘」的「堪」是甚麼意思？",
+        "options": [
+            {"text": "能夠、想要——「堪」在此處解作能夠或值得，意思是如今有誰能夠（或想要）去摘取呢", "is_correct": True,
+             "explanation": "此選項正確。「堪」即能夠或值得。"},
+            {"text": "忍受", "is_correct": False,
+             "explanation": "此選項錯誤。「堪」在此處解作能夠。"},
+            {"text": "勘察", "is_correct": False,
+             "explanation": "此選項錯誤。「堪」不是「勘」。"},
+            {"text": "欣賞", "is_correct": False,
+             "explanation": "此選項錯誤。「堪」解作能夠或想要。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B70-Q19  p12  中  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "字詞解釋",
+        "stem": "《聲聲慢》中「守着窗兒，獨自怎生得黑」的「怎生」是甚麼意思？",
+        "options": [
+            {"text": "怎麼——「怎生」是宋代口語，意思是怎麼、如何，表示疑問", "is_correct": True,
+             "explanation": "此選項正確。「怎生」即怎麼。"},
+            {"text": "怎樣生活", "is_correct": False,
+             "explanation": "此選項錯誤。「怎生」是一個詞，不是分開理解。"},
+            {"text": "怎樣出生", "is_correct": False,
+             "explanation": "此選項錯誤。「怎生」是宋代口語，即怎麼。"},
+            {"text": "很生氣", "is_correct": False,
+             "explanation": "此選項錯誤。「怎生」解作怎麼。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B70-Q20  p12  中  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "字詞解釋",
+        "stem": "《青玉案》中「東風夜放花千樹」的「花千樹」是甚麼意思？",
+        "options": [
+            {"text": "千棵樹上繁花盛放——以千樹繁花借喻滿城的花燈，表示元宵夜花燈多如繁花盛放", "is_correct": True,
+             "explanation": "此選項正確。「花千樹」借喻滿城花燈。"},
+            {"text": "真正的花樹", "is_correct": False,
+             "explanation": "此選項錯誤。「花千樹」是比喻花燈。"},
+            {"text": "種了一千棵樹", "is_correct": False,
+             "explanation": "此選項錯誤。「花千樹」是形容花燈之多。"},
+            {"text": "千種花", "is_correct": False,
+             "explanation": "此選項錯誤。「花千樹」借喻燈火如繁花。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B70-Q21  p12  中  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "字詞解釋",
+        "stem": "《青玉案》中「那人卻在、燈火闌珊處」的「卻」是甚麼意思？",
+        "options": [
+            {"text": "剛好、正——「卻」在此處表示出乎意料的語氣，指那人剛好、竟然在燈火零落之處", "is_correct": True,
+             "explanation": "此選項正確。「卻」在此處解作剛好、竟然。"},
+            {"text": "退卻", "is_correct": False,
+             "explanation": "此選項錯誤。「卻」在此處不是退卻的意思。"},
+            {"text": "拒絕", "is_correct": False,
+             "explanation": "此選項錯誤。「卻」在此處表示出乎意料。"},
+            {"text": "但是", "is_correct": False,
+             "explanation": "此選項錯誤。「卻」在此處解作剛好。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B70-Q22  p12  中  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "字詞解釋",
+        "stem": "《青玉案》中「玉壺光轉」的「玉壺」是甚麼意思？",
+        "options": [
+            {"text": "月亮——「玉壺」在此處比喻月亮，形容月亮圓潤如玉壺般發光", "is_correct": True,
+             "explanation": "此選項正確。「玉壺」比喻月亮。"},
+            {"text": "真正的玉製壺", "is_correct": False,
+             "explanation": "此選項錯誤。「玉壺」在此處比喻月亮。"},
+            {"text": "酒壺", "is_correct": False,
+             "explanation": "此選項錯誤。「玉壺」比喻月亮。"},
+            {"text": "花燈", "is_correct": False,
+             "explanation": "此選項錯誤。「玉壺」指月亮。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B70-Q23  p12  中  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "字詞解釋",
+        "stem": "《青玉案》中「蛾兒雪柳黃金縷」是指甚麼？",
+        "options": [
+            {"text": "各種頭飾——「蛾兒」、「雪柳」、「黃金縷」都是元宵時婦女佩戴的頭飾名稱，此句以頭飾借代盛裝打扮的婦女", "is_correct": True,
+             "explanation": "此選項正確。三者都是頭飾，借代婦女。"},
+            {"text": "蛾、柳樹和金線", "is_correct": False,
+             "explanation": "此選項錯誤。三者都是頭飾的名稱。"},
+            {"text": "三種食物", "is_correct": False,
+             "explanation": "此選項錯誤。三者都是元宵頭飾。"},
+            {"text": "三位女子的名字", "is_correct": False,
+             "explanation": "此選項錯誤。三者是頭飾名稱。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B70-Q24  p12  深  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "字詞解釋",
+        "stem": "《念奴嬌》中「多情應笑我」的「多情」在此處有甚麼特別含義？",
+        "options": [
+            {"text": "多愁善感——「多情」在此處不是指對愛情多情，而是指蘇軾自嘲自己過於感懷往事、多愁善感。面對千古英雄的豐功偉業，自己卻華髮早生、功業未成，感觸太深，所以自嘲「多情」可笑", "is_correct": True,
+             "explanation": "此選項正確。「多情」指多愁善感，是自嘲。"},
+            {"text": "對愛人深情", "is_correct": False,
+             "explanation": "此選項錯誤。不是指男女之情。"},
+            {"text": "感情豐富而快樂", "is_correct": False,
+             "explanation": "此選項錯誤。「多情」在此處帶有自嘲意味。"},
+            {"text": "對朋友重情", "is_correct": False,
+             "explanation": "此選項錯誤。「多情」指感懷往事、多愁善感。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B70-Q25  p12  深  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "字詞解釋",
+        "stem": "《念奴嬌》中「浪淘盡」的「淘」有甚麼深層含義？",
+        "options": [
+            {"text": "沖洗、淘汰——「淘」本指用水沖洗，引申為淘汰、消逝。「浪淘盡」意指千古英雄人物都被歷史的浪濤沖刷乾淨，隨時間消逝。一個「盡」字強調消逝的徹底，無一倖免", "is_correct": True,
+             "explanation": "此選項正確。「淘」有沖洗和淘汰的雙重含義。"},
+            {"text": "只是物理沖刷", "is_correct": False,
+             "explanation": "此選項錯誤。還有時間淘汰英雄的引申義。"},
+            {"text": "挑選", "is_correct": False,
+             "explanation": "此選項錯誤。「淘」在此處是沖洗消逝的意思。"},
+            {"text": "清洗乾淨", "is_correct": False,
+             "explanation": "此選項不夠全面。還暗含時間淘汰一切的深層含義。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B70-Q26  p12  深  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "字詞解釋",
+        "stem": "《聲聲慢》中「尋尋覓覓」的「尋」和「覓」有甚麼分別？為甚麼要連用？",
+        "options": [
+            {"text": "「尋」偏向有目標地尋找，「覓」偏向搜索、探求。兩者意思相近但有微妙差異。疊字連用（尋尋覓覓）的作用：①強調反覆尋找的動作和心理狀態；②營造若有所失的空虛感；③音韻上形成低迴婉轉的節奏", "is_correct": True,
+             "explanation": "此選項正確。同義疊用加強反覆尋找的空虛感。"},
+            {"text": "完全相同，只是重複", "is_correct": False,
+             "explanation": "此選項錯誤。雖意思相近，但疊用有加強效果。"},
+            {"text": "一個找人一個找物", "is_correct": False,
+             "explanation": "此選項錯誤。兩者都可以指各種尋找。"},
+            {"text": "沒有特別作用", "is_correct": False,
+             "explanation": "此選項錯誤。疊字連用有重要的修辭和音韻效果。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B70-Q27  p12  深  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "字詞解釋",
+        "stem": "《聲聲慢》中「三杯兩盞淡酒」的「淡」字有甚麼深層含義？",
+        "options": [
+            {"text": "表面指酒味淡薄，深層指：①愁太深——不是酒淡，而是愁太濃，以致覺得酒淡，喝多少也無法消解；②心境蕭索——在孤苦寂寞中，即使飲酒也感覺索然無味；③暗合整首詞清冷的基調", "is_correct": True,
+             "explanation": "此選項正確。「淡」不只是酒味，更映射愁之深重。"},
+            {"text": "只是酒的濃度低", "is_correct": False,
+             "explanation": "此選項不夠全面。還暗含愁太濃以致覺酒淡的深意。"},
+            {"text": "指清水", "is_correct": False,
+             "explanation": "此選項錯誤。仍然是酒，但「淡」字有深層含義。"},
+            {"text": "指好酒", "is_correct": False,
+             "explanation": "此選項錯誤。「淡」與好酒相反。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B70-Q28  p12  深  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "字詞解釋",
+        "stem": "《青玉案》中「寶馬雕車香滿路」的「香」字有甚麼修辭含義？",
+        "options": [
+            {"text": "「香」既指車上富貴人家的衣鬢香氣，也暗示元宵夜的奢華享樂氣氛。以嗅覺描寫配合視覺（寶馬雕車），營造出繁華靡麗的元宵景象。深層上與下片「那人」所處的冷清之地形成對比——「香滿路」的繁華世俗vs.燈火闌珊處的孤高", "is_correct": True,
+             "explanation": "此選項正確。「香」兼有感官描寫和象徵意味。"},
+            {"text": "只是花香", "is_correct": False,
+             "explanation": "此選項錯誤。「香」指衣鬢香氣，並有深層象徵。"},
+            {"text": "食物的香味", "is_correct": False,
+             "explanation": "此選項錯誤。「香」指車上人物的衣鬢香氣。"},
+            {"text": "沒有特別含義", "is_correct": False,
+             "explanation": "此選項錯誤。「香」有感官和象徵的雙重作用。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B70-Q29  p12  最深  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最深",
+        "skill": "字詞解釋",
+        "stem": "《念奴嬌》中「人間如夢」與《聲聲慢》中「怎一箇愁字了得」都是全詞的核心語句，兩者在用詞上有甚麼不同的藝術效果？",
+        "options": [
+            {"text": "「人間如夢」用「夢」字總結蘇軾的哲學感悟——人生短暫虛幻，功業成敗都如夢一場，語氣豁達超脫，有自我開解之意。「怎一箇愁字了得」則反用一個「愁」字，以「了得」（概括得了）的反問形式，表明愁緒之深已超越語言所能表達的極限，語氣沉痛絕望。一者超然，一者沉溺；一者豪放，一者婉約", "is_correct": True,
+             "explanation": "此選項正確。一者超脫豁達，一者沉痛深切。"},
+            {"text": "兩者意思相同", "is_correct": False,
+             "explanation": "此選項錯誤。兩者在情感基調和用詞效果上截然不同。"},
+            {"text": "「夢」比「愁」更悲傷", "is_correct": False,
+             "explanation": "此選項錯誤。「人間如夢」帶有超脫感，反而較為豁達。"},
+            {"text": "只是風格不同", "is_correct": False,
+             "explanation": "此選項不夠全面。不僅風格不同，情感和哲學含義也不同。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B70-Q30  p12  最深  字詞解釋  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最深",
+        "skill": "字詞解釋",
+        "stem": "三首詞中都有「暗」字或相關意象（《念奴嬌》的「灰飛煙滅」、《聲聲慢》的「黑」、《青玉案》的「闌珊」），這些表示光線暗淡的詞語分別有甚麼不同的象徵意義？",
+        "options": [
+            {"text": "各有不同象徵：①「灰飛煙滅」——象徵曹軍的覆滅和歷史功業的瞬間消逝，帶有壯烈和戲劇性；②「得黑」——象徵李清照在孤苦中度日如年，盼望天黑（時間）來結束痛苦，「黑」代表時間的漫長和精神的煎熬；③「闌珊」——象徵「那人」所在的幽暗角落，暗示遠離世俗繁華、自甘寂寞的高潔品格。三者雖都涉及光暗，但分別象徵毀滅、煎熬和高潔", "is_correct": True,
+             "explanation": "此選項正確。三個「暗」各自象徵毀滅、煎熬和高潔。"},
+            {"text": "都表示悲傷", "is_correct": False,
+             "explanation": "此選項過於簡單。三者象徵意義各不相同。"},
+            {"text": "只是描寫環境", "is_correct": False,
+             "explanation": "此選項錯誤。都有深層的象徵意義。"},
+            {"text": "沒有可比性", "is_correct": False,
+             "explanation": "此選項錯誤。比較三者可以揭示不同的象徵意義。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # =====================================================================
+    # Batch 71 – p12 × 內容理解 × 30 questions
+    # Passage: 宋詞三首（蘇軾〈念奴嬌·赤壁懷古〉、李清照〈聲聲慢·秋情〉、
+    #          辛棄疾〈青玉案·元夕〉）
+    # Skill: t-comprehension
+    # Difficulty distribution: 最淺5, 淺8, 中10, 深5, 最深2
+    # =====================================================================
+
+    # ── B71-Q01  p12  最淺  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "內容理解",
+        "stem": "《念奴嬌·赤壁懷古》上片主要描寫甚麼？",
+        "options": [
+            {"text": "赤壁的壯麗景色——描寫長江東流、亂石穿空、驚濤拍岸、捲起千堆雪等赤壁磯的雄偉景象", "is_correct": True,
+             "explanation": "此選項正確。上片主要寫赤壁壯景。"},
+            {"text": "周瑜的故事", "is_correct": False,
+             "explanation": "此選項錯誤。周瑜主要出現在下片。"},
+            {"text": "蘇軾的家庭生活", "is_correct": False,
+             "explanation": "此選項錯誤。上片寫赤壁風景。"},
+            {"text": "戰爭的經過", "is_correct": False,
+             "explanation": "此選項錯誤。上片寫景，不是敘事。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B71-Q02  p12  最淺  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "內容理解",
+        "stem": "《聲聲慢》描寫的是甚麼季節的景象？",
+        "options": [
+            {"text": "秋天——詞中描寫「乍暖還寒」的氣候、南飛的大雁、凋零的黃花、梧桐細雨等秋天景物", "is_correct": True,
+             "explanation": "此選項正確。描寫深秋景象。"},
+            {"text": "春天", "is_correct": False,
+             "explanation": "此選項錯誤。黃花堆積、雁南飛是秋天景象。"},
+            {"text": "夏天", "is_correct": False,
+             "explanation": "此選項錯誤。詞題就是「秋情」。"},
+            {"text": "冬天", "is_correct": False,
+             "explanation": "此選項錯誤。是深秋，尚未入冬。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B71-Q03  p12  最淺  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "內容理解",
+        "stem": "《青玉案·元夕》描寫的是甚麼節日的景象？",
+        "options": [
+            {"text": "元宵節（正月十五）——描寫元宵夜滿城花燈、煙火、歌舞、遊人的熱鬧盛況", "is_correct": True,
+             "explanation": "此選項正確。元夕即元宵節。"},
+            {"text": "中秋節", "is_correct": False,
+             "explanation": "此選項錯誤。「元夕」是元宵節。"},
+            {"text": "端午節", "is_correct": False,
+             "explanation": "此選項錯誤。元夕就是元宵節。"},
+            {"text": "除夕", "is_correct": False,
+             "explanation": "此選項錯誤。是元宵節，不是除夕。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B71-Q04  p12  最淺  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "內容理解",
+        "stem": "《念奴嬌》中蘇軾主要懷念的歷史人物是誰？",
+        "options": [
+            {"text": "周瑜——蘇軾在下片重點描寫周瑜（公瑾）年少有為、風度翩翩、在赤壁之戰中大敗曹軍的英雄形象", "is_correct": True,
+             "explanation": "此選項正確。主要懷念周瑜。"},
+            {"text": "曹操", "is_correct": False,
+             "explanation": "此選項錯誤。曹操是被周瑜擊敗的對手。"},
+            {"text": "劉備", "is_correct": False,
+             "explanation": "此選項錯誤。主要懷念的是周瑜。"},
+            {"text": "諸葛亮", "is_correct": False,
+             "explanation": "此選項錯誤。雖有「羽扇綸巾」之爭議，但主角是周瑜。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B71-Q05  p12  最淺  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "內容理解",
+        "stem": "《聲聲慢》的作者在詞中表達了甚麼情感？",
+        "options": [
+            {"text": "深切的愁苦和孤寂——李清照表達了無法排遣的悲愁，包括國破家亡、喪夫之痛和孀居之苦", "is_correct": True,
+             "explanation": "此選項正確。表達深切的愁苦和孤寂。"},
+            {"text": "歡樂", "is_correct": False,
+             "explanation": "此選項錯誤。全詞處處是愁苦。"},
+            {"text": "憤怒", "is_correct": False,
+             "explanation": "此選項錯誤。主要是愁苦孤寂。"},
+            {"text": "輕鬆愉快", "is_correct": False,
+             "explanation": "此選項錯誤。是深沉的悲愁。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B71-Q06  p12  淺  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "內容理解",
+        "stem": "《念奴嬌》中「亂石穿空，驚濤拍岸，捲起千堆雪」描寫了甚麼景象？",
+        "options": [
+            {"text": "赤壁磯雄偉壯觀的景象——陡峭的石壁高聳入雲，巨浪猛烈拍擊岸邊，激起的浪花像千萬堆白雪般壯觀", "is_correct": True,
+             "explanation": "此選項正確。描寫赤壁的壯麗景色。"},
+            {"text": "冬天下雪的景象", "is_correct": False,
+             "explanation": "此選項錯誤。「雪」是比喻浪花。"},
+            {"text": "地震的景象", "is_correct": False,
+             "explanation": "此選項錯誤。是描寫江邊的壯觀景色。"},
+            {"text": "戰爭的景象", "is_correct": False,
+             "explanation": "此選項錯誤。是自然景觀的描寫。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B71-Q07  p12  淺  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "內容理解",
+        "stem": "《念奴嬌》中蘇軾把自己和周瑜作比較，得出甚麼感慨？",
+        "options": [
+            {"text": "感慨自己年華老去、功業未成——周瑜年少有為，娶得美人，又在赤壁建立不朽功業；自己卻被貶黃州，華髮早生，一事無成", "is_correct": True,
+             "explanation": "此選項正確。以周瑜反襯自己功業未成。"},
+            {"text": "覺得自己比周瑜優秀", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾自覺不如周瑜。"},
+            {"text": "嫉妒周瑜", "is_correct": False,
+             "explanation": "此選項錯誤。是仰慕和反襯，不是嫉妒。"},
+            {"text": "對周瑜不屑", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾對周瑜是仰慕的。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B71-Q08  p12  淺  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "內容理解",
+        "stem": "《聲聲慢》中「雁過也，正傷心，卻是舊時相識」表達了甚麼意思？",
+        "options": [
+            {"text": "看見南飛的大雁觸發傷感——大雁從北方南飛，是作者在北方時就認識的「舊相識」。看到牠們勾起了對故國的思念和身世飄零的感慨", "is_correct": True,
+             "explanation": "此選項正確。雁南飛觸發故國之思。"},
+            {"text": "遇到了老朋友", "is_correct": False,
+             "explanation": "此選項錯誤。「舊時相識」指的是大雁。"},
+            {"text": "害怕大雁", "is_correct": False,
+             "explanation": "此選項錯誤。是觸發傷感，不是害怕。"},
+            {"text": "喜歡大雁", "is_correct": False,
+             "explanation": "此選項錯誤。是傷心，不是喜歡。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B71-Q09  p12  淺  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "內容理解",
+        "stem": "《聲聲慢》中「滿地黃花堆積，憔悴損，如今有誰堪摘」表達了甚麼感情？",
+        "options": [
+            {"text": "自傷年華老去、孤苦無依——黃花凋零堆積暗示自己容顏憔悴，年華已逝；「有誰堪摘」暗示無人關心，孤苦無依", "is_correct": True,
+             "explanation": "此選項正確。以花自喻，感嘆年華老去。"},
+            {"text": "喜歡賞花", "is_correct": False,
+             "explanation": "此選項錯誤。是傷感，不是賞花的愉悅。"},
+            {"text": "嫌花不好看", "is_correct": False,
+             "explanation": "此選項錯誤。是借花自傷。"},
+            {"text": "想種花", "is_correct": False,
+             "explanation": "此選項錯誤。是感嘆自己如花般憔悴。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B71-Q10  p12  淺  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "內容理解",
+        "stem": "《青玉案》上片描寫了元宵夜的哪些景象？",
+        "options": [
+            {"text": "滿城花燈如千樹繁花、煙火如星雨、寶馬雕車絡繹不絕、簫聲悠揚、月光流轉、魚龍形花燈飛舞——一派繁華熱鬧的景象", "is_correct": True,
+             "explanation": "此選項正確。上片寫元宵繁華盛況。"},
+            {"text": "冷清寂寞的景象", "is_correct": False,
+             "explanation": "此選項錯誤。上片寫的是繁華熱鬧。"},
+            {"text": "只有月亮", "is_correct": False,
+             "explanation": "此選項錯誤。還有花燈、煙火、人群等。"},
+            {"text": "戰爭場面", "is_correct": False,
+             "explanation": "此選項錯誤。寫的是節日慶典。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B71-Q11  p12  淺  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "內容理解",
+        "stem": "《青玉案》中作者在人群中尋找的「那人」最後在哪裏被找到？",
+        "options": [
+            {"text": "在燈火稀疏零落的地方——「那人卻在、燈火闌珊處」，即遠離熱鬧人群、燈光暗淡的角落", "is_correct": True,
+             "explanation": "此選項正確。「那人」在燈火闌珊處。"},
+            {"text": "在最熱鬧的地方", "is_correct": False,
+             "explanation": "此選項錯誤。恰恰相反，在燈火稀疏的地方。"},
+            {"text": "在家中", "is_correct": False,
+             "explanation": "此選項錯誤。在燈火闌珊處。"},
+            {"text": "找不到", "is_correct": False,
+             "explanation": "此選項錯誤。最終找到了——在燈火闌珊處。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B71-Q12  p12  淺  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "內容理解",
+        "stem": "《念奴嬌》最後兩句「人間如夢，一尊還酹江月」表達了甚麼態度？",
+        "options": [
+            {"text": "豁達超脫——蘇軾感悟人生如夢，功業成敗都是虛幻的，不如向江月灑酒祭奠，寄情自然，隨緣自適", "is_correct": True,
+             "explanation": "此選項正確。表達豁達超脫的態度。"},
+            {"text": "悲觀絕望", "is_correct": False,
+             "explanation": "此選項錯誤。雖有感慨但最終是豁達的。"},
+            {"text": "憤怒不平", "is_correct": False,
+             "explanation": "此選項錯誤。最後是自我寬解。"},
+            {"text": "興奮激動", "is_correct": False,
+             "explanation": "此選項錯誤。是感慨後的豁達。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B71-Q13  p12  淺  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "內容理解",
+        "stem": "《聲聲慢》中「梧桐更兼細雨，到黃昏、點點滴滴」營造了甚麼氣氛？",
+        "options": [
+            {"text": "孤冷淒涼的氣氛——雨打梧桐的聲音在黃昏時分點滴不斷，在寂靜中更顯淒涼，加深了孤寂和愁苦的感受", "is_correct": True,
+             "explanation": "此選項正確。營造孤冷淒涼的氣氛。"},
+            {"text": "浪漫的氣氛", "is_correct": False,
+             "explanation": "此選項錯誤。是淒涼的氣氛。"},
+            {"text": "歡快的氣氛", "is_correct": False,
+             "explanation": "此選項錯誤。雨打梧桐營造的是淒涼氣氛。"},
+            {"text": "恐怖的氣氛", "is_correct": False,
+             "explanation": "此選項錯誤。是淒涼孤寂，不是恐怖。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B71-Q14  p12  中  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "內容理解",
+        "stem": "《念奴嬌》中「江山如畫，一時多少豪傑」在結構上有甚麼作用？",
+        "options": [
+            {"text": "承上啟下——「江山如畫」總結上文描寫的赤壁壯麗景色；「一時多少豪傑」引出下片對周瑜的懷想和感慨，連接了寫景和詠懷兩部分", "is_correct": True,
+             "explanation": "此選項正確。承上啟下，連接景與情。"},
+            {"text": "只是感嘆", "is_correct": False,
+             "explanation": "此選項錯誤。有明確的結構功能。"},
+            {"text": "總結全詞", "is_correct": False,
+             "explanation": "此選項錯誤。不是總結，而是過渡。"},
+            {"text": "開頭引起", "is_correct": False,
+             "explanation": "此選項錯誤。是上片末句，起承上啟下作用。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B71-Q15  p12  中  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "內容理解",
+        "stem": "《念奴嬌》中蘇軾寫周瑜「小喬初嫁了」有甚麼用意？",
+        "options": [
+            {"text": "以美人襯托英雄——寫小喬（國色天香的美女）嫁給周瑜，突顯周瑜英雄配美人的風采。同時暗示周瑜年紀輕輕就已名利雙收，反襯蘇軾自己的失意", "is_correct": True,
+             "explanation": "此選項正確。以美人襯托英雄，反襯自己。"},
+            {"text": "只是敘述婚姻", "is_correct": False,
+             "explanation": "此選項錯誤。有襯托和反襯的深層用意。"},
+            {"text": "批評周瑜重色輕友", "is_correct": False,
+             "explanation": "此選項錯誤。是讚美周瑜英雄美人。"},
+            {"text": "介紹小喬的故事", "is_correct": False,
+             "explanation": "此選項錯誤。重點不在小喬，而是襯托周瑜。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B71-Q16  p12  中  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "內容理解",
+        "stem": "《聲聲慢》開頭七組疊字「尋尋覓覓，冷冷清清，悽悽慘慘戚戚」有甚麼情感層次？",
+        "options": [
+            {"text": "情感逐層加深——「尋尋覓覓」寫若有所失的空虛落寞；「冷冷清清」寫尋覓無着的徹骨清冷；「悽悽慘慘戚戚」寫孤冷中轉為深沉的悲痛。三組疊字由外在動作到內心感受，由弱到強", "is_correct": True,
+             "explanation": "此選項正確。從失落→清冷→悲痛，層層遞進。"},
+            {"text": "三組意思完全一樣", "is_correct": False,
+             "explanation": "此選項錯誤。三組有不同的情感層次。"},
+            {"text": "只是為了好聽", "is_correct": False,
+             "explanation": "此選項錯誤。有豐富的情感層次。"},
+            {"text": "表達開心", "is_correct": False,
+             "explanation": "此選項錯誤。表達的是愁苦悲痛。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B71-Q17  p12  中  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "內容理解",
+        "stem": "《聲聲慢》末句「這次第，怎一箇愁字了得」有甚麼作用？",
+        "options": [
+            {"text": "總結全詞的愁情——用反問語氣指出前述種種淒涼景象中蘊含的愁思，不是一個「愁」字能概括得了的。全詞雖處處隱含愁緒，但到末句才點出「愁」字，有首尾呼應之效，使愁思更為深刻", "is_correct": True,
+             "explanation": "此選項正確。總結全詞，以反問加深愁情。"},
+            {"text": "只是簡單的感歎", "is_correct": False,
+             "explanation": "此選項錯誤。有總結和深化的作用。"},
+            {"text": "表示不再愁了", "is_correct": False,
+             "explanation": "此選項錯誤。是說愁太深，一個字概括不了。"},
+            {"text": "與前文無關", "is_correct": False,
+             "explanation": "此選項錯誤。是總結前文所有愁景。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B71-Q18  p12  中  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "內容理解",
+        "stem": "《青玉案》中「蛾兒雪柳黃金縷，笑語盈盈暗香去」在結構上有甚麼作用？",
+        "options": [
+            {"text": "由寫景過渡至寫人抒情——此句寫盛裝婦女的賞燈活動，從上片的元宵景色描寫過渡至下片尋找「那人」的敘事，起承上啟下的作用", "is_correct": True,
+             "explanation": "此選項正確。過渡句，連接寫景和抒情。"},
+            {"text": "只是描寫婦女", "is_correct": False,
+             "explanation": "此選項錯誤。還有結構上的過渡作用。"},
+            {"text": "總結全詞", "is_correct": False,
+             "explanation": "此選項錯誤。不是總結，而是過渡。"},
+            {"text": "與主題無關", "is_correct": False,
+             "explanation": "此選項錯誤。有重要的結構功能。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B71-Q19  p12  中  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "內容理解",
+        "stem": "《青玉案》中，盛裝打扮的婦女與「那人」有甚麼對比？",
+        "options": [
+            {"text": "婦女爭妍鬥麗、穿插在熱鬧人群中湊熱鬧，而「那人」獨自站在燈火稀疏的地方。一個追求繁華熱鬧，一個不慕繁華、自甘寂寞——兩者的差異襯托出「那人」的孤高脫俗", "is_correct": True,
+             "explanation": "此選項正確。以婦女的熱鬧反襯「那人」的孤高。"},
+            {"text": "沒有對比", "is_correct": False,
+             "explanation": "此選項錯誤。兩者構成鮮明對比。"},
+            {"text": "「那人」比婦女更華麗", "is_correct": False,
+             "explanation": "此選項錯誤。「那人」在燈火闌珊處，不慕繁華。"},
+            {"text": "婦女不如「那人」聰明", "is_correct": False,
+             "explanation": "此選項錯誤。對比的是態度和品格。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B71-Q20  p12  中  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "內容理解",
+        "stem": "《念奴嬌》上片「大江東去」和末句「一尊還酹江月」都提到了江水和月亮，這有甚麼呼應？",
+        "options": [
+            {"text": "首尾呼應——開頭寫大江東去象徵時間流逝、英雄消逝；結尾以酒酹江月表達寄情自然的豁達。江水和明月是永恆不變的，與短暫虛幻的人生形成對比，前後貫穿了永恆vs.短暫的主題", "is_correct": True,
+             "explanation": "此選項正確。首尾呼應，貫穿永恆vs.短暫的主題。"},
+            {"text": "只是巧合", "is_correct": False,
+             "explanation": "此選項錯誤。是精心安排的結構呼應。"},
+            {"text": "沒有關係", "is_correct": False,
+             "explanation": "此選項錯誤。兩者在結構和主題上都有呼應。"},
+            {"text": "只是寫景", "is_correct": False,
+             "explanation": "此選項錯誤。還有深層的主題呼應。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B71-Q21  p12  中  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "內容理解",
+        "stem": "《聲聲慢》描寫了從甚麼時間到甚麼時間的景況？",
+        "options": [
+            {"text": "從白天到黃昏——先寫白天的天氣（乍暖還寒）、淡酒抵不住風寒、雁過傷心；再寫黃花堆積、獨守窗前；最後寫黃昏細雨打梧桐，描寫秋日一整天的景況", "is_correct": True,
+             "explanation": "此選項正確。從日間到黃昏的景況。"},
+            {"text": "只寫了清晨", "is_correct": False,
+             "explanation": "此選項錯誤。從日間一直寫到黃昏。"},
+            {"text": "只寫了晚上", "is_correct": False,
+             "explanation": "此選項錯誤。涵蓋了整天到黃昏。"},
+            {"text": "從春天到冬天", "is_correct": False,
+             "explanation": "此選項錯誤。寫的是秋日一天之內的景況。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B71-Q22  p12  中  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "內容理解",
+        "stem": "《聲聲慢》中大雁勾起了李清照哪些愁緒？",
+        "options": [
+            {"text": "兩方面愁緒：①故國之思——北雁南飛與自己流落南方的處境相似，勾起對故國和北方故土的思念；②喪夫之痛——鴻雁傳書，但丈夫已故，再也收不到書信，睹物思人，追憶往日美好時光", "is_correct": True,
+             "explanation": "此選項正確。觸發故國之思和喪夫之痛。"},
+            {"text": "想吃雁肉", "is_correct": False,
+             "explanation": "此選項錯誤。觸發的是深層的愁緒。"},
+            {"text": "只是害怕鳥", "is_correct": False,
+             "explanation": "此選項錯誤。觸發的是故國之思和喪夫之痛。"},
+            {"text": "羨慕大雁能飛", "is_correct": False,
+             "explanation": "此選項錯誤。主要是勾起故國之思和喪夫之痛。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B71-Q23  p12  中  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "內容理解",
+        "stem": "《青玉案》中作者描寫元宵繁華盛況的目的是甚麼？",
+        "options": [
+            {"text": "以繁華反襯「那人」的孤高——上片極力渲染元宵夜的繁華熱鬧，揭示南宋朝廷偏安享樂的景象，為下片「那人」不慕繁華、身處燈火闌珊處的孤高形象提供鮮明對比", "is_correct": True,
+             "explanation": "此選項正確。以繁華反襯孤高。"},
+            {"text": "純粹欣賞美景", "is_correct": False,
+             "explanation": "此選項錯誤。寫景有反襯和諷喻的目的。"},
+            {"text": "炫耀節日排場", "is_correct": False,
+             "explanation": "此選項錯誤。繁華描寫是為了反襯。"},
+            {"text": "記錄歷史", "is_correct": False,
+             "explanation": "此選項錯誤。有更深的藝術目的。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B71-Q24  p12  深  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "內容理解",
+        "stem": "《念奴嬌》中下片有兩處提到「笑」——「談笑間」和「多情應笑我」，兩者有甚麼不同？",
+        "options": [
+            {"text": "意義不同：①「談笑間」的笑是談笑風生——表現周瑜指揮作戰時從容閒雅的神采，輕鬆自若地擊敗曹軍；②「應笑我」的笑是自嘲——蘇軾自覺多愁善感，追懷古人的功業卻自己華髮早生、功業未就，覺得自己可笑。一者表現從容自信，一者表現自嘲感慨", "is_correct": True,
+             "explanation": "此選項正確。前者是從容自信，後者是自嘲。"},
+            {"text": "兩個笑意思相同", "is_correct": False,
+             "explanation": "此選項錯誤。兩者的情感含義截然不同。"},
+            {"text": "都是快樂的笑", "is_correct": False,
+             "explanation": "此選項錯誤。第二個「笑」帶有自嘲意味。"},
+            {"text": "都是嘲笑別人", "is_correct": False,
+             "explanation": "此選項錯誤。第二個是嘲笑自己。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B71-Q25  p12  深  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "內容理解",
+        "stem": "《聲聲慢》如何運用「酒」的意象表達情感？",
+        "options": [
+            {"text": "「三杯兩盞淡酒，怎敵他晚來風急」——酒本能暖身消愁，但此處酒是「淡」的，無法抵禦急風的寒冷。表面是酒味太淡不能禦寒，深層是：①愁太深，以致覺得酒淡，喝多少也消不了愁；②內心的淒寒遠超身體的寒冷，非酒所能治。暗示借酒消愁愁更愁", "is_correct": True,
+             "explanation": "此選項正確。淡酒不敵急風，暗示愁不可消。"},
+            {"text": "只是喝酒取暖", "is_correct": False,
+             "explanation": "此選項錯誤。還有深層的情感含義。"},
+            {"text": "表示喜歡喝酒", "is_correct": False,
+             "explanation": "此選項錯誤。酒是表達愁苦的載體。"},
+            {"text": "表示酒的品質差", "is_correct": False,
+             "explanation": "此選項錯誤。「淡」有深層含義。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B71-Q26  p12  深  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "內容理解",
+        "stem": "《青玉案》中「那人」有哪些不同的解讀？",
+        "options": [
+            {"text": "多元解讀：①理想人格的象徵——「那人」不慕繁華、自甘寂寞，象徵作者追求的高潔品格；②政治寓意——身處「燈火闌珊處」暗示不與主和派同流合污，諷喻南宋朝廷偏安享樂；③感情追求——表達對某種精神境界或人生理想的追尋；④梁啟超說「自憐幽獨，傷心人別有懷抱」。後世讀者的多元解讀正體現「作者未必然，讀者何必不然」", "is_correct": True,
+             "explanation": "此選項正確。「那人」有多元解讀的可能。"},
+            {"text": "只是找一個女人", "is_correct": False,
+             "explanation": "此選項錯誤。有更深的象徵意義。"},
+            {"text": "沒有特別含義", "is_correct": False,
+             "explanation": "此選項錯誤。歷來有豐富的解讀。"},
+            {"text": "指作者自己", "is_correct": False,
+             "explanation": "此選項不夠全面。有多種解讀可能。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B71-Q27  p12  深  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "內容理解",
+        "stem": "《念奴嬌》中寫景的部分如何為下片的抒情做鋪墊？",
+        "options": [
+            {"text": "上片寫赤壁雄偉奇險之景（大江東去、亂石穿空、驚濤拍岸），這些景物歷久長存，與下片人事的短暫虛幻形成對比。壯麗的江山曾孕育無數豪傑，但他們都被浪淘盡；周瑜的功業也終歸煙滅。景之永恆反襯人之短暫，為「人間如夢」的感慨做了充分鋪墊", "is_correct": True,
+             "explanation": "此選項正確。景之永恆反襯人之短暫。"},
+            {"text": "寫景和抒情無關", "is_correct": False,
+             "explanation": "此選項錯誤。景為情做了充分鋪墊。"},
+            {"text": "只是為了好看", "is_correct": False,
+             "explanation": "此選項錯誤。寫景有深層的鋪墊作用。"},
+            {"text": "上片太長了", "is_correct": False,
+             "explanation": "此選項錯誤。上片的寫景對全詞很重要。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B71-Q28  p12  深  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "內容理解",
+        "stem": "《聲聲慢》中「守着窗兒，獨自怎生得黑」表達了甚麼心理？",
+        "options": [
+            {"text": "度日如年的煎熬——獨自守着寒窗，盼望天黑（一天結束），但時間在孤獨中過得特別慢。表達了：①孤苦無依——「獨自」點明處境；②時間煎熬——漫長的白天難以打發；③矛盾心理——白天痛苦，但等到黃昏又有梧桐細雨添愁，日夜都無法解脫", "is_correct": True,
+             "explanation": "此選項正確。度日如年，日夜都是煎熬。"},
+            {"text": "喜歡黑夜", "is_correct": False,
+             "explanation": "此選項錯誤。是盼望結束煎熬，不是喜歡黑夜。"},
+            {"text": "怕黑", "is_correct": False,
+             "explanation": "此選項錯誤。是在孤獨中度日如年。"},
+            {"text": "想睡覺", "is_correct": False,
+             "explanation": "此選項錯誤。表達的是孤苦中時間的煎熬。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B71-Q29  p12  最深  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最深",
+        "skill": "內容理解",
+        "stem": "三首詞分別以甚麼方式處理「個人與外在世界的關係」？試比較三者的不同。",
+        "options": [
+            {"text": "三者處理方式不同：①蘇軾——面對歷史的宏大和個人的渺小，選擇超脫豁達，以「人間如夢」自我寬解，寄情江月，接受命運；②李清照——面對孤苦的現實，無法超脫，沉浸在愁苦中，以密集的意象（酒、雁、花、雨）層層渲染，坦率表達痛苦；③辛棄疾——面對世俗的繁華，選擇疏離和堅守，在燈火闌珊處尋找理想人格。一者超脫，一者沉溺，一者堅守", "is_correct": True,
+             "explanation": "此選項正確。超脫、沉溺、堅守三種不同態度。"},
+            {"text": "三者完全相同", "is_correct": False,
+             "explanation": "此選項錯誤。三者處理方式截然不同。"},
+            {"text": "都是悲觀的", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾豁達，辛棄疾堅守。"},
+            {"text": "無法比較", "is_correct": False,
+             "explanation": "此選項錯誤。三者可以從態度上進行比較。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B71-Q30  p12  最深  內容理解  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最深",
+        "skill": "內容理解",
+        "stem": "三首詞結尾的處理手法有甚麼不同？各自達到了甚麼效果？",
+        "options": [
+            {"text": "各不相同：①《念奴嬌》以「人間如夢，一尊還酹江月」作結——由感慨轉向超脫，灑酒祭月，豁達開闊；②《聲聲慢》以「怎一箇愁字了得」作結——以反問結束，愁無止境，餘音裊裊，令人無限惆悵；③《青玉案》以「那人卻在、燈火闌珊處」作結——以發現作結，突然轉折帶來驚喜又歸於孤清，留下無限遐想。三者分別是超脫式、沉痛式、發現式結尾", "is_correct": True,
+             "explanation": "此選項正確。超脫式、沉痛式、發現式三種不同結尾。"},
+            {"text": "三首結尾差不多", "is_correct": False,
+             "explanation": "此選項錯誤。三首結尾手法和效果各異。"},
+            {"text": "都是開放式結尾", "is_correct": False,
+             "explanation": "此選項錯誤。各有不同類型的結尾。"},
+            {"text": "只有第三首好", "is_correct": False,
+             "explanation": "此選項錯誤。三首各有精妙之處。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # =====================================================================
+    # Batch 72 – p12 × 主旨歸納 × 30 questions
+    # Passage: 宋詞三首（蘇軾〈念奴嬌·赤壁懷古〉、李清照〈聲聲慢·秋情〉、
+    #          辛棄疾〈青玉案·元夕〉）
+    # Skill: t-theme
+    # Difficulty distribution: 最淺5, 淺8, 中10, 深5, 最深2
+    # =====================================================================
+
+    # ── B72-Q01  p12  最淺  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "主旨歸納",
+        "stem": "《念奴嬌·赤壁懷古》的主題是甚麼？",
+        "options": [
+            {"text": "懷古傷今——蘇軾借赤壁的壯麗景色和周瑜的英雄事跡，抒發自己年華老去、功業未成的感慨，最終以「人間如夢」自我寬解", "is_correct": True,
+             "explanation": "此選項正確。懷古傷今，自我寬解。"},
+            {"text": "歌頌戰爭", "is_correct": False,
+             "explanation": "此選項錯誤。不是歌頌戰爭，而是懷古傷今。"},
+            {"text": "描寫風景", "is_correct": False,
+             "explanation": "此選項錯誤。風景只是載體，主題是懷古傷今。"},
+            {"text": "讚美周瑜", "is_correct": False,
+             "explanation": "此選項錯誤。讚美周瑜是為了反襯自己。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B72-Q02  p12  最淺  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "主旨歸納",
+        "stem": "《聲聲慢·秋情》的主題是甚麼？",
+        "options": [
+            {"text": "表達無法排遣的深切愁苦——李清照描寫深秋蕭索的景象，抒發國破家亡、喪夫之痛和孀居孤苦的情緒", "is_correct": True,
+             "explanation": "此選項正確。表達無法排遣的愁苦。"},
+            {"text": "欣賞秋天美景", "is_correct": False,
+             "explanation": "此選項錯誤。秋景是為了渲染愁情。"},
+            {"text": "寫天氣變化", "is_correct": False,
+             "explanation": "此選項錯誤。天氣描寫是為了襯托心情。"},
+            {"text": "歌頌愛情", "is_correct": False,
+             "explanation": "此選項錯誤。主題是愁苦，不是歌頌。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B72-Q03  p12  最淺  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "主旨歸納",
+        "stem": "《青玉案·元夕》的主題是甚麼？",
+        "options": [
+            {"text": "表達自甘寂寞、不隨波逐流的高尚情操——辛棄疾借描寫元宵繁華和尋找「那人」，暗示自己不慕繁華、淡泊孤高的品格", "is_correct": True,
+             "explanation": "此選項正確。表達孤高自持的情懷。"},
+            {"text": "純粹描寫節日", "is_correct": False,
+             "explanation": "此選項錯誤。節日描寫有更深的寓意。"},
+            {"text": "寫愛情故事", "is_correct": False,
+             "explanation": "此選項錯誤。有更深的象徵寓意。"},
+            {"text": "歌頌南宋繁華", "is_correct": False,
+             "explanation": "此選項錯誤。繁華描寫帶有諷喻意味。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B72-Q04  p12  最淺  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "主旨歸納",
+        "stem": "三首詞的共同點是甚麼？",
+        "options": [
+            {"text": "都是通過描寫外在景象來抒發內心情感——蘇軾借赤壁景色抒懷古之情，李清照借秋景抒愁苦，辛棄疾借元宵盛況寄託心志", "is_correct": True,
+             "explanation": "此選項正確。三者都是借景（事）抒情。"},
+            {"text": "都是寫愛情", "is_correct": False,
+             "explanation": "此選項錯誤。三首詞的內容各不相同。"},
+            {"text": "都是快樂的", "is_correct": False,
+             "explanation": "此選項錯誤。三首詞都有深層的感慨。"},
+            {"text": "都是描寫戰爭", "is_correct": False,
+             "explanation": "此選項錯誤。只有《念奴嬌》涉及戰爭。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B72-Q05  p12  最淺  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "主旨歸納",
+        "stem": "《念奴嬌》中「人間如夢」一語概括了蘇軾甚麼人生態度？",
+        "options": [
+            {"text": "豁達超脫——蘇軾感悟人生短暫如夢，功業成敗都是虛幻的，因此不必過分執著，選擇寄情自然、隨緣自適", "is_correct": True,
+             "explanation": "此選項正確。「人間如夢」體現豁達超脫。"},
+            {"text": "消極逃避", "is_correct": False,
+             "explanation": "此選項錯誤。是豁達超脫，不是消極逃避。"},
+            {"text": "對人生毫無感覺", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾有深切感慨，最終選擇超脫。"},
+            {"text": "不關心任何事", "is_correct": False,
+             "explanation": "此選項錯誤。是經歷感慨後的超脫態度。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B72-Q06  p12  淺  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "主旨歸納",
+        "stem": "《念奴嬌》表達了蘇軾對自己甚麼處境的感慨？",
+        "options": [
+            {"text": "被貶黃州、功業未成的失意——蘇軾因「烏台詩案」被貶黃州，年華漸老卻一事無成，借懷念周瑜年少有為反襯自己的失意", "is_correct": True,
+             "explanation": "此選項正確。感慨被貶和功業未成。"},
+            {"text": "對家庭的不滿", "is_correct": False,
+             "explanation": "此選項錯誤。感慨的是仕途和功業。"},
+            {"text": "對錢財的渴望", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾感慨的是功業未成。"},
+            {"text": "旅途疲勞", "is_correct": False,
+             "explanation": "此選項錯誤。是對人生處境的深層感慨。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B72-Q07  p12  淺  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "主旨歸納",
+        "stem": "《聲聲慢》中李清照的愁苦包含哪些層面？",
+        "options": [
+            {"text": "三個層面：①國破之恨——北宋滅亡，故土淪陷，流落南方；②喪夫之哀——丈夫趙明誠去世，失去精神依靠；③孀居之苦——晚年孤苦無依，飽嘗顛沛流離之苦", "is_correct": True,
+             "explanation": "此選項正確。國破、喪夫、孀居三重愁苦。"},
+            {"text": "只是天氣不好", "is_correct": False,
+             "explanation": "此選項錯誤。愁苦有深層的人生原因。"},
+            {"text": "只是想念丈夫", "is_correct": False,
+             "explanation": "此選項不夠全面。還有國破和孀居之苦。"},
+            {"text": "只是身體不適", "is_correct": False,
+             "explanation": "此選項錯誤。是精神上的深層愁苦。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B72-Q08  p12  淺  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "主旨歸納",
+        "stem": "《青玉案》中辛棄疾借「那人」表達了甚麼情懷？",
+        "options": [
+            {"text": "不甘流俗、淡泊孤高——「那人」不慕繁華，獨處燈火闌珊處，象徵辛棄疾不願與主和派同流合污、自甘淡泊的高潔品格", "is_correct": True,
+             "explanation": "此選項正確。表達不甘流俗的情懷。"},
+            {"text": "找女朋友", "is_correct": False,
+             "explanation": "此選項錯誤。「那人」有象徵意義。"},
+            {"text": "喜歡熱鬧", "is_correct": False,
+             "explanation": "此選項錯誤。恰恰相反——不慕繁華。"},
+            {"text": "無聊打發時間", "is_correct": False,
+             "explanation": "此選項錯誤。有深層的政治寄託。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B72-Q09  p12  淺  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "主旨歸納",
+        "stem": "《念奴嬌》中蘇軾感慨「千古風流人物」被「浪淘盡」，這表達了甚麼道理？",
+        "options": [
+            {"text": "時間無情，功業虛幻——即使是歷史上最傑出的英雄人物，也會隨時間流逝而消逝。人生短暫，功業再大也終歸虛無", "is_correct": True,
+             "explanation": "此選項正確。感嘆時間無情、人生短暫。"},
+            {"text": "英雄都被殺了", "is_correct": False,
+             "explanation": "此選項錯誤。「淘盡」是隨時間消逝。"},
+            {"text": "只有壞人被淘汰", "is_correct": False,
+             "explanation": "此選項錯誤。是所有人物都被時間淘洗。"},
+            {"text": "沒有英雄", "is_correct": False,
+             "explanation": "此選項錯誤。有英雄，但都隨時間消逝了。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B72-Q10  p12  淺  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "主旨歸納",
+        "stem": "《聲聲慢》的愁苦是可以解脫的嗎？從甚麼地方看出來？",
+        "options": [
+            {"text": "不可解脫——從多處看出：①淡酒無法消愁（「怎敵他晚來風急」）；②白天度日如年（「獨自怎生得黑」）；③黃昏有雨打梧桐添愁；④末句「怎一箇愁字了得」直言愁苦無法概括。全天候、全方位的愁苦無從解脫", "is_correct": True,
+             "explanation": "此選項正確。愁苦無處不在，無法解脫。"},
+            {"text": "可以解脫", "is_correct": False,
+             "explanation": "此選項錯誤。全詞表明愁苦無法解脫。"},
+            {"text": "喝酒就好了", "is_correct": False,
+             "explanation": "此選項錯誤。淡酒也無法消愁。"},
+            {"text": "睡覺就好了", "is_correct": False,
+             "explanation": "此選項錯誤。度日如年，無法安眠。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B72-Q11  p12  淺  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "主旨歸納",
+        "stem": "《青玉案》上片的繁華描寫暗含了甚麼批評？",
+        "options": [
+            {"text": "暗含對南宋偏安享樂的批評——元宵盛況暗示南宋朝廷偏安江左，貪圖享樂，醉生夢死，不思收復失地。繁華的表面下是國家的危機", "is_correct": True,
+             "explanation": "此選項正確。暗批南宋偏安享樂。"},
+            {"text": "沒有批評", "is_correct": False,
+             "explanation": "此選項錯誤。繁華描寫帶有諷喻意味。"},
+            {"text": "讚美南宋經濟", "is_correct": False,
+             "explanation": "此選項錯誤。是批評而非讚美。"},
+            {"text": "批評普通百姓", "is_correct": False,
+             "explanation": "此選項錯誤。批評的是朝廷的偏安態度。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B72-Q12  p12  淺  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "主旨歸納",
+        "stem": "《念奴嬌》全詞的情感發展是怎樣的？",
+        "options": [
+            {"text": "從壯闊到感慨再到超脫——上片寫壯闘的赤壁景色，引發對英雄的懷想；下片由周瑜的風采反襯自己的失意，產生深沉感慨；最終以「人間如夢」自我寬解，歸於超脫", "is_correct": True,
+             "explanation": "此選項正確。壯闊→感慨→超脫。"},
+            {"text": "從悲傷到快樂", "is_correct": False,
+             "explanation": "此選項錯誤。情感發展更為複雜。"},
+            {"text": "一直很快樂", "is_correct": False,
+             "explanation": "此選項錯誤。有深沉的感慨。"},
+            {"text": "一直很悲傷", "is_correct": False,
+             "explanation": "此選項錯誤。最終歸於超脫。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B72-Q13  p12  淺  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "主旨歸納",
+        "stem": "《聲聲慢》全詞的情感基調是甚麼？",
+        "options": [
+            {"text": "沉鬱悲苦——從開頭「尋尋覓覓」的空虛失落，到末尾「怎一箇愁字了得」的深沉哀歎，全詞始終籠罩在濃重的愁苦中，沒有任何轉折或寬解", "is_correct": True,
+             "explanation": "此選項正確。始終是沉鬱悲苦的基調。"},
+            {"text": "先苦後樂", "is_correct": False,
+             "explanation": "此選項錯誤。全詞都是沉鬱的。"},
+            {"text": "輕鬆幽默", "is_correct": False,
+             "explanation": "此選項錯誤。基調是悲苦的。"},
+            {"text": "昂揚奮發", "is_correct": False,
+             "explanation": "此選項錯誤。是沉鬱悲苦的。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B72-Q14  p12  中  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "主旨歸納",
+        "stem": "《念奴嬌》中蘇軾以周瑜和自己的對比來表達主旨，這種手法有甚麼效果？",
+        "options": [
+            {"text": "以反襯加深感慨——周瑜年少有為（娶美人、建功業、風度翩翩），蘇軾卻年華老去（早生華髮）、被貶黃州（功業未成）。兩者的巨大反差使蘇軾的失意感慨更加深沉有力，也讓「人間如夢」的感悟更有說服力", "is_correct": True,
+             "explanation": "此選項正確。反襯使感慨更深沉。"},
+            {"text": "只是介紹周瑜", "is_correct": False,
+             "explanation": "此選項錯誤。對比有加深主旨的效果。"},
+            {"text": "顯示蘇軾嫉妒", "is_correct": False,
+             "explanation": "此選項錯誤。是仰慕和自我反省。"},
+            {"text": "與主旨無關", "is_correct": False,
+             "explanation": "此選項錯誤。對比直接服務於主旨。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B72-Q15  p12  中  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "主旨歸納",
+        "stem": "《聲聲慢》的秋景描寫與主旨有甚麼關係？",
+        "options": [
+            {"text": "借景抒情，景即是情——每一個秋景意象都對應一種愁緒：①急風→內心淒寒；②南雁→故國之思；③黃花→年華老去；④梧桐細雨→孤寂綿綿。秋天的蕭瑟與作者的愁苦完美融合，景越蕭索，情越深切", "is_correct": True,
+             "explanation": "此選項正確。景與情完美融合。"},
+            {"text": "景與情無關", "is_correct": False,
+             "explanation": "此選項錯誤。每個景都對應愁緒。"},
+            {"text": "純粹寫景", "is_correct": False,
+             "explanation": "此選項錯誤。景是為了抒情。"},
+            {"text": "景色很美", "is_correct": False,
+             "explanation": "此選項錯誤。景色是蕭索的，服務於愁情。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B72-Q16  p12  中  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "主旨歸納",
+        "stem": "《青玉案》中「那人」在燈火闌珊處的位置有甚麼象徵意義？",
+        "options": [
+            {"text": "象徵不隨波逐流的品格——繁華熱鬧的人群代表世俗（追名逐利、偏安享樂），燈火闌珊處代表遠離世俗的角落。「那人」選擇站在闌珊處，象徵作者不願隨波逐流、自甘淡泊的高潔品格", "is_correct": True,
+             "explanation": "此選項正確。位置象徵不隨波逐流。"},
+            {"text": "只是碰巧在那裏", "is_correct": False,
+             "explanation": "此選項錯誤。有深層的象徵意義。"},
+            {"text": "因為燈火太亮不舒服", "is_correct": False,
+             "explanation": "此選項錯誤。位置有品格象徵。"},
+            {"text": "找不到更好的位置", "is_correct": False,
+             "explanation": "此選項錯誤。是主動選擇的位置。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B72-Q17  p12  中  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "主旨歸納",
+        "stem": "三首詞分別屬於甚麼詞派？詞派風格如何體現主旨？",
+        "options": [
+            {"text": "①《念奴嬌》——豪放派：意境雄渾壯闘，寫大江赤壁，懷古英雄，感慨宏大深沉；②《聲聲慢》——婉約派：語言細膩含蓄，以疊字和意象層層渲染愁苦，感情婉轉深摯；③《青玉案》——辛棄疾雖是豪放派代表，此詞兼有婉約的含蓄和豪放的寄託。詞派風格配合了各自主旨的表達", "is_correct": True,
+             "explanation": "此選項正確。豪放、婉約各配合主旨。"},
+            {"text": "三首都是豪放派", "is_correct": False,
+             "explanation": "此選項錯誤。《聲聲慢》是婉約派。"},
+            {"text": "三首都是婉約派", "is_correct": False,
+             "explanation": "此選項錯誤。《念奴嬌》是豪放派。"},
+            {"text": "詞派不重要", "is_correct": False,
+             "explanation": "此選項錯誤。詞派風格與主旨表達密切相關。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B72-Q18  p12  中  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "主旨歸納",
+        "stem": "《念奴嬌》中「江月」和「大江」分別代表甚麼？如何配合主旨？",
+        "options": [
+            {"text": "象徵永恆——大江和明月是自然界永恆不變的存在，與「千古風流人物」和「人間如夢」形成對比。人生短暫虛幻，但自然永恆長存。蘇軾最終選擇向江月灑酒，表示放下功業執著，寄情永恆的自然，體現了「人間如夢」的超脫主旨", "is_correct": True,
+             "explanation": "此選項正確。江月象徵永恆，配合超脫主旨。"},
+            {"text": "只是景物", "is_correct": False,
+             "explanation": "此選項錯誤。有深層的象徵意義。"},
+            {"text": "代表悲傷", "is_correct": False,
+             "explanation": "此選項錯誤。代表永恆和超脫。"},
+            {"text": "與主旨無關", "is_correct": False,
+             "explanation": "此選項錯誤。直接服務於主旨。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B72-Q19  p12  中  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "主旨歸納",
+        "stem": "《聲聲慢》全詞不直接提「愁」字，直到末句才出現，這有甚麼效果？",
+        "options": [
+            {"text": "欲擒故縱，愁更深切——全詞通過意象和景物渲染愁情（風、雁、花、雨），處處是愁卻不說「愁」，層層累積。到末句才說「怎一箇愁字了得」，一方面點破前文所有愁緒，另一方面表明愁已超越語言能表達的極限。這種先蓄後發的效果使愁情更加深刻", "is_correct": True,
+             "explanation": "此選項正確。先蓄後發，愁更深刻。"},
+            {"text": "忘記寫了", "is_correct": False,
+             "explanation": "此選項錯誤。是精心安排的藝術效果。"},
+            {"text": "其實不愁", "is_correct": False,
+             "explanation": "此選項錯誤。全詞處處是愁。"},
+            {"text": "沒有效果", "is_correct": False,
+             "explanation": "此選項錯誤。有先蓄後發的效果。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B72-Q20  p12  中  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "主旨歸納",
+        "stem": "《青玉案》中「眾裏尋他千百度」暗示了甚麼？",
+        "options": [
+            {"text": "對理想的執著追尋——在茫茫人海（世俗社會）中反覆尋找自己認同的理想人格或精神寄託，尋找「千百度」而不放棄，表現了辛棄疾對理想的堅定追求。最終在燈火闌珊處找到，暗示理想不在繁華喧鬧中，而在孤寂淡泊之處", "is_correct": True,
+             "explanation": "此選項正確。暗示對理想的執著追尋。"},
+            {"text": "找路", "is_correct": False,
+             "explanation": "此選項錯誤。有深層的象徵意義。"},
+            {"text": "找東西", "is_correct": False,
+             "explanation": "此選項錯誤。「尋他」有理想追求的寓意。"},
+            {"text": "只是閒逛", "is_correct": False,
+             "explanation": "此選項錯誤。「千百度」表現執著追尋。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B72-Q21  p12  中  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "主旨歸納",
+        "stem": "《念奴嬌》中永恆的自然與短暫的人生構成對比，這個對比帶出了甚麼主旨？",
+        "options": [
+            {"text": "感悟人生應超然物外——大江和明月永恆不變，但千古英雄和個人功業都會隨時間消逝。這個對比讓蘇軾悟出：既然「人間如夢」，就不必過分執著於個人的成敗得失，應該以寬廣的胸懷看待人生", "is_correct": True,
+             "explanation": "此選項正確。對比帶出超然物外的感悟。"},
+            {"text": "人要活得久一點", "is_correct": False,
+             "explanation": "此選項錯誤。主旨是超然物外。"},
+            {"text": "自然不重要", "is_correct": False,
+             "explanation": "此選項錯誤。自然的永恆啟發了人生感悟。"},
+            {"text": "沒有道理", "is_correct": False,
+             "explanation": "此選項錯誤。蘊含深刻的人生哲理。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B72-Q22  p12  中  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "主旨歸納",
+        "stem": "《聲聲慢》中個人命運與國家命運如何交織？",
+        "options": [
+            {"text": "個人與國家的苦難交織——李清照的愁苦既有個人層面（喪夫、孀居、年華老去），也有國家層面（北宋滅亡、流落南方、故土淪陷）。南飛的大雁同時觸發對故國和亡夫的思念，顯示個人命運與國家興亡不可分割", "is_correct": True,
+             "explanation": "此選項正確。個人和國家的苦難交織。"},
+            {"text": "只有個人層面", "is_correct": False,
+             "explanation": "此選項錯誤。還有國家層面。"},
+            {"text": "只有國家層面", "is_correct": False,
+             "explanation": "此選項錯誤。還有個人層面。"},
+            {"text": "兩者無關", "is_correct": False,
+             "explanation": "此選項錯誤。個人與國家命運交織。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B72-Q23  p12  中  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "主旨歸納",
+        "stem": "《青玉案》的情感發展是怎樣的？最後的情感基調是甚麼？",
+        "options": [
+            {"text": "由繁華到孤清——上片寫元宵的璀璨熱鬧，情緒是外向的；下片轉向尋人的焦急，經歷「千百度」的熱切尋找後，突然發現「那人」在燈火闌珊處。最後的情感基調是驚喜中帶孤清——找到了理想，但理想卻在孤寂之處", "is_correct": True,
+             "explanation": "此選項正確。繁華→焦急→驚喜帶孤清。"},
+            {"text": "一直很快樂", "is_correct": False,
+             "explanation": "此選項錯誤。有更複雜的情感發展。"},
+            {"text": "一直很孤獨", "is_correct": False,
+             "explanation": "此選項錯誤。上片是熱鬧的。"},
+            {"text": "沒有發展", "is_correct": False,
+             "explanation": "此選項錯誤。有明顯的情感變化。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B72-Q24  p12  深  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "主旨歸納",
+        "stem": "三首詞的作者面對困境時各自採取了甚麼態度？哪種態度最積極？",
+        "options": [
+            {"text": "三種態度：①蘇軾——超脫豁達：以「人間如夢」自我寬解，接受命運，寄情自然；②李清照——坦率表達：不掩飾痛苦，直面愁苦，以藝術昇華苦難；③辛棄疾——堅守理想：在繁華（世俗）中堅持尋找「那人」（理想人格），不向世俗妥協。各有可取之處：蘇軾的豁達、李清照的真誠、辛棄疾的堅守都是面對困境的積極方式", "is_correct": True,
+             "explanation": "此選項正確。三種態度各有可取之處。"},
+            {"text": "只有蘇軾是積極的", "is_correct": False,
+             "explanation": "此選項錯誤。三者各有積極之處。"},
+            {"text": "都是消極的", "is_correct": False,
+             "explanation": "此選項錯誤。三者都有各自的積極面。"},
+            {"text": "無法比較", "is_correct": False,
+             "explanation": "此選項錯誤。可以從態度上進行比較。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B72-Q25  p12  深  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "主旨歸納",
+        "stem": "《念奴嬌》的「人間如夢」是真正的超脫，還是無奈的自我安慰？",
+        "options": [
+            {"text": "兩者兼有——一方面，蘇軾確實從哲學角度感悟到人生短暫虛幻，有真正的超脫成分；另一方面，他畢竟是在被貶的困境中發出感慨，「多情應笑我，早生華髮」流露的是真切的苦悶和不甘。「人間如夢」既是哲學感悟，也是對現實無能為力的自我寬解。這種矛盾恰恰使作品更加真實動人", "is_correct": True,
+             "explanation": "此選項正確。兩者兼有，矛盾中更顯真實。"},
+            {"text": "完全超脫", "is_correct": False,
+             "explanation": "此選項過於簡單。還有苦悶和不甘的成分。"},
+            {"text": "完全是自我安慰", "is_correct": False,
+             "explanation": "此選項也過於簡單。有真正的哲學感悟。"},
+            {"text": "不需要分析", "is_correct": False,
+             "explanation": "此選項錯誤。分析這個問題有助於理解主旨。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B72-Q26  p12  深  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "主旨歸納",
+        "stem": "《聲聲慢》的主旨與李清照前期作品（如《一剪梅》）有甚麼不同？",
+        "options": [
+            {"text": "愁的性質和深度不同——前期的愁是閨中少婦甜蜜的相思之愁（「人比黃花瘦」），是暫時的分離，有盼望重逢的希望。後期的愁是國破家亡、喪夫孀居的深重苦難，是永遠無法解脫的。前期愁中有甜，後期愁到極致", "is_correct": True,
+             "explanation": "此選項正確。前期甜蜜相思 vs. 後期深重苦難。"},
+            {"text": "完全一樣", "is_correct": False,
+             "explanation": "此選項錯誤。愁的性質和深度截然不同。"},
+            {"text": "前期更悲", "is_correct": False,
+             "explanation": "此選項錯誤。後期的愁更深重。"},
+            {"text": "沒有可比性", "is_correct": False,
+             "explanation": "此選項錯誤。對比可以揭示愁情的變化。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B72-Q27  p12  深  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "主旨歸納",
+        "stem": "《青玉案》的主旨是否只是表達個人情操？還有甚麼更深層的意義？",
+        "options": [
+            {"text": "不只是個人情操，還有政治寓意——①個人層面：表達不甘流俗、孤高自持的品格；②政治層面：諷喻南宋朝廷偏安享樂（元宵繁華），暗示自己不願與主和派同流合污；③時代層面：辛棄疾主張抗金復國，但不被重用，「那人」也可理解為他在世俗中尋找志同道合者的孤獨。作品兼具個人和政治的雙重寓意", "is_correct": True,
+             "explanation": "此選項正確。兼具個人和政治雙重寓意。"},
+            {"text": "只是個人情操", "is_correct": False,
+             "explanation": "此選項錯誤。還有政治寓意。"},
+            {"text": "只是政治批評", "is_correct": False,
+             "explanation": "此選項錯誤。也有個人情操。"},
+            {"text": "沒有深層意義", "is_correct": False,
+             "explanation": "此選項錯誤。有多層次的意義。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B72-Q28  p12  深  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "主旨歸納",
+        "stem": "三首詞對「時間」這個主題有甚麼不同的處理？",
+        "options": [
+            {"text": "各有不同：①蘇軾——以宏觀的歷史時間觀看人生（「千古」「浪淘盡」），在時間長河中人生只是一夢，因此超脫；②李清照——以微觀的日常時間感受痛苦（一天從早到晚的煎熬），每一刻都是愁的放大，度日如年；③辛棄疾——以節慶之夜的短暫時間（一個元宵夜），在熱鬧瞬間捕捉永恆的理想。三者分別代表歷史時間、日常時間和瞬間時間", "is_correct": True,
+             "explanation": "此選項正確。歷史、日常、瞬間三種時間觀。"},
+            {"text": "都一樣", "is_correct": False,
+             "explanation": "此選項錯誤。三者對時間的處理截然不同。"},
+            {"text": "都不涉及時間", "is_correct": False,
+             "explanation": "此選項錯誤。三者都涉及時間主題。"},
+            {"text": "無法比較", "is_correct": False,
+             "explanation": "此選項錯誤。比較可以揭示深層差異。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B72-Q29  p12  最深  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最深",
+        "skill": "主旨歸納",
+        "stem": "三首詞的主旨在現代社會是否仍有啟發？試結合具體的現代情境說明。",
+        "options": [
+            {"text": "仍有啟發：①蘇軾的豁達——在現代高壓社會中，「人間如夢」提醒人們不要過分執著於功名利祿，學會放下和超脫；②李清照的真情——在壓抑情感的文化中，直面和表達痛苦是心理健康的重要一步；③辛棄疾的堅守——在消費主義和隨波逐流的時代，「那人」提醒我們堅守理想，不必追求表面的繁華。三首詞分別啟發了我們對成敗、情感和理想的態度", "is_correct": True,
+             "explanation": "此選項正確。三首詞各有現代啟發。"},
+            {"text": "完全過時", "is_correct": False,
+             "explanation": "此選項錯誤。核心主旨有跨時代的價值。"},
+            {"text": "只適用於古代", "is_correct": False,
+             "explanation": "此選項錯誤。可以映射到現代情境。"},
+            {"text": "無法說明", "is_correct": False,
+             "explanation": "此選項錯誤。可以結合現代情境說明。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B72-Q30  p12  最深  主旨歸納  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最深",
+        "skill": "主旨歸納",
+        "stem": "有人認為三首詞雖然題材不同，但都涉及「理想與現實的落差」。你同意嗎？試結合三首詞說明。",
+        "options": [
+            {"text": "同意——三首詞都涉及理想與現實的落差：①蘇軾——理想是像周瑜那樣年少有為、建功立業，現實是被貶黃州、華髮早生、功業未成；②李清照——理想是與丈夫琴瑟和鳴的美好生活，現實是國破家亡、喪夫孀居、飄零異鄉；③辛棄疾——理想是抗金復國、建功立業，現實是朝廷偏安、自己被閒置。三者的落差導致了不同的回應：超脫、哀痛和堅守", "is_correct": True,
+             "explanation": "此選項正確。三者都涉及理想與現實的落差。"},
+            {"text": "不同意", "is_correct": False,
+             "explanation": "此選項錯誤。三首詞確實都涉及理想與現實的落差。"},
+            {"text": "只有一首涉及", "is_correct": False,
+             "explanation": "此選項錯誤。三首都涉及。"},
+            {"text": "無法判斷", "is_correct": False,
+             "explanation": "此選項錯誤。可以從文本中分析。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # =====================================================================
+    # Batch 73 – p12 × 修辭手法 × 30 questions
+    # Passage: 宋詞三首
+    # Skill: t-rhetoric
+    # Key rhetorical devices: 明喻, 借喻, 借代, 誇飾, 對偶, 疊字, 反問, 襯托, 示現, 象徵
+    # Difficulty distribution: 最淺5, 淺8, 中10, 深5, 最深2
+    # =====================================================================
+
+    # ── B73-Q01  p12  最淺  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "修辭手法",
+        "stem": "《念奴嬌》中「江山如畫」運用了甚麼修辭手法？",
+        "options": [
+            {"text": "明喻——用「如」字把「江山」比喻為「畫」，把壯麗的自然景色比作美麗的畫卷", "is_correct": True,
+             "explanation": "此選項正確。「如」是明喻標誌。"},
+            {"text": "借代", "is_correct": False,
+             "explanation": "此選項錯誤。有「如」字是明喻。"},
+            {"text": "誇張", "is_correct": False,
+             "explanation": "此選項錯誤。是明喻，不是誇張。"},
+            {"text": "對偶", "is_correct": False,
+             "explanation": "此選項錯誤。是明喻。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B73-Q02  p12  最淺  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "修辭手法",
+        "stem": "《念奴嬌》中「人間如夢」運用了甚麼修辭手法？",
+        "options": [
+            {"text": "明喻——用「如」字把「人間」比喻為「夢」，表示人生短暫虛幻如夢一場", "is_correct": True,
+             "explanation": "此選項正確。「如」是明喻標誌。"},
+            {"text": "擬人", "is_correct": False,
+             "explanation": "此選項錯誤。是明喻。"},
+            {"text": "反問", "is_correct": False,
+             "explanation": "此選項錯誤。是明喻。"},
+            {"text": "借代", "is_correct": False,
+             "explanation": "此選項錯誤。是明喻。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B73-Q03  p12  最淺  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "修辭手法",
+        "stem": "《聲聲慢》中「尋尋覓覓，冷冷清清，悽悽慘慘戚戚」運用了甚麼修辭手法？",
+        "options": [
+            {"text": "疊字——連用七組疊字（每個字重複一次），營造低迴婉轉的節奏，表達反覆交織的愁苦情感", "is_correct": True,
+             "explanation": "此選項正確。七組疊字是最顯著的修辭。"},
+            {"text": "對偶", "is_correct": False,
+             "explanation": "此選項錯誤。是疊字，不是對偶。"},
+            {"text": "排比", "is_correct": False,
+             "explanation": "此選項錯誤。主要修辭是疊字。"},
+            {"text": "擬人", "is_correct": False,
+             "explanation": "此選項錯誤。是疊字。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B73-Q04  p12  最淺  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "修辭手法",
+        "stem": "《青玉案》中「星如雨」運用了甚麼修辭手法？",
+        "options": [
+            {"text": "明喻——用「如」字把煙火比喻為下雨般的繁星，形容元宵煙火燦爛密集", "is_correct": True,
+             "explanation": "此選項正確。「如」是明喻標誌。"},
+            {"text": "借代", "is_correct": False,
+             "explanation": "此選項錯誤。有比喻詞「如」，是明喻。"},
+            {"text": "對偶", "is_correct": False,
+             "explanation": "此選項錯誤。是明喻。"},
+            {"text": "疊字", "is_correct": False,
+             "explanation": "此選項錯誤。是明喻。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B73-Q05  p12  最淺  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "修辭手法",
+        "stem": "《念奴嬌》中「亂石穿空，驚濤拍岸」運用了甚麼修辭手法？",
+        "options": [
+            {"text": "對偶——「亂石穿空」對「驚濤拍岸」，結構相同（主語+動詞+賓語），詞性相對，上句仰望石壁，下句俯視江浪", "is_correct": True,
+             "explanation": "此選項正確。結構對稱的對偶句。"},
+            {"text": "明喻", "is_correct": False,
+             "explanation": "此選項錯誤。沒有比喻詞，是對偶。"},
+            {"text": "疊字", "is_correct": False,
+             "explanation": "此選項錯誤。是對偶。"},
+            {"text": "反問", "is_correct": False,
+             "explanation": "此選項錯誤。是對偶。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B73-Q06  p12  淺  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "修辭手法",
+        "stem": "《念奴嬌》中「捲起千堆雪」運用了甚麼修辭手法？",
+        "options": [
+            {"text": "借喻——以「雪」借喻浪花，省略了本體（浪花）和比喻詞，直接用喻體（雪）代替，形象地描繪浪花潔白如雪的壯觀景象", "is_correct": True,
+             "explanation": "此選項正確。「雪」借喻浪花。"},
+            {"text": "明喻", "is_correct": False,
+             "explanation": "此選項錯誤。沒有「如」「像」等比喻詞，是借喻。"},
+            {"text": "借代", "is_correct": False,
+             "explanation": "此選項錯誤。雪和浪花是相似關係（借喻），不是相關關係（借代）。"},
+            {"text": "誇張", "is_correct": False,
+             "explanation": "此選項錯誤。「千堆」有誇張成分，但「雪」本身是借喻。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B73-Q07  p12  淺  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "修辭手法",
+        "stem": "《念奴嬌》中「檣櫓灰飛煙滅」運用了甚麼修辭手法？",
+        "options": [
+            {"text": "借代——以「檣櫓」（桅杆和船槳）借代曹軍的整個船隊（艦隊），用船的部件代指整體", "is_correct": True,
+             "explanation": "此選項正確。以局部代替整體的借代。"},
+            {"text": "明喻", "is_correct": False,
+             "explanation": "此選項錯誤。沒有比喻關係，是借代。"},
+            {"text": "對偶", "is_correct": False,
+             "explanation": "此選項錯誤。是借代手法。"},
+            {"text": "疊字", "is_correct": False,
+             "explanation": "此選項錯誤。是借代。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B73-Q08  p12  淺  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "修辭手法",
+        "stem": "《念奴嬌》中「亂石穿空」運用了甚麼修辭手法？",
+        "options": [
+            {"text": "誇張（誇飾）——石壁並非真的「穿」破天空，而是誇張地描寫石壁高聳入雲的氣勢，突出赤壁地勢的險峻", "is_correct": True,
+             "explanation": "此選項正確。「穿空」是誇張描寫。"},
+            {"text": "擬人", "is_correct": False,
+             "explanation": "此選項錯誤。石壁沒有被賦予人的特質。"},
+            {"text": "明喻", "is_correct": False,
+             "explanation": "此選項錯誤。沒有比喻詞。"},
+            {"text": "反語", "is_correct": False,
+             "explanation": "此選項錯誤。是誇張。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B73-Q09  p12  淺  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "修辭手法",
+        "stem": "《聲聲慢》中「滿地黃花堆積，憔悴損，如今有誰堪摘？」運用了甚麼修辭手法？",
+        "options": [
+            {"text": "反問——以問句形式表達「無人採摘」的意思，不需要回答。反問加強了孤苦無依的感嘆效果", "is_correct": True,
+             "explanation": "此選項正確。反問加強感嘆效果。"},
+            {"text": "明喻", "is_correct": False,
+             "explanation": "此選項錯誤。是反問句式。"},
+            {"text": "對偶", "is_correct": False,
+             "explanation": "此選項錯誤。是反問。"},
+            {"text": "誇張", "is_correct": False,
+             "explanation": "此選項錯誤。是反問。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B73-Q10  p12  淺  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "修辭手法",
+        "stem": "《青玉案》中「東風夜放花千樹」運用了甚麼修辭手法？",
+        "options": [
+            {"text": "借喻——以「花千樹」（千樹繁花盛放）借喻滿城花燈，省略了本體（花燈）和比喻詞，直接用喻體描寫，表示花燈多如繁花", "is_correct": True,
+             "explanation": "此選項正確。「花千樹」借喻花燈。"},
+            {"text": "明喻", "is_correct": False,
+             "explanation": "此選項錯誤。沒有比喻詞，是借喻。"},
+            {"text": "對偶", "is_correct": False,
+             "explanation": "此選項錯誤。是借喻。"},
+            {"text": "反問", "is_correct": False,
+             "explanation": "此選項錯誤。是借喻。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B73-Q11  p12  淺  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "修辭手法",
+        "stem": "《青玉案》中「寶馬雕車香滿路」運用了甚麼修辭手法？",
+        "options": [
+            {"text": "借代——以「寶馬雕車」（名貴的馬和裝飾華麗的車）借代乘車出遊的富貴人家，用交通工具代指人物", "is_correct": True,
+             "explanation": "此選項正確。以車馬代人，是借代。"},
+            {"text": "明喻", "is_correct": False,
+             "explanation": "此選項錯誤。是借代，不是比喻。"},
+            {"text": "疊字", "is_correct": False,
+             "explanation": "此選項錯誤。是借代。"},
+            {"text": "反問", "is_correct": False,
+             "explanation": "此選項錯誤。是借代。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B73-Q12  p12  淺  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "修辭手法",
+        "stem": "《青玉案》中「鳳簫聲動，玉壺光轉」運用了甚麼修辭手法？",
+        "options": [
+            {"text": "對偶——「鳳簫聲動」對「玉壺光轉」，結構對稱（名詞+名詞+動詞），一寫聽覺（簫聲），一寫視覺（月光）", "is_correct": True,
+             "explanation": "此選項正確。結構對稱的對偶。"},
+            {"text": "明喻", "is_correct": False,
+             "explanation": "此選項錯誤。是對偶。"},
+            {"text": "反問", "is_correct": False,
+             "explanation": "此選項錯誤。是對偶。"},
+            {"text": "誇張", "is_correct": False,
+             "explanation": "此選項錯誤。是對偶。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B73-Q13  p12  淺  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "修辭手法",
+        "stem": "《青玉案》中「蛾兒雪柳黃金縷」運用了甚麼修辭手法？",
+        "options": [
+            {"text": "借代——以頭飾名稱（蛾兒、雪柳、黃金縷）借代盛裝打扮的婦女，用頭飾代指戴頭飾的人", "is_correct": True,
+             "explanation": "此選項正確。以頭飾代人，是借代。"},
+            {"text": "明喻", "is_correct": False,
+             "explanation": "此選項錯誤。是借代。"},
+            {"text": "對偶", "is_correct": False,
+             "explanation": "此選項錯誤。是借代。"},
+            {"text": "疊字", "is_correct": False,
+             "explanation": "此選項錯誤。是借代。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B73-Q14  p12  中  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "修辭手法",
+        "stem": "《念奴嬌》下片「遙想公瑾當年……檣櫓灰飛煙滅」運用了甚麼修辭手法來描寫周瑜？",
+        "options": [
+            {"text": "示現——「遙想」一詞表明以下內容是詞人在想像中重現三國往事。把過去的歷史場景生動地呈現在眼前（周瑜的英姿、赤壁之戰的經過），讓讀者如臨其境", "is_correct": True,
+             "explanation": "此選項正確。「遙想」引出示現手法。"},
+            {"text": "明喻", "is_correct": False,
+             "explanation": "此選項錯誤。是示現，重現過去場景。"},
+            {"text": "反問", "is_correct": False,
+             "explanation": "此選項錯誤。是示現。"},
+            {"text": "疊字", "is_correct": False,
+             "explanation": "此選項錯誤。是示現。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B73-Q15  p12  中  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "修辭手法",
+        "stem": "《念奴嬌》中寫周瑜「小喬初嫁了，雄姿英發」運用了甚麼修辭手法？",
+        "options": [
+            {"text": "側面烘托——寫小喬（美人）下嫁周瑜，以美人襯托英雄，從側面烘托周瑜的魅力和地位。英雄配美人，突顯周瑜的風采", "is_correct": True,
+             "explanation": "此選項正確。以美人側面烘托英雄。"},
+            {"text": "誇張", "is_correct": False,
+             "explanation": "此選項錯誤。是側面烘托。"},
+            {"text": "反問", "is_correct": False,
+             "explanation": "此選項錯誤。是烘托。"},
+            {"text": "明喻", "is_correct": False,
+             "explanation": "此選項錯誤。是烘托手法。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B73-Q16  p12  中  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "修辭手法",
+        "stem": "《念奴嬌》中「談笑間、檣櫓灰飛煙滅」除了借代外，還運用了甚麼修辭手法？",
+        "options": [
+            {"text": "誇張——「談笑間」就把敵軍消滅，誇張了周瑜指揮的從容和戰爭的迅速。實際上赤壁之戰持續了一段時間，但詞中用「談笑間」把它濃縮為一瞬間，突顯周瑜的軍事才能", "is_correct": True,
+             "explanation": "此選項正確。「談笑間」誇張了戰爭的迅速。"},
+            {"text": "疊字", "is_correct": False,
+             "explanation": "此選項錯誤。是誇張。"},
+            {"text": "反問", "is_correct": False,
+             "explanation": "此選項錯誤。是誇張。"},
+            {"text": "對偶", "is_correct": False,
+             "explanation": "此選項錯誤。是誇張。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B73-Q17  p12  中  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "修辭手法",
+        "stem": "《聲聲慢》中「到黃昏、點點滴滴」運用了甚麼修辭手法？有甚麼效果？",
+        "options": [
+            {"text": "疊字——「點點滴滴」四字疊用，模擬雨水滴落梧桐葉的聲音，使讀者仿佛聽到雨聲。效果：①聲音效果——模擬綿綿不斷的雨聲；②節奏效果——放慢節奏，營造纏綿不盡的氛圍；③與開頭七組疊字前後呼應", "is_correct": True,
+             "explanation": "此選項正確。疊字模擬雨聲，增強效果。"},
+            {"text": "明喻", "is_correct": False,
+             "explanation": "此選項錯誤。是疊字。"},
+            {"text": "借代", "is_correct": False,
+             "explanation": "此選項錯誤。是疊字。"},
+            {"text": "對偶", "is_correct": False,
+             "explanation": "此選項錯誤。是疊字。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B73-Q18  p12  中  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "修辭手法",
+        "stem": "《青玉案》中以盛裝婦女反襯「那人」，運用了甚麼修辭手法？",
+        "options": [
+            {"text": "襯托（反襯）——以爭妍鬥麗的婦女和繁華熱鬧的場景，反襯「那人」獨處燈火闌珊處的孤高脫俗。兩者形成鮮明對比，突出「那人」不慕繁華、自甘寂寞的品格", "is_correct": True,
+             "explanation": "此選項正確。以繁華反襯孤高。"},
+            {"text": "明喻", "is_correct": False,
+             "explanation": "此選項錯誤。是襯托（反襯）。"},
+            {"text": "疊字", "is_correct": False,
+             "explanation": "此選項錯誤。是襯托。"},
+            {"text": "誇張", "is_correct": False,
+             "explanation": "此選項錯誤。是襯托。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B73-Q19  p12  中  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "修辭手法",
+        "stem": "《青玉案》中「那人」有甚麼象徵意義？這運用了甚麼修辭手法？",
+        "options": [
+            {"text": "象徵——「那人」不只是一個具體的人，更象徵了作者追求的理想人格：不慕繁華、自甘寂寞的志士或君子。通過象徵手法，把抽象的品格理想具體化為一個形象", "is_correct": True,
+             "explanation": "此選項正確。「那人」象徵理想人格。"},
+            {"text": "明喻", "is_correct": False,
+             "explanation": "此選項錯誤。是象徵，不是比喻。"},
+            {"text": "借代", "is_correct": False,
+             "explanation": "此選項錯誤。是象徵。"},
+            {"text": "反問", "is_correct": False,
+             "explanation": "此選項錯誤。是象徵。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B73-Q20  p12  中  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "修辭手法",
+        "stem": "《念奴嬌》中以周瑜的年少有為反襯蘇軾自己的失意，運用了甚麼修辭手法？",
+        "options": [
+            {"text": "襯托（反襯）——以周瑜的年少有為（娶美人、建功業）反襯蘇軾的年華老去、功業未成。兩者的巨大反差使感慨更加深沉", "is_correct": True,
+             "explanation": "此選項正確。以周瑜反襯蘇軾。"},
+            {"text": "明喻", "is_correct": False,
+             "explanation": "此選項錯誤。是襯托。"},
+            {"text": "借代", "is_correct": False,
+             "explanation": "此選項錯誤。是襯托。"},
+            {"text": "疊字", "is_correct": False,
+             "explanation": "此選項錯誤。是襯托。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B73-Q21  p12  中  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "修辭手法",
+        "stem": "《念奴嬌》上片「大江東去，浪淘盡、千古風流人物」運用了甚麼修辭手法？",
+        "options": [
+            {"text": "託物起興——以長江東流的壯闘景象引起對歷史人物的懷想。「大江東去」不只是寫景，更是用江水滔滔東去引發時間流逝、英雄消逝的感慨", "is_correct": True,
+             "explanation": "此選項正確。以大江起興。"},
+            {"text": "對偶", "is_correct": False,
+             "explanation": "此選項錯誤。是起興手法。"},
+            {"text": "疊字", "is_correct": False,
+             "explanation": "此選項錯誤。是起興。"},
+            {"text": "反問", "is_correct": False,
+             "explanation": "此選項錯誤。是起興手法。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B73-Q22  p12  中  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "修辭手法",
+        "stem": "《聲聲慢》中「這次第，怎一箇愁字了得」運用了甚麼修辭手法？",
+        "options": [
+            {"text": "反問——以反問語氣表達「不是一個『愁』字能概括得了的」，不需要回答。反問比直接說更能強調愁苦之深、之廣、之不可言喻", "is_correct": True,
+             "explanation": "此選項正確。反問加強愁苦的表達力度。"},
+            {"text": "明喻", "is_correct": False,
+             "explanation": "此選項錯誤。是反問。"},
+            {"text": "對偶", "is_correct": False,
+             "explanation": "此選項錯誤。是反問。"},
+            {"text": "借代", "is_correct": False,
+             "explanation": "此選項錯誤。是反問。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B73-Q23  p12  中  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "修辭手法",
+        "stem": "《青玉案》中「花千樹」和「香滿路」分別運用了甚麼修辭手法？",
+        "options": [
+            {"text": "誇飾（誇張）——「千樹」和「滿路」都是誇張的說法：花燈不可能真有千樹那麼多，香氣也不可能充滿整條路。誇張描寫突出了元宵夜花燈之多和氣氛之濃", "is_correct": True,
+             "explanation": "此選項正確。「千」「滿」都是誇張。"},
+            {"text": "對偶", "is_correct": False,
+             "explanation": "此選項錯誤。是誇飾。"},
+            {"text": "疊字", "is_correct": False,
+             "explanation": "此選項錯誤。是誇飾。"},
+            {"text": "反問", "is_correct": False,
+             "explanation": "此選項錯誤。是誇飾。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B73-Q24  p12  深  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "修辭手法",
+        "stem": "《聲聲慢》開頭七組疊字被稱為「千古創格」，其藝術效果有哪些層面？",
+        "options": [
+            {"text": "多層面的藝術效果：①情感層面——從失落→清冷→悲痛，三組疊字情感逐層遞進，由外而內、由弱到強；②音韻層面——運用大量舌齒音和齊微韻，音調三次轉折，營造低迴婉轉的聲情效果；③結構層面——為全詞定下沉鬱的基調，統領以下所有意象；④創新層面——前無古人的疊字運用方式，開創了新的詞法格局", "is_correct": True,
+             "explanation": "此選項正確。情感、音韻、結構、創新四個層面。"},
+            {"text": "只是好聽", "is_correct": False,
+             "explanation": "此選項錯誤。效果遠不止於聽覺。"},
+            {"text": "只是重複字詞", "is_correct": False,
+             "explanation": "此選項錯誤。有多層面的藝術效果。"},
+            {"text": "沒有特別", "is_correct": False,
+             "explanation": "此選項錯誤。被稱為「千古創格」。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B73-Q25  p12  深  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "修辭手法",
+        "stem": "三首詞分別以甚麼主要修辭手法來表達主旨？比較三者的不同。",
+        "options": [
+            {"text": "各有主要手法：①《念奴嬌》——借事抒情+襯托：借周瑜的英雄事跡反襯自己失意，以古今對比抒發感慨；②《聲聲慢》——借景抒情+疊字：以秋天的蕭索景物渲染愁苦，疊字加強情感力度；③《青玉案》——象徵+襯托：以「那人」象徵理想人格，以繁華反襯孤高。三者分別用古今對比、景物渲染、人物象徵來表達主旨", "is_correct": True,
+             "explanation": "此選項正確。三種不同的主要修辭策略。"},
+            {"text": "都一樣", "is_correct": False,
+             "explanation": "此選項錯誤。三者的主要修辭手法不同。"},
+            {"text": "都是明喻", "is_correct": False,
+             "explanation": "此選項錯誤。明喻不是主要手法。"},
+            {"text": "無法比較", "is_correct": False,
+             "explanation": "此選項錯誤。可以從修辭角度比較。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B73-Q26  p12  深  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "修辭手法",
+        "stem": "《念奴嬌》中「穿」、「拍」、「捲」三個動詞的運用有甚麼精妙之處？",
+        "options": [
+            {"text": "三個動詞各有精妙：①「穿」——把石壁高聳、刺穿天空的形態描繪出來，突出尖、高、陡的山勢；②「拍」——寫江水擊石的動態和聲音，突出衝擊的氣勢；③「捲」——寫浪花濺起後翻捲的動態，描繪澎湃的景象。三個動詞從不同角度和感官描寫，一仰觀（穿空）一俯視（拍岸）一近觀（捲雪），層次分明，動態十足", "is_correct": True,
+             "explanation": "此選項正確。三個動詞各有精妙，多角度描寫。"},
+            {"text": "隨意選擇的", "is_correct": False,
+             "explanation": "此選項錯誤。三個動詞經過精心選擇。"},
+            {"text": "可以互換", "is_correct": False,
+             "explanation": "此選項錯誤。每個動詞有獨特的效果。"},
+            {"text": "沒有特別", "is_correct": False,
+             "explanation": "此選項錯誤。三個動詞非常精妙。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B73-Q27  p12  深  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "修辭手法",
+        "stem": "《青玉案》中視覺、聽覺、嗅覺的感官描寫如何交替運用？有甚麼效果？",
+        "options": [
+            {"text": "感官交替：①視覺——花千樹、星如雨、寶馬雕車、魚龍舞、蛾兒雪柳；②聽覺——鳳簫聲動、笑語盈盈；③嗅覺——香滿路、暗香去。效果：三種感官交替出現，令讀者目不暇給、耳不暇接，全方位地感受元宵的繁華。視覺為主，穿插聽覺和嗅覺，使描寫立體豐滿", "is_correct": True,
+             "explanation": "此選項正確。多感官交替營造立體效果。"},
+            {"text": "只用視覺", "is_correct": False,
+             "explanation": "此選項錯誤。還有聽覺和嗅覺。"},
+            {"text": "沒有特別安排", "is_correct": False,
+             "explanation": "此選項錯誤。感官交替是精心安排的。"},
+            {"text": "效果不好", "is_correct": False,
+             "explanation": "此選項錯誤。效果是立體豐滿的。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B73-Q28  p12  深  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "修辭手法",
+        "stem": "《聲聲慢》中的意象（酒、雁、花、梧桐細雨）分別運用了甚麼抒情手法？",
+        "options": [
+            {"text": "各有不同：①淡酒——直接抒情中帶借物抒情（「怎敵他」直言無法消愁）；②秋雁——觸景生情（看到雁勾起故國和亡夫之思）；③黃花——緣情寫景/融情入景（以花的憔悴映射人的憔悴）；④梧桐細雨——借景抒情（雨打梧桐營造孤冷氣氛）。四個意象用了不同的抒情手法，層層推進愁情", "is_correct": True,
+             "explanation": "此選項正確。四個意象用了不同的抒情手法。"},
+            {"text": "都是明喻", "is_correct": False,
+             "explanation": "此選項錯誤。用了多種不同的手法。"},
+            {"text": "只是寫景", "is_correct": False,
+             "explanation": "此選項錯誤。每個意象都有抒情功能。"},
+            {"text": "手法都一樣", "is_correct": False,
+             "explanation": "此選項錯誤。各有不同的抒情手法。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B73-Q29  p12  最深  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最深",
+        "skill": "修辭手法",
+        "stem": "三首詞在「動與靜」的處理上各有甚麼特色？這與修辭手法有甚麼關係？",
+        "options": [
+            {"text": "各有特色：①《念奴嬌》——以動為主（大江東去、驚濤拍岸、談笑間灰飛煙滅），動態描寫配合豪放氣勢，「一尊還酹江月」最後歸於靜，由動入靜象徵超脫；②《聲聲慢》——動靜交錯（尋覓的動態→冷清的靜態→雁過的動態→守窗的靜態→雨滴的動態），反覆在動靜間擺盪，暗示愁緒的反覆纏繞；③《青玉案》——先動後靜（上片繁華全是動態，「那人」卻靜靜站在闌珊處），動態消失後聚焦唯一的靜態形象。三者的動靜處理都配合了各自的主旨和修辭策略", "is_correct": True,
+             "explanation": "此選項正確。三者動靜處理各有特色，配合主旨。"},
+            {"text": "都是動態", "is_correct": False,
+             "explanation": "此選項錯誤。三者的動靜安排各不相同。"},
+            {"text": "都是靜態", "is_correct": False,
+             "explanation": "此選項錯誤。三者都有動態描寫。"},
+            {"text": "無法分析", "is_correct": False,
+             "explanation": "此選項錯誤。可以從動靜角度分析。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B73-Q30  p12  最深  修辭手法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最深",
+        "skill": "修辭手法",
+        "stem": "三首詞都使用了入聲韻（短促的韻腳），但效果不同。試分析入聲韻在三首詞中各自的藝術效果。",
+        "options": [
+            {"text": "效果各異：①《念奴嬌》押物、壁、雪、傑、發、滅、髮、月等入聲韻——短促剛勁的入聲配合豪放的基調，使全詞在奔放中更顯雄勁有力；②《聲聲慢》押覓、戚、息、急、識、積、摘、黑、滴、得等入聲韻——短促的入聲造成急促的節奏，與長調的慢速形成張力，營造低迴壓抑的聲情效果；③《青玉案》押樹、雨、路、舞、縷、去、度、處等仄聲韻——使結尾收束有力，配合「燈火闌珊處」的孤清意境。同是入聲（仄聲），因配合不同的情感基調而產生不同效果", "is_correct": True,
+             "explanation": "此選項正確。入聲韻在三首詞中各有不同的藝術效果。"},
+            {"text": "效果都一樣", "is_correct": False,
+             "explanation": "此選項錯誤。配合不同情感產生不同效果。"},
+            {"text": "韻腳不重要", "is_correct": False,
+             "explanation": "此選項錯誤。韻腳是聲情結合的重要元素。"},
+            {"text": "無法分析", "is_correct": False,
+             "explanation": "此選項錯誤。可以分析入聲韻的不同效果。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # =====================================================================
+    # Batch 74 – p12 × 人物分析 × 30 questions
+    # Passage: 宋詞三首
+    # Skill: t-character
+    # Characters: 蘇軾, 周瑜, 李清照, 辛棄疾, 小喬, 「那人」
+    # Difficulty distribution: 最淺5, 淺8, 中10, 深5, 最深2
+    # =====================================================================
+
+    # ── B74-Q01  p12  最淺  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "人物分析",
+        "stem": "《念奴嬌》中的周瑜是甚麼形象？",
+        "options": [
+            {"text": "年少有為的英雄——周瑜英姿雄偉、神采煥發，手揮羽扇，頭戴綸巾，是一位文武兼備的儒將，在赤壁之戰中從容擊敗曹軍", "is_correct": True,
+             "explanation": "此選項正確。周瑜是年少有為的儒將形象。"},
+            {"text": "老弱的將軍", "is_correct": False,
+             "explanation": "此選項錯誤。周瑜是年少有為的英雄。"},
+            {"text": "殘暴的武將", "is_correct": False,
+             "explanation": "此選項錯誤。周瑜是儒雅的儒將形象。"},
+            {"text": "失敗的人物", "is_correct": False,
+             "explanation": "此選項錯誤。周瑜在赤壁大勝。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B74-Q02  p12  最淺  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "人物分析",
+        "stem": "《聲聲慢》中的李清照呈現了甚麼形象？",
+        "options": [
+            {"text": "孤苦無依的婦人——飽經國破家亡、喪夫之痛，獨自面對蕭索秋景，愁苦無法排遣", "is_correct": True,
+             "explanation": "此選項正確。孤苦無依的婦人形象。"},
+            {"text": "快樂的少女", "is_correct": False,
+             "explanation": "此選項錯誤。是孤苦的晚年形象。"},
+            {"text": "威嚴的女將軍", "is_correct": False,
+             "explanation": "此選項錯誤。是飽經苦難的婦人。"},
+            {"text": "無憂無慮的妻子", "is_correct": False,
+             "explanation": "此選項錯誤。丈夫已去世。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B74-Q03  p12  最淺  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "人物分析",
+        "stem": "《念奴嬌》中的蘇軾呈現了甚麼形象？",
+        "options": [
+            {"text": "被貶文人、華髮早生——蘇軾因「烏台詩案」被貶黃州，年華漸老，功業未成，但最終以豁達的態度面對人生", "is_correct": True,
+             "explanation": "此選項正確。失意但豁達的文人形象。"},
+            {"text": "得意的官員", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾是被貶的失意文人。"},
+            {"text": "年輕的戰士", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾已「早生華髮」。"},
+            {"text": "快樂的遊客", "is_correct": False,
+             "explanation": "此選項錯誤。遊赤壁時心情是感慨的。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B74-Q04  p12  最淺  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "人物分析",
+        "stem": "《青玉案》中的「那人」是甚麼形象？",
+        "options": [
+            {"text": "孤高脫俗的人——不追隨熱鬧人群，獨自站在燈火稀疏零落之處，不慕繁華，自甘寂寞", "is_correct": True,
+             "explanation": "此選項正確。孤高脫俗的形象。"},
+            {"text": "追求熱鬧的人", "is_correct": False,
+             "explanation": "此選項錯誤。恰恰相反——遠離熱鬧。"},
+            {"text": "迷路的人", "is_correct": False,
+             "explanation": "此選項錯誤。是自甘寂寞。"},
+            {"text": "打扮華麗的婦女", "is_correct": False,
+             "explanation": "此選項錯誤。與盛裝婦女形成對比。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B74-Q05  p12  最淺  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "人物分析",
+        "stem": "《念奴嬌》中提到的小喬是誰？",
+        "options": [
+            {"text": "周瑜的妻子——小喬是三國時期的美女，嫁給了周瑜。詞中提及小喬是為了以美人襯托英雄", "is_correct": True,
+             "explanation": "此選項正確。小喬是周瑜的妻子。"},
+            {"text": "蘇軾的妻子", "is_correct": False,
+             "explanation": "此選項錯誤。是周瑜的妻子。"},
+            {"text": "曹操的妻子", "is_correct": False,
+             "explanation": "此選項錯誤。是周瑜的妻子。"},
+            {"text": "一個歌女", "is_correct": False,
+             "explanation": "此選項錯誤。是周瑜的妻子，三國時期的美女。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B74-Q06  p12  淺  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "人物分析",
+        "stem": "《念奴嬌》中周瑜的形象包含了哪些方面？",
+        "options": [
+            {"text": "三個方面：①英雄配美人——娶得小喬，風頭一時無兩；②儒將風範——「羽扇綸巾」，手揮羽扇，頭戴綸巾，風度翩翩；③軍事才能——「談笑間、檣櫓灰飛煙滅」，從容指揮赤壁之戰，大敗曹軍", "is_correct": True,
+             "explanation": "此選項正確。美人、儒雅、軍事三方面。"},
+            {"text": "只有打仗", "is_correct": False,
+             "explanation": "此選項錯誤。還有配美人和儒將風範。"},
+            {"text": "只有外貌", "is_correct": False,
+             "explanation": "此選項錯誤。還有軍事才能和婚姻。"},
+            {"text": "只有婚姻", "is_correct": False,
+             "explanation": "此選項錯誤。包含多個方面。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B74-Q07  p12  淺  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "人物分析",
+        "stem": "《念奴嬌》中蘇軾與周瑜在哪些方面形成對比？",
+        "options": [
+            {"text": "多方面對比：①年紀——周瑜年少有為，蘇軾「早生華髮」；②功業——周瑜赤壁建功，蘇軾被貶黃州功業未成；③婚姻——周瑜娶得美人小喬，蘇軾沒有提及這方面的得意；④地位——周瑜是吳國大都督，蘇軾是被貶的團練副使", "is_correct": True,
+             "explanation": "此選項正確。年紀、功業、婚姻、地位多方面對比。"},
+            {"text": "沒有對比", "is_correct": False,
+             "explanation": "此選項錯誤。兩者形成鮮明對比。"},
+            {"text": "只有年紀", "is_correct": False,
+             "explanation": "此選項錯誤。多方面的對比。"},
+            {"text": "蘇軾比周瑜好", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾自覺不如周瑜。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B74-Q08  p12  淺  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "人物分析",
+        "stem": "《聲聲慢》中李清照通過哪些行為表現她的孤寂？",
+        "options": [
+            {"text": "多種行為：①尋尋覓覓——不斷尋找，若有所失；②飲淡酒——借酒消愁卻不成；③看雁南飛——觸景傷心；④守着窗兒——獨自守窗，度日如年；⑤聽雨打梧桐——在寂靜中聽雨聲更添愁", "is_correct": True,
+             "explanation": "此選項正確。通過多種行為表現孤寂。"},
+            {"text": "在外面遊玩", "is_correct": False,
+             "explanation": "此選項錯誤。是獨自在家中。"},
+            {"text": "與朋友聊天", "is_correct": False,
+             "explanation": "此選項錯誤。是「獨自」。"},
+            {"text": "開心地唱歌", "is_correct": False,
+             "explanation": "此選項錯誤。是愁苦的。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B74-Q09  p12  淺  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "人物分析",
+        "stem": "《青玉案》中辛棄疾塑造的「那人」與盛裝婦女有甚麼不同？",
+        "options": [
+            {"text": "多方面不同：①地點——婦女在人群熱鬧處，「那人」在燈火闌珊處；②打扮——婦女爭妍鬥麗（蛾兒雪柳黃金縷），「那人」不強調外表；③態度——婦女追逐熱鬧，「那人」自甘寂寞；④氣質——婦女世俗繁華，「那人」孤高脫俗", "is_correct": True,
+             "explanation": "此選項正確。地點、打扮、態度、氣質都不同。"},
+            {"text": "沒有不同", "is_correct": False,
+             "explanation": "此選項錯誤。兩者形成鮮明對比。"},
+            {"text": "「那人」更華麗", "is_correct": False,
+             "explanation": "此選項錯誤。「那人」不慕繁華。"},
+            {"text": "婦女更孤高", "is_correct": False,
+             "explanation": "此選項錯誤。「那人」才是孤高的。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B74-Q10  p12  淺  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "人物分析",
+        "stem": "《念奴嬌》中蘇軾「多情應笑我」表現了他甚麼性格特點？",
+        "options": [
+            {"text": "自嘲和豁達——蘇軾自嘲自己「多情」（多愁善感），在壯闘的赤壁前追懷往事反顯可笑。這種自嘲表現了他善於自我反省和豁達面對困境的性格", "is_correct": True,
+             "explanation": "此選項正確。自嘲表現豁達。"},
+            {"text": "驕傲自大", "is_correct": False,
+             "explanation": "此選項錯誤。是自嘲，不是驕傲。"},
+            {"text": "悲觀消極", "is_correct": False,
+             "explanation": "此選項錯誤。自嘲帶有豁達意味。"},
+            {"text": "嘲笑別人", "is_correct": False,
+             "explanation": "此選項錯誤。是嘲笑自己。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B74-Q11  p12  淺  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "人物分析",
+        "stem": "《聲聲慢》中李清照以「黃花」自喻，暗示了甚麼？",
+        "options": [
+            {"text": "年華老去、憔悴凋零——黃花堆積凋殘，暗喻李清照自己容顏憔悴、年華已逝。她早年曾寫「人比黃花瘦」，當時是甜蜜的相思致人消瘦；如今卻是飽經苦難、真正的「憔悴損」", "is_correct": True,
+             "explanation": "此選項正確。以花自喻年華老去。"},
+            {"text": "喜歡黃色", "is_correct": False,
+             "explanation": "此選項錯誤。黃花是自喻。"},
+            {"text": "在種花", "is_correct": False,
+             "explanation": "此選項錯誤。是以花自況。"},
+            {"text": "花很漂亮", "is_correct": False,
+             "explanation": "此選項錯誤。花已凋殘，暗喻自己。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B74-Q12  p12  淺  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "人物分析",
+        "stem": "《念奴嬌》最後蘇軾「一尊還酹江月」表現了他甚麼態度？",
+        "options": [
+            {"text": "寄情自然、隨緣自適——蘇軾選擇向永恆的江月灑酒祭奠，表示放下對功業的執著，接受命運，寄情自然。這體現了他在苦悶中自我寬解的豁達胸懷", "is_correct": True,
+             "explanation": "此選項正確。表現寄情自然的豁達。"},
+            {"text": "喝醉了", "is_correct": False,
+             "explanation": "此選項錯誤。灑酒祭月有象徵意義。"},
+            {"text": "浪費酒", "is_correct": False,
+             "explanation": "此選項錯誤。「酹」是祭奠的動作。"},
+            {"text": "不開心想借酒澆愁", "is_correct": False,
+             "explanation": "此選項錯誤。是寄情自然的豁達態度。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B74-Q13  p12  淺  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "人物分析",
+        "stem": "《青玉案》中辛棄疾在尋找「那人」的過程中表現了甚麼情感？",
+        "options": [
+            {"text": "熱切焦急到喜出望外——「眾裏尋他千百度」表現尋找過程的熱切和反覆，「驀然回首」的突然發現帶來驚喜和滿足", "is_correct": True,
+             "explanation": "此選項正確。從熱切焦急到喜出望外。"},
+            {"text": "一直很冷淡", "is_correct": False,
+             "explanation": "此選項錯誤。「千百度」表現了熱切。"},
+            {"text": "害怕找到", "is_correct": False,
+             "explanation": "此選項錯誤。找到後是驚喜的。"},
+            {"text": "無所謂", "is_correct": False,
+             "explanation": "此選項錯誤。尋找的態度很認真。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B74-Q14  p12  中  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "人物分析",
+        "stem": "蘇軾在《念奴嬌》中展現了怎樣複雜的內心世界？",
+        "options": [
+            {"text": "矛盾複雜：①仰慕英雄——對周瑜的才華和功業充滿嚮往；②自傷失意——被貶黃州，年華老去卻功業未成；③自嘲多情——覺得自己追懷往事、多愁善感可笑；④最終超脫——以「人間如夢」寬解自己，選擇寄情江月。這些矛盾情感構成了蘇軾豐富的內心世界", "is_correct": True,
+             "explanation": "此選項正確。仰慕、自傷、自嘲、超脫四層情感。"},
+            {"text": "只有快樂", "is_correct": False,
+             "explanation": "此選項錯誤。內心世界很複雜。"},
+            {"text": "只有悲傷", "is_correct": False,
+             "explanation": "此選項錯誤。還有仰慕和超脫。"},
+            {"text": "沒有矛盾", "is_correct": False,
+             "explanation": "此選項錯誤。有多層矛盾的情感。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B74-Q15  p12  中  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "人物分析",
+        "stem": "《聲聲慢》如何通過感官描寫來塑造李清照的形象？",
+        "options": [
+            {"text": "多感官展現孤苦形象：①觸覺——感受到「乍暖還寒」的冷暖變化和「晚來風急」的寒意，顯示身體虛弱敏感；②視覺——看到南飛大雁、滿地黃花凋零，觸發傷感；③聽覺——聽到雨打梧桐「點點滴滴」，孤寂中聽覺放大。通過多種感官描寫，塑造了一個身心俱疲、對外界極度敏感的孤苦婦人形象", "is_correct": True,
+             "explanation": "此選項正確。多感官塑造孤苦敏感的形象。"},
+            {"text": "沒有感官描寫", "is_correct": False,
+             "explanation": "此選項錯誤。觸覺、視覺、聽覺都有。"},
+            {"text": "只有視覺", "is_correct": False,
+             "explanation": "此選項錯誤。還有觸覺和聽覺。"},
+            {"text": "形象不夠鮮明", "is_correct": False,
+             "explanation": "此選項錯誤。多感官描寫使形象非常鮮明。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B74-Q16  p12  中  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "人物分析",
+        "stem": "《青玉案》中「那人」的形象塑造有甚麼特別之處？",
+        "options": [
+            {"text": "以留白和反襯為主——「那人」沒有具體的外貌、言語或行動描寫，只知道獨自站在燈火闌珊處。形象主要通過與周圍繁華場景和盛裝婦女的反襯來突出。這種留白反而讓讀者有更多想像空間，使「那人」成為一個可以多元解讀的象徵形象", "is_correct": True,
+             "explanation": "此選項正確。留白和反襯的塑造手法。"},
+            {"text": "有詳細的外貌描寫", "is_correct": False,
+             "explanation": "此選項錯誤。沒有具體外貌描寫。"},
+            {"text": "有對話", "is_correct": False,
+             "explanation": "此選項錯誤。「那人」沒有言語。"},
+            {"text": "塑造手法很普通", "is_correct": False,
+             "explanation": "此選項錯誤。留白手法很特別。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B74-Q17  p12  中  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "人物分析",
+        "stem": "周瑜在《念奴嬌》中是通過甚麼描寫方法來塑造的？",
+        "options": [
+            {"text": "多種描寫方法：①肖像描寫——「雄姿英發」描寫英偉的外表和神采；②行動描寫——「羽扇綸巾，談笑間」描寫從容指揮的動作和風度；③側面烘托——「小喬初嫁了」以美人襯托英雄的魅力。三種方法結合，塑造了一個全面立體的英雄形象", "is_correct": True,
+             "explanation": "此選項正確。肖像、行動、側面烘托三種方法。"},
+            {"text": "只有對話", "is_correct": False,
+             "explanation": "此選項錯誤。沒有對話描寫。"},
+            {"text": "只有外貌", "is_correct": False,
+             "explanation": "此選項錯誤。還有行動和側面烘托。"},
+            {"text": "只有心理描寫", "is_correct": False,
+             "explanation": "此選項錯誤。主要是肖像、行動和烘托。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B74-Q18  p12  中  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "人物分析",
+        "stem": "三首詞中，哪位作者最直接地表露自己的情感？為甚麼？",
+        "options": [
+            {"text": "李清照——《聲聲慢》中情感表達最直接：①開頭七組疊字直接描寫內心狀態；②「怎敵他」「獨自怎生得黑」等口語化表達率真直白；③末句「怎一箇愁字了得」直接說出愁苦。這是李清照善用口語、直抒胸臆的風格特點", "is_correct": True,
+             "explanation": "此選項正確。李清照以口語直抒胸臆。"},
+            {"text": "蘇軾", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾通過懷古間接抒情。"},
+            {"text": "辛棄疾", "is_correct": False,
+             "explanation": "此選項錯誤。辛棄疾通過象徵間接表達。"},
+            {"text": "三者一樣直接", "is_correct": False,
+             "explanation": "此選項錯誤。李清照最直接。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B74-Q19  p12  中  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "人物分析",
+        "stem": "《聲聲慢》中「守着窗兒，獨自怎生得黑」塑造了李清照甚麼形象？",
+        "options": [
+            {"text": "度日如年的孤獨老婦——「守着窗兒」暗示她哪裏都不去，只能呆坐窗前；「獨自」點明無人陪伴；「怎生得黑」表明每一刻都是煎熬，盼望天黑結束痛苦的一天。整句塑造了一個被困在孤獨中、無力掙脫的可憐形象", "is_correct": True,
+             "explanation": "此選項正確。孤獨中度日如年的形象。"},
+            {"text": "享受獨處", "is_correct": False,
+             "explanation": "此選項錯誤。是被迫的孤獨，不是享受。"},
+            {"text": "等待客人", "is_correct": False,
+             "explanation": "此選項錯誤。是在孤獨中煎熬。"},
+            {"text": "在工作", "is_correct": False,
+             "explanation": "此選項錯誤。是呆坐窗前度日。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B74-Q20  p12  中  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "人物分析",
+        "stem": "《青玉案》中辛棄疾的形象與「那人」有甚麼關係？",
+        "options": [
+            {"text": "「那人」是辛棄疾理想自我的投射——辛棄疾在現實中主張抗金卻不被重用，在世俗（偏安享樂的南宋社會）中格格不入。「那人」不慕繁華、自甘寂寞的品格正是辛棄疾自己的寫照。尋找「那人」的過程也是確認自己理想的過程", "is_correct": True,
+             "explanation": "此選項正確。「那人」是理想自我的投射。"},
+            {"text": "完全無關", "is_correct": False,
+             "explanation": "此選項錯誤。「那人」是自我的投射。"},
+            {"text": "「那人」是辛棄疾的敵人", "is_correct": False,
+             "explanation": "此選項錯誤。是理想的象徵。"},
+            {"text": "辛棄疾嫉妒「那人」", "is_correct": False,
+             "explanation": "此選項錯誤。是仰慕和認同。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B74-Q21  p12  中  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "人物分析",
+        "stem": "蘇軾自稱「多情」，這個自我評價是否準確？",
+        "options": [
+            {"text": "準確但有自嘲意味——蘇軾確實「多情」（多愁善感）：①對歷史懷有深切感觸；②對自己的處境有強烈感慨；③面對壯景能生發無限聯想。但「應笑我」帶有自嘲：在浩瀚的歷史和自然面前，個人的多情顯得渺小可笑。這種自知之明本身就是蘇軾豁達性格的體現", "is_correct": True,
+             "explanation": "此選項正確。準確但帶自嘲。"},
+            {"text": "完全不準確", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾確實多愁善感。"},
+            {"text": "只是謙虛", "is_correct": False,
+             "explanation": "此選項錯誤。有真實的自我評價。"},
+            {"text": "是諷刺", "is_correct": False,
+             "explanation": "此選項錯誤。是真誠的自嘲。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B74-Q22  p12  中  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "人物分析",
+        "stem": "《聲聲慢》中的大雁和黃花分別映照了李清照甚麼處境？",
+        "options": [
+            {"text": "各映照不同處境：①大雁——映照「流落異鄉」的處境。北雁南飛與李清照從北方流落南方相似；大雁是「舊時相識」，觸發對故國和亡夫的思念；②黃花——映照「年華老去、孤苦無依」的處境。花堆積凋殘如自己容顏憔悴，「有誰堪摘」暗示無人關心", "is_correct": True,
+             "explanation": "此選項正確。大雁映照流落，黃花映照衰老。"},
+            {"text": "沒有映照", "is_correct": False,
+             "explanation": "此選項錯誤。兩者都映照了她的處境。"},
+            {"text": "只是自然描寫", "is_correct": False,
+             "explanation": "此選項錯誤。有深層的映照意義。"},
+            {"text": "映照的是相同的處境", "is_correct": False,
+             "explanation": "此選項錯誤。映照的處境各不相同。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B74-Q23  p12  中  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "人物分析",
+        "stem": "三位作者在詞中各自展現了甚麼性格特點？",
+        "options": [
+            {"text": "各有不同：①蘇軾——豁達曠達，善於自嘲和自我寬解，面對困境能以哲學思考超脫；②李清照——真摯細膩，敏感多情，不掩飾痛苦，以真情打動人心；③辛棄疾——堅毅孤高，在世俗中堅守理想，不隨波逐流。三者分別體現了超脫、真情和堅守三種不同的性格力量", "is_correct": True,
+             "explanation": "此選項正確。超脫、真情、堅守。"},
+            {"text": "性格都一樣", "is_correct": False,
+             "explanation": "此選項錯誤。三者性格各異。"},
+            {"text": "都很軟弱", "is_correct": False,
+             "explanation": "此選項錯誤。各有不同的性格力量。"},
+            {"text": "無法分析", "is_correct": False,
+             "explanation": "此選項錯誤。可以從作品中分析性格。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B74-Q24  p12  深  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "人物分析",
+        "stem": "蘇軾在《念奴嬌》中是否只是簡單地讚美周瑜？他對周瑜的態度有甚麼複雜之處？",
+        "options": [
+            {"text": "態度複雜：①確實仰慕——讚美周瑜的才華、功業和風度；②用作反襯——通過讚美周瑜來反襯自己的失意，周瑜越偉大，自己越渺小；③哲學超越——最終連周瑜也是「千古風流人物」之一，也被「浪淘盡」，即使如周瑜般偉大也終歸虛無。所以蘇軾對周瑜既仰慕又將之置於更大的歷史格局中審視", "is_correct": True,
+             "explanation": "此選項正確。仰慕、反襯、哲學超越三層態度。"},
+            {"text": "純粹讚美", "is_correct": False,
+             "explanation": "此選項錯誤。態度更加複雜。"},
+            {"text": "嫉妒周瑜", "is_correct": False,
+             "explanation": "此選項錯誤。不是嫉妒而是多層的態度。"},
+            {"text": "對周瑜無感", "is_correct": False,
+             "explanation": "此選項錯誤。有強烈的情感。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B74-Q25  p12  深  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "人物分析",
+        "stem": "李清照在《聲聲慢》中塑造的自我形象與她前期作品中的形象有甚麼變化？",
+        "options": [
+            {"text": "巨大變化：①前期（如《如夢令》《一剪梅》）——活潑嬌憨的少女或甜蜜思念的少婦形象，雖有愁緒但輕盈美好（「人比黃花瘦」是甜蜜的消瘦）；②後期（《聲聲慢》）——飽經苦難的孤獨老婦形象，愁苦深重，無法排遣。變化的原因：國破家亡、喪夫、流離失所徹底改變了她的人生和創作", "is_correct": True,
+             "explanation": "此選項正確。從活潑少婦到孤苦老婦。"},
+            {"text": "沒有變化", "is_correct": False,
+             "explanation": "此選項錯誤。前後期有巨大變化。"},
+            {"text": "後期更快樂", "is_correct": False,
+             "explanation": "此選項錯誤。後期更加愁苦。"},
+            {"text": "前期更悲傷", "is_correct": False,
+             "explanation": "此選項錯誤。前期的愁是輕盈的。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B74-Q26  p12  深  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "人物分析",
+        "stem": "《青玉案》中「那人」為甚麼不加入熱鬧的人群？這反映了辛棄疾甚麼內心世界？",
+        "options": [
+            {"text": "「那人」不加入人群是主動選擇：①不認同世俗繁華——繁華背後是南宋的偏安享樂，「那人」拒絕參與這種醉生夢死；②堅守自己的價值——寧可孤獨也不妥協。這反映了辛棄疾的內心世界：①壯志未酬的孤獨——主張抗金復國卻被閒置；②不向現實低頭——即使不被理解也堅守理想；③既嚮往又疏離——對主流社會既有嚮往（「尋他千百度」）又無法融入的矛盾", "is_correct": True,
+             "explanation": "此選項正確。主動選擇背後是複雜的內心世界。"},
+            {"text": "因為害羞", "is_correct": False,
+             "explanation": "此選項錯誤。是主動的價值選擇。"},
+            {"text": "因為生病", "is_correct": False,
+             "explanation": "此選項錯誤。是品格的表現。"},
+            {"text": "沒有原因", "is_correct": False,
+             "explanation": "此選項錯誤。有深層的原因。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B74-Q27  p12  深  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "人物分析",
+        "stem": "三首詞中的「孤獨」各有甚麼不同的內涵？",
+        "options": [
+            {"text": "三種不同的孤獨：①蘇軾的孤獨——歷史時空中的渺小感：在千古英雄和永恆自然面前，個人的存在何其渺小。這是哲學性的孤獨，但他用豁達化解；②李清照的孤獨——實際生活中的孤苦無依：喪夫、流離、無人關心。這是現實性的孤獨，無法化解；③辛棄疾的孤獨——理想與世俗不相容的孤高：堅守理想但不被理解。這是選擇性的孤獨，自願承擔", "is_correct": True,
+             "explanation": "此選項正確。哲學性、現實性、選擇性三種孤獨。"},
+            {"text": "孤獨都一樣", "is_correct": False,
+             "explanation": "此選項錯誤。三者的孤獨內涵不同。"},
+            {"text": "都不孤獨", "is_correct": False,
+             "explanation": "此選項錯誤。三者都涉及孤獨主題。"},
+            {"text": "無法比較", "is_correct": False,
+             "explanation": "此選項錯誤。可以比較孤獨的不同內涵。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B74-Q28  p12  深  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "人物分析",
+        "stem": "三位作者在詞中展現的「自我定位」有甚麼不同？",
+        "options": [
+            {"text": "各有不同的自我定位：①蘇軾——定位為「渺小的旁觀者」：在歷史長河和自然面前，個人是渺小而短暫的。這種定位反而帶來超脫；②李清照——定位為「苦難的承受者」：國破家亡的痛苦全部由自己承擔，無法轉嫁或逃避。這種定位帶來了真實的情感力量；③辛棄疾——定位為「孤獨的堅守者」：在世俗中堅守理想的少數人。這種定位帶來了精神的高度", "is_correct": True,
+             "explanation": "此選項正確。旁觀者、承受者、堅守者。"},
+            {"text": "定位都一樣", "is_correct": False,
+             "explanation": "此選項錯誤。三者的自我定位不同。"},
+            {"text": "都定位為英雄", "is_correct": False,
+             "explanation": "此選項錯誤。各有不同的定位。"},
+            {"text": "都定位為受害者", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾超脫，辛棄疾堅守。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B74-Q29  p12  最深  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最深",
+        "skill": "人物分析",
+        "stem": "蘇軾、李清照、辛棄疾三人面對人生困境時的回應方式，哪一種最能引起你的共鳴？試結合作品分析。",
+        "options": [
+            {"text": "三種回應方式各有價值，可引起不同人的共鳴：①蘇軾的超脫——適合面對無法改變的命運時：承認人生如夢，放下執著，寄情自然。在現代高壓社會中，這種豁達態度有助於心理健康；②李清照的真情——適合需要療愈的時候：坦率面對和表達痛苦，不強顔歡笑。真情流露本身就是一種勇氣和力量；③辛棄疾的堅守——適合面對價值衝突的時候：在世俗壓力下仍堅持理想和原則。這對面對社會壓力的年輕人特別有啟發。三種回應不分高下，適用於不同的人生處境", "is_correct": True,
+             "explanation": "此選項正確。三種回應各有價值和適用情境。"},
+            {"text": "只有一種好", "is_correct": False,
+             "explanation": "此選項錯誤。三種各有價值。"},
+            {"text": "都沒有用", "is_correct": False,
+             "explanation": "此選項錯誤。三種都有啟發。"},
+            {"text": "無法引起共鳴", "is_correct": False,
+             "explanation": "此選項錯誤。三種適合不同人和處境。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B74-Q30  p12  最深  人物分析  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最深",
+        "skill": "人物分析",
+        "stem": "三首詞中的人物形象塑造手法各有甚麼特色？從文學批評的角度比較三者的優劣。",
+        "options": [
+            {"text": "各有特色：①《念奴嬌》的周瑜——正面描寫為主（肖像+行動+烘托），形象鮮明立體，但主要服務於反襯蘇軾自己，不是獨立的人物研究；②《聲聲慢》的李清照——直接抒情為主，通過行為和感受塑造自我形象，真實動人但缺少他者視角；③《青玉案》的「那人」——留白為主，幾乎沒有具體描寫，讓讀者自行想像和填充，是最具開放性和象徵力量的人物形象。三者代表了寫實、抒情和象徵三種不同的文學塑造方式，各有千秋", "is_correct": True,
+             "explanation": "此選項正確。寫實、抒情、象徵三種不同方式。"},
+            {"text": "都一樣好", "is_correct": False,
+             "explanation": "此選項錯誤。各有不同特色和優劣。"},
+            {"text": "第一首最好", "is_correct": False,
+             "explanation": "此選項過於簡單。各有千秋。"},
+            {"text": "無法比較", "is_correct": False,
+             "explanation": "此選項錯誤。可以從文學批評角度比較。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # =====================================================================
+    # Batch 75 – p12 × 句式語法 × 30 questions
+    # Passage: 宋詞三首
+    # Skill: t-grammar
+    # Topics: 詞牌格律, 倒裝句, 省略句, 判斷句, 虛詞, 口語入詞
+    # Difficulty distribution: 最淺5, 淺8, 中10, 深5, 最深2
+    # =====================================================================
+
+    # ── B75-Q01  p12  最淺  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "句式語法",
+        "stem": "「多情應笑我，早生華髮」是甚麼句式？",
+        "options": [
+            {"text": "倒裝句——正常語序應為「應笑我多情，早生華髮」。原文將「多情」提前，強調蘇軾感慨自己多愁善感", "is_correct": True,
+             "explanation": "此選項正確。「多情」是倒裝提前的成分。"},
+            {"text": "正常語序", "is_correct": False,
+             "explanation": "此選項錯誤。語序經過了倒裝。"},
+            {"text": "判斷句", "is_correct": False,
+             "explanation": "此選項錯誤。不是判斷句。"},
+            {"text": "被動句", "is_correct": False,
+             "explanation": "此選項錯誤。不是被動句。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B75-Q02  p12  最淺  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "句式語法",
+        "stem": "「怎一箇愁字了得」是甚麼句式？",
+        "options": [
+            {"text": "反問句——意思是「怎能用一個愁字就說得完呢」，反問加強了愁苦深重、難以言說的語氣", "is_correct": True,
+             "explanation": "此選項正確。「怎……了得」是反問。"},
+            {"text": "陳述句", "is_correct": False,
+             "explanation": "此選項錯誤。是反問句。"},
+            {"text": "祈使句", "is_correct": False,
+             "explanation": "此選項錯誤。不是祈使句。"},
+            {"text": "感嘆句", "is_correct": False,
+             "explanation": "此選項錯誤。是反問句式。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B75-Q03  p12  最淺  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "句式語法",
+        "stem": "「大江東去」中的「東」是甚麼詞性？",
+        "options": [
+            {"text": "名詞用作副詞（狀語）——「東」本來是名詞（東方），這裏用作副詞修飾「去」，表示向東流去", "is_correct": True,
+             "explanation": "此選項正確。名詞作狀語。"},
+            {"text": "名詞", "is_correct": False,
+             "explanation": "此選項不完全正確。「東」在這裏是名詞活用為副詞。"},
+            {"text": "動詞", "is_correct": False,
+             "explanation": "此選項錯誤。「東」不是動詞。"},
+            {"text": "形容詞", "is_correct": False,
+             "explanation": "此選項錯誤。不是形容詞。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B75-Q04  p12  最淺  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "句式語法",
+        "stem": "「獨自怎生得黑」中的「怎生」是甚麼意思？",
+        "options": [
+            {"text": "怎麼、怎樣——「怎生」是宋代口語，相當於現代漢語的「怎麼」。「怎生得黑」意思是「怎樣才能捱到天黑」", "is_correct": True,
+             "explanation": "此選項正確。宋代口語，意思是怎麼。"},
+            {"text": "甚麼生物", "is_correct": False,
+             "explanation": "此選項錯誤。「怎生」是整體詞語。"},
+            {"text": "為甚麼生氣", "is_correct": False,
+             "explanation": "此選項錯誤。不是「怎/生」分開解釋。"},
+            {"text": "怎樣生活", "is_correct": False,
+             "explanation": "此選項錯誤。「怎生」意思是怎麼。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B75-Q05  p12  最淺  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "句式語法",
+        "stem": "「人間如夢」是甚麼句式？",
+        "options": [
+            {"text": "判斷句（比喻型）——用「如」字將「人間」比作「夢」，表達人生虛幻短暫的意思。這是明喻兼判斷", "is_correct": True,
+             "explanation": "此選項正確。用「如」構成比喻判斷句。"},
+            {"text": "反問句", "is_correct": False,
+             "explanation": "此選項錯誤。不是反問句。"},
+            {"text": "倒裝句", "is_correct": False,
+             "explanation": "此選項錯誤。不是倒裝句。"},
+            {"text": "省略句", "is_correct": False,
+             "explanation": "此選項錯誤。不是省略句。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B75-Q06  p12  淺  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "句式語法",
+        "stem": "「故國神遊，多情應笑我，早生華髮」的正常語序應如何排列？",
+        "options": [
+            {"text": "「（我）神遊故國，（古人）應笑我多情，（我已）早生華髮」——原文將「故國」「多情」提前，是雙重倒裝。目的是強調「故國」（壯士的舞台）和「多情」（蘇軾的自嘲）", "is_correct": True,
+             "explanation": "此選項正確。雙重倒裝。"},
+            {"text": "語序沒有變化", "is_correct": False,
+             "explanation": "此選項錯誤。有明顯的倒裝。"},
+            {"text": "只有一處倒裝", "is_correct": False,
+             "explanation": "此選項錯誤。有兩處倒裝。"},
+            {"text": "是省略句不是倒裝句", "is_correct": False,
+             "explanation": "此選項錯誤。主要是倒裝句式。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B75-Q07  p12  淺  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "句式語法",
+        "stem": "「三杯兩盞淡酒，怎敵他、晚來風急」中「怎敵他」的「他」指甚麼？",
+        "options": [
+            {"text": "代詞，指「晚來風急」（晚間的急風）——「他」在這裏是虛指代詞，指代後面的「晚來風急」，即傍晚的急風。「怎敵他」意思是怎能抵擋。「他」字的使用是口語化的表現", "is_correct": True,
+             "explanation": "此選項正確。「他」指代晚來風急。"},
+            {"text": "指某個人", "is_correct": False,
+             "explanation": "此選項錯誤。「他」是虛指。"},
+            {"text": "指李清照自己", "is_correct": False,
+             "explanation": "此選項錯誤。不是指人。"},
+            {"text": "沒有意義", "is_correct": False,
+             "explanation": "此選項錯誤。「他」有代指的功能。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B75-Q08  p12  淺  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "句式語法",
+        "stem": "「東風夜放花千樹」中「花千樹」是甚麼語序？",
+        "options": [
+            {"text": "倒裝——正常語序應為「千樹花」（千樹的花燈）。原文將「花」提前，強調花燈的繽紛。同時「千樹」是誇飾，形容花燈多得像千棵花樹", "is_correct": True,
+             "explanation": "此選項正確。「花千樹」是倒裝。"},
+            {"text": "正常語序", "is_correct": False,
+             "explanation": "此選項錯誤。正常應為「千樹花」。"},
+            {"text": "省略句", "is_correct": False,
+             "explanation": "此選項錯誤。是倒裝。"},
+            {"text": "被動句", "is_correct": False,
+             "explanation": "此選項錯誤。不是被動句。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B75-Q09  p12  淺  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "句式語法",
+        "stem": "「浪淘盡、千古風流人物」中「淘盡」是甚麼意思？主語是甚麼？",
+        "options": [
+            {"text": "淘盡——沖刷殆盡的意思。主語是「浪」（江水的波浪）。「浪淘盡千古風流人物」是比喻：歷史的洪流把千古以來的英雄人物都沖刷殆盡了。「浪」既實指長江的波浪，也喻指歷史的洪流", "is_correct": True,
+             "explanation": "此選項正確。浪是主語，淘盡是沖刷殆盡。"},
+            {"text": "主語是人物", "is_correct": False,
+             "explanation": "此選項錯誤。主語是浪。"},
+            {"text": "淘盡是挑選的意思", "is_correct": False,
+             "explanation": "此選項錯誤。淘盡是沖刷殆盡。"},
+            {"text": "沒有主語", "is_correct": False,
+             "explanation": "此選項錯誤。主語是浪。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B75-Q10  p12  淺  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "句式語法",
+        "stem": "「了得」在「怎一箇愁字了得」中是甚麼意思？是甚麼用法？",
+        "options": [
+            {"text": "了得——了結、說完的意思。「了得」是口語詞彙，在宋代白話中常用。整句意思是「怎能用一個愁字就說完呢」，暗示愁苦之深遠超語言所能表達", "is_correct": True,
+             "explanation": "此選項正確。了結、說完的意思。"},
+            {"text": "很厲害", "is_correct": False,
+             "explanation": "此選項錯誤。不是現代口語「了得」的意思。"},
+            {"text": "結束了", "is_correct": False,
+             "explanation": "此選項錯誤。在反問句中意思是「說完」。"},
+            {"text": "得到了", "is_correct": False,
+             "explanation": "此選項錯誤。不是「了」加「得」。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B75-Q11  p12  淺  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "句式語法",
+        "stem": "「一尊還酹江月」中「還」應讀作甚麼？是甚麼意思？",
+        "options": [
+            {"text": "讀作「huán」（還是）——意思是「還是（算了吧）」，表示放下執著，轉而向江月灑酒。帶有一種「算了，何必多想」的語氣，體現蘇軾的自我寬解", "is_correct": True,
+             "explanation": "此選項正確。讀huán，意思是還是。"},
+            {"text": "讀作「hái」（仍然）", "is_correct": False,
+             "explanation": "此選項錯誤。應讀作huán。"},
+            {"text": "歸還", "is_correct": False,
+             "explanation": "此選項錯誤。不是歸還的意思。"},
+            {"text": "沒有特別意思", "is_correct": False,
+             "explanation": "此選項錯誤。「還」表示轉折。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B75-Q12  p12  淺  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "句式語法",
+        "stem": "「更」在「梧桐更兼細雨」中是甚麼意思？",
+        "options": [
+            {"text": "又、加上——「更兼」意思是「又加上」，表示在已有的愁苦之上再添加一層。「更」字層層遞進，暗示愁苦不斷疊加", "is_correct": True,
+             "explanation": "此選項正確。更是又、再的意思。"},
+            {"text": "更加好", "is_correct": False,
+             "explanation": "此選項錯誤。不是更加好。"},
+            {"text": "改變", "is_correct": False,
+             "explanation": "此選項錯誤。不是變更。"},
+            {"text": "另一個", "is_correct": False,
+             "explanation": "此選項不夠準確。是又、加上的意思。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B75-Q13  p12  淺  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "句式語法",
+        "stem": "「卻」在「卻是舊時相識」中是甚麼意思和語氣？",
+        "options": [
+            {"text": "竟然、原來——「卻」在這裏是轉折語氣詞，帶有「原來（竟然）是舊時的相識」的意外和感慨。大雁是從前在北方見過的舊識，如今在南方重逢，觸發了李清照對故國和往事的傷感", "is_correct": True,
+             "explanation": "此選項正確。竟然、原來的轉折語氣。"},
+            {"text": "退卻", "is_correct": False,
+             "explanation": "此選項錯誤。不是退卻。"},
+            {"text": "拒絕", "is_correct": False,
+             "explanation": "此選項錯誤。是語氣詞。"},
+            {"text": "但是", "is_correct": False,
+             "explanation": "此選項不夠準確。有意外發現的語氣。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B75-Q14  p12  中  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "句式語法",
+        "stem": "《聲聲慢》開頭七組疊字的語法結構有甚麼特點？",
+        "options": [
+            {"text": "三層遞進的動詞/形容詞疊字結構：①「尋尋覓覓」——動詞疊用，描寫尋找的動作（行為層面）；②「冷冷清清」——形容詞疊用，描寫環境感受（外在環境層面）；③「悽悽慘慘戚戚」——形容詞疊用，描寫內心情感（內心層面）。三組由外到內、由動到靜、由行為到感受，構成遞進結構，逐步深入人物的內心世界", "is_correct": True,
+             "explanation": "此選項正確。三層由外到內的遞進結構。"},
+            {"text": "只是重複", "is_correct": False,
+             "explanation": "此選項錯誤。有遞進的層次結構。"},
+            {"text": "隨意排列", "is_correct": False,
+             "explanation": "此選項錯誤。有精心安排的邏輯。"},
+            {"text": "全是名詞", "is_correct": False,
+             "explanation": "此選項錯誤。有動詞和形容詞。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B75-Q15  p12  中  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "句式語法",
+        "stem": "「念奴嬌」和「聲聲慢」作為詞牌，在格律上有甚麼不同？",
+        "options": [
+            {"text": "主要不同：①字數——「念奴嬌」100字，屬長調；「聲聲慢」97字，也屬長調，但結構不同；②分段——兩者都分上下片；③韻腳——《念奴嬌·赤壁懷古》多用入聲韻，聲調短促有力，適合豪放風格；《聲聲慢·秋情》也用入聲韻，但營造的是壓抑悲苦的效果；④句式——念奴嬌長短句交錯，有力有節奏感；聲聲慢善用短句和疊字", "is_correct": True,
+             "explanation": "此選項正確。字數、韻腳、句式都有不同。"},
+            {"text": "完全一樣", "is_correct": False,
+             "explanation": "此選項錯誤。兩者格律不同。"},
+            {"text": "念奴嬌是短調", "is_correct": False,
+             "explanation": "此選項錯誤。100字是長調。"},
+            {"text": "聲聲慢是小令", "is_correct": False,
+             "explanation": "此選項錯誤。97字是長調。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B75-Q16  p12  中  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "句式語法",
+        "stem": "《聲聲慢》中有哪些口語化的表達？這些表達有甚麼效果？",
+        "options": [
+            {"text": "多處口語化表達：①「怎敵他」——怎能抵擋；②「怎生」——怎麼；③「了得」——說完、了結；④「次第」——光景、情形。這些口語化表達的效果是：使詞作更加率真直白，貼近真實的說話方式。李清照善於「以口語入詞」，使詞不顯矯揉造作，讓讀者感受到真實的情感流露", "is_correct": True,
+             "explanation": "此選項正確。多處口語入詞使情感更真切。"},
+            {"text": "沒有口語化表達", "is_correct": False,
+             "explanation": "此選項錯誤。有多處口語化表達。"},
+            {"text": "口語化降低了詞的水平", "is_correct": False,
+             "explanation": "此選項錯誤。口語化是李清照的特色和長處。"},
+            {"text": "只有一處", "is_correct": False,
+             "explanation": "此選項錯誤。有多處口語化表達。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B75-Q17  p12  中  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "句式語法",
+        "stem": "「亂石穿空，驚濤拍岸，捲起千堆雪」三句在句式上有甚麼特點？",
+        "options": [
+            {"text": "排比兼對偶的結構：三句各四字，結構相似（名詞+動詞+賓語），形成排比。其中「亂石穿空」與「驚濤拍岸」更構成工整對偶（亂石對驚濤，穿對拍，空對岸）。第三句「捲起千堆雪」是排比的高潮收束。三句由上（天空）到下（岸邊）再到前（水面），構成完整的空間描寫", "is_correct": True,
+             "explanation": "此選項正確。排比兼對偶。"},
+            {"text": "沒有對偶", "is_correct": False,
+             "explanation": "此選項錯誤。前兩句構成對偶。"},
+            {"text": "只有一句", "is_correct": False,
+             "explanation": "此選項錯誤。是三句的排比結構。"},
+            {"text": "是散文句式", "is_correct": False,
+             "explanation": "此選項錯誤。是整齊的排比對偶句式。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B75-Q18  p12  中  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "句式語法",
+        "stem": "「談笑間、檣櫓灰飛煙滅」中省略了甚麼成分？",
+        "options": [
+            {"text": "省略了主語和時間背景：①省略了主語「周瑜」——是周瑜在談笑之間指揮作戰；②省略了「使」（使役動詞）——完整應為「（周瑜）談笑間（使）檣櫓灰飛煙滅」。省略使句式更加精煉，突出了周瑜從容指揮的大將風度和戰果的驚人", "is_correct": True,
+             "explanation": "此選項正確。省略主語和使役動詞。"},
+            {"text": "沒有省略", "is_correct": False,
+             "explanation": "此選項錯誤。省略了多個成分。"},
+            {"text": "省略了賓語", "is_correct": False,
+             "explanation": "此選項錯誤。主要省略了主語和使役動詞。"},
+            {"text": "省略了地點", "is_correct": False,
+             "explanation": "此選項錯誤。主要省略了主語和使役動詞。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B75-Q19  p12  中  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "句式語法",
+        "stem": "「眾裏尋他千百度」中「千百度」是甚麼意思和用法？",
+        "options": [
+            {"text": "千百次、千百遍——「度」是「次」的意思，「千百度」即千百次。「千百」是誇張的數詞，強調尋找的反覆和執著。整句意思是「在人群中尋找她千百次」。「度」用作量詞是古代漢語的常見用法", "is_correct": True,
+             "explanation": "此選項正確。千百次的意思。"},
+            {"text": "溫度", "is_correct": False,
+             "explanation": "此選項錯誤。不是溫度。"},
+            {"text": "程度", "is_correct": False,
+             "explanation": "此選項錯誤。「度」是「次」的意思。"},
+            {"text": "一百度", "is_correct": False,
+             "explanation": "此選項錯誤。是千百次。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B75-Q20  p12  中  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "句式語法",
+        "stem": "「驀然回首，那人卻在、燈火闌珊處」中「驀然」和「闌珊」分別是甚麼意思？",
+        "options": [
+            {"text": "驀然——突然、忽然。闌珊——稀疏零落、黯淡。「驀然回首」是突然間回頭一看；「燈火闌珊處」是燈火稀疏零落的地方。兩個詞一個寫動作的突然，一個寫環境的冷清，形成強烈的戲劇效果", "is_correct": True,
+             "explanation": "此選項正確。突然回頭，燈火稀疏處。"},
+            {"text": "驀然是慢慢的", "is_correct": False,
+             "explanation": "此選項錯誤。驀然是突然。"},
+            {"text": "闌珊是很亮的", "is_correct": False,
+             "explanation": "此選項錯誤。闌珊是稀疏零落。"},
+            {"text": "兩個都是形容熱鬧", "is_correct": False,
+             "explanation": "此選項錯誤。闌珊是冷清黯淡。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B75-Q21  p12  中  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "句式語法",
+        "stem": "「憔悴損」中的「損」是甚麼用法？",
+        "options": [
+            {"text": "程度補語——「損」在這裏是動詞的補語，表示程度之深。「憔悴損」意思是「憔悴極了、憔悴得很」。這種用法在宋代口語中常見，表示「到了極點」的程度", "is_correct": True,
+             "explanation": "此選項正確。「損」是程度補語。"},
+            {"text": "損壞", "is_correct": False,
+             "explanation": "此選項錯誤。不是損壞的意思。"},
+            {"text": "損失", "is_correct": False,
+             "explanation": "此選項錯誤。是程度補語。"},
+            {"text": "沒有特別意思", "is_correct": False,
+             "explanation": "此選項錯誤。「損」表示程度之深。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B75-Q22  p12  中  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "句式語法",
+        "stem": "「小喬初嫁了」中的「了」是甚麼用法？和現代漢語的「了」有甚麼不同？",
+        "options": [
+            {"text": "語氣助詞，表示完成——「了」在這裏表示「剛剛完成」的語氣，強調周瑜和小喬新婚不久。和現代漢語不同的是：現代「了」常用在動詞後表示已完成（吃了飯），但古代「了」還可以放在句末作為語氣詞，帶有感嘆或強調的意味。「初嫁了」強調的是「正值新婚」的青春意氣", "is_correct": True,
+             "explanation": "此選項正確。語氣助詞表示完成。"},
+            {"text": "沒有意思", "is_correct": False,
+             "explanation": "此選項錯誤。「了」有語氣作用。"},
+            {"text": "和現代用法完全一樣", "is_correct": False,
+             "explanation": "此選項錯誤。古代用法有更豐富的語氣。"},
+            {"text": "表示結束", "is_correct": False,
+             "explanation": "此選項不夠準確。表示剛完成的語氣。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B75-Q23  p12  中  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "句式語法",
+        "stem": "「如今有誰堪摘」中「堪」是甚麼意思？整句是甚麼句式？",
+        "options": [
+            {"text": "堪——可以、能夠。整句是反問兼感嘆的句式。意思是「如今還有誰能去摘呢」，暗示①花已憔悴凋零，不值得摘；②自己憔悴，無心摘花；③沒有人（丈夫）可以為自己摘花了。反問加強了孤獨無依的感慨", "is_correct": True,
+             "explanation": "此選項正確。堪是可以，反問兼感嘆句。"},
+            {"text": "堪是不能", "is_correct": False,
+             "explanation": "此選項錯誤。堪是可以、能夠。"},
+            {"text": "是陳述句", "is_correct": False,
+             "explanation": "此選項錯誤。是反問句。"},
+            {"text": "堪是喜歡", "is_correct": False,
+             "explanation": "此選項錯誤。堪是可以。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B75-Q24  p12  深  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "句式語法",
+        "stem": "三首詞在句式長短的變化上各有甚麼特點？這與內容和情感有甚麼關係？",
+        "options": [
+            {"text": "各有特點：①《念奴嬌》——長短句交錯有力，四字短句（亂石穿空）急促有力，長句（遙想公瑾當年……）舒緩悠揚，配合豪放的氣勢和懷古的沉思；②《聲聲慢》——以短句為主，特別是開頭疊字和「守着窗兒」等，短促的節奏營造壓抑窒息的感覺，配合愁苦的情感；③《青玉案》——上片多長句描寫繁華場景，下片轉短句收束，「驀然回首」的節奏變化製造轉折效果。句式的長短直接影響詞的節奏和情感表達", "is_correct": True,
+             "explanation": "此選項正確。句式長短與情感表達密切相關。"},
+            {"text": "三首一樣", "is_correct": False,
+             "explanation": "此選項錯誤。句式變化各有特點。"},
+            {"text": "與情感無關", "is_correct": False,
+             "explanation": "此選項錯誤。句式與情感密切相關。"},
+            {"text": "只有長句", "is_correct": False,
+             "explanation": "此選項錯誤。有長短句交錯。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B75-Q25  p12  深  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "句式語法",
+        "stem": "《聲聲慢》中「乍暖還寒時候，最難將息」的語法結構如何？「將息」是甚麼意思？",
+        "options": [
+            {"text": "語法結構：「乍暖還寒時候」是時間狀語，「最難將息」是謂語。「乍……還……」是「剛剛……又……」的意思，表示天氣反覆變化。「將息」是古代口語，意思是「休養、調理」。整句是說：天氣剛暖又冷的時候，最難好好休養調理。表面寫天氣，實際暗喻心情的起伏不定，難以平靜", "is_correct": True,
+             "explanation": "此選項正確。時間狀語+謂語，將息是休養。"},
+            {"text": "將息是呼吸", "is_correct": False,
+             "explanation": "此選項錯誤。將息是休養調理。"},
+            {"text": "乍是「炸」", "is_correct": False,
+             "explanation": "此選項錯誤。乍是剛剛。"},
+            {"text": "沒有特別結構", "is_correct": False,
+             "explanation": "此選項錯誤。有層次分明的語法結構。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B75-Q26  p12  深  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "句式語法",
+        "stem": "三首詞中的虛詞（如「卻」「還」「更」「怎」「應」）各有甚麼語氣功能？",
+        "options": [
+            {"text": "各有不同的語氣功能：①「卻」——轉折、意外語氣：「卻是舊時相識」（原來是……）；②「還」——轉折讓步語氣：「一尊還酹江月」（還是算了……）；③「更」——遞進加重語氣：「梧桐更兼細雨」（又加上……）；④「怎」——反問質疑語氣：「怎敵他」「怎生得黑」「怎一箇愁字了得」（怎能……）；⑤「應」——推測揣度語氣：「多情應笑我」（大概會……）。這些虛詞看似不起眼，但決定了整句的語氣和情感基調", "is_correct": True,
+             "explanation": "此選項正確。每個虛詞都有特定的語氣功能。"},
+            {"text": "虛詞沒有意義", "is_correct": False,
+             "explanation": "此選項錯誤。虛詞有重要的語氣功能。"},
+            {"text": "都是一樣的語氣", "is_correct": False,
+             "explanation": "此選項錯誤。各有不同語氣。"},
+            {"text": "可以刪去", "is_correct": False,
+             "explanation": "此選項錯誤。虛詞是不可或缺的。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B75-Q27  p12  深  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "句式語法",
+        "stem": "《念奴嬌》中「人道是、三國周郎赤壁」在語法上有甚麼特點？「人道是」起甚麼作用？",
+        "options": [
+            {"text": "語法特點：①「人道是」是插入語（引述語），意思是「人們說是」，起過渡和連接作用。②將眼前的赤壁與歷史的三國周郎聯繫起來。③「人道是」帶有一種客觀引述的語氣——蘇軾並不確定這裏是否就是真正的赤壁古戰場，用「人道是」保持了一種距離和曖昧。這種寫法既引出了懷古主題，又巧妙地避免了史實考證的問題", "is_correct": True,
+             "explanation": "此選項正確。插入語，帶有客觀引述的語氣。"},
+            {"text": "沒有特別作用", "is_correct": False,
+             "explanation": "此選項錯誤。有過渡和距離的作用。"},
+            {"text": "是蘇軾自己的判斷", "is_correct": False,
+             "explanation": "此選項錯誤。「人道是」是引述他人。"},
+            {"text": "可以刪去", "is_correct": False,
+             "explanation": "此選項錯誤。有重要的過渡作用。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B75-Q28  p12  深  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "句式語法",
+        "stem": "《青玉案》上片的語法結構如何組織元宵夜景的描寫？",
+        "options": [
+            {"text": "層層鋪排的語法結構：①「東風夜放花千樹」——主謂賓結構，總寫花燈；②「更吹落、星如雨」——承接結構，加寫煙火；③「寶馬雕車香滿路」——偏正+主謂結構，寫車馬和香氣；④「鳳簫聲動，玉壺光轉」——兩組主謂短語對偶，寫音樂和月光；⑤「一夜魚龍舞」——時間+主謂結構，總結整晚的歡樂。由視覺（花燈→煙火）到綜合感官（香氣→聲音→光影→舞蹈），語法由簡到繁，場面由小到大", "is_correct": True,
+             "explanation": "此選項正確。層層鋪排由簡到繁。"},
+            {"text": "沒有組織", "is_correct": False,
+             "explanation": "此選項錯誤。有嚴密的組織。"},
+            {"text": "只有一種結構", "is_correct": False,
+             "explanation": "此選項錯誤。多種語法結構交替。"},
+            {"text": "很混亂", "is_correct": False,
+             "explanation": "此選項錯誤。結構層次分明。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B75-Q29  p12  最深  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最深",
+        "skill": "句式語法",
+        "stem": "三首詞在韻腳和聲調上各有甚麼特點？這些特點如何服務於各自的主題和情感？",
+        "options": [
+            {"text": "各有特色：①《念奴嬌》——以入聲韻為主（物、壁、發、月等），短促有力，配合豪放的氣勢。入聲的急促與壯景和英雄氣概相呼應，收束時「月」字餘韻悠長，配合超脫的結尾；②《聲聲慢》——也用入聲韻（覓、戚、息、急、識、積、摘、黑、滴、得），全篇壓抑促迫的韻腳營造窒息感。連續的短促韻腳如一聲聲嘆息，配合愁苦無盡的主題；③《青玉案》——用平聲和仄聲交替的韻腳（樹、雨、路、去、處等），節奏較為流暢。上片的流暢感配合繁華場景，下片收束於「處」字，穩定而安靜，配合找到「那人」的寧靜", "is_correct": True,
+             "explanation": "此選項正確。韻腳聲調與主題情感相互配合。"},
+            {"text": "韻腳沒有關係", "is_correct": False,
+             "explanation": "此選項錯誤。韻腳與情感密切相關。"},
+            {"text": "三首韻腳一樣", "is_correct": False,
+             "explanation": "此選項錯誤。各有不同特點。"},
+            {"text": "聲調不重要", "is_correct": False,
+             "explanation": "此選項錯誤。聲調對詞的效果很重要。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B75-Q30  p12  最深  句式語法  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最深",
+        "skill": "句式語法",
+        "stem": "比較三首詞在語言風格上的差異：蘇軾的雅語、李清照的口語、辛棄疾的精語各有甚麼特色？",
+        "options": [
+            {"text": "三種語言風格各有特色：①蘇軾的雅語——用典雅的書面語和歷史典故，如「羽扇綸巾」「檣櫓灰飛煙滅」，語言莊重有氣勢，適合懷古詠史的主題；②李清照的口語——善用日常口語入詞，如「怎敵他」「怎生得黑」「了得」，語言平白樸素但感情真摯，打破了詞必須華美的慣例，開創了「以口語入詞」的風格；③辛棄疾的精語——語言精煉含蓄，如「眾裏尋他千百度」「燈火闌珊處」，每個字都經過推敲，以最少的語言承載最豐富的意涵。三種風格代表了宋詞語言藝術的三個方向", "is_correct": True,
+             "explanation": "此選項正確。雅語、口語、精語三種風格。"},
+            {"text": "風格都一樣", "is_correct": False,
+             "explanation": "此選項錯誤。三者語言風格各異。"},
+            {"text": "李清照最差", "is_correct": False,
+             "explanation": "此選項錯誤。口語入詞是李清照的特色和成就。"},
+            {"text": "只有蘇軾好", "is_correct": False,
+             "explanation": "此選項錯誤。三者各有千秋。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # =====================================================================
+    # Batch 76 – p12 × 背景知識 × 30 questions
+    # Passage: 宋詞三首
+    # Skill: t-context
+    # Topics: 蘇軾生平/烏台詩案/黃州, 李清照前後期/靖康之變/宋室南渡,
+    #         辛棄疾/南宋偏安/主和主戰, 詞的體裁/詞牌/豪放婉約,
+    #         赤壁之戰/三國, 元宵節
+    # Difficulty distribution: 最淺5, 淺8, 中10, 深5, 最深2
+    # =====================================================================
+
+    # ── B76-Q01  p12  最淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "背景知識",
+        "stem": "蘇軾是哪個朝代的文學家？",
+        "options": [
+            {"text": "北宋——蘇軾（1037-1101），字子瞻，號東坡居士，是北宋著名文學家，唐宋八大家之一", "is_correct": True,
+             "explanation": "此選項正確。蘇軾是北宋文學家。"},
+            {"text": "唐朝", "is_correct": False,
+             "explanation": "此選項錯誤。是北宋不是唐朝。"},
+            {"text": "南宋", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾是北宋人。"},
+            {"text": "明朝", "is_correct": False,
+             "explanation": "此選項錯誤。是北宋。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B76-Q02  p12  最淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "背景知識",
+        "stem": "李清照屬於詞的哪個流派？",
+        "options": [
+            {"text": "婉約派——李清照是婉約派的代表詞人，詞風細膩含蓄，善於表達內心情感", "is_correct": True,
+             "explanation": "此選項正確。婉約派代表。"},
+            {"text": "豪放派", "is_correct": False,
+             "explanation": "此選項錯誤。是婉約派。"},
+            {"text": "花間派", "is_correct": False,
+             "explanation": "此選項錯誤。花間派是晚唐五代。"},
+            {"text": "江西詩派", "is_correct": False,
+             "explanation": "此選項錯誤。江西詩派寫詩不是詞。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B76-Q03  p12  最淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "背景知識",
+        "stem": "辛棄疾的主要政治主張是甚麼？",
+        "options": [
+            {"text": "主張抗金復國——辛棄疾（1140-1207），字幼安，號稼軒，南宋愛國詞人。他一生主張北伐抗金，收復失地，但屢受排擠，壯志未酬", "is_correct": True,
+             "explanation": "此選項正確。主張抗金復國。"},
+            {"text": "主張議和", "is_correct": False,
+             "explanation": "此選項錯誤。是主戰派。"},
+            {"text": "主張投降", "is_correct": False,
+             "explanation": "此選項錯誤。是愛國主戰。"},
+            {"text": "沒有政治主張", "is_correct": False,
+             "explanation": "此選項錯誤。有強烈的抗金主張。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B76-Q04  p12  最淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "背景知識",
+        "stem": "「詞」和「詩」有甚麼基本區別？",
+        "options": [
+            {"text": "詞的句式長短不一（又稱「長短句」），配合音樂（詞牌）演唱；詩的句式整齊（五言或七言），不一定配合音樂。詞有詞牌名規定格律，詩有律詩絕句等體裁", "is_correct": True,
+             "explanation": "此選項正確。詞是長短句配合音樂。"},
+            {"text": "完全一樣", "is_correct": False,
+             "explanation": "此選項錯誤。詞和詩有區別。"},
+            {"text": "詞比詩短", "is_correct": False,
+             "explanation": "此選項錯誤。長調詞可以很長。"},
+            {"text": "詩配合音樂，詞不配合", "is_correct": False,
+             "explanation": "此選項錯誤。反過來了。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B76-Q05  p12  最淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最淺",
+        "skill": "背景知識",
+        "stem": "赤壁之戰是哪個歷史時期的戰役？",
+        "options": [
+            {"text": "三國時期（東漢末年）——赤壁之戰發生於建安十三年（公元208年），孫劉聯軍大敗曹操，奠定了三國鼎立的格局", "is_correct": True,
+             "explanation": "此選項正確。三國時期的著名戰役。"},
+            {"text": "宋朝", "is_correct": False,
+             "explanation": "此選項錯誤。是三國時期。"},
+            {"text": "秦朝", "is_correct": False,
+             "explanation": "此選項錯誤。是三國時期。"},
+            {"text": "明朝", "is_correct": False,
+             "explanation": "此選項錯誤。是三國時期。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B76-Q06  p12  淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "背景知識",
+        "stem": "「烏台詩案」是甚麼事件？對蘇軾有甚麼影響？",
+        "options": [
+            {"text": "「烏台詩案」是北宋元豐二年（1079年）發生的文字獄。蘇軾因詩文被指控諷刺新法和朝廷，被逮捕下獄。出獄後被貶為黃州團練副使。影響：①蘇軾的政治生涯遭受重大打擊；②被貶黃州期間反而寫出了最好的作品，包括《念奴嬌·赤壁懷古》和前後《赤壁賦》", "is_correct": True,
+             "explanation": "此選項正確。烏台詩案導致蘇軾被貶黃州。"},
+            {"text": "一場軍事戰爭", "is_correct": False,
+             "explanation": "此選項錯誤。是文字獄。"},
+            {"text": "與蘇軾無關", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾是主角。"},
+            {"text": "發生在南宋", "is_correct": False,
+             "explanation": "此選項錯誤。發生在北宋。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B76-Q07  p12  淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "背景知識",
+        "stem": "李清照的人生可以分為哪兩個時期？各有甚麼特點？",
+        "options": [
+            {"text": "前期和後期：①前期（北宋）——嫁給金石學家趙明誠，婚姻幸福，生活優裕。詞風活潑清新，多寫閨中生活和離愁；②後期（南宋）——靖康之變後，北宋滅亡，宋室南渡。丈夫趙明誠去世，金石文物散失。李清照流離失所，晚年孤苦。詞風轉為沉痛悲苦", "is_correct": True,
+             "explanation": "此選項正確。前期幸福，後期孤苦。"},
+            {"text": "一直很幸福", "is_correct": False,
+             "explanation": "此選項錯誤。後期很孤苦。"},
+            {"text": "一直很痛苦", "is_correct": False,
+             "explanation": "此選項錯誤。前期是幸福的。"},
+            {"text": "沒有明顯分期", "is_correct": False,
+             "explanation": "此選項錯誤。靖康之變是明顯的分界線。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B76-Q08  p12  淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "背景知識",
+        "stem": "「靖康之變」是甚麼事件？對李清照有甚麼影響？",
+        "options": [
+            {"text": "靖康之變（1127年）——金兵攻入北宋首都開封，擄走徽宗、欽宗二帝，北宋滅亡。宋室南渡，建立南宋。對李清照的影響：①被迫南渡，離開故鄉；②顛沛流離中大量金石書畫散失；③丈夫趙明誠在南渡途中去世；④此後生活困苦、孤獨終老。《聲聲慢》即寫於此時期", "is_correct": True,
+             "explanation": "此選項正確。靖康之變導致國破家亡。"},
+            {"text": "一場自然災害", "is_correct": False,
+             "explanation": "此選項錯誤。是軍事政治事件。"},
+            {"text": "與李清照無關", "is_correct": False,
+             "explanation": "此選項錯誤。直接導致她生活巨變。"},
+            {"text": "發生在唐朝", "is_correct": False,
+             "explanation": "此選項錯誤。發生在北宋末年。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B76-Q09  p12  淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "背景知識",
+        "stem": "辛棄疾有甚麼特殊的人生經歷？",
+        "options": [
+            {"text": "辛棄疾出生在金國統治下的北方，21歲時組織義軍起義抗金，後率眾南歸南宋。他文武雙全，但在南宋朝廷中因為主戰立場而長期不受重用，多次被閒置。他的詞充滿了壯志未酬的悲憤和愛國熱情", "is_correct": True,
+             "explanation": "此選項正確。北方起義，南歸後不受重用。"},
+            {"text": "一生都很順利", "is_correct": False,
+             "explanation": "此選項錯誤。多次被閒置。"},
+            {"text": "從不關心國事", "is_correct": False,
+             "explanation": "此選項錯誤。是愛國詞人。"},
+            {"text": "出生在南宋", "is_correct": False,
+             "explanation": "此選項錯誤。出生在金國統治下的北方。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B76-Q10  p12  淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "背景知識",
+        "stem": "宋詞的「豪放派」和「婉約派」有甚麼基本區別？",
+        "options": [
+            {"text": "基本區別：①題材——豪放派題材廣泛，多寫歷史、政治、山河等宏大主題；婉約派多寫愛情、離愁、閨思等個人情感；②風格——豪放派氣勢磅礴、意境開闊；婉約派含蓄細膩、語言優美；③代表——豪放派代表有蘇軾、辛棄疾；婉約派代表有李清照、柳永", "is_correct": True,
+             "explanation": "此選項正確。題材、風格、代表都不同。"},
+            {"text": "完全一樣", "is_correct": False,
+             "explanation": "此選項錯誤。兩個流派有明顯區別。"},
+            {"text": "婉約派更好", "is_correct": False,
+             "explanation": "此選項錯誤。兩派各有成就。"},
+            {"text": "只有一個流派", "is_correct": False,
+             "explanation": "此選項錯誤。有兩個主要流派。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B76-Q11  p12  淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "背景知識",
+        "stem": "《念奴嬌·赤壁懷古》寫於甚麼時候？蘇軾當時的處境如何？",
+        "options": [
+            {"text": "寫於元豐五年（1082年），蘇軾被貶黃州期間。當時蘇軾因「烏台詩案」被貶為黃州團練副使——一個沒有實權的閒職。他遊覽黃州赤壁（赤鼻磯），懷想三國英雄周瑜，感慨自己功業未成、年華已老", "is_correct": True,
+             "explanation": "此選項正確。被貶黃州期間所寫。"},
+            {"text": "當官時寫的", "is_correct": False,
+             "explanation": "此選項錯誤。是被貶時寫的。"},
+            {"text": "年輕時寫的", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾當時已四十多歲。"},
+            {"text": "在東京寫的", "is_correct": False,
+             "explanation": "此選項錯誤。在黃州寫的。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B76-Q12  p12  淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "背景知識",
+        "stem": "元宵節在古代中國有甚麼特別之處？這與《青玉案》有甚麼關係？",
+        "options": [
+            {"text": "元宵節是農曆正月十五，是古代少數允許女性外出的節日，也是全民狂歡的盛會——張燈結綵、歌舞遊樂。《青玉案》正是描寫元宵夜的繁華景象：花燈如千樹花開，煙火如星雨，寶馬雕車滿路，婦女盛裝出遊。這個背景使「那人」不參與熱鬧更顯突出", "is_correct": True,
+             "explanation": "此選項正確。元宵節的背景使主題更突出。"},
+            {"text": "與詞無關", "is_correct": False,
+             "explanation": "此選項錯誤。元宵節是詞的重要背景。"},
+            {"text": "元宵節很冷清", "is_correct": False,
+             "explanation": "此選項錯誤。元宵節非常熱鬧。"},
+            {"text": "禁止外出", "is_correct": False,
+             "explanation": "此選項錯誤。元宵節允許外出遊玩。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B76-Q13  p12  淺  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "背景知識",
+        "stem": "「詞牌」是甚麼？「念奴嬌」「聲聲慢」「青玉案」各是甚麼？",
+        "options": [
+            {"text": "詞牌是詞的格律名稱，規定了字數、句數、平仄和韻腳。「念奴嬌」「聲聲慢」「青玉案」都是詞牌名：①「念奴嬌」——100字，雙調（上下兩片），適合寫豪放壯闊的內容；②「聲聲慢」——97字，雙調，適合寫纏綿悲苦的內容；③「青玉案」——67字，雙調，篇幅較短但結構精巧", "is_correct": True,
+             "explanation": "此選項正確。三者都是詞牌名。"},
+            {"text": "作者的名字", "is_correct": False,
+             "explanation": "此選項錯誤。是詞牌名不是作者名。"},
+            {"text": "詩的題目", "is_correct": False,
+             "explanation": "此選項錯誤。是詞的格律名稱。"},
+            {"text": "書的名字", "is_correct": False,
+             "explanation": "此選項錯誤。是詞牌名。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B76-Q14  p12  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "蘇軾遊覽的赤壁是否就是三國赤壁之戰的古戰場？這對理解詞作有甚麼影響？",
+        "options": [
+            {"text": "一般認為不是——蘇軾遊覽的是黃州赤壁（赤鼻磯），而三國赤壁之戰的古戰場在湖北蒲圻（今赤壁市）。蘇軾本人也用了「人道是」三字，暗示他知道這可能不是真正的古戰場。但這不影響詞的價值：蘇軾借此地點發思古之幽情，重要的是藉懷古來抒發自己的感慨，不在於地點是否精確", "is_correct": True,
+             "explanation": "此選項正確。可能不是同一地點但不影響詞的價值。"},
+            {"text": "確定是同一地點", "is_correct": False,
+             "explanation": "此選項錯誤。一般認為不是。"},
+            {"text": "蘇軾不知道赤壁之戰", "is_correct": False,
+             "explanation": "此選項錯誤。他專門懷古。"},
+            {"text": "地點不對所以詞不好", "is_correct": False,
+             "explanation": "此選項錯誤。不影響文學價值。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B76-Q15  p12  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "南宋「偏安」是甚麼意思？這與辛棄疾的詞有甚麼關係？",
+        "options": [
+            {"text": "偏安——指南宋朝廷偏安江南一隅，不積極收復北方失地。朝廷中主和派佔上風，與金國議和，放棄收復北方。辛棄疾是主戰派，一生主張北伐抗金，但在偏安的政治氛圍下屢受排擠。《青玉案》中元宵繁華可理解為偏安社會的醉生夢死，「那人」不參與其中正是辛棄疾對這種現狀的不認同", "is_correct": True,
+             "explanation": "此選項正確。偏安背景下辛棄疾不隨俗。"},
+            {"text": "偏安是很好的政策", "is_correct": False,
+             "explanation": "此選項錯誤。辛棄疾反對偏安。"},
+            {"text": "與辛棄疾無關", "is_correct": False,
+             "explanation": "此選項錯誤。是理解辛棄疾詞的重要背景。"},
+            {"text": "南宋收復了北方", "is_correct": False,
+             "explanation": "此選項錯誤。南宋沒有收復北方。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B76-Q16  p12  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "赤壁之戰中周瑜扮演了甚麼角色？蘇軾在詞中是否忠於史實？",
+        "options": [
+            {"text": "周瑜是孫劉聯軍的主要統帥，指揮火攻大敗曹操。蘇軾基本忠於史實但有文學加工：①「小喬初嫁了」——歷史上赤壁之戰時小喬嫁給周瑜已有十年，並非「初嫁」。蘇軾故意寫成「初嫁」是為了突出周瑜的年少得意；②「檣櫓灰飛煙滅」——簡化了複雜的戰況，突出周瑜的從容和戰果的輝煌。文學創作允許適當的虛構", "is_correct": True,
+             "explanation": "此選項正確。基本忠於史實但有文學加工。"},
+            {"text": "完全符合史實", "is_correct": False,
+             "explanation": "此選項錯誤。有文學加工。"},
+            {"text": "完全虛構", "is_correct": False,
+             "explanation": "此選項錯誤。基本忠於史實。"},
+            {"text": "周瑜沒有參加赤壁之戰", "is_correct": False,
+             "explanation": "此選項錯誤。周瑜是主要統帥。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B76-Q17  p12  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "蘇軾為甚麼被稱為「東坡居士」？這個號有甚麼含義？",
+        "options": [
+            {"text": "蘇軾被貶黃州期間，因生活困難，在城東的山坡上開荒種地，因此自號「東坡居士」。「東坡」是實際的地名，「居士」是在家修行的佛教稱號。這個號體現了蘇軾被貶後的生活狀態和他以苦為樂、隨遇而安的達觀態度", "is_correct": True,
+             "explanation": "此選項正確。因在黃州東坡種地而自號。"},
+            {"text": "因為住在東邊", "is_correct": False,
+             "explanation": "此選項不夠完整。是因為在城東山坡開荒種地。"},
+            {"text": "出生時的名字", "is_correct": False,
+             "explanation": "此選項錯誤。是自取的號。"},
+            {"text": "別人取的綽號", "is_correct": False,
+             "explanation": "此選項錯誤。是自號。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B76-Q18  p12  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "趙明誠是誰？他的去世對李清照有甚麼影響？",
+        "options": [
+            {"text": "趙明誠是李清照的丈夫，金石學家，擅長古器物和金石碑帖的收藏與研究。兩人志趣相投，婚姻幸福。趙明誠在南渡途中（1129年）病逝。他的去世對李清照的影響：①失去了人生伴侶，此後孤獨終老；②大量共同收藏的金石書畫在戰亂中散失；③詞風從清新變為沉痛，《聲聲慢》正是喪夫後的作品", "is_correct": True,
+             "explanation": "此選項正確。喪夫導致李清照晚年孤苦。"},
+            {"text": "不認識的人", "is_correct": False,
+             "explanation": "此選項錯誤。是李清照的丈夫。"},
+            {"text": "對李清照沒有影響", "is_correct": False,
+             "explanation": "此選項錯誤。影響深遠。"},
+            {"text": "是李清照的朋友", "is_correct": False,
+             "explanation": "此選項錯誤。是丈夫。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B76-Q19  p12  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "辛棄疾為甚麼被稱為「詞中之龍」？",
+        "options": [
+            {"text": "辛棄疾被稱為「詞中之龍」，原因：①作品數量多——存詞六百多首，是宋代存詞最多的詞人；②題材廣泛——愛國、抒懷、詠物、山水、農村無所不寫；③風格多變——以豪放為主但也能寫婉約細膩之作；④用典豐富——善於化用經典。他與蘇軾並稱「蘇辛」，是豪放派的集大成者", "is_correct": True,
+             "explanation": "此選項正確。多產、多才、多變。"},
+            {"text": "因為他姓龍", "is_correct": False,
+             "explanation": "此選項錯誤。因為詞作成就極高。"},
+            {"text": "只寫了幾首詞", "is_correct": False,
+             "explanation": "此選項錯誤。存詞六百多首。"},
+            {"text": "只擅長豪放詞", "is_correct": False,
+             "explanation": "此選項錯誤。風格多變。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B76-Q20  p12  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "蘇軾除了是詞人，還在哪些領域有重要成就？",
+        "options": [
+            {"text": "多方面成就：①散文——唐宋八大家之一，代表作有前後《赤壁賦》；②詩歌——與黃庭堅並稱「蘇黃」；③書法——「蘇黃米蔡」宋四家之一；④繪畫——善畫竹石；⑤飲食——東坡肉、東坡豆腐等菜式傳說源自他；⑥佛學——對佛學有深入研究。蘇軾是中國文化史上罕見的全才", "is_correct": True,
+             "explanation": "此選項正確。散文、詩、書、畫多方面全才。"},
+            {"text": "只會寫詞", "is_correct": False,
+             "explanation": "此選項錯誤。是多方面全才。"},
+            {"text": "只會書法", "is_correct": False,
+             "explanation": "此選項錯誤。有多方面成就。"},
+            {"text": "沒有其他成就", "is_correct": False,
+             "explanation": "此選項錯誤。成就涵蓋多個領域。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B76-Q21  p12  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "「羽扇綸巾」在歷史上是甚麼打扮？蘇軾為甚麼用這個描寫周瑜？",
+        "options": [
+            {"text": "「羽扇綸巾」是手持羽毛扇、頭戴青絲頭巾的打扮，是古代文人儒士的裝束，而非武將的盔甲戰袍。蘇軾用這個描寫周瑜是為了突出他「儒將」的形象——身為大將卻穿着文人裝束指揮作戰，表現他的從容自信和文武兼備。歷史上「羽扇綸巾」也常用來形容諸葛亮，蘇軾將其移用於周瑜", "is_correct": True,
+             "explanation": "此選項正確。文人裝束突出儒將形象。"},
+            {"text": "是武將的盔甲", "is_correct": False,
+             "explanation": "此選項錯誤。是文人的裝束。"},
+            {"text": "隨便寫的", "is_correct": False,
+             "explanation": "此選項錯誤。有突出儒將形象的用意。"},
+            {"text": "是蘇軾自己的打扮", "is_correct": False,
+             "explanation": "此選項錯誤。是描寫周瑜的。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B76-Q22  p12  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "李清照在詞學理論上有甚麼重要主張？",
+        "options": [
+            {"text": "李清照提出了「詞別是一家」的主張——認為詞和詩是不同的文學體裁，詞應該保持自己的特點（配合音律、語言通俗、感情細膩），不應該寫成像詩一樣的東西。這個主張針對蘇軾「以詩為詞」的做法，強調詞應該有自己獨立的藝術標準。她本人的創作也實踐了這個主張", "is_correct": True,
+             "explanation": "此選項正確。「詞別是一家」的理論主張。"},
+            {"text": "沒有理論主張", "is_correct": False,
+             "explanation": "此選項錯誤。有「詞別是一家」的重要主張。"},
+            {"text": "認為詞和詩一樣", "is_correct": False,
+             "explanation": "此選項錯誤。恰恰相反。"},
+            {"text": "主張廢除詞", "is_correct": False,
+             "explanation": "此選項錯誤。是要維護詞的獨特性。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B76-Q23  p12  中  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "背景知識",
+        "stem": "辛棄疾年輕時有甚麼英勇事蹟？",
+        "options": [
+            {"text": "辛棄疾21歲時在金國統治下的山東組織了兩千人的義軍參加抗金起義。他曾率五十騎突入金營，活捉叛徒張安國，千里奔馳南歸南宋。這段英勇經歷使他具有文人少有的軍事經驗和豪邁氣概，也使他的詞充滿了真實的戰場氣息和愛國熱情", "is_correct": True,
+             "explanation": "此選項正確。組織義軍、活捉叛徒、南歸。"},
+            {"text": "沒有英勇事蹟", "is_correct": False,
+             "explanation": "此選項錯誤。有突入金營活捉叛徒的事蹟。"},
+            {"text": "只是文人", "is_correct": False,
+             "explanation": "此選項錯誤。是文武雙全。"},
+            {"text": "在南宋出生長大", "is_correct": False,
+             "explanation": "此選項錯誤。出生在金國統治下的北方。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B76-Q24  p12  深  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "背景知識",
+        "stem": "三位作者各自的歷史背景如何影響了他們的詞作主題和風格？",
+        "options": [
+            {"text": "歷史背景深刻影響了創作：①蘇軾——「烏台詩案」後被貶黃州，政治失意但思想成熟。在黃州他接觸了佛道思想，形成了「人間如夢」的哲學觀。被貶的挫折反而催生了超脫豁達的風格；②李清照——靖康之變導致國破家亡、喪夫流離。真實的苦難經歷使她的後期詞充滿了切膚之痛，不需要虛構就能寫出感人的作品；③辛棄疾——生於金國、南歸抗金卻不受重用。主戰與偏安的矛盾使他的詞充滿了壯志未酬的悲憤。文武雙全的經歷使他的豪放有真實的底蘊", "is_correct": True,
+             "explanation": "此選項正確。各自的歷史背景深刻影響了創作。"},
+            {"text": "背景沒有影響", "is_correct": False,
+             "explanation": "此選項錯誤。背景影響深遠。"},
+            {"text": "三者背景相同", "is_correct": False,
+             "explanation": "此選項錯誤。背景各不相同。"},
+            {"text": "只有政治背景有影響", "is_correct": False,
+             "explanation": "此選項錯誤。個人經歷、社會環境都有影響。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B76-Q25  p12  深  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "背景知識",
+        "stem": "蘇軾「以詩為詞」的革新對宋詞發展有甚麼影響？三首詞中有甚麼體現？",
+        "options": [
+            {"text": "蘇軾「以詩為詞」的革新：①打破了詞只寫「男女私情」的傳統，將歷史、哲學、政治等宏大題材引入詞中；②提高了詞的文學地位，使詞不再被視為「小道」；③開創了豪放派的先河。在三首詞中的體現：蘇軾的《念奴嬌》以懷古詠史入詞是「以詩為詞」的典型；辛棄疾承繼這一傳統，以象徵手法寫政治理想；而李清照則代表了對這一趨勢的反思——她主張「詞別是一家」，認為詞應保持自己的特點", "is_correct": True,
+             "explanation": "此選項正確。以詩為詞開創豪放派。"},
+            {"text": "沒有影響", "is_correct": False,
+             "explanation": "此選項錯誤。影響深遠。"},
+            {"text": "降低了詞的水平", "is_correct": False,
+             "explanation": "此選項錯誤。提高了詞的地位。"},
+            {"text": "三首詞沒有體現", "is_correct": False,
+             "explanation": "此選項錯誤。三首都有不同程度的體現。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B76-Q26  p12  深  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "背景知識",
+        "stem": "南宋主和派與主戰派的爭論是怎樣的？辛棄疾處於甚麼位置？",
+        "options": [
+            {"text": "南宋朝廷長期存在主和與主戰的爭論：①主和派——以秦檜等為代表，主張與金國議和，維持現狀，認為北伐風險太大；②主戰派——以岳飛、辛棄疾等為代表，主張北伐收復失地。辛棄疾是堅定的主戰派，多次上書陳述抗金策略（如《美芹十論》《九議》），但因為主和派佔上風，他長期被閒置。他的詞中充滿了「壯志未酬」的悲憤，《青玉案》中「那人」的孤高正是他在政治上被孤立的寫照", "is_correct": True,
+             "explanation": "此選項正確。辛棄疾是被孤立的主戰派。"},
+            {"text": "沒有爭論", "is_correct": False,
+             "explanation": "此選項錯誤。爭論持續了整個南宋。"},
+            {"text": "辛棄疾是主和派", "is_correct": False,
+             "explanation": "此選項錯誤。是堅定的主戰派。"},
+            {"text": "主戰派最終勝利", "is_correct": False,
+             "explanation": "此選項錯誤。主和派長期佔上風。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B76-Q27  p12  深  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "背景知識",
+        "stem": "「酹」是甚麼禮儀？蘇軾「一尊還酹江月」有甚麼文化含義？",
+        "options": [
+            {"text": "「酹」是古代的祭奠禮儀——將酒灑在地上（或水中）以祭祀天地、鬼神或逝者。蘇軾「酹江月」的文化含義：①祭奠的對象是「江月」——江水和明月是永恆的自然，蘇軾向它們致敬而非向人間權貴；②暗含佛道思想——人生短暫如夢，不如寄情於永恆的自然；③寄託了超脫的願望——放下對功業的執念，與天地江月為伴。這個結尾體現了蘇軾在儒家（追求功業）與佛道（追求超脫）之間的取捨", "is_correct": True,
+             "explanation": "此選項正確。酹是祭奠，向自然致敬表示超脫。"},
+            {"text": "喝酒", "is_correct": False,
+             "explanation": "此選項錯誤。是灑酒祭奠。"},
+            {"text": "沒有文化含義", "is_correct": False,
+             "explanation": "此選項錯誤。有豐富的文化內涵。"},
+            {"text": "倒掉剩酒", "is_correct": False,
+             "explanation": "此選項錯誤。是有意義的祭奠禮儀。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B76-Q28  p12  深  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "深",
+        "skill": "背景知識",
+        "stem": "三首詞分別代表了宋代文人在困境中的哪三種精神傳統？",
+        "options": [
+            {"text": "三種精神傳統：①蘇軾——佛道的超脫傳統：「人間如夢」體現了佛教的「無常」觀和道家的「齊物」思想，面對挫折選擇超越個人得失，寄情自然；②李清照——詩經以來的「抒情」傳統：直接表達個人情感，「怎一箇愁字了得」延續了屈原「長太息以掩涕兮」的個人抒懷傳統；③辛棄疾——儒家的「入世」傳統：堅持「修齊治平」的理想，即使不被重用也不放棄。三者分別代表了中國文化中佛道、詩騷和儒家的精神資源", "is_correct": True,
+             "explanation": "此選項正確。佛道、抒情、儒家三種傳統。"},
+            {"text": "都是同一傳統", "is_correct": False,
+             "explanation": "此選項錯誤。三種不同的精神傳統。"},
+            {"text": "都是佛教", "is_correct": False,
+             "explanation": "此選項錯誤。各有不同的精神來源。"},
+            {"text": "沒有精神傳統", "is_correct": False,
+             "explanation": "此選項錯誤。有深厚的文化傳統。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B76-Q29  p12  最深  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最深",
+        "skill": "背景知識",
+        "stem": "從文學史的角度看，三首詞在宋詞發展中各佔甚麼地位？它們之間有甚麼傳承關係？",
+        "options": [
+            {"text": "各佔重要地位且有傳承：①蘇軾《念奴嬌》——豪放派的開山之作之一，「以詩為詞」的典範。打破了「詞為艷科」的傳統，將懷古詠史引入詞中，被評為「千古絕唱」。蘇軾是豪放派的開創者；②李清照《聲聲慢》——婉約派的巔峰之作，「以口語入詞」的典範。七組疊字被譽為「千古創格」，將婉約詞的藝術推到極致。她的「詞別是一家」理論也在文學批評史上有重要地位；③辛棄疾《青玉案》——豪放派的集大成之作之一。辛棄疾承繼蘇軾的豪放詞風，但更加沉鬱頓挫，以象徵手法豐富了詞的表現力。傳承關係：蘇軾→辛棄疾構成豪放派的主線，李清照在婉約派中自成一格", "is_correct": True,
+             "explanation": "此選項正確。三首詞在文學史上各有重要地位。"},
+            {"text": "不重要", "is_correct": False,
+             "explanation": "此選項錯誤。都是宋詞的經典之作。"},
+            {"text": "沒有傳承關係", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾和辛棄疾有明確的傳承。"},
+            {"text": "地位都一樣", "is_correct": False,
+             "explanation": "此選項過於簡單。各有不同的地位和貢獻。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B76-Q30  p12  最深  背景知識  ────────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最深",
+        "skill": "背景知識",
+        "stem": "三首詞的創作背景涉及北宋、南宋、三國三個時代。這些不同時代的交織如何豐富了作品的內涵？",
+        "options": [
+            {"text": "多重時代的交織豐富了內涵：①《念奴嬌》——交織了北宋（蘇軾的時代）和三國（周瑜的時代）。千年時差使蘇軾意識到個人在歷史長河中的渺小，產生了「人間如夢」的哲學感悟。同時，三國英雄的輝煌反襯了北宋文人的無力感；②《聲聲慢》——交織了北宋（李清照的幸福前期）和南宋（她的苦難後期）。一個人的人生橫跨了兩個朝代的更替，個人命運與國家興亡緊密相連。「舊時相識」的大雁正是連接兩個時代的紐帶；③《青玉案》——看似只寫南宋的元宵夜，但辛棄疾出生在金國統治的北方，他的南宋身份本身就是時代悲劇的產物。「那人」的孤獨指向南宋偏安的政治現實。三首詞通過不同時代的交織，使個人命運與歷史大局產生共鳴，超越了一時一地的局限", "is_correct": True,
+             "explanation": "此選項正確。多重時代交織豐富了內涵。"},
+            {"text": "只涉及一個時代", "is_correct": False,
+             "explanation": "此選項錯誤。涉及多個時代。"},
+            {"text": "時代交織沒有意義", "is_correct": False,
+             "explanation": "此選項錯誤。交織大大豐富了內涵。"},
+            {"text": "三首詞的時代背景相同", "is_correct": False,
+             "explanation": "此選項錯誤。涉及不同時代。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # =====================================================================
+    # Batch 77 – 跨篇章比較 × 50 questions
+    # Skill: t-comparison
+    # Cross-passage comparison across all 12 prescribed passages
+    # p01 論仁論孝論君子 | p02 魚我所欲也 | p03 逍遙遊
+    # p04 勸學 | p05 出師表 | p06 師說
+    # p07 廉頗藺相如列傳 | p08 岳陽樓記 | p09 六國論
+    # p10 始得西山宴遊記 | p11 唐詩三首 | p12 宋詞三首
+    # Difficulty distribution: 最淺8, 淺12, 中16, 深10, 最深4
+    # =====================================================================
+
+    # ── B77-Q01  p01  最淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p01",
+        "difficulty": "最淺",
+        "skill": "跨篇章比較",
+        "stem": "孔子（《論仁、論孝、論君子》）和孟子（《魚我所欲也》）同屬哪個學派？",
+        "options": [
+            {"text": "儒家——孔子是儒家創始人，孟子繼承並發展了孔子的思想，兩人並稱「孔孟」，同為儒家的代表人物", "is_correct": True,
+             "explanation": "此選項正確。孔孟同屬儒家。"},
+            {"text": "道家", "is_correct": False,
+             "explanation": "此選項錯誤。道家代表是老子和莊子。"},
+            {"text": "法家", "is_correct": False,
+             "explanation": "此選項錯誤。法家代表是韓非子。"},
+            {"text": "墨家", "is_correct": False,
+             "explanation": "此選項錯誤。墨家代表是墨子。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B77-Q02  p03  最淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p03",
+        "difficulty": "最淺",
+        "skill": "跨篇章比較",
+        "stem": "莊子（《逍遙遊》）和荀子（《勸學》）分別屬於哪個學派？",
+        "options": [
+            {"text": "莊子屬於道家，荀子屬於儒家——莊子繼承老子的思想，主張順應自然、追求精神自由；荀子則繼承孔子的思想，主張後天學習、積累修養", "is_correct": True,
+             "explanation": "此選項正確。莊子道家，荀子儒家。"},
+            {"text": "都是儒家", "is_correct": False,
+             "explanation": "此選項錯誤。莊子是道家。"},
+            {"text": "都是道家", "is_correct": False,
+             "explanation": "此選項錯誤。荀子是儒家。"},
+            {"text": "莊子儒家，荀子道家", "is_correct": False,
+             "explanation": "此選項錯誤。反過來了。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B77-Q03  p05  最淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p05",
+        "difficulty": "最淺",
+        "skill": "跨篇章比較",
+        "stem": "諸葛亮（《出師表》）和范仲淹（《岳陽樓記》）都表現了對甚麼的關懷？",
+        "options": [
+            {"text": "國家和百姓——諸葛亮「鞠躬盡瘁，死而後已」為蜀漢效力；范仲淹「先天下之憂而憂，後天下之樂而樂」心繫天下。兩人都以天下為己任", "is_correct": True,
+             "explanation": "此選項正確。都關懷國家和百姓。"},
+            {"text": "個人享樂", "is_correct": False,
+             "explanation": "此選項錯誤。兩人都以天下為己任。"},
+            {"text": "山水風光", "is_correct": False,
+             "explanation": "此選項錯誤。兩人關懷的是國家。"},
+            {"text": "文學創作", "is_correct": False,
+             "explanation": "此選項錯誤。核心關懷是國家和百姓。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B77-Q04  p06  最淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p06",
+        "difficulty": "最淺",
+        "skill": "跨篇章比較",
+        "stem": "韓愈（《師說》）和荀子（《勸學》）都討論了甚麼主題？",
+        "options": [
+            {"text": "學習的重要性——韓愈強調從師學習的重要，荀子強調持續學習和積累的重要。兩篇都主張學習是進步的關鍵", "is_correct": True,
+             "explanation": "此選項正確。都討論學習的重要性。"},
+            {"text": "戰爭", "is_correct": False,
+             "explanation": "此選項錯誤。討論的是學習。"},
+            {"text": "治國方略", "is_correct": False,
+             "explanation": "此選項錯誤。主題是學習。"},
+            {"text": "山水遊記", "is_correct": False,
+             "explanation": "此選項錯誤。不是山水遊記。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B77-Q05  p11  最淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "最淺",
+        "skill": "跨篇章比較",
+        "stem": "唐詩三首和宋詞三首在文學體裁上有甚麼最基本的區別？",
+        "options": [
+            {"text": "唐詩三首是「詩」，句式整齊（五言或七言）；宋詞三首是「詞」，句式長短不一（又稱長短句），配合詞牌演唱", "is_correct": True,
+             "explanation": "此選項正確。詩句式整齊，詞長短不一。"},
+            {"text": "沒有區別", "is_correct": False,
+             "explanation": "此選項錯誤。詩和詞是不同的體裁。"},
+            {"text": "都是詩", "is_correct": False,
+             "explanation": "此選項錯誤。宋詞三首是詞。"},
+            {"text": "都是詞", "is_correct": False,
+             "explanation": "此選項錯誤。唐詩三首是詩。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B77-Q06  p07  最淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p07",
+        "difficulty": "最淺",
+        "skill": "跨篇章比較",
+        "stem": "藺相如（《廉頗藺相如列傳》）和諸葛亮（《出師表》）分別效力於哪個國家？",
+        "options": [
+            {"text": "藺相如效力於趙國（戰國時期），諸葛亮效力於蜀漢（三國時期）。兩人雖處於不同時代，但同樣是忠心耿耿的臣子", "is_correct": True,
+             "explanation": "此選項正確。藺相如趙國，諸葛亮蜀漢。"},
+            {"text": "都是蜀國", "is_correct": False,
+             "explanation": "此選項錯誤。藺相如是趙國的。"},
+            {"text": "都是秦國", "is_correct": False,
+             "explanation": "此選項錯誤。兩人都不是秦國的。"},
+            {"text": "藺相如蜀國，諸葛亮趙國", "is_correct": False,
+             "explanation": "此選項錯誤。反過來了。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B77-Q07  p09  最淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p09",
+        "difficulty": "最淺",
+        "skill": "跨篇章比較",
+        "stem": "《六國論》和《出師表》都涉及甚麼大主題？",
+        "options": [
+            {"text": "國家存亡——《六國論》分析六國滅亡的原因，《出師表》諫勸後主振興蜀漢。兩篇都關注國家的興衰存亡問題", "is_correct": True,
+             "explanation": "此選項正確。都涉及國家存亡。"},
+            {"text": "愛情", "is_correct": False,
+             "explanation": "此選項錯誤。是國家存亡。"},
+            {"text": "山水遊覽", "is_correct": False,
+             "explanation": "此選項錯誤。是政治論述。"},
+            {"text": "修身養性", "is_correct": False,
+             "explanation": "此選項錯誤。主要是國家存亡。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B77-Q08  p10  最淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p10",
+        "difficulty": "最淺",
+        "skill": "跨篇章比較",
+        "stem": "柳宗元（《始得西山宴遊記》）和范仲淹（《岳陽樓記》）寫作這些文章時有甚麼共同處境？",
+        "options": [
+            {"text": "都是被貶官員——柳宗元被貶永州，范仲淹被貶鄧州。兩人都在政治失意時寫下這些作品", "is_correct": True,
+             "explanation": "此選項正確。都是被貶時寫的。"},
+            {"text": "都在做官", "is_correct": False,
+             "explanation": "此選項錯誤。都是被貶的。"},
+            {"text": "都是學生", "is_correct": False,
+             "explanation": "此選項錯誤。都是官員。"},
+            {"text": "處境完全不同", "is_correct": False,
+             "explanation": "此選項錯誤。都被貶謫。"},
+        ],
+        "critique_score": 8,
+    },
+
+    # ── B77-Q09  p01  淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p01",
+        "difficulty": "淺",
+        "skill": "跨篇章比較",
+        "stem": "孔子強調的「仁」和孟子主張的「義」有甚麼關係？",
+        "options": [
+            {"text": "「義」是「仁」的延伸和發展——孔子以「仁」為核心，強調愛人、克己復禮；孟子將「仁」進一步發展為「義」，強調在面對抉擇時要堅守道義、捨生取義。「仁」側重內心修養，「義」側重行為選擇。兩者同屬儒家道德體系，互相補充", "is_correct": True,
+             "explanation": "此選項正確。義是仁的延伸。"},
+            {"text": "完全對立", "is_correct": False,
+             "explanation": "此選項錯誤。兩者互相補充。"},
+            {"text": "沒有關係", "is_correct": False,
+             "explanation": "此選項錯誤。同屬儒家道德體系。"},
+            {"text": "仁比義重要得多", "is_correct": False,
+             "explanation": "此選項過於簡單。兩者各有側重。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B77-Q10  p03  淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p03",
+        "difficulty": "淺",
+        "skill": "跨篇章比較",
+        "stem": "莊子追求「逍遙」和荀子主張「勸學」反映了甚麼不同的人生觀？",
+        "options": [
+            {"text": "相反的人生觀：①莊子——追求擺脫一切外在束縛（名利、世俗標準），達到精神上的絕對自由，認為人不必刻意追求知識和成就；②荀子——強調後天學習和努力，認為人性本惡必須通過學習來改善，人應該積極投入社會、自我提升。一個追求超脫，一個追求進取", "is_correct": True,
+             "explanation": "此選項正確。超脫vs進取。"},
+            {"text": "人生觀一樣", "is_correct": False,
+             "explanation": "此選項錯誤。兩者人生觀相反。"},
+            {"text": "都主張學習", "is_correct": False,
+             "explanation": "此選項錯誤。莊子不主張刻意學習。"},
+            {"text": "都追求自由", "is_correct": False,
+             "explanation": "此選項錯誤。荀子強調修養規範。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B77-Q11  p05  淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p05",
+        "difficulty": "淺",
+        "skill": "跨篇章比較",
+        "stem": "諸葛亮和藺相如作為臣子有甚麼共同品質？",
+        "options": [
+            {"text": "共同品質：①忠誠——諸葛亮忠於蜀漢，鞠躬盡瘁；藺相如忠於趙國，不惜以身犯險；②智慧——諸葛亮善於分析形勢，藺相如在秦廷上隨機應變；③勇氣——諸葛亮敢於北伐，藺相如敢於面對強秦。兩人都是忠智勇兼備的理想臣子形象", "is_correct": True,
+             "explanation": "此選項正確。忠智勇兼備。"},
+            {"text": "沒有共同點", "is_correct": False,
+             "explanation": "此選項錯誤。有很多共同品質。"},
+            {"text": "只有勇氣", "is_correct": False,
+             "explanation": "此選項錯誤。還有忠誠和智慧。"},
+            {"text": "都很軟弱", "is_correct": False,
+             "explanation": "此選項錯誤。都是勇敢的臣子。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B77-Q12  p04  淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p04",
+        "difficulty": "淺",
+        "skill": "跨篇章比較",
+        "stem": "韓愈和荀子對「學習」的看法有甚麼相似之處？",
+        "options": [
+            {"text": "相似之處：①都強調持續性——荀子說「學不可以已」，韓愈說「人非生而知之者」，都認為學習不能停止；②都重視方法——荀子強調「鍥而不捨」的專注，韓愈強調「從師」問道的方法；③都反對自滿——荀子批評「半途而廢」，韓愈批評「恥學於師」。兩人的學習觀一脈相承", "is_correct": True,
+             "explanation": "此選項正確。持續性、方法、反對自滿。"},
+            {"text": "完全不同", "is_correct": False,
+             "explanation": "此選項錯誤。有很多相似之處。"},
+            {"text": "都反對學習", "is_correct": False,
+             "explanation": "此選項錯誤。都強調學習重要。"},
+            {"text": "只是偶然相似", "is_correct": False,
+             "explanation": "此選項錯誤。有思想上的傳承。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B77-Q13  p08  淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p08",
+        "difficulty": "淺",
+        "skill": "跨篇章比較",
+        "stem": "范仲淹和柳宗元的寫景文章有甚麼不同的目的？",
+        "options": [
+            {"text": "目的不同：①范仲淹《岳陽樓記》——借景抒懷，提出「先天下之憂而憂，後天下之樂而樂」的政治理想。景物描寫是為了引出議論；②柳宗元《始得西山宴遊記》——借景自喻，以西山的「特立」比喻自己的高潔品格，在山水中尋找精神寄託。景物描寫是為了表達內心感悟", "is_correct": True,
+             "explanation": "此選項正確。一個抒政治理想，一個尋精神寄託。"},
+            {"text": "目的一樣", "is_correct": False,
+             "explanation": "此選項錯誤。目的不同。"},
+            {"text": "都是純粹寫景", "is_correct": False,
+             "explanation": "此選項錯誤。都有深層目的。"},
+            {"text": "都是為了議論", "is_correct": False,
+             "explanation": "此選項錯誤。柳宗元主要是抒情感悟。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B77-Q14  p09  淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p09",
+        "difficulty": "淺",
+        "skill": "跨篇章比較",
+        "stem": "蘇洵（《六國論》）和諸葛亮（《出師表》）對國家危亡的態度有甚麼不同？",
+        "options": [
+            {"text": "態度不同：①蘇洵——以旁觀者的角度分析歷史教訓（六國為何滅亡），是「事後論政」的學者態度，借古諷今；②諸葛亮——以當事人的角度直接向君主進言，是「身在其中」的臣子態度，積極求變。一個是冷靜分析，一個是殷切進諫", "is_correct": True,
+             "explanation": "此選項正確。旁觀分析vs當事進諫。"},
+            {"text": "態度一樣", "is_correct": False,
+             "explanation": "此選項錯誤。一是分析歷史，一是進諫君主。"},
+            {"text": "都不關心", "is_correct": False,
+             "explanation": "此選項錯誤。都很關心國家。"},
+            {"text": "蘇洵更積極", "is_correct": False,
+             "explanation": "此選項錯誤。諸葛亮作為當事人更積極。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B77-Q15  p12  淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "跨篇章比較",
+        "stem": "王維（《山居秋暝》）和蘇軾（《念奴嬌》）同樣涉及自然描寫，有甚麼不同？",
+        "options": [
+            {"text": "不同之處：①王維——描寫寧靜和諧的山居秋景（明月松間照，清泉石上流），人與自然融為一體，呈現恬淡閒適的境界；②蘇軾——描寫壯闊雄偉的江景（亂石穿空，驚濤拍岸），以自然的雄偉引發歷史感慨，呈現豪邁蒼茫的境界。一個靜謐，一個壯闊", "is_correct": True,
+             "explanation": "此選項正確。靜謐vs壯闊。"},
+            {"text": "完全一樣", "is_correct": False,
+             "explanation": "此選項錯誤。風格和目的都不同。"},
+            {"text": "都是壯闊的", "is_correct": False,
+             "explanation": "此選項錯誤。王維是靜謐的。"},
+            {"text": "都是靜謐的", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾是壯闊的。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B77-Q16  p02  淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p02",
+        "difficulty": "淺",
+        "skill": "跨篇章比較",
+        "stem": "孟子「捨生取義」的精神和藺相如在秦廷的表現有甚麼關係？",
+        "options": [
+            {"text": "藺相如是「捨生取義」的實踐者——他在秦廷上「持璧叩柱」，以性命相搏來維護趙國的尊嚴，寧死不辱國。這正是孟子所說的「捨生而取義者也」的具體體現：當生命和道義發生衝突時，選擇道義", "is_correct": True,
+             "explanation": "此選項正確。藺相如實踐了捨生取義的精神。"},
+            {"text": "沒有關係", "is_correct": False,
+             "explanation": "此選項錯誤。藺相如的行為體現了孟子的精神。"},
+            {"text": "藺相如反對孟子", "is_correct": False,
+             "explanation": "此選項錯誤。他的行為正好印證了孟子的主張。"},
+            {"text": "孟子反對藺相如", "is_correct": False,
+             "explanation": "此選項錯誤。孟子會讚賞藺相如的行為。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B77-Q17  p10  淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p10",
+        "difficulty": "淺",
+        "skill": "跨篇章比較",
+        "stem": "柳宗元的山水遊記和王維的山水詩在寫景手法上有甚麼不同？",
+        "options": [
+            {"text": "不同手法：①柳宗元（散文）——以敘事帶寫景，先交代遊覽經過，再描寫西山景色，最後抒發感悟。篇幅較長，描寫細膩具體；②王維（詩歌）——直接以意象組合呈現畫面（明月、松林、清泉、石上），不需敘事鋪墊。篇幅精煉，留白多，營造意境。一個是鋪敘展開，一個是意象點染", "is_correct": True,
+             "explanation": "此選項正確。鋪敘展開vs意象點染。"},
+            {"text": "完全一樣", "is_correct": False,
+             "explanation": "此選項錯誤。散文和詩的手法不同。"},
+            {"text": "柳宗元更簡練", "is_correct": False,
+             "explanation": "此選項錯誤。詩更簡練。"},
+            {"text": "王維更詳細", "is_correct": False,
+             "explanation": "此選項錯誤。散文更詳細。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B77-Q18  p08  淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p08",
+        "difficulty": "淺",
+        "skill": "跨篇章比較",
+        "stem": "范仲淹「先天下之憂而憂」和諸葛亮「鞠躬盡瘁」表達了甚麼共同精神？",
+        "options": [
+            {"text": "以天下為己任的家國精神——范仲淹主張士人應該把國家的憂患放在個人之前，先憂後樂；諸葛亮竭盡全力為蜀漢效力，直到死為止。兩者都體現了儒家「修身齊家治國平天下」的理想，把個人奉獻給國家和百姓", "is_correct": True,
+             "explanation": "此選項正確。以天下為己任的精神。"},
+            {"text": "享樂精神", "is_correct": False,
+             "explanation": "此選項錯誤。是奉獻精神。"},
+            {"text": "隱居精神", "is_correct": False,
+             "explanation": "此選項錯誤。是入世奉獻。"},
+            {"text": "沒有共同點", "is_correct": False,
+             "explanation": "此選項錯誤。有共同的家國精神。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B77-Q19  p12  淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "淺",
+        "skill": "跨篇章比較",
+        "stem": "蘇軾（《念奴嬌》）和杜甫（《登樓》）同為失意文人，面對困境的態度有甚麼不同？",
+        "options": [
+            {"text": "態度不同：①蘇軾——最終選擇超脫，以「人間如夢，一尊還酹江月」放下執著，寄情自然。態度偏向豁達曠達；②杜甫——始終無法放下對國家的憂慮，「可憐後主還祠廟，日暮聊為梁甫吟」到最後仍在憂國。態度偏向沉鬱深沉。一個超脫，一個堅守", "is_correct": True,
+             "explanation": "此選項正確。蘇軾超脫，杜甫堅守。"},
+            {"text": "態度一樣", "is_correct": False,
+             "explanation": "此選項錯誤。態度有明顯不同。"},
+            {"text": "都很快樂", "is_correct": False,
+             "explanation": "此選項錯誤。都是失意的。"},
+            {"text": "杜甫更豁達", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾更豁達。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B77-Q20  p11  淺  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "淺",
+        "skill": "跨篇章比較",
+        "stem": "李白（《月下獨酌》）和李清照（《聲聲慢》）都寫到了「酒」，各有甚麼不同的作用？",
+        "options": [
+            {"text": "作用不同：①李白——在月下獨酌，以酒助興，與月亮和影子結為「三人」。酒帶來了浪漫的想像和暫時的歡樂，是李白的浪漫豪情的載體；②李清照——「三杯兩盞淡酒，怎敵他、晚來風急」，飲酒無法抵擋寒冷和愁苦，酒是無效的消愁工具。一個以酒助興，一個借酒無法消愁", "is_correct": True,
+             "explanation": "此選項正確。助興vs無法消愁。"},
+            {"text": "作用一樣", "is_correct": False,
+             "explanation": "此選項錯誤。一個助興，一個消愁不成。"},
+            {"text": "都不喝酒", "is_correct": False,
+             "explanation": "此選項錯誤。兩人都有飲酒。"},
+            {"text": "都是為了忘憂", "is_correct": False,
+             "explanation": "此選項錯誤。李白的酒帶來歡樂。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B77-Q21  p01  中  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p01",
+        "difficulty": "中",
+        "skill": "跨篇章比較",
+        "stem": "儒家（孔子、孟子）和道家（莊子）對「個人修養」有甚麼不同理解？",
+        "options": [
+            {"text": "根本不同：①儒家——修養是為了入世。孔子主張「克己復禮為仁」，通過學習禮義來提升自我，最終服務於社會（修身齊家治國平天下）；孟子主張養「浩然之氣」，培養道德勇氣；②道家——修養是為了超脫。莊子主張去除人為的束縛和世俗的價值觀，回歸自然的本真狀態，追求精神上的「逍遙」。儒家是「加法」（增添修養），道家是「減法」（去除束縛）", "is_correct": True,
+             "explanation": "此選項正確。入世修養vs超脫自然。"},
+            {"text": "完全相同", "is_correct": False,
+             "explanation": "此選項錯誤。儒道修養觀不同。"},
+            {"text": "道家不講修養", "is_correct": False,
+             "explanation": "此選項錯誤。道家有自己的修養觀。"},
+            {"text": "儒家不講修養", "is_correct": False,
+             "explanation": "此選項錯誤。修養是儒家核心。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q22  p06  中  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p06",
+        "difficulty": "中",
+        "skill": "跨篇章比較",
+        "stem": "荀子和韓愈對「師」的理解有甚麼異同？",
+        "options": [
+            {"text": "異同並存：①相同——都認為從師學習是必要的，反對自以為是、不肯向人請教的態度；②不同——荀子的「師」泛指學習的對象和過程（「青，取之於藍，而青於藍」），重點在自我學習和積累；韓愈的「師」特指傳道授業解惑的老師，批評當時「恥學於師」的風氣，並提出「弟子不必不如師，師不必賢於弟子」的平等觀。荀子重「學」，韓愈重「師」", "is_correct": True,
+             "explanation": "此選項正確。荀子重學，韓愈重師。"},
+            {"text": "完全相同", "is_correct": False,
+             "explanation": "此選項錯誤。側重點不同。"},
+            {"text": "完全不同", "is_correct": False,
+             "explanation": "此選項錯誤。有相同之處。"},
+            {"text": "都反對從師", "is_correct": False,
+             "explanation": "此選項錯誤。都主張從師學習。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q23  p05  中  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p05",
+        "difficulty": "中",
+        "skill": "跨篇章比較",
+        "stem": "《出師表》《岳陽樓記》《六國論》三篇論政文章的寫作目的有甚麼不同？",
+        "options": [
+            {"text": "各有不同：①《出師表》——直接進諫君主，目的是說服後主振興蜀漢、親賢遠佞，是「臣對君」的政治行動；②《岳陽樓記》——借重修岳陽樓之機表達政治理想，目的是勉勵友人和抒發「先憂後樂」的胸懷，是「文人的自我表達」；③《六國論》——以歷史為鑑分析政策得失，目的是借古諷今、警示當朝，是「學者的政論」。三者分別代表了進諫、抒懷、論政三種寫作目的", "is_correct": True,
+             "explanation": "此選項正確。進諫、抒懷、論政。"},
+            {"text": "目的一樣", "is_correct": False,
+             "explanation": "此選項錯誤。三者目的不同。"},
+            {"text": "都是進諫", "is_correct": False,
+             "explanation": "此選項錯誤。只有《出師表》是進諫。"},
+            {"text": "都是論政", "is_correct": False,
+             "explanation": "此選項錯誤。《岳陽樓記》主要是抒懷。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q24  p07  中  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p07",
+        "difficulty": "中",
+        "skill": "跨篇章比較",
+        "stem": "藺相如和諸葛亮的「智慧」表現在哪些不同方面？",
+        "options": [
+            {"text": "不同方面：①藺相如——外交智慧：在強敵面前臨危不懼，「完璧歸趙」靠的是臨場應變、隨機應對的機智。他的智慧是「急中生智」型，在危急時刻做出最佳判斷；②諸葛亮——戰略智慧：對天下大勢有全盤分析（三分天下、聯吳抗曹），《出師表》中的諫言也體現了深謀遠慮。他的智慧是「運籌帷幄」型，着眼於長遠規劃。一個善於應急，一個善於規劃", "is_correct": True,
+             "explanation": "此選項正確。應急vs規劃。"},
+            {"text": "智慧一樣", "is_correct": False,
+             "explanation": "此選項錯誤。表現在不同方面。"},
+            {"text": "都不聰明", "is_correct": False,
+             "explanation": "此選項錯誤。兩人都很有智慧。"},
+            {"text": "只有藺相如有智慧", "is_correct": False,
+             "explanation": "此選項錯誤。兩人都有智慧。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B77-Q25  p10  中  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p10",
+        "difficulty": "中",
+        "skill": "跨篇章比較",
+        "stem": "柳宗元、范仲淹和王維三位被貶或隱居文人，如何通過自然來處理內心的苦悶？",
+        "options": [
+            {"text": "各有不同方式：①柳宗元——在山水中尋找自我認同。西山的「特立」（高聳獨立）映照了他被貶但不屈的精神，山水成為他「自喻」的媒介；②范仲淹——通過對比陰晴不同的景色，超越個人得失，提升到「不以物喜，不以己悲」的境界。山水成為他「哲理思考」的觸媒；③王維——在自然中找到歸隱的理由和寧靜。山水成為他「安身立命」的空間。三者分別是自喻、哲思和安居", "is_correct": True,
+             "explanation": "此選項正確。自喻、哲思、安居三種方式。"},
+            {"text": "方式一樣", "is_correct": False,
+             "explanation": "此選項錯誤。三者處理方式不同。"},
+            {"text": "都不關心自然", "is_correct": False,
+             "explanation": "此選項錯誤。自然在三者作品中很重要。"},
+            {"text": "自然讓他們更苦悶", "is_correct": False,
+             "explanation": "此選項錯誤。自然幫助他們處理苦悶。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q26  p11  中  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "中",
+        "skill": "跨篇章比較",
+        "stem": "唐詩三首和宋詞三首在抒情方式上有甚麼不同？",
+        "options": [
+            {"text": "不同方式：①唐詩三首——多用含蓄意象間接抒情。王維以松月清泉營造境界，李白以月影酒杯寄託孤獨，杜甫以山河古蹟暗寓憂國，都不直接說「我很傷心」；②宋詞三首——抒情更直接明確。蘇軾直言「人間如夢」，李清照直呼「怎一箇愁字了得」，辛棄疾的尋覓過程直接表達心志。唐詩偏含蓄，宋詞偏直抒", "is_correct": True,
+             "explanation": "此選項正確。唐詩含蓄，宋詞直抒。"},
+            {"text": "方式一樣", "is_correct": False,
+             "explanation": "此選項錯誤。抒情方式不同。"},
+            {"text": "唐詩更直接", "is_correct": False,
+             "explanation": "此選項錯誤。唐詩較含蓄。"},
+            {"text": "宋詞不抒情", "is_correct": False,
+             "explanation": "此選項錯誤。宋詞三首都有抒情。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B77-Q27  p02  中  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p02",
+        "difficulty": "中",
+        "skill": "跨篇章比較",
+        "stem": "孟子和莊子對「自由」的理解有甚麼不同？",
+        "options": [
+            {"text": "根本不同：①孟子——自由是道德上的自主選擇。人能夠在生死之間選擇義（捨生取義），這種道德選擇權就是真正的自由。自由建立在堅守道義之上；②莊子——自由是擺脫一切外在和內在的束縛。「逍遙遊」追求的是不依賴任何外物（包括道德規範）的絕對精神自由。自由建立在去除執著之上。孟子的自由是「有所堅持」的自由，莊子的自由是「無所依賴」的自由", "is_correct": True,
+             "explanation": "此選項正確。道德自主vs超越一切。"},
+            {"text": "理解一樣", "is_correct": False,
+             "explanation": "此選項錯誤。根本不同。"},
+            {"text": "都不講自由", "is_correct": False,
+             "explanation": "此選項錯誤。兩者都涉及自由的主題。"},
+            {"text": "莊子也講道德自由", "is_correct": False,
+             "explanation": "此選項錯誤。莊子追求超越道德的自由。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q28  p04  中  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p04",
+        "difficulty": "中",
+        "skill": "跨篇章比較",
+        "stem": "荀子和莊子對「知識」的態度有甚麼根本分歧？",
+        "options": [
+            {"text": "根本分歧：①荀子——知識是改善人性的必要工具。「學不可以已」，人必須通過不斷學習來累積知識、培養品德。知識代表進步；②莊子——知識可能成為精神自由的障礙。追求有限的知識來應對無限的世界是危險的（「吾生也有涯，而知也無涯」非莊子原意的正面勸學）。真正的智慧是放下對知識的執著。荀子「求知」，莊子「去知」", "is_correct": True,
+             "explanation": "此選項正確。求知vs去知。"},
+            {"text": "態度一樣", "is_correct": False,
+             "explanation": "此選項錯誤。態度截然相反。"},
+            {"text": "都追求知識", "is_correct": False,
+             "explanation": "此選項錯誤。莊子不主張追求知識。"},
+            {"text": "都反對知識", "is_correct": False,
+             "explanation": "此選項錯誤。荀子積極追求知識。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q29  p07  中  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p07",
+        "difficulty": "中",
+        "skill": "跨篇章比較",
+        "stem": "藺相如在秦廷的表現如何體現了孟子「捨生取義」的精神？",
+        "options": [
+            {"text": "多處體現：①「持璧叩柱」——當秦王欺詐時，藺相如寧願與璧同碎也不讓國家受辱，以性命維護道義；②「布衣之怒」——以死相威脅對抗暴力，不懼秦王的權勢；③「完璧歸趙」後的態度——明知可能被殺，仍選擇回到秦國赴宴。這些行為都是在「生」（保全性命）和「義」（維護國家尊嚴）之間選擇了「義」，完美詮釋了孟子「二者不可得兼，捨生而取義者也」的思想", "is_correct": True,
+             "explanation": "此選項正確。多處體現捨生取義。"},
+            {"text": "沒有體現", "is_correct": False,
+             "explanation": "此選項錯誤。多處體現了這種精神。"},
+            {"text": "藺相如只顧自己", "is_correct": False,
+             "explanation": "此選項錯誤。他為國家不惜犧牲。"},
+            {"text": "與孟子無關", "is_correct": False,
+             "explanation": "此選項錯誤。是孟子精神的實踐。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B77-Q30  p11  中  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "中",
+        "skill": "跨篇章比較",
+        "stem": "王維的山居和柳宗元的西山遊記，在「人與自然」的主題上有甚麼異同？",
+        "options": [
+            {"text": "異同並存：①相同——都在自然中找到了精神的出路，都是被貶/失意文人的山水書寫，都體現了人與自然的親密關係；②不同——王維的「人與自然」是和諧融入：「隨意春芳歇，王孫自可留」，人成為自然的一部分，安然居住其中；柳宗元的「人與自然」是精神投射：西山的「特立不群」是他自我品格的投射，人在自然中照見自己。一個是「融入」，一個是「映照」", "is_correct": True,
+             "explanation": "此選項正確。融入vs映照。"},
+            {"text": "完全相同", "is_correct": False,
+             "explanation": "此選項錯誤。有明顯的異同。"},
+            {"text": "完全不同", "is_correct": False,
+             "explanation": "此選項錯誤。也有相同之處。"},
+            {"text": "都是純粹寫景", "is_correct": False,
+             "explanation": "此選項錯誤。都有深層意義。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q31  p12  中  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "中",
+        "skill": "跨篇章比較",
+        "stem": "蘇軾「人間如夢」和范仲淹「先天下之憂而憂」代表了甚麼不同的人生態度？",
+        "options": [
+            {"text": "兩種不同態度：①蘇軾——超脫出世：認為人生短暫虛幻如夢，不必過分執著於功業得失，應寄情自然、隨遇而安。這是佛道思想的影響；②范仲淹——入世擔當：認為士人應該承擔天下興亡的責任，個人的憂樂要以天下為先。這是儒家「天下為公」思想的體現。一個選擇放下，一個選擇承擔。兩種態度代表了中國文人面對困境時的兩條精神出路", "is_correct": True,
+             "explanation": "此選項正確。超脫出世vs入世擔當。"},
+            {"text": "態度一樣", "is_correct": False,
+             "explanation": "此選項錯誤。代表不同的人生態度。"},
+            {"text": "都是超脫", "is_correct": False,
+             "explanation": "此選項錯誤。范仲淹是入世。"},
+            {"text": "都是入世", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾偏向超脫。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q32  p05  中  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p05",
+        "difficulty": "中",
+        "skill": "跨篇章比較",
+        "stem": "諸葛亮的「忠」和孔子的「君子」之道有甚麼關係？",
+        "options": [
+            {"text": "諸葛亮是「君子」的實踐者：①「義以為上」——諸葛亮「受任於敗軍之際，奉命於危難之間」，在劉備最困難時挺身而出，體現了孔子所說的「見義不為，無勇也」；②「忠信」——對先帝遺命念念不忘，鞠躬盡瘁，是孔子「主忠信」的典範；③「先人後己」——不求個人利益，只求國家興盛，符合孔子「君子喻於義，小人喻於利」的標準。諸葛亮的忠是君子之道的集中體現", "is_correct": True,
+             "explanation": "此選項正確。諸葛亮的忠體現了君子之道。"},
+            {"text": "沒有關係", "is_correct": False,
+             "explanation": "此選項錯誤。有密切的關係。"},
+            {"text": "諸葛亮反對孔子", "is_correct": False,
+             "explanation": "此選項錯誤。諸葛亮實踐了儒家精神。"},
+            {"text": "孔子反對忠臣", "is_correct": False,
+             "explanation": "此選項錯誤。孔子推崇忠信。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B77-Q33  p08  中  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p08",
+        "difficulty": "中",
+        "skill": "跨篇章比較",
+        "stem": "范仲淹的「先憂後樂」和孔子的「仁」有甚麼關係？",
+        "options": [
+            {"text": "「先憂後樂」是「仁」的延伸：①孔子的「仁」——核心是「愛人」，推己及人，關懷他人的福祉；②范仲淹的「先天下之憂而憂」——把「愛人」擴展到「愛天下人」，把個人的憂樂放在天下人之後。這是儒家「仁」的理想在政治實踐上的最高表現。范仲淹把孔子的道德理想轉化為政治家的行動準則", "is_correct": True,
+             "explanation": "此選項正確。先憂後樂是仁的延伸。"},
+            {"text": "沒有關係", "is_correct": False,
+             "explanation": "此選項錯誤。有思想傳承的關係。"},
+            {"text": "互相矛盾", "is_correct": False,
+             "explanation": "此選項錯誤。是一脈相承的。"},
+            {"text": "范仲淹反對孔子", "is_correct": False,
+             "explanation": "此選項錯誤。是繼承和發展。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B77-Q34  p09  中  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p09",
+        "difficulty": "中",
+        "skill": "跨篇章比較",
+        "stem": "蘇洵論六國和司馬遷記藺相如，在論述策略上有甚麼不同？",
+        "options": [
+            {"text": "策略不同：①蘇洵《六國論》——以論說為主。開宗明義提出論點（「六國破滅，非兵不利，戰不善，弊在賂秦」），然後分層論證，舉例分析。是「先論後證」的議論文策略；②司馬遷《廉頗藺相如列傳》——以敘事為主。通過完整的事件描述（完璧歸趙、澠池之會、負荊請罪）讓讀者自行理解人物品格。是「以事見人」的傳記文策略。一個用道理說服，一個用故事感動", "is_correct": True,
+             "explanation": "此選項正確。論說vs敘事。"},
+            {"text": "策略一樣", "is_correct": False,
+             "explanation": "此選項錯誤。論述策略完全不同。"},
+            {"text": "都是議論文", "is_correct": False,
+             "explanation": "此選項錯誤。司馬遷的是傳記。"},
+            {"text": "都是敘事文", "is_correct": False,
+             "explanation": "此選項錯誤。蘇洵的是議論文。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q35  p03  中  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p03",
+        "difficulty": "中",
+        "skill": "跨篇章比較",
+        "stem": "莊子的寓言手法和蘇洵的論證手法在說理上有甚麼不同的效果？",
+        "options": [
+            {"text": "效果不同：①莊子（寓言）——以鯤鵬、蜩與學鳩等寓言故事來說理。效果是：啟發讀者自行思考，不直接給出結論，留有多重解讀空間。說理是「暗示型」的；②蘇洵（論證）——以歷史事實和邏輯推理來說理（六國賂秦的得失計算）。效果是：觀點明確，論據充分，說服力強。說理是「說服型」的。一個啟發想像，一個訴諸邏輯", "is_correct": True,
+             "explanation": "此選項正確。暗示型vs說服型。"},
+            {"text": "效果一樣", "is_correct": False,
+             "explanation": "此選項錯誤。效果不同。"},
+            {"text": "蘇洵用寓言", "is_correct": False,
+             "explanation": "此選項錯誤。蘇洵用論證。"},
+            {"text": "莊子用論證", "is_correct": False,
+             "explanation": "此選項錯誤。莊子用寓言。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q36  p01  中  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p01",
+        "difficulty": "中",
+        "skill": "跨篇章比較",
+        "stem": "十二篇指定篇章可以分為哪幾個體裁類別？",
+        "options": [
+            {"text": "主要四類：①語錄/散文——《論仁、論孝、論君子》（語錄體）、《魚我所欲也》《逍遙遊》《勸學》（先秦散文）；②應用文/論說文——《出師表》（表/奏議）、《師說》（雜說）、《六國論》（論說文）；③記敘文——《廉頗藺相如列傳》（傳記）、《岳陽樓記》（記）、《始得西山宴遊記》（遊記）；④韻文——唐詩三首（詩）、宋詞三首（詞）。這四類涵蓋了中國古典文學的主要體裁", "is_correct": True,
+             "explanation": "此選項正確。語錄散文、論說文、記敘文、韻文四類。"},
+            {"text": "只有一類", "is_correct": False,
+             "explanation": "此選項錯誤。有多個體裁類別。"},
+            {"text": "都是詩", "is_correct": False,
+             "explanation": "此選項錯誤。只有唐詩三首是詩。"},
+            {"text": "無法分類", "is_correct": False,
+             "explanation": "此選項錯誤。可以按體裁分類。"},
+        ],
+        "critique_score": 9,
+    },
+
+    # ── B77-Q37  p01  深  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p01",
+        "difficulty": "深",
+        "skill": "跨篇章比較",
+        "stem": "儒家三位思想家（孔子、孟子、荀子）的教育觀有甚麼發展變化？",
+        "options": [
+            {"text": "逐步發展：①孔子——教育的核心是「仁」的培養，以身教和對話啟發學生（有教無類、因材施教）。教育方法側重啟發式，學生通過與老師的交流自己思考和領悟；②孟子——教育的核心是激發人本有的善性（惻隱、羞惡、辭讓、是非之心）。教育是「由內而外」的，引導學生發現自己本來就有的善良本性；③荀子——教育的核心是矯正人的惡性，通過外在的學習和禮義規範來改變人性。教育是「由外而內」的，需要持續不斷地學習和積累。從孔子的啟發到孟子的內省到荀子的外鑠，儒家教育觀越來越系統化", "is_correct": True,
+             "explanation": "此選項正確。啟發、內省、外鑠三階段發展。"},
+            {"text": "沒有發展", "is_correct": False,
+             "explanation": "此選項錯誤。有明顯的發展變化。"},
+            {"text": "三者完全一樣", "is_correct": False,
+             "explanation": "此選項錯誤。各有不同的側重。"},
+            {"text": "荀子反對教育", "is_correct": False,
+             "explanation": "此選項錯誤。荀子最重視教育。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q38  p03  深  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p03",
+        "difficulty": "深",
+        "skill": "跨篇章比較",
+        "stem": "莊子、柳宗元、蘇軾三人的「超脫」有甚麼不同層次？",
+        "options": [
+            {"text": "三個層次：①莊子——哲學上的超脫：從根本上否定世俗的價值觀（功名利祿不值得追求），追求不依賴任何外物的「逍遙」。這是最徹底的超脫，因為他從未入世；②柳宗元——審美上的超脫：在被貶的現實中無法真正解脫政治上的挫敗感，但通過山水審美暫時忘卻痛苦（「心凝形釋，與萬化冥合」）。這是暫時的超脫，回到現實仍然痛苦；③蘇軾——人生智慧的超脫：經歷了政治打擊後，以「人間如夢」的通達看法化解苦悶，既承認人生的虛幻又積極面對。這是介乎入世與出世之間的超脫。三人代表了哲學、審美、人生三個層次", "is_correct": True,
+             "explanation": "此選項正確。哲學、審美、人生三層超脫。"},
+            {"text": "超脫一樣", "is_correct": False,
+             "explanation": "此選項錯誤。層次不同。"},
+            {"text": "都不超脫", "is_correct": False,
+             "explanation": "此選項錯誤。三人都有超脫的一面。"},
+            {"text": "蘇軾最徹底", "is_correct": False,
+             "explanation": "此選項錯誤。莊子最徹底。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q39  p09  深  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p09",
+        "difficulty": "深",
+        "skill": "跨篇章比較",
+        "stem": "《出師表》《岳陽樓記》《六國論》三篇在論證方法上有甚麼不同？",
+        "options": [
+            {"text": "論證方法各異：①《出師表》——以情動人為主。諸葛亮追述先帝知遇之恩，表明自己報恩盡忠的決心，用真摯的情感感動後主。是「動之以情」的論證；②《岳陽樓記》——以理服人為主。通過「遷客騷人」和「古仁人」兩種對比，推理出「不以物喜，不以己悲」和「先憂後樂」的道理。是「曉之以理」的論證；③《六國論》——以史為鑑為主。用六國賂秦的歷史事實和數據計算來證明觀點。是「證之以事」的論證。三者代表了情、理、事三種不同的說服策略", "is_correct": True,
+             "explanation": "此選項正確。動之以情、曉之以理、證之以事。"},
+            {"text": "論證方法一樣", "is_correct": False,
+             "explanation": "此選項錯誤。各有不同。"},
+            {"text": "都用歷史事實", "is_correct": False,
+             "explanation": "此選項錯誤。諸葛亮主要以情動人。"},
+            {"text": "都以情動人", "is_correct": False,
+             "explanation": "此選項錯誤。蘇洵主要用歷史事實。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q40  p02  深  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p02",
+        "difficulty": "深",
+        "skill": "跨篇章比較",
+        "stem": "藺相如的行為如何同時體現了孔子的「仁」和孟子的「義」？",
+        "options": [
+            {"text": "兩者兼備：①體現「仁」——藺相如完璧歸趙後，面對廉頗的挑釁選擇退讓（「引車避匿」），不是因為怕，而是以國家大局為重，不忍因個人恩怨而損害國家。這種「推己及人、以大局為重」的胸懷正是孔子「仁」的表現；②體現「義」——在秦廷上，藺相如面對強秦的威脅寧死不屈，以性命維護國家尊嚴。這種「捨生取義」的勇氣正是孟子「義」的表現。面對外敵取「義」（勇於犧牲），面對同袍取「仁」（寬容退讓），展現了儒家理想人格的完整面貌", "is_correct": True,
+             "explanation": "此選項正確。外敵取義，同袍取仁。"},
+            {"text": "只體現義", "is_correct": False,
+             "explanation": "此選項錯誤。也體現了仁。"},
+            {"text": "只體現仁", "is_correct": False,
+             "explanation": "此選項錯誤。也體現了義。"},
+            {"text": "都沒有體現", "is_correct": False,
+             "explanation": "此選項錯誤。兩者都有體現。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q41  p11  深  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "深",
+        "skill": "跨篇章比較",
+        "stem": "唐詩三首和宋詞三首中的「孤獨」主題有甚麼不同的表現和內涵？",
+        "options": [
+            {"text": "不同表現和內涵：①唐詩三首的孤獨——王維的孤獨是自願的隱居，以山水為伴，享受寧靜；李白的孤獨是性情的放縱，對影成三人反而自得其樂；杜甫的孤獨是時代悲劇的產物，憂國憂民而無人共鳴。唐詩的孤獨較含蓄，各帶一份灑脫或沉鬱；②宋詞三首的孤獨——蘇軾的孤獨是歷史時空中的渺小感；李清照的孤獨是現實生活的孤苦無依；辛棄疾的孤獨是理想與世俗的不相容。宋詞的孤獨更直接、更深沉，帶有更強烈的個人色彩", "is_correct": True,
+             "explanation": "此選項正確。唐詩含蓄灑脫，宋詞直接深沉。"},
+            {"text": "沒有孤獨主題", "is_correct": False,
+             "explanation": "此選項錯誤。六首都涉及孤獨。"},
+            {"text": "孤獨都一樣", "is_correct": False,
+             "explanation": "此選項錯誤。各有不同的表現。"},
+            {"text": "唐詩更孤獨", "is_correct": False,
+             "explanation": "此選項錯誤。宋詞的孤獨更深沉。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q42  p06  深  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p06",
+        "difficulty": "深",
+        "skill": "跨篇章比較",
+        "stem": "從孔子到荀子到韓愈，「師道」觀念經歷了甚麼演變？",
+        "options": [
+            {"text": "三階段演變：①孔子——以身教為主。孔子本人就是最好的「師」，通過與學生的日常對話和身體力行來教導。師道是自然的、生活化的；②荀子——將「師」的作用制度化。強調「師」是維護禮義的關鍵（「國將興，必貴師而重傅」），師的地位與君主並列。師道成為社會秩序的一部分；③韓愈——為「師道」辯護和正名。針對當時「恥學於師」的風氣，重新定義師的功能（「傳道受業解惑」），並提出「弟子不必不如師」的平等觀。師道從自然實踐到制度建設到文化辯護，越來越成為需要捍衛的價值", "is_correct": True,
+             "explanation": "此選項正確。身教、制度化、文化辯護三階段。"},
+            {"text": "沒有演變", "is_correct": False,
+             "explanation": "此選項錯誤。有明顯的演變。"},
+            {"text": "三者完全一樣", "is_correct": False,
+             "explanation": "此選項錯誤。各有不同的側重。"},
+            {"text": "韓愈反對師道", "is_correct": False,
+             "explanation": "此選項錯誤。韓愈是捍衛師道的。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q43  p10  深  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p10",
+        "difficulty": "深",
+        "skill": "跨篇章比較",
+        "stem": "柳宗元的「西山之特立」和莊子的「逍遙遊」在追求精神自由上有甚麼異同？",
+        "options": [
+            {"text": "異同並存：①相同——都追求超越世俗的精神境界。柳宗元「心凝形釋，與萬化冥合」和莊子追求的精神自由有相通之處；②不同——①根本動機不同：莊子的逍遙是主動選擇的哲學追求，不因為任何外在遭遇；柳宗元的超脫是被貶後的精神避難，有現實的痛苦作為背景；②持續性不同：莊子的逍遙是持久的哲學狀態，柳宗元的超脫只在遊山時短暫出現；③徹底性不同：莊子要擺脫一切束縛（包括是非善惡），柳宗元仍然堅守著儒家的價值觀（「特立」暗含品格的堅持），沒有真正超越", "is_correct": True,
+             "explanation": "此選項正確。相通但動機、持續性、徹底性不同。"},
+            {"text": "完全相同", "is_correct": False,
+             "explanation": "此選項錯誤。有重要的差異。"},
+            {"text": "完全不同", "is_correct": False,
+             "explanation": "此選項錯誤。有相通之處。"},
+            {"text": "柳宗元更自由", "is_correct": False,
+             "explanation": "此選項錯誤。莊子的自由更徹底。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q44  p08  深  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p08",
+        "difficulty": "深",
+        "skill": "跨篇章比較",
+        "stem": "范仲淹的「不以物喜，不以己悲」和蘇軾的「人間如夢」都是面對人生的態度，有甚麼本質區別？",
+        "options": [
+            {"text": "本質區別：①范仲淹——超越個人得失是為了更好地承擔社會責任。「不以物喜，不以己悲」不是看淡人生，而是不讓個人情緒影響為國為民的大業。超越是手段，擔當是目的。這是儒家「內聖外王」的理想；②蘇軾——看淡人生是為了自我解脫。「人間如夢」是認識到人生的短暫和虛幻，從而放下執著，獲得內心的平靜。超越本身就是目的。這受到了佛道思想的影響。范仲淹超越個人是為了走向天下，蘇軾超越人生是為了回歸自我", "is_correct": True,
+             "explanation": "此選項正確。范走向天下，蘇回歸自我。"},
+            {"text": "本質一樣", "is_correct": False,
+             "explanation": "此選項錯誤。有本質的區別。"},
+            {"text": "都是消極", "is_correct": False,
+             "explanation": "此選項錯誤。范仲淹很積極。"},
+            {"text": "都是積極", "is_correct": False,
+             "explanation": "此選項錯誤。蘇軾偏向出世。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q45  p07  深  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p07",
+        "difficulty": "深",
+        "skill": "跨篇章比較",
+        "stem": "《廉頗藺相如列傳》《出師表》《六國論》三篇涉及「國家存亡」的文章，作者各站在甚麼角度論述？",
+        "options": [
+            {"text": "三個角度：①司馬遷——歷史記錄者的角度。客觀記錄藺相如如何憑智勇維護趙國尊嚴，不加主觀議論，讓讀者自行評價。角度是「呈現」；②諸葛亮——當事臣子的角度。以第一人稱直接向君主進諫，從自身經歷出發說明形勢和策略。角度是「參與」；③蘇洵——後世評論者的角度。站在數百年後回顧歷史，冷靜分析六國滅亡的政策失誤，借古諷今。角度是「反思」。呈現、參與、反思三個角度構成了認識國家興亡的完整視角", "is_correct": True,
+             "explanation": "此選項正確。呈現、參與、反思三個角度。"},
+            {"text": "角度一樣", "is_correct": False,
+             "explanation": "此選項錯誤。三者角度不同。"},
+            {"text": "都是當事人", "is_correct": False,
+             "explanation": "此選項錯誤。只有諸葛亮是當事人。"},
+            {"text": "都是旁觀者", "is_correct": False,
+             "explanation": "此選項錯誤。諸葛亮是參與者。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q46  p04  深  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p04",
+        "difficulty": "深",
+        "skill": "跨篇章比較",
+        "stem": "「義」「仁」「忠」三個儒家概念在《魚我所欲也》《論仁、論孝、論君子》《出師表》中各有甚麼不同的表現方式？",
+        "options": [
+            {"text": "表現方式各異：①「義」在《魚我所欲也》——以哲學論證的方式表現。孟子通過類比論證（魚與熊掌）和假設論證（乞人不受嗟來之食）來論述義的重要性。「義」是一個抽象的道德原則；②「仁」在《論仁、論孝、論君子》——以語錄對話的方式表現。孔子在不同情境中對不同弟子解釋「仁」的含義，「仁」是一個需要在生活中實踐的品德；③「忠」在《出師表》——以個人實踐的方式表現。諸葛亮用自己的一生來實踐忠臣的責任，「忠」是一種具體的行動和承諾。從抽象原則到生活實踐到具體行動", "is_correct": True,
+             "explanation": "此選項正確。哲學論證、對話實踐、行動承諾。"},
+            {"text": "表現方式一樣", "is_correct": False,
+             "explanation": "此選項錯誤。各有不同的表現方式。"},
+            {"text": "三個概念一樣", "is_correct": False,
+             "explanation": "此選項錯誤。義、仁、忠各有側重。"},
+            {"text": "沒有關係", "is_correct": False,
+             "explanation": "此選項錯誤。同屬儒家道德體系。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q47  p01  最深  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p01",
+        "difficulty": "最深",
+        "skill": "跨篇章比較",
+        "stem": "十二篇指定篇章可以按主題分為哪幾個群組？各群組有甚麼共同關懷和內在聯繫？",
+        "options": [
+            {"text": "可分為四大群組：①「道德修養」群組（p01論語、p02魚我所欲也、p03逍遙遊、p04勸學）——共同關懷：如何成為更好的人。儒家主張學習禮義（孔子、孟子、荀子），道家主張去除束縛（莊子），兩者構成互補的修養觀；②「家國擔當」群組（p05出師表、p08岳陽樓記、p09六國論）——共同關懷：士人的社會責任。從忠臣的實踐到文人的理想到學者的反思，展現了不同角度的家國情懷；③「人物品格」群組（p06師說、p07廉頗藺相如列傳）——共同關懷：理想人格的塑造。韓愈論師道、司馬遷寫智勇忠義，都在探索甚麼是值得效法的品格；④「文人心靈」群組（p10始得西山、p11唐詩三首、p12宋詞三首）——共同關懷：文人如何面對困境。山水、詩歌、詞曲成為失意文人安頓心靈的方式。四個群組構成了「修身→治國→立人→安心」的完整人文教育", "is_correct": True,
+             "explanation": "此選項正確。修身、治國、立人、安心四大群組。"},
+            {"text": "無法分組", "is_correct": False,
+             "explanation": "此選項錯誤。可以按主題分組。"},
+            {"text": "都是同一主題", "is_correct": False,
+             "explanation": "此選項錯誤。有不同的主題群組。"},
+            {"text": "沒有內在聯繫", "is_correct": False,
+             "explanation": "此選項錯誤。群組之間有內在聯繫。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q48  p04  最深  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p04",
+        "difficulty": "最深",
+        "skill": "跨篇章比較",
+        "stem": "先秦諸子散文（《論語》《魚我所欲也》《逍遙遊》《勸學》）和唐宋散文（《出師表》《師說》《岳陽樓記》《六國論》《始得西山宴遊記》）在寫作手法上有甚麼根本差異？這反映了甚麼文學發展趨勢？",
+        "options": [
+            {"text": "根本差異和趨勢：①先秦散文——語言精煉簡約，多用語錄體或對話體（論語）、類比推理（孟子）、寓言故事（莊子）、排比比喻（荀子）。說理方式較為直接和形象化。反映了口語傳統和思想百家爭鳴的時代；②唐宋散文——語言更加典雅工整，結構更加嚴謹。諸葛亮的表文情理並茂，韓愈的論說邏輯嚴密，范仲淹的駢散結合，蘇洵的論證層層推進，柳宗元的敘事與抒情交融。反映了散文藝術從自然發展走向自覺創作的趨勢。文學發展趨勢：從「言之有物」（先秦重內容）到「言之有文」（唐宋重形式與內容並重），散文藝術越來越成熟和精緻", "is_correct": True,
+             "explanation": "此選項正確。從自然到自覺，從重內容到形式內容並重。"},
+            {"text": "沒有差異", "is_correct": False,
+             "explanation": "此選項錯誤。有根本的差異。"},
+            {"text": "先秦更好", "is_correct": False,
+             "explanation": "此選項過於簡化。各有優勢。"},
+            {"text": "唐宋退步了", "is_correct": False,
+             "explanation": "此選項錯誤。是發展和成熟。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q49  p11  最深  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p11",
+        "difficulty": "最深",
+        "skill": "跨篇章比較",
+        "stem": "四組涉及「文人與自然」的作品（《始得西山宴遊記》、《岳陽樓記》、唐詩三首、宋詞三首）在「借景抒情」上有甚麼不同的層次？",
+        "options": [
+            {"text": "四個層次：①柳宗元《始得西山宴遊記》——「以景喻己」層次。西山的特立不群直接比喻自己的品格，景物是人格的象徵。借景是為了自我確認；②范仲淹《岳陽樓記》——「以景論理」層次。陰雨和晴明的景色引出「不以物喜，不以己悲」的道理，景物是哲理的觸媒。借景是為了闡發道理；③唐詩三首——「以景造境」層次。王維的松月、李白的花影月光、杜甫的山河雲日，營造出完整的意境，情感融入其中。借景是為了營造氛圍和意境；④宋詞三首——「以景傳情」層次。蘇軾的赤壁壯景、李清照的秋雨黃花、辛棄疾的燈火闌珊，都是直接承載和傳達強烈情感的媒介。借景是為了表達無法言說的情感。四個層次從自喻到說理到造境到傳情，越來越注重情感的直接表達", "is_correct": True,
+             "explanation": "此選項正確。喻己、論理、造境、傳情四層。"},
+            {"text": "都是同一層次", "is_correct": False,
+             "explanation": "此選項錯誤。有不同的層次。"},
+            {"text": "都是純粹寫景", "is_correct": False,
+             "explanation": "此選項錯誤。都有借景的深意。"},
+            {"text": "無法比較", "is_correct": False,
+             "explanation": "此選項錯誤。可以從層次角度比較。"},
+        ],
+        "critique_score": 10,
+    },
+
+    # ── B77-Q50  p12  最深  跨篇章比較  ────────────────────
+    {
+        "passage_id": "p12",
+        "difficulty": "最深",
+        "skill": "跨篇章比較",
+        "stem": "十二篇指定篇章所展現的「理想人格」有甚麼共同點和差異？這對現代人有甚麼啟示？",
+        "options": [
+            {"text": "共同點和差異：①共同點——十二篇都展現了「不隨波逐流」的精神：孔孟的君子不同於小人，莊子的至人不受束縛，荀子主張學習超越本性，諸葛亮忠心不二，韓愈敢於批評世俗，藺相如智勇不屈，范仲淹先憂後樂，蘇洵直言政策之失，柳宗元堅守品格，唐詩宋詞的詩人各有堅持。「不隨俗」是所有理想人格的底色；②差異——可分為三類理想：a)「入世型」（孔孟荀、諸葛亮、韓愈、范仲淹、蘇洵）——以改善社會為己任；b)「超脫型」（莊子、王維、蘇軾、李白）——以精神自由為追求；c)「堅守型」（藺相如、辛棄疾、柳宗元、杜甫、李清照）——以堅持原則和真情為本分；③對現代人的啟示——在充滿壓力和從眾壓力的現代社會，這三類理想人格提供了不同的精神資源：入世型啟發社會責任，超脫型啟發心理健康，堅守型啟發個人原則。三者不必二選一，可以根據人生處境靈活運用", "is_correct": True,
+             "explanation": "此選項正確。不隨俗的共同底色，入世、超脫、堅守三類差異。"},
+            {"text": "沒有共同點", "is_correct": False,
+             "explanation": "此選項錯誤。有「不隨俗」的共同底色。"},
+            {"text": "對現代人無用", "is_correct": False,
+             "explanation": "此選項錯誤。有重要的啟示意義。"},
+            {"text": "理想人格都一樣", "is_correct": False,
+             "explanation": "此選項錯誤。有不同類型的差異。"},
+        ],
+        "critique_score": 10,
+    },
 ]
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-def build_rows(questions: list[dict]) -> list[dict]:
-    """Convert question dicts into DB-ready row bundles."""
-
-def build_rows(questions: list[dict]) -> list[dict]:
-    """Convert question dicts into DB-ready row bundles."""
-
-def build_rows(questions: list[dict]) -> list[dict]:
-    """Convert question dicts into DB-ready row bundles."""
-
-def build_rows(questions: list[dict]) -> list[dict]:
-    """Convert question dicts into DB-ready row bundles."""
-
-def build_rows(questions: list[dict]) -> list[dict]:
-    """Convert question dicts into DB-ready row bundles."""
-# ---------------------------------------------------------------------------
-
-def build_rows(questions: list[dict]) -> list[dict]:
-    """Convert question dicts into DB-ready row bundles."""
 
 def build_rows(questions: list[dict]) -> list[dict]:
     """Convert question dicts into DB-ready row bundles."""
