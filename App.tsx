@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { AppState, AppStateStatus } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import * as SplashScreen from "expo-splash-screen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
@@ -13,6 +14,9 @@ import RootNavigator from "./src/navigation/RootNavigator";
 import LoadingScreen from "./src/components/LoadingScreen";
 import { configureRevenueCat } from "./src/lib/revenueCat";
 import { supabase, isSupabaseConfigured } from "./src/lib/supabase";
+
+// Keep the native splash screen visible until we're ready to render.
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 // Initialise RevenueCat once at module load, before any component renders.
 configureRevenueCat();
@@ -34,6 +38,13 @@ export default function App() {
   }, [fontsLoaded]);
 
   const ready = fontsLoaded || fontTimeout;
+
+  // Hide the native splash screen once fonts are ready (or timed out).
+  useEffect(() => {
+    if (ready) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [ready]);
 
   // ── Centralised Supabase auth refresh ───────────────────────────────────
   // The SDK's internal auto-refresh timer stops when iOS/Android freezes
