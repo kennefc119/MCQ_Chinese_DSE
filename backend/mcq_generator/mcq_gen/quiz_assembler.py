@@ -314,6 +314,29 @@ def _passage_skill_desc(quiz_type: str, passage_label: str, skill_label: str, n:
     return f"共 {n} 條{passage_label}【{skill_label}】模擬考試，限時 45 分鐘（評分 >= {min_score}/10）"
 
 
+def _passage_mixed_desc(quiz_type: str, passage_label: str, n: int, min_score: int) -> str:
+    if quiz_type == "quiz":
+        return f"共 {n} 條{passage_label}綜合測驗，涵蓋多項技能，限時 20 分鐘（評分 >= {min_score}/10）"
+    return f"共 {n} 條{passage_label}模擬考試，涵蓋多項技能，限時 45 分鐘（評分 >= {min_score}/10）"
+
+
+def _stratified_shuffle(pool: list[dict], rng: random.Random) -> list[dict]:
+    """Interleave difficulty levels via round-robin for variety within each quiz."""
+    by_diff: dict[int, list[dict]] = defaultdict(list)
+    for q in pool:
+        by_diff[q.get("difficulty", 3)].append(q)
+    for bucket in by_diff.values():
+        rng.shuffle(bucket)
+    stratified: list[dict] = []
+    diff_keys = sorted(by_diff.keys())
+    buckets = {k: list(by_diff[k]) for k in diff_keys}
+    while any(buckets.values()):
+        for k in diff_keys:
+            if buckets[k]:
+                stratified.append(buckets[k].pop(0))
+    return stratified
+
+
 # --- Assembly per quiz type --------------------------------------------------
 
 
@@ -328,12 +351,11 @@ def _assemble_type(
     rng: random.Random | None = None,
 ) -> list[dict]:
     """
-    Assemble quizzes grouped by (passage, skill) for a single quiz_type.
+    Assemble quizzes for a single quiz_type.
 
-    Each (passage, skill, type) combination produces as many non-overlapping
-    quiz instances as the filtered pool allows.  A question is used at most
-    once within the same (passage, skill, type) but may appear across different
-    combinations.
+    Exercises are grouped by (passage, skill) — each skill gets its own set.
+    Quizzes and exams are grouped by passage only — skills are mixed within
+    each instance for broader coverage.
 
     Filtering: exercise keeps 50%, quiz keeps 75%, exam keeps 100%.
     Difficult questions are filtered out first, then randomly within each level.
@@ -368,65 +390,85 @@ def _assemble_type(
             return None
         return picker.next()
 
-    # Group by (passage_id, skill_tag) — a question with multiple tags appears
-    # in multiple groups; it may be reused across different (passage, skill) combos.
-    groups: dict[tuple[str, str], list[dict]] = defaultdict(list)
-    for r in eligible:
-        pid = r.get("passage_id")
-        if not pid:
-            continue
-        for tag in (r.get("tags") or []):
-            groups[(pid, tag)].append(r)
+    if quiz_type == "exercise":
+        # ── Exercise: group by (passage, skill) ──────────────────────────
+        groups: dict[tuple[str, str], list[dict]] = defaultdict(list)
+        for r in eligible:
+            pid = r.get("passage_id")
+            if not pid:
+                continue
+            for tag in (r.get("tags") or []):
+                groups[(pid, tag)].append(r)
 
-    for (pid, tag_id) in sorted(groups.keys()):
-        pool = groups[(pid, tag_id)]
+        for (pid, tag_id) in sorted(groups.keys()):
+            pool = groups[(pid, tag_id)]
+            filtered = _filter_pool(pool, keep_ratio, rng)
+            filtered = _stratified_shuffle(filtered, rng)
 
-        # Apply keep-ratio filter (removes difficult questions first, then random)
-        filtered = _filter_pool(pool, keep_ratio, rng)
+            n_instances = len(filtered) // n
+            if n_instances == 0:
+                continue
 
-        # ── Stratified shuffle: interleave difficulty levels for variety ──
-        by_diff: dict[int, list[dict]] = defaultdict(list)
-        for q in filtered:
-            by_diff[q.get("difficulty", 3)].append(q)
-        for bucket in by_diff.values():
-            rng.shuffle(bucket)
+            skill_label = TAG_LABEL.get(tag_id, tag_id)
+            label = (_ptitles.get(pid) or _passage_label(pid)).removesuffix("（節錄）").strip()
+            subj  = PASSAGE_SUBJECT.get(pid, "文言文")
 
-        # Round-robin across difficulty levels (low → high, repeat) so each
-        # slice of N questions gets a spread of difficulties.
-        stratified: list[dict] = []
-        diff_keys = sorted(by_diff.keys())
-        buckets = {k: list(by_diff[k]) for k in diff_keys}
-        while any(buckets.values()):
-            for k in diff_keys:
-                if buckets[k]:
-                    stratified.append(buckets[k].pop(0))
-        filtered = stratified
+            for i in range(n_instances):
+                batch = filtered[i * n : (i + 1) * n]
+                seq   = i + 1
+                title = f"{label}【{skill_label}】"
+                records.append(_make_record(
+                    quiz_type=quiz_type,
+                    title=title,
+                    description=_passage_skill_desc(quiz_type, label, skill_label, n, min_score),
+                    passage_id=pid,
+                    question_ids=[r["id"] for r in batch],
+                    cover_image_url=_pick_cover(pid, title, seq),
+                    subject_area=subj,
+                    existing_id_map=existing_id_map,
+                    summary=summary,
+                    title_id=seq,
+                ))
+    else:
+        # ── Quiz / Exam: group by passage, mix all skills ────────────────
+        by_passage: dict[str, list[dict]] = defaultdict(list)
+        seen: set[str] = set()
+        for r in eligible:
+            pid = r.get("passage_id")
+            if not pid:
+                continue
+            if r["id"] not in seen:
+                by_passage[pid].append(r)
+                seen.add(r["id"])
 
-        # Create as many non-overlapping instances as possible
-        n_instances = len(filtered) // n
-        if n_instances == 0:
-            continue
+        for pid in sorted(by_passage.keys()):
+            pool = by_passage[pid]
+            filtered = _filter_pool(pool, keep_ratio, rng)
+            filtered = _stratified_shuffle(filtered, rng)
 
-        skill_label = TAG_LABEL.get(tag_id, tag_id)
-        label = (_ptitles.get(pid) or _passage_label(pid)).removesuffix("（節錄）").strip()
-        subj  = PASSAGE_SUBJECT.get(pid, "文言文")
+            n_instances = len(filtered) // n
+            if n_instances == 0:
+                continue
 
-        for i in range(n_instances):
-            batch = filtered[i * n : (i + 1) * n]
-            seq   = i + 1
-            title = f"{label}【{skill_label}】"
-            records.append(_make_record(
-                quiz_type=quiz_type,
-                title=title,
-                description=_passage_skill_desc(quiz_type, label, skill_label, n, min_score),
-                passage_id=pid,
-                question_ids=[r["id"] for r in batch],
-                cover_image_url=_pick_cover(pid, title, seq),
-                subject_area=subj,
-                existing_id_map=existing_id_map,
-                summary=summary,
-                title_id=seq,
-            ))
+            label = (_ptitles.get(pid) or _passage_label(pid)).removesuffix("（節錄）").strip()
+            subj  = PASSAGE_SUBJECT.get(pid, "文言文")
+
+            for i in range(n_instances):
+                batch = filtered[i * n : (i + 1) * n]
+                seq   = i + 1
+                title = label
+                records.append(_make_record(
+                    quiz_type=quiz_type,
+                    title=title,
+                    description=_passage_mixed_desc(quiz_type, label, n, min_score),
+                    passage_id=pid,
+                    question_ids=[r["id"] for r in batch],
+                    cover_image_url=_pick_cover(pid, title, seq),
+                    subject_area=subj,
+                    existing_id_map=existing_id_map,
+                    summary=summary,
+                    title_id=seq,
+                ))
 
     return records
 
@@ -439,8 +481,11 @@ def assemble_quizzes(
     strategies: list[str] | None = None,
 ) -> dict[str, Any]:
     """
-    Fetch all active questions, assemble quiz records grouped by
-    (passage, skill, type), then upsert into dsemcq_quizzes.
+    Fetch all active questions and assemble quiz records, then upsert
+    into dsemcq_quizzes.
+
+    Exercises are grouped by (passage, skill).
+    Quizzes and exams are grouped by passage only — skills are mixed.
 
     Each run uses a different random seed so the combinations vary.
     strategies: kept for API compatibility; ignored.
