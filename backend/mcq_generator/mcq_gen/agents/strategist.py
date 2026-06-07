@@ -34,6 +34,7 @@ def _build_prompt(
     forced_passage: str | None = None,
     forced_difficulty: int | None = None,
     forced_skill: str | None = None,
+    admin_hint: str | None = None,
 ) -> str:
     notes: list[str] = []
     if forced_passage:
@@ -51,6 +52,11 @@ def _build_prompt(
         notes.append(
             f"⚠️ **管理員已指定考核能力**：你**必須**將 `skill_tested` 欄位設為 `{forced_skill}`，"
             f"不得自行選擇其他考核能力。請優先選擇在此能力下最缺題的篇章（若篇章未被指定）。"
+        )
+    if admin_hint:
+        notes.append(
+            f"💡 **管理員出題方向提示**：{admin_hint}\n"
+            f"請在 `special_notes` 欄位中納入此提示，傳達給下游出題員。"
         )
     note = "\n\n".join(notes) + "\n\n" if notes else ""
 
@@ -78,6 +84,7 @@ def run_strategist(
     forced_passage: str | None = None,
     forced_difficulty: int | None = None,
     forced_skill: str | None = None,
+    admin_hint: str | None = None,
 ) -> Spec:
     """呼叫策略師，回傳一個 Spec。如不提供 stats 則自動從 Supabase 讀取。"""
     if stats is None:
@@ -88,6 +95,7 @@ def run_strategist(
         forced_passage=forced_passage,
         forced_difficulty=forced_difficulty,
         forced_skill=forced_skill,
+        admin_hint=admin_hint,
     )
 
     log.info(

@@ -45,9 +45,10 @@ class CycleState(TypedDict, total=False):
     # 輸入
     db_stats: DBStats
     dry_run: bool
-    forced_passage: str | None  # 管理員指定篇章；None 表示讓策略師自行決定
-    forced_difficulty: int | None  # 管理員指定難度 1-5；None 表示讓策略師自行決定
-    forced_skill: str | None       # 管理員指定考核能力（Skill enum value）；None 表示讓策略師自行決定
+    forced_passage: str | None
+    forced_difficulty: int | None
+    forced_skill: str | None
+    admin_hint: str | None        # 管理員提示（向下游注入的出題方向或約束）
 
     # Agent 1 輸出
     spec: Spec
@@ -122,6 +123,7 @@ def node_strategist(state: CycleState) -> dict[str, Any]:
         forced_passage=state.get("forced_passage"),
         forced_difficulty=state.get("forced_difficulty"),
         forced_skill=state.get("forced_skill"),
+        admin_hint=state.get("admin_hint"),
     )
     qid = _make_question_id(spec.passage)
     return {"spec": spec, "question_id": qid, "iteration": 0, "draft_history": []}
@@ -258,6 +260,7 @@ def run_pipeline(
     passage: str | None = None,
     difficulty: int | None = None,
     skill: str | None = None,
+    admin_hint: str | None = None,
     dry_run: bool = False,
 ) -> list[SavedQuestion]:
     """
@@ -290,6 +293,7 @@ def run_pipeline(
             "forced_passage": passage,
             "forced_difficulty": difficulty,
             "forced_skill": skill,
+            "admin_hint": admin_hint,
             "iteration": 0,
             "draft_history": [],
         }
@@ -323,11 +327,12 @@ def run_pipeline(
 def run_correction_pipeline(
     question_id: str | None = None,
     dry_run: bool = False,
+    source: str = "flagged",
 ) -> list[dict]:
     """
-    Run the correction workflow for flagged questions.
+    Run the correction workflow for flagged or deactivated questions.
 
-    For each flagged question:
+    For each question:
       1. Corrector LLM analyses the question + user comments → corrected Draft
       2. Critic LLM reviews the corrected Draft (with user comments as reference)
       3. If score >= 7 → UPDATE question in-place, reset flags
@@ -335,27 +340,31 @@ def run_correction_pipeline(
       5. If max iterations → leave as-is, log failure
 
     Args:
-        question_id: If provided, correct only this question. Otherwise all flagged.
+        question_id: If provided, correct only this question. Otherwise all in pool.
         dry_run: If True, don't write to DB.
+        source: "flagged" (user-flagged, default) or "deactivated" (is_active=false).
 
     Returns:
         List of result dicts with question_id, status, score, etc.
     """
     from .agents.corrector import run_corrector
     from .agents.critic import run_critic
-    from .db.flagged import fetch_flagged_questions
+    from .db.flagged import fetch_deactivated_questions, fetch_flagged_questions
     from .db.writer import update_question
     from .llm import get_traces, reset_traces
 
-    flagged = fetch_flagged_questions(question_id=question_id)
+    if source == "deactivated":
+        questions = fetch_deactivated_questions(question_id=question_id)
+    else:
+        questions = fetch_flagged_questions(question_id=question_id)
 
-    if not flagged:
-        log.info("correction_no_flagged_questions")
+    if not questions:
+        log.info("correction_no_questions", source=source)
         return []
 
     results: list[dict] = []
 
-    for fq in flagged:
+    for fq in questions:
         log.info(
             "correction_start",
             question_id=fq.question_id,

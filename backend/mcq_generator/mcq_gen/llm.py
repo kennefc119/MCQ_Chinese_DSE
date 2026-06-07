@@ -30,6 +30,58 @@ def _estimate_tokens(text: str) -> int:
 _local = threading.local()
 
 
+def _repair_json(s: str) -> str:
+    """Attempt to fix common JSON errors from weak LLMs.
+
+    Fixes:
+    - Trailing commas before ] or }
+    - Missing commas between } and { (adjacent objects in array)
+    - Missing commas between } and "key" (adjacent properties)
+    - Truncated JSON (unclosed brackets/braces)
+    """
+    import re as _re
+
+    # Remove trailing commas: ,] or ,}
+    s = _re.sub(r",\s*([}\]])", r"\1", s)
+
+    # Insert missing commas: }{ → },{
+    s = _re.sub(r"}\s*{", "},{", s)
+
+    # Insert missing commas: }"key" → },"key"
+    s = _re.sub(r'}\s*"', '},"', s)
+
+    # Insert missing commas between string values on adjacent lines
+    s = _re.sub(r'"\s*\n\s*"', '","', s)
+
+    # Fix truncated JSON: close any unclosed brackets/braces in the right order
+    stack: list[str] = []
+    in_str = False
+    escape = False
+    for ch in s:
+        if escape:
+            escape = False
+            continue
+        if ch == "\\":
+            escape = True
+            continue
+        if ch == '"' and not escape:
+            in_str = not in_str
+            continue
+        if in_str:
+            continue
+        if ch == "{":
+            stack.append("}")
+        elif ch == "[":
+            stack.append("]")
+        elif ch in ("}", "]") and stack:
+            stack.pop()
+
+    # Close in reverse order
+    s += "".join(reversed(stack))
+
+    return s
+
+
 def _get_traces_list() -> list[dict]:
     """Get the thread-local traces list, creating it if needed."""
     if not hasattr(_local, "traces"):
@@ -228,14 +280,26 @@ def chat_structured(
     # Try direct parse first
     try:
         return schema.model_validate_json(stripped)
-    except Exception as exc:
-        # Fall back: extract outermost JSON object
-        start = stripped.find("{")
-        end = stripped.rfind("}") + 1
-        if start >= 0 and end > start:
+    except Exception:
+        pass
+
+    # Fall back: extract outermost JSON object
+    start = stripped.find("{")
+    end = stripped.rfind("}") + 1
+    if start >= 0 and end > start:
+        json_str = stripped[start:end]
+        try:
+            return schema.model_validate_json(json_str)
+        except Exception:
+            pass
+
+        # Attempt JSON repair for common weak-LLM issues
+        repaired = _repair_json(json_str)
+        if repaired != json_str:
             try:
-                return schema.model_validate_json(stripped[start:end])
+                return schema.model_validate_json(repaired)
             except Exception:
                 pass
-        log.error("poe_parse_error", raw=stripped[:500], error=str(exc))
-        raise ValueError(f"JSON 解析失敗: {exc}") from exc
+
+    log.error("poe_parse_error", raw=stripped[:500])
+    raise ValueError(f"JSON 解析失敗: {stripped[:300]}")

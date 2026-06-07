@@ -56,7 +56,7 @@ class DraftOption(BaseModel):
     """一個 MC 選項（無 A/B/C/D 標籤，由應用程式在執行時分配）。"""
 
     text: str
-    is_correct: bool  # 四個選項中恰好一個為 True
+    is_correct: bool = False  # 預設 False — 弱 LLM 有時省略此欄位，預設為錯誤選項較安全
     explanation: str = ""  # 此選項為何正確／錯誤（1-3 句，直接引用選項文字及篇章原文）；LLM 有時省略時預設空字串
 
 

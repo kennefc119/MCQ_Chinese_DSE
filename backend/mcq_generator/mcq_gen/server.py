@@ -78,6 +78,7 @@ class GenerateRequest(BaseModel):
     passage_id: str | None = None
     forced_difficulty: int | None = None   # 1-5; None = 讓策略師自行決定
     forced_skill: str | None = None        # Skill enum 字串（如「修辭手法」）；None = 自行決定
+    admin_hint: str | None = None          # 管理員提示（向下游注入的出題方向或約束）
     dry_run: bool = True
     count: int = 1   # 1–20 questions per batch
 
@@ -277,6 +278,7 @@ def generate(req: GenerateRequest) -> dict[str, Any]:
             passage=req.passage_id,
             difficulty=req.forced_difficulty,
             skill=req.forced_skill,
+            admin_hint=req.admin_hint,
             dry_run=req.dry_run,
         )
     except Exception as exc:
@@ -517,6 +519,59 @@ def correct(req: CorrectRequest) -> dict[str, Any]:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     # Aggregate total tokens across all questions
+    total_tokens = sum(r.get("total_tokens", 0) for r in results)
+
+    return {
+        "results": results,
+        "total_tokens": total_tokens,
+    }
+
+
+@app.get("/api/deactivated")
+def list_deactivated() -> list[dict[str, Any]]:
+    """Return all deactivated questions (is_active=false)."""
+    from .db.flagged import fetch_deactivated_questions
+
+    deactivated = fetch_deactivated_questions()
+    return [
+        {
+            "question_id": fq.question_id,
+            "passage_id": fq.passage_id,
+            "stem": fq.stem,
+            "difficulty": fq.difficulty,
+            "is_active": fq.is_active,
+            "critique_score": fq.critique_score,
+            "user_flag_count": fq.user_flag_count,
+            "user_flag_comments": fq.user_flag_comments,
+            "options": fq.options,
+            "tags": fq.tags,
+        }
+        for fq in deactivated
+    ]
+
+
+@app.post("/api/correct-deactivated")
+def correct_deactivated(req: CorrectRequest) -> dict[str, Any]:
+    """
+    Run the correction workflow for deactivated questions.
+    Same pipeline as /api/correct but sources from is_active=false pool.
+    """
+    log.info(
+        "correct_deactivated_start",
+        question_id=req.question_id,
+        dry_run=req.dry_run,
+    )
+
+    try:
+        results = run_correction_pipeline(
+            question_id=req.question_id,
+            dry_run=req.dry_run,
+            source="deactivated",
+        )
+    except Exception as exc:
+        log.error("correct_deactivated_error", error=str(exc))
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
     total_tokens = sum(r.get("total_tokens", 0) for r in results)
 
     return {
