@@ -13,6 +13,7 @@ import { useAuth } from "../context/AuthContext";
 import Button from "../components/Button";
 import LoadingScreen from "../components/LoadingScreen";
 import Icon from "../components/Icon";
+import ReportQuestionButton from "../components/ReportQuestionButton";
 import { AppStackParamList } from "../navigation/types";
 
 type Nav = NativeStackNavigationProp<AppStackParamList, "QuizRunner">;
@@ -240,6 +241,11 @@ export default function QuizRunnerScreen() {
             ))}
           </View>
         )}
+
+        {/* Flag / Report button */}
+        <View style={{ alignItems: "flex-end", marginTop: spacing.sm }}>
+          <ReportQuestionButton questionId={cur.id} compact />
+        </View>
       </ScrollView>
 
       {/* Bottom navigation */}

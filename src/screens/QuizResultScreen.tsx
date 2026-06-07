@@ -14,6 +14,7 @@ import SealStamp from "../components/SealStamp";
 import Icon from "../components/Icon";
 import SealMark from "../components/SealMark";
 import InkDivider from "../components/InkDivider";
+import ReportQuestionButton from "../components/ReportQuestionButton";
 import { AppStackParamList } from "../navigation/types";
 
 type Nav = NativeStackNavigationProp<AppStackParamList, "QuizResult">;
@@ -165,6 +166,10 @@ export default function QuizResultScreen() {
                   <Text style={styles.explainText}>{q.explanation}</Text>
                 </View>
               )}
+              {/* Flag / Report button */}
+              <View style={{ alignItems: "flex-end", marginTop: spacing.sm }}>
+                <ReportQuestionButton questionId={q.id} />
+              </View>
             </View>
           );
         })}

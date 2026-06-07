@@ -315,3 +315,138 @@ def run_pipeline(
 
     log.info("pipeline_done", generated=len(results), dry_run=dry_run)
     return results
+
+
+# ─── Correction Pipeline ─────────────────────────────────────────────────────
+
+
+def run_correction_pipeline(
+    question_id: str | None = None,
+    dry_run: bool = False,
+) -> list[dict]:
+    """
+    Run the correction workflow for flagged questions.
+
+    For each flagged question:
+      1. Corrector LLM analyses the question + user comments → corrected Draft
+      2. Critic LLM reviews the corrected Draft (with user comments as reference)
+      3. If score >= 7 → UPDATE question in-place, reset flags
+      4. If score < 7 and iteration < max → loop back to Corrector
+      5. If max iterations → leave as-is, log failure
+
+    Args:
+        question_id: If provided, correct only this question. Otherwise all flagged.
+        dry_run: If True, don't write to DB.
+
+    Returns:
+        List of result dicts with question_id, status, score, etc.
+    """
+    from .agents.corrector import run_corrector
+    from .agents.critic import run_critic
+    from .db.flagged import fetch_flagged_questions
+    from .db.writer import update_question
+    from .llm import get_traces, reset_traces
+
+    flagged = fetch_flagged_questions(question_id=question_id)
+
+    if not flagged:
+        log.info("correction_no_flagged_questions")
+        return []
+
+    results: list[dict] = []
+
+    for fq in flagged:
+        log.info(
+            "correction_start",
+            question_id=fq.question_id,
+            flag_count=fq.user_flag_count,
+            comments_preview=(fq.user_flag_comments or "")[:80],
+        )
+
+        # Reset traces for this question so we get per-question trace capture
+        reset_traces()
+
+        status = "failed"
+        final_score = 0
+        iteration = 0
+
+        draft = None
+        spec = None
+        critique = None
+
+        for iteration in range(settings.max_revise_iterations):
+            # Step 1: Corrector generates a corrected Draft
+            draft, spec = run_corrector(fq, iteration=iteration)
+
+            # Step 2: Critic reviews (with user flag comments as reference)
+            critique = run_critic(
+                spec=spec,
+                draft=draft,
+                iteration=iteration,
+                user_flag_comments=fq.user_flag_comments,
+            )
+
+            final_score = critique.score
+
+            if critique.score >= 7:
+                # Success — update in place
+                if not dry_run:
+                    update_question(
+                        question_id=fq.question_id,
+                        stem=draft.question_stem,
+                        options=draft.options,
+                        critique_score=critique.score,
+                    )
+                status = "corrected"
+                log.info(
+                    "correction_success",
+                    question_id=fq.question_id,
+                    score=critique.score,
+                    iterations=iteration + 1,
+                    dry_run=dry_run,
+                )
+                break
+            else:
+                log.info(
+                    "correction_revise",
+                    question_id=fq.question_id,
+                    score=critique.score,
+                    iteration=iteration + 1,
+                )
+        else:
+            # Max iterations reached without passing
+            status = "max_iterations"
+            log.warning(
+                "correction_max_iterations",
+                question_id=fq.question_id,
+                final_score=final_score,
+            )
+
+        # Capture per-question traces
+        q_traces = get_traces()
+        q_total_tokens = sum(t.get("total_tokens", 0) for t in q_traces)
+
+        results.append({
+            "question_id": fq.question_id,
+            "passage_id": fq.passage_id,
+            "status": status,
+            "score": final_score,
+            "iterations": iteration + 1,
+            "user_flag_count": fq.user_flag_count,
+            "user_flag_comments": fq.user_flag_comments,
+            "corrected_stem": draft.question_stem if draft else None,
+            "corrected_options": [o.model_dump() for o in draft.options] if draft else None,
+            "critique_comments": critique.comments if critique else None,
+            "critique_instructions": critique.revision_instructions if critique else None,
+            "dry_run": dry_run,
+            "traces": q_traces,
+            "total_tokens": q_total_tokens,
+        })
+
+    log.info(
+        "correction_pipeline_done",
+        total=len(results),
+        corrected=sum(1 for r in results if r["status"] == "corrected"),
+        failed=sum(1 for r in results if r["status"] != "corrected"),
+    )
+    return results

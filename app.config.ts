@@ -4,7 +4,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "文淵DSE",
   slug: "dsemcq",
-  version: "1.0.0",
+  version: "1.0.1",
   scheme: "dsemcq",
   orientation: "portrait",
   userInterfaceStyle: "dark",

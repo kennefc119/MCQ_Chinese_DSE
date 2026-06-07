@@ -47,6 +47,7 @@ def write_question(q: SavedQuestion) -> bool:
     q_row = {
         "id": q.question_id,
         "passage_id": q.passage_id,
+        "cross_passage_id": q.spec.cross_passage if q.spec.cross_passage else None,
         "stem": q.stem,
         # explanation intentionally omitted — each option now carries its own explanation
         "difficulty": _DIFF_TO_INT[q.difficulty_label],
@@ -110,5 +111,67 @@ def write_question(q: SavedQuestion) -> bool:
         passage=q.passage_id,
         is_active=q.is_active,
         score=q.critique_score,
+    )
+    return True
+
+
+def update_question(
+    question_id: str,
+    stem: str,
+    options: list[DraftOption],
+    critique_score: int,
+) -> bool:
+    """
+    Update an existing question in-place (for the correction workflow).
+    Updates stem, options, critique_score, resets user flags, and re-activates.
+    Returns True on success, False on failure.
+    """
+    sb = get_supabase()
+
+    # ── 1. Update dsemcq_questions ────────────────────────────────────────
+    q_update = {
+        "stem": stem,
+        "critique_score": critique_score,
+        "is_active": True,
+        "user_flag_count": 0,
+        "user_flag_comments": None,
+        "admin_flag": False,
+    }
+    result = (
+        sb.table("dsemcq_questions")
+        .update(q_update)
+        .eq("id", question_id)
+        .execute()
+    )
+    if not result.data:
+        log.warning("update_question_not_found", question_id=question_id)
+        return False
+
+    # ── 2. Replace options (delete old, insert new) ───────────────────────
+    sb.table("dsemcq_question_options").delete().eq(
+        "question_id", question_id
+    ).execute()
+
+    option_rows = [
+        {
+            "id": f"{question_id}-opt{i}",
+            "question_id": question_id,
+            "text": opt.text,
+            "is_correct": opt.is_correct,
+            "explanation": opt.explanation,
+        }
+        for i, opt in enumerate(options)
+    ]
+    sb.table("dsemcq_question_options").insert(option_rows).execute()
+
+    # ── 3. Clear user flag records from dsemcq_user_flags ─────────────────
+    sb.table("dsemcq_user_flags").delete().eq(
+        "question_id", question_id
+    ).execute()
+
+    log.info(
+        "question_updated",
+        question_id=question_id,
+        score=critique_score,
     )
     return True

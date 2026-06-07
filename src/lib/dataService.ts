@@ -628,3 +628,43 @@ export async function listUserAttempts(userId: string): Promise<Attempt[]> {
   const remoteIds = new Set(remote.map((a) => a.id));
   return [...remote, ...local.filter((a) => !remoteIds.has(a.id))];
 }
+
+// ── Question flagging ────────────────────────────────────────────────────
+
+/** Admin flags a question — sets admin_flag=true and is_active=false immediately. */
+export async function adminFlagQuestion(questionId: string): Promise<{ ok: boolean; error?: string }> {
+  if (!isSupabaseConfigured) return { ok: false, error: "Supabase not configured" };
+  const { error } = await supabase.rpc("admin_flag_question", { p_question_id: questionId });
+  if (error) {
+    console.warn("[dsemcq] adminFlagQuestion error:", error.message);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
+}
+
+/** User reports a question error (報錯). Comment is mandatory, max 50 chars. */
+export async function userFlagQuestion(questionId: string, comment: string): Promise<{ ok: boolean; error?: string }> {
+  if (!isSupabaseConfigured) return { ok: false, error: "Supabase not configured" };
+  const { error } = await supabase.rpc("user_flag_question", {
+    p_question_id: questionId,
+    p_comment: comment,
+  });
+  if (error) {
+    console.warn("[dsemcq] userFlagQuestion error:", error.message);
+    // Unique constraint violation → already flagged
+    if (error.code === "23505") return { ok: false, error: "你已經報錯過此題" };
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
+}
+
+/** Check if the current user has already flagged a specific question. */
+export async function hasUserFlaggedQuestion(questionId: string): Promise<boolean> {
+  if (!isSupabaseConfigured) return false;
+  const { data } = await supabase
+    .from("dsemcq_user_flags")
+    .select("id")
+    .eq("question_id", questionId)
+    .maybeSingle();
+  return data != null;
+}

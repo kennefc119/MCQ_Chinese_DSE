@@ -1,0 +1,3019 @@
+[
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p01-09eaaa-opt0",
+    "old": "打破「學在官府」壟斷，平民可受教育",
+    "new": "打破學在官府壟斷，平民可受教育"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p01-198f42-opt0",
+    "old": "以「害仁」「成仁」對舉，突顯捨生取義",
+    "new": "以害仁成仁對舉，突顯捨生取義"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p01-559034-opt0",
+    "old": "針對顏淵修養程度，提出「克己復禮」高要求",
+    "new": "針對顏淵修養程度，提出克己復禮高要求"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p01-6dab17-opt0",
+    "old": "以類比引出反問，使「行孝須敬」的論點更深入人心",
+    "new": "以類比引出反問，使行孝須敬的論點更深入人心"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p01-d93bf5-opt0",
+    "old": "「幾諫」鼓勵規勸，可見孝道並非盲從",
+    "new": "幾諫鼓勵規勸，可見孝道並非盲從"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p01-ecd3ce-opt0",
+    "old": "判斷句（「是…也」）和省略句（省略主語）",
+    "new": "判斷句（是…也）和省略句（省略主語）"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p02-05e949-opt0",
+    "old": "語氣助詞，表限制語氣，相當於「罷了」",
+    "new": "語氣助詞，表限制語氣，相當於罷了"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p02-111779-opt0",
+    "old": "判斷句確立論點，假設句以歸謬法反證，反問句加強論證力度——三者層層遞進配合",
+    "new": "判斷句確立論點，假設句以歸謬法反證，反問句加強論證力度，三者層層遞進配合"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p02-14afc5-opt0",
+    "old": "副詞，表示「也」「同樣」，強調兩者並重",
+    "new": "副詞，表示也同樣，強調兩者並重"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p02-1b1a07-opt0",
+    "old": "否定副詞，相當於「不」",
+    "new": "否定副詞，相當於不"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p02-2cfe90-opt0",
+    "old": "先假設「所欲莫甚於生」推出人應不擇手段求生，再以事實否定假設，得出此結論",
+    "new": "先假設所欲莫甚於生推出人應不擇手段求生，再以事實否定假設，得出此結論"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p02-46dfc2-opt0",
+    "old": "承上啟下——承接首段論證人皆有捨生取義之心，開啟次段以事例論證本心的發用與失喪",
+    "new": "承上啟下，承接首段論證人皆有捨生取義之心，開啟次段以事例論證本心的發用與失喪"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p02-6d375a-opt0",
+    "old": "道德本體論：人天生具有善性（本心），義是人心固有的價值；道德實踐論：人應抵抗物欲誘惑以保持本心，否則就是「失其本心」",
+    "new": "道德本體論：人天生具有善性（本心），義是人心固有的價值；道德實踐論：人應抵抗物欲誘惑以保持本心，否則就是失其本心"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p02-6e7b24-opt0",
+    "old": "通過反覆對比過去堅守義與現在見利忘義，層層加深對「失其本心」的批判力度",
+    "new": "通過反覆對比過去堅守義與現在見利忘義，層層加深對失其本心的批判力度"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p02-70227f-opt0",
+    "old": "從「有本心」到「失本心」的遞進對比：守義證明本心存在，失義揭示本心可失",
+    "new": "從有本心到失本心的遞進對比：守義證明本心存在，失義揭示本心可失"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p02-7c24bd-opt0",
+    "old": "連詞，表因果，相當於「所以」",
+    "new": "連詞，表因果，相當於所以"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p02-80f34f-opt0",
+    "old": "邏輯完整：先論證本心的普遍存在，再揭示其喪失的原因，最後以反問呼籲保持，形成「立論─警示─勸勉」的完整結構",
+    "new": "邏輯完整：先論證本心的普遍存在，再揭示其喪失的原因，最後以反問呼籲保持，形成立論─警示─勸勉的完整結構"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p02-85aa50-opt0",
+    "old": "首段以判斷句立論、假設句歸謬、反問句加強，次段以排比句鋪排、反問句收束——句式由理性推論過渡到情感批判",
+    "new": "首段以判斷句立論、假設句歸謬、反問句加強，次段以排比句鋪排、反問句收束，句式由理性推論過渡到情感批判"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p02-90576f-opt0",
+    "old": "人與禽獸的分別在於人有仁義之心，這與文中強調人人皆有「捨生取義」的本心一致",
+    "new": "人與禽獸的分別在於人有仁義之心，這與文中強調人人皆有捨生取義的本心一致"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p02-9792d9-opt0",
+    "old": "本文以捨生取義為例，具體論證人性本善——人天生有羞惡之心",
+    "new": "本文以捨生取義為例，具體論證人性本善，人天生有羞惡之心"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p02-ac6b7b-opt0",
+    "old": "孟子親歷義利衝突——諸侯重利輕義，這使他的批判帶有切身體會，增強說服力",
+    "new": "孟子親歷義利衝突，諸侯重利輕義，這使他的批判帶有切身體會，增強說服力"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p02-bf9935-opt0",
+    "old": "假設「生命最重要」推出人應不擇手段求生，以事實反駁假設，間接證明有比生更重要的價值",
+    "new": "假設生命最重要推出人應不擇手段求生，以事實反駁假設，間接證明有比生更重要的價值"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p02-c2c202-opt0",
+    "old": "培養人的向善之心——人雖有本心但可能喪失，需教育保存",
+    "new": "培養人的向善之心，人雖有本心但可能喪失，需教育保存"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p02-c51c22-opt1",
+    "old": "路人與乞丐之間形成對比——路人有禮義、乞丐無禮義",
+    "new": "路人與乞丐之間形成對比"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p02-c51c22-opt3",
+    "old": "首段和次段之間形成對比——首段講理論、次段講實踐",
+    "new": "首段和次段之間形成對比"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p02-c92fdd-opt0",
+    "old": "假設句與反問句：先以「如使」提出假設，再以「何不」構成反問",
+    "new": "假設句與反問句：先以如使提出假設，再以何不構成反問"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p02-dd2cb9-opt0",
+    "old": "司馬遷所言「失其本」即失去禮義本心，與文中「此之謂失其本心」相呼應",
+    "new": "司馬遷所言失其本即失去禮義本心，與文中此之謂失其本心相呼應"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p02-e681ba-opt0",
+    "old": "孟子以性善論為基礎，把孔子「殺身成仁」的價值期許普遍化，使義利觀從聖賢層面擴至全人類",
+    "new": "孟子以性善論為基礎，把孔子殺身成仁的價值期許普遍化，使義利觀從聖賢層面擴至全人類"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p02-f0f109-opt0",
+    "old": "有人明明可以用某些方法求生避禍，卻選擇不用——因為那些方法違背義",
+    "new": "有人明明可以用某些方法求生避禍，卻選擇不用，因為那些方法違背義"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p02-fe7939-opt0",
+    "old": "仁政建基於不忍人之心，本文論證人皆有善性——同以性善論為基礎",
+    "new": "仁政建基於不忍人之心，本文論證人皆有善性，同以性善論為基礎"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p03-0160cf-opt0",
+    "old": "以理想畫面展示「無用之用」終極意義",
+    "new": "以理想畫面展示無用之用終極意義"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p03-076aa7-opt0",
+    "old": "連詞，表示順接——先聚集族人",
+    "new": "連詞，表示順接，先聚集族人"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p03-1234ab-opt0",
+    "old": "突出「有用」（善捕→死）反招禍害",
+    "new": "突出有用（善捕→死）反招禍害"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p03-17057e-opt0",
+    "old": "介詞結構——「以」解作「把」，「為」解作「作為」",
+    "new": "介詞結構——以解作把，為解作作為"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p03-24fd41-opt1",
+    "old": "大瓠比喻惠子的智慧——雖然很大但空洞無物",
+    "new": "大瓠比喻惠子的智慧"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p03-24fd41-opt2",
+    "old": "大瓠比喻莊子自己——孤獨而不被理解",
+    "new": "大瓠比喻莊子自己"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p03-3d57d6-opt0",
+    "old": "世俗追求「有用」（如狸狌善捕）會招禍",
+    "new": "世俗追求有用（如狸狌善捕）會招禍"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p03-43f7ec-opt0",
+    "old": "被動句——「夭」解作「被砍伐」",
+    "new": "被動句，「夭」解作「被砍伐」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p03-45a8fa-opt0",
+    "old": "超越世俗「有用/無用」的相對概念",
+    "new": "超越世俗有用/無用的相對概念"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p03-4e8510-opt0",
+    "old": "由「善用大」遞進至「無用之用」",
+    "new": "由善用大遞進至無用之用"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p03-537410-opt1",
+    "old": "「我樹之成」和「大瓠之種」——兩處都解作「的」",
+    "new": "「我樹之成」和「大瓠之種」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p03-537410-opt2",
+    "old": "「客聞之」和「子之言」——兩處都是代詞",
+    "new": "「客聞之」和「子之言」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p03-537410-opt3",
+    "old": "「掊之」和「大瓠之種」——兩處都是代詞",
+    "new": "「掊之」和「大瓠之種」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p03-563f66-opt0",
+    "old": "連詞，表示轉折——雖然能為大",
+    "new": "連詞，表示轉折，雖然能為大"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p03-58cf69-opt0",
+    "old": "以「蓬」（纏繞閉塞的蓬草）作比喻",
+    "new": "以蓬（纏繞閉塞的蓬草）作比喻"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p03-6cab49-opt0",
+    "old": "非全部——含門人後學篇章集合整理",
+    "new": "非全部，含門人後學篇章集合整理"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p03-746253-opt0",
+    "old": "狸狌是「有用招禍」的反面例子",
+    "new": "狸狌是有用招禍的反面例子"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p03-78c254-opt1",
+    "old": "大瓠的種子——種子太大損害了惠子的生命",
+    "new": "大瓠的種子"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p03-78c254-opt2",
+    "old": "斄牛體形龐大——龐大的體形損害了斄牛的性命",
+    "new": "斄牛體形龐大"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p03-78c254-opt3",
+    "old": "大樗不合繩墨——不合規矩損害了大樗的性命",
+    "new": "大樗不合繩墨"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p03-7d72b5-opt0",
+    "old": "不同——「於」分別引出對象和處所",
+    "new": "不同，「於」分別引出對象和處所"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p03-888840-opt0",
+    "old": "同物異用，關鍵在於能否「用大」",
+    "new": "同物異用，關鍵在於能否用大"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p03-96fd70-opt0",
+    "old": "先以動物例說「有用」招禍「無用」保身",
+    "new": "先以動物例說有用招禍無用保身"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p03-b058a5-opt1",
+    "old": "相同：都是連詞，解作「用來」",
+    "new": "相同：都是連詞，解作用來"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p03-b143d9-opt1",
+    "old": "名家不注重邏輯，隨意發言——莊子批評惠子說話沒有條理",
+    "new": "名家不注重邏輯，隨意發言"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p03-b143d9-opt2",
+    "old": "名家追求精神自由——與莊子的觀點完全一致，不存在批評",
+    "new": "名家追求精神自由"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p03-b3d876-opt1",
+    "old": "烏龜——指有龜甲的爬行動物",
+    "new": "烏龜"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p03-b3d876-opt2",
+    "old": "占卜——指以龜甲進行問卦",
+    "new": "占卜"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p03-b3d876-opt3",
+    "old": "緩慢——形容行動遲緩不敏捷",
+    "new": "緩慢"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p03-c18edb-opt0",
+    "old": "詞性活用——「將」本為名詞（將領）",
+    "new": "詞性活用，「將」本為名詞（將領）"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p03-cb8cd4-opt0",
+    "old": "寓言說理——以虛構的故事寄託「善用大」的道理",
+    "new": "寓言說理——以虛構的故事寄託善用大的道理"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p03-d2b679-opt0",
+    "old": "運用對比——兩種結果形成鮮明反差",
+    "new": "運用對比，兩種結果形成鮮明反差"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p03-d99eb3-opt1",
+    "old": "省略了主語——不知道是誰使他率領軍隊",
+    "new": "省略了主語"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p03-d99eb3-opt2",
+    "old": "省略了連詞——應為「越有難，而吳王使之將」",
+    "new": "省略了連詞"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p03-dca3ea-opt0",
+    "old": "世俗的「有用」反招禍患",
+    "new": "世俗的有用反招禍患"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p03-dcb0ee-opt0",
+    "old": "將「無用之用」的哲理具象化",
+    "new": "將無用之用的哲理具象化"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p03-efd24c-opt0",
+    "old": "世俗認為「無用」的事物",
+    "new": "世俗認為無用的事物"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p03-f1a55e-opt0",
+    "old": "不同——「卑身而伏」的「而」表示修飾（以",
+    "new": "不同，「卑身而伏」的「而」表示修飾（以"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p03-f38905-opt1",
+    "old": "動詞，解作「到達」——「拙於用大」即「笨拙地到達大的地方」",
+    "new": "動詞，解作「到達」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p03-f38905-opt2",
+    "old": "連詞，解作「和」——「拙於用大」即「笨拙和用大」",
+    "new": "連詞，解作「和」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p03-f38905-opt3",
+    "old": "語氣詞，無實義——可以省略不影響句意",
+    "new": "語氣詞，無實義"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p04-06ee21-opt0",
+    "old": "學習的方法在於「善假於物」",
+    "new": "學習的方法在於善假於物"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-114877-opt1",
+    "old": "「無為而治」——主張順應自然",
+    "new": "「無為而治」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-114877-opt2",
+    "old": "「兼愛非攻」——主張博愛和平",
+    "new": "「兼愛非攻」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-114877-opt3",
+    "old": "「以法為教」——完全否定禮義",
+    "new": "「以法為教」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-1e1f28-opt1",
+    "old": "三組對比都說明同一個道理——堅持",
+    "new": "三組對比都說明同一個道理"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-1e1f28-opt3",
+    "old": "「朽木」vs「金石」——說明天資決定成敗",
+    "new": "「朽木」vs「金石」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p04-29fb4c-opt0",
+    "old": "雙重否定——「非…無…」表肯定",
+    "new": "雙重否定——非…無…表肯定"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-340b90-opt1",
+    "old": "「木受繩則直，金就礪則利」——這是散句",
+    "new": "「木受繩則直，金就礪則利」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-340b90-opt2",
+    "old": "「不積跬步，無以至千里」——這是散句",
+    "new": "「不積跬步，無以至千里」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p04-34397f-opt0",
+    "old": "本性（通「性」）",
+    "new": "本性（通性）"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p04-355fed-opt0",
+    "old": "改變人的本性——由惡變善",
+    "new": "改變人的本性，由惡變善"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-3944bc-opt1",
+    "old": "兩者都是名詞——「利」指利益，「強」指力量",
+    "new": "兩者都是名詞"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-3944bc-opt2",
+    "old": "兩者都是動詞——「利」指使鋒利，「強」指使強壯",
+    "new": "兩者都是動詞"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-3944bc-opt3",
+    "old": "兩者沒有特殊用法——按正常語序排列",
+    "new": "兩者沒有特殊用法"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p04-398a9d-opt0",
+    "old": "代詞——代指前文的木材",
+    "new": "代詞，代指前文的木材"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p04-3a2711-opt0",
+    "old": "學習要持之以恆——放棄的話連腐木也折不斷",
+    "new": "學習要持之以恆，放棄的話連腐木也折不斷"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p04-3de914-opt0",
+    "old": "因果判斷句——以「者…也」歸因",
+    "new": "因果判斷句——以者…也歸因"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p04-4c877c-opt0",
+    "old": "開門見山——篇首即提出「學不可以已」",
+    "new": "開門見山——篇首即提出學不可以已"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p04-530fd3-opt0",
+    "old": "為學必須累積——積土成淵，積善成德",
+    "new": "為學必須累積，積土成淵，積善成德"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p04-56e0ea-opt0",
+    "old": "學習要專心致志——天資不如人也能有",
+    "new": "學習要專心致志，天資不如人也能有"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p04-59a713-opt0",
+    "old": "荀子的性惡論和「重法愛民而霸」的主張",
+    "new": "荀子的性惡論和重法愛民而霸的主張"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p04-5f14ef-opt0",
+    "old": "結構助詞——構成名詞性結構",
+    "new": "結構助詞，構成名詞性結構"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p04-6596eb-opt0",
+    "old": "正是勸學的基礎——因性惡故須學",
+    "new": "正是勸學的基礎，因性惡故須學"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p04-703aad-opt0",
+    "old": "吸收法家「重法」思想，主張禮法並重",
+    "new": "吸收法家重法思想，主張禮法並重"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p04-733f9f-opt0",
+    "old": "智慧（通「智」）",
+    "new": "智慧（通智）"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p04-7346a1-opt0",
+    "old": "「青，取之於藍，而青於藍」——青出於藍的比喻",
+    "new": "「青，取之於藍，而青於藍」，青出於藍的比喻"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-75ff04-opt2",
+    "old": "古文是主動句式——木材主動靠近繩墨",
+    "new": "古文是主動句式"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-75ff04-opt3",
+    "old": "古文是疑問句式——問木材是否會變直",
+    "new": "古文是疑問句式"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p04-873792-opt0",
+    "old": "否定詞組——表示「不可以」（不能夠）",
+    "new": "否定詞組，表示「不可以」（不能夠）"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-9b95b6-opt1",
+    "old": "「不用」——不需要到達千里",
+    "new": "「不用」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-9b95b6-opt2",
+    "old": "「不能以此」——不能用這個方法",
+    "new": "「不能以此」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p04-c2ee5b-opt0",
+    "old": "首尾呼應——首段立論，末段回應",
+    "new": "首尾呼應，首段立論，末段回應"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-c3b2f1-opt1",
+    "old": "「登高而招」——登高然後招手",
+    "new": "「登高而招」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-c3b2f1-opt2",
+    "old": "「吾嘗終日而思矣」——整天地思考",
+    "new": "「吾嘗終日而思矣」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-c3b2f1-opt3",
+    "old": "「鍥而不舍」——雕刻而不放棄",
+    "new": "「鍥而不舍」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p04-c86017-opt0",
+    "old": "對偶——「不積跬步」對「不積小流」，結構對稱",
+    "new": "對偶——不積跬步對不積小流，結構對稱"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-d601b5-opt2",
+    "old": "對比論證——比較跬步和千里的差距",
+    "new": "對比論證"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-d601b5-opt3",
+    "old": "類比論證——由千里推論出江海",
+    "new": "類比論證"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p04-d79446-opt0",
+    "old": "學習要專心——蚯蚓用心專一故有成就",
+    "new": "學習要專心，蚯蚓用心專一故有成就"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p04-dd9d28-opt0",
+    "old": "定語後置的標誌——「爪牙之利」等於",
+    "new": "定語後置的標誌，「爪牙之利」等於"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-dea71b-opt3",
+    "old": "年齡——體現了荀子尊重長者的看法",
+    "new": "年齡"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-dea71b-opt1",
+    "old": "天資——體現了荀子重視天賦的看法",
+    "new": "天資"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-dea71b-opt2",
+    "old": "出身——體現了荀子重視家世的看法",
+    "new": "出身"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-f5b1be-opt2",
+    "old": "按時間先後排列——先發生的在前",
+    "new": "按時間先後排列"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p04-f5b1be-opt3",
+    "old": "從大到小排列——先說最重要的",
+    "new": "從大到小排列"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-10fa4f-opt0",
+    "old": "判斷句——「……者，……也」是判斷句式",
+    "new": "判斷句，「……者，……也」是判斷句式"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p05-19649a-opt0",
+    "old": "綜合運用動作描寫（「持璧睨柱」「肉袒負荊」）、語言描寫（「五步之內",
+    "new": "綜合運用動作描寫（持璧睨柱肉袒負荊）、語言描寫（五步之內"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-1980f0-opt0",
+    "old": "秦王出於利害算計——殺相如得不到璧反斷秦趙之交，放人才是上策",
+    "new": "秦王出於利害算計，殺相如得不到璧反斷秦趙之交，放人才是上策"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-2034de-opt0",
+    "old": "內部鬥爭會兩敗俱傷——將相不和就像兩虎相鬥，結果是兩敗俱傷，給敵人可乘之機",
+    "new": "內部鬥爭會兩敗俱傷，將相不和就像兩虎相鬥，結果是兩敗俱傷，給敵人可乘之機"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-35aef1-opt0",
+    "old": "詞性活用——「衣」本是名詞（衣服），這裏活用為動詞，意思是「穿上」。「衣褐」即「穿上粗布衣服」",
+    "new": "詞性活用，「衣」本是名詞（衣服），這裏活用為動詞，意思是「穿上」。「衣褐」即「穿上粗布衣服」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-385d20-opt0",
+    "old": "心胸狹隘、看重門第出身——他因藺相如出身低微而不願屈居其下，只看出身不看才能",
+    "new": "心胸狹隘、看重門第出身，他因藺相如出身低微而不願屈居其下，只看出身不看才能"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-3d18ac-opt0",
+    "old": "真正認識到對方的品德後能放下身段——廉頗從自大到謙卑的轉變，說明真誠的品德最終能打動人心，化解矛盾",
+    "new": "真正認識到對方的品德後能放下身段，廉頗從自大到謙卑的轉變，說明真誠的品德最終能打動人心，化解矛盾"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p05-449bf1-opt2",
+    "old": "環境描寫——描繪宮殿環境",
+    "new": "環境描寫"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p05-449bf1-opt1",
+    "old": "直接描寫——描繪外貌形象",
+    "new": "直接描寫"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p05-449bf1-opt3",
+    "old": "直接描寫——評論才能品格",
+    "new": "直接描寫"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-502b5c-opt0",
+    "old": "是道義上的勝利——趙國未失璧也未失面，且讓秦國背負了「曲」（理虧）的名聲",
+    "new": "是道義上的勝利，趙國未失璧也未失面，且讓秦國背負了「曲」（理虧）的名聲"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-517c47-opt0",
+    "old": "精於算計、重利輕義——殺相如無益反斷交，不如厚遇放人以保持關係",
+    "new": "精於算計、重利輕義，殺相如無益反斷交，不如厚遇放人以保持關係"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p05-540f2f-opt0",
+    "old": "側面烘托——通過門客的誤解反襯藺相如避讓的深層用意，引出其「先國家之急」的解釋",
+    "new": "側面烘托——通過門客的誤解反襯藺相如避讓的深層用意，引出其先國家之急的解釋"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-55d38e-opt0",
+    "old": "通假字——「彊」通「強」，意思是「強大的」",
+    "new": "通假字，「彊」通「強」，意思是「強大的」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-58ae75-opt0",
+    "old": "廉頗是藺相如品格的鏡子——先作對比襯托，後以知錯能改回應藺相如的胸襟，完成主旨論證",
+    "new": "廉頗是藺相如品格的鏡子，先作對比襯托，後以知錯能改回應藺相如的胸襟，完成主旨論證"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-5b0f80-opt0",
+    "old": "「衣」由名詞活用為動詞，解作「穿上」；「褐」指粗布衣服——全句意為「派他的隨從穿上粗布衣服」",
+    "new": "「衣」由名詞活用為動詞，解作「穿上」；「褐」指粗布衣服，全句意為「派他的隨從穿上粗布衣服」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-62ce16-opt0",
+    "old": "推動情節發展並深化主旨——先製造內部矛盾張力，再以和解收束，論證「先公後私」的道理",
+    "new": "推動情節發展並深化主旨，先製造內部矛盾張力，再以和解收束，論證「先公後私」的道理"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-6431cc-opt0",
+    "old": "真正的恥辱不是個人被輕視，而是國家因內部鬥爭而被外敵侵犯——個人名譽與國家安全相比微不足道",
+    "new": "真正的恥辱不是個人被輕視，而是國家因內部鬥爭而被外敵侵犯，個人名譽與國家安全相比微不足道"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p05-67a65f-opt3",
+    "old": "環境描寫——烘托緊張氣氛",
+    "new": "環境描寫"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p05-67a65f-opt2",
+    "old": "心理描寫——展現內心憤怒",
+    "new": "心理描寫"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p05-67a65f-opt1",
+    "old": "語言描寫——言詞威懾近臣",
+    "new": "語言描寫"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p05-6a72bd-opt0",
+    "old": "副詞——修飾動詞「喜」，表示程度很深，「大喜」即「非常高興」",
+    "new": "副詞——修飾動詞喜，表示程度很深，大喜即非常高興"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-6e3bcf-opt0",
+    "old": "韓——戰國時期最主要的七個諸侯國",
+    "new": "韓，戰國時期最主要的七個諸侯國"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-7535a1-opt0",
+    "old": "英雄不問出身——藺相如出身卑微但智勇兼備，憑個人才能獲得重用和尊重",
+    "new": "英雄不問出身，藺相如出身卑微但智勇兼備，憑個人才能獲得重用和尊重"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p05-766be2-opt0",
+    "old": "直接描寫——語言描寫，廉頗自稱「鄙賤之人」並尊稱藺相如為「將軍」，展現他勇於自省、知錯能改的形象",
+    "new": "直接描寫——語言描寫，廉頗自稱鄙賤之人並尊稱藺相如為將軍，展現他勇於自省、知錯能改的形象"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p05-795146-opt0",
+    "old": "反映了司馬遷重視「人與人之間的關係和互動」的歷史觀",
+    "new": "反映了司馬遷重視人與人之間的關係和互動的歷史觀"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p05-7b1f18-opt3",
+    "old": "紀、傳、論、贊、序——分別記事、記人、議論、讚美、序言",
+    "new": "紀、傳、論、贊、序"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p05-7b1f18-opt2",
+    "old": "編年、紀事、人物、地理、典章——按時序和類別排列",
+    "new": "編年、紀事、人物、地理、典章"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p05-7b1f18-opt1",
+    "old": "本紀、年表、禮志、世家、雜傳——記帝王至庶民",
+    "new": "本紀、年表、禮志、世家、雜傳"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-7f2da7-opt0",
+    "old": "忠誠愛國、以國家利益為先——兩人都甘冒個人風險維護國家尊嚴和安全",
+    "new": "忠誠愛國、以國家利益為先，兩人都甘冒個人風險維護國家尊嚴和安全"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p05-80dd65-opt0",
+    "old": "完璧歸趙突出「智勇」，澠池之會突出「膽識和正氣」",
+    "new": "完璧歸趙突出智勇，澠池之會突出膽識和正氣"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-89ecd5-opt0",
+    "old": "諸葛亮的盡忠報國體現了孔子「君子喻於義」的精神——以道義為重，不計個人得失",
+    "new": "諸葛亮的盡忠報國體現了孔子「君子喻於義」的精神，以道義為重，不計個人得失"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p05-8b3b0b-opt0",
+    "old": "殺——「刃」由名詞活用為動詞，解作「殺」",
+    "new": "殺——刃由名詞活用為動詞，解作殺"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-9c0fb6-opt0",
+    "old": "廉頗的軍事部署——送趙王到邊境並約定立太子為王以絕秦望；同時趙國在邊境部署重兵防備秦國入侵",
+    "new": "廉頗的軍事部署，送趙王到邊境並約定立太子為王以絕秦望；同時趙國在邊境部署重兵防備秦國入侵"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p05-a5c8d5-opt0",
+    "old": "以「請以秦之咸陽為趙王壽」對等回應",
+    "new": "以請以秦之咸陽為趙王壽對等回應"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p05-a74704-opt1",
+    "old": "批評——旨在批評繆賢和趙王",
+    "new": "批評"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p05-a74704-opt2",
+    "old": "鋪墊——為藺相如失敗埋下伏筆",
+    "new": "鋪墊"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p05-a74704-opt3",
+    "old": "對比——繆賢和趙王之間的對比",
+    "new": "對比"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-a780f3-opt0",
+    "old": "處處迴避廉頗——稱病不上朝，外出時遠遠看見廉頗就繞道而行",
+    "new": "處處迴避廉頗，稱病不上朝，外出時遠遠看見廉頗就繞道而行"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p05-aa8a1b-opt0",
+    "old": "「睨」字生動傳神，展現挑釁姿態和決心",
+    "new": "睨字生動傳神，展現挑釁姿態和決心"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p05-b25393-opt0",
+    "old": "故作輕鬆客氣（「竊聞」「好音」「請」），實際暗含羞辱",
+    "new": "故作輕鬆客氣（竊聞好音請），實際暗含羞辱"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-b2f925-opt0",
+    "old": "詞性活用——「前」本是方位名詞（前方），這裏活用為動詞，意思是「走上前」",
+    "new": "詞性活用，「前」本是方位名詞（前方），這裏活用為動詞，意思是「走上前」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-c5389e-opt0",
+    "old": "收束全文主旨——將相和好象徵文武團結，暗示只有內部團結才能抵禦強秦",
+    "new": "收束全文主旨，將相和好象徵文武團結，暗示只有內部團結才能抵禦強秦"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-cb7d35-opt0",
+    "old": "「負」解作「使……承擔」，「曲」解作「理虧」——全句意為「寧可答應使秦國承擔理虧的罪名」",
+    "new": "「負」解作「使……承擔」，「曲」解作「理虧」，全句意為「寧可答應使秦國承擔理虧的罪名」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-d829b9-opt0",
+    "old": "廉頗、藺相如、李牧、趙奢——他們都是趙國的名臣名將，在不同時期為趙國效力",
+    "new": "廉頗、藺相如、李牧、趙奢，他們都是趙國的名臣名將，在不同時期為趙國效力"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-d8467f-opt0",
+    "old": "「因」解作「於是」，「卻」解作「後退」——全句意為「藺相如於是握着璧後退站立」",
+    "new": "「因」解作「於是」，「卻」解作「後退」，全句意為「藺相如於是握着璧後退站立」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p05-e86e48-opt0",
+    "old": "通假字＋固定結構「所以」＋判斷句",
+    "new": "通假字＋固定結構所以＋判斷句"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-ed86e9-opt0",
+    "old": "「逆」解作「違反」，「驩」解作「友好關係」——全句意為「為一塊璧的緣故而違反與強秦的友好關係」",
+    "new": "「逆」解作「違反」，「驩」解作「友好關係」，全句意為「為一塊璧的緣故而違反與強秦的友好關係」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-eec3a7-opt0",
+    "old": "以退為進——主動承認欺君之罪並自請受死",
+    "new": "以退為進，主動承認欺君之罪並自請受死"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-f1d35c-opt0",
+    "old": "「嚴」解作「尊重」，「修」解作「表示」——全句意為「尊重大國的威望以表示敬意」",
+    "new": "「嚴」解作「尊重」，「修」解作「表示」，全句意為「尊重大國的威望以表示敬意」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-f206a5-opt0",
+    "old": "文武合力是國家安全的保障——文臣和武將缺一不可，內部團結才能抵禦外敵",
+    "new": "文武合力是國家安全的保障，文臣和武將缺一不可，內部團結才能抵禦外敵"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p05-f3c6f6-opt0",
+    "old": "「究天人之際，通古今之變，成一家之言」",
+    "new": "究天人之際，通古今之變，成一家之言"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-fa3e88-opt0",
+    "old": "強國恃勢凌人——秦國仗着國力強大欺壓弱國，不守信約、態度傲慢，是典型的強權行為",
+    "new": "強國恃勢凌人，秦國仗着國力強大欺壓弱國，不守信約、態度傲慢，是典型的強權行為"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p05-fde039-opt0",
+    "old": "按時間先後構成遞進——依次展現藺相如智勇、膽識、胸襟，推動地位升高和矛盾加劇，終以負荊請罪達到高潮",
+    "new": "按時間先後構成遞進，依次展現藺相如智勇、膽識、胸襟，推動地位升高和矛盾加劇，終以負荊請罪達到高潮"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p06-032de8-opt0",
+    "old": "「創業未半，而中道崩殂」——轉折（卻）",
+    "new": "「創業未半，而中道崩殂」，轉折（卻）"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-0ef37f-opt1",
+    "old": "賓語前置——賓語移至動詞之前",
+    "new": "賓語前置"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-0ef37f-opt2",
+    "old": "被動句——主語是動作承受者",
+    "new": "被動句"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-0ef37f-opt3",
+    "old": "省略句——省略了某個句子成分",
+    "new": "省略句"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p06-19cc52-opt0",
+    "old": "虛實結合——概括印象，事例佐證",
+    "new": "虛實結合，概括印象，事例佐證"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p06-2a006a-opt0",
+    "old": "先公後私——先安排國事再表個人情",
+    "new": "先公後私，先安排國事再表個人情"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p06-34c22d-opt0",
+    "old": "借代加對偶——以謙辭突顯淡泊志向",
+    "new": "借代加對偶，以謙辭突顯淡泊志向"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-35932f-opt1",
+    "old": "「軍事至上」——一切以北伐為中心",
+    "new": "「軍事至上」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-35932f-opt2",
+    "old": "「法治至上」——一切以法律制度為準",
+    "new": "「法治至上」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-35932f-opt3",
+    "old": "「個人英雄主義」——國家只靠一個人",
+    "new": "「個人英雄主義」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p06-3cb682-opt0",
+    "old": "出征前的時刻使文章具有「臨別遺言」的性質",
+    "new": "出征前的時刻使文章具有臨別遺言的性質"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p06-400f94-opt0",
+    "old": "用「未半」和「崩殂」形成轉折",
+    "new": "用未半和崩殂形成轉折"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p06-428842-opt0",
+    "old": "①「此誠危急存亡之秋也」→ 判斷句（以「也」結尾）",
+    "new": "①此誠危急存亡之秋也→ 判斷句（以也結尾）"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-471b36-opt1",
+    "old": "因果句式——前因後果的關係",
+    "new": "因果句式"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-471b36-opt2",
+    "old": "被動句式——主語承受動作",
+    "new": "被動句式"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p06-66095f-opt0",
+    "old": "層遞——由淺入深、由具體到原則",
+    "new": "層遞，由淺入深、由具體到原則"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p06-8500b3",
+    "stem": "從修辭學的角度分析，《出師表》中「對比」手法的運用有哪幾個層次？試指出這些層次及其效果。"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p06-9b926c-opt0",
+    "old": "各種手法配合——增強論證和表達效果",
+    "new": "各種手法配合，增強論證和表達效果"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p06-9cafe1-opt0",
+    "old": "第一層是「報恩型忠誠」",
+    "new": "第一層是報恩型忠誠"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p06-bfaeed-opt0",
+    "old": "對偶——「內」對「外」結構整齊對稱",
+    "new": "對偶——內對外結構整齊對稱"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p06-bff673-opt0",
+    "old": "判斷句——「也」字表示肯定判斷",
+    "new": "判斷句——也字表示肯定判斷"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-cae2a1-opt1",
+    "old": "推卸責任——把失敗的責任推給大臣",
+    "new": "推卸責任"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-cae2a1-opt2",
+    "old": "威脅大臣——如果不聽話就處罰",
+    "new": "威脅大臣"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-cd235e-opt1",
+    "old": "高興得流淚——因為要去打仗很開心",
+    "new": "高興得流淚"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-cd235e-opt2",
+    "old": "憤怒——對後主的不滿",
+    "new": "憤怒"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-cd235e-opt3",
+    "old": "無所謂——只是客套結尾",
+    "new": "無所謂"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p06-cef5bc-opt0",
+    "old": "雙重否定表肯定——等於「每次都」",
+    "new": "雙重否定表肯定——等於每次都"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p06-d25240-opt0",
+    "old": "借代——用「益州」（地名）代指蜀國",
+    "new": "借代——用益州（地名）代指蜀國"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p06-d46c3f-opt0",
+    "old": "以退為進——自我貶低以襯托先帝恩德和消除猜疑",
+    "new": "以退為進，自我貶低以襯托先帝恩德和消除猜疑"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-dbc61b-opt1",
+    "old": "「苟全性命於亂世」——只求保全性命",
+    "new": "「苟全性命於亂世」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-dbc61b-opt2",
+    "old": "「不求聞達於諸侯」——不追求名利",
+    "new": "「不求聞達於諸侯」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-dbc61b-opt3",
+    "old": "「妄自菲薄」——自我輕視",
+    "new": "「妄自菲薄」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p06-dbd370-opt0",
+    "old": "早上——「夙夜」即早晚不停",
+    "new": "早上——夙夜即早晚不停"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-dcafc1-opt1",
+    "old": "自卑——真心認為自己才能不足以擔大任",
+    "new": "自卑"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-dcafc1-opt2",
+    "old": "炫耀——彰顯從布衣登上丞相高位的成就",
+    "new": "炫耀"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-dcafc1-opt3",
+    "old": "抱怨——不滿先帝打斷了自己的隱居生活",
+    "new": "抱怨"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p06-ee2a18-opt0",
+    "old": "雙重否定——「未嘗不」即「每次都」",
+    "new": "雙重否定——未嘗不即每次都"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p06-f830e3-opt0",
+    "old": "正確的——「雅言」即正當的意見",
+    "new": "正確的——雅言即正當的意見"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p06-f9ee45-opt0",
+    "old": "君臣語用「愚」「臣」「陛下」等謙詞",
+    "new": "君臣語用愚臣陛下等謙詞"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-ff1b43-opt1",
+    "old": "誇飾手法——刻意美化臣子以取悅後主",
+    "new": "誇飾手法"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-ff1b43-opt2",
+    "old": "暗含反語——表面讚美實則暗示他們不足",
+    "new": "暗含反語"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p06-ff1b43-opt3",
+    "old": "排比手法——用相似句式羅列多人名字",
+    "new": "排比手法"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p07-0ee56c-opt0",
+    "old": "①「師者，所以傳道受業解惑也」",
+    "new": "①師者，所以傳道受業解惑也"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p07-196942-opt0",
+    "old": "真正的老師是「傳道、解惑」",
+    "new": "真正的老師是傳道、解惑"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p07-596300-opt0",
+    "old": "「道」是全文的核心概念",
+    "new": "道是全文的核心概念"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p07-59b285-opt0",
+    "old": "韓愈是第一個明確提出儒家「道統」傳承",
+    "new": "韓愈是第一個明確提出儒家道統傳承"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p07-6ba138-opt0",
+    "old": "為「從師的必要性」提供邏輯基礎",
+    "new": "為從師的必要性提供邏輯基礎"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p07-9bb2dc-opt0",
+    "old": "被士大夫嘲笑為「好為人師」的「狂人」",
+    "new": "被士大夫嘲笑為好為人師的狂人"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p07-a0ff28-opt0",
+    "old": "「道之所存，師之所存也」",
+    "new": "道之所存，師之所存也"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p07-a574b8",
+    "stem": "韓愈在全文結尾以李蟠作結。試分析韓愈選擇李蟠這個例子的深層用意。"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p07-c440c9-opt0",
+    "old": "講授（通「授」）",
+    "new": "講授（通授）"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p07-cb43d1-opt0",
+    "old": "假設存在一個客觀的「道」（儒家道統）",
+    "new": "假設存在一個客觀的道（儒家道統）"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p07-cb5b90-opt0",
+    "old": "繼承：韓愈繼承了孔子「三人行必有我師",
+    "new": "繼承：韓愈繼承了孔子三人行必有我師"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p07-da9cc1",
+    "stem": "有學者認為《師說》不僅是一篇教育論文，更是一篇「反封建等級制度」的宣言。你是否同意？請從文本中尋找依據。"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p07-e85b1b-opt0",
+    "old": "第6段「聖人無常師」呼應第2段「道之所存",
+    "new": "第6段聖人無常師呼應第2段道之所存"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p07-e90700-opt0",
+    "old": "①「夫」",
+    "new": "①夫"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p08-0b43d3",
+    "stem": "文中「而」字出現了十多次，主要有哪些用法？試各舉一例。"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p08-26f606-opt0",
+    "old": "他感到「心凝形釋，與萬化冥合」",
+    "new": "他感到心凝形釋，與萬化冥合"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p08-2a829e-opt0",
+    "old": "①「尺寸千里」",
+    "new": "①尺寸千里"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p08-2eb144-opt0",
+    "old": "他是被貶永州的官員（「僇人」）",
+    "new": "他是被貶永州的官員（僇人）"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p08-3a19bd-opt0",
+    "old": "從「恆惴慄」",
+    "new": "從恆惴慄"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p08-4e2b36",
+    "stem": "本文被評為「寫景精妙，準確清新」。試從修辭角度分析以下描寫西山景色的文字為何「精妙」：「其高下之勢，岈然洼然，若垤若穴，"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p08-675dd5-opt0",
+    "old": "先俯視（「數州之土壤",
+    "new": "先俯視（數州之土壤"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p08-8e8d6e-opt0",
+    "old": "真正的「遊」不只是觀賞風景和飲酒享樂",
+    "new": "真正的遊不只是觀賞風景和飲酒享樂"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p08-95c606",
+    "stem": "柳宗元的精神從哪些途徑獲得解脫？試根據文章歸納。"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p08-9b1ecd",
+    "stem": "文中的襯托手法有哪些表現？試分析具體例子。"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p08-a00c3a-opt0",
+    "old": "柳宗元的「遊」不是消遣旅遊",
+    "new": "柳宗元的遊不是消遣旅遊"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p08-a1b0a7-opt0",
+    "old": "①襯托服務於「始得」主題",
+    "new": "①襯托服務於始得主題"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p08-a8f8f8-opt0",
+    "old": "①「悠悠乎」「洋洋乎」",
+    "new": "①悠悠乎洋洋乎"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p08-b88f18-opt0",
+    "old": "字面都是「回家」「離去」",
+    "new": "字面都是回家離去"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p08-c70b46-opt0",
+    "old": "達到「心凝形釋，與萬化冥合」的境界",
+    "new": "達到心凝形釋，與萬化冥合的境界"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p08-c8d171-opt0",
+    "old": "以前的遊覽只是「施施而行，漫漫而遊」",
+    "new": "以前的遊覽只是施施而行，漫漫而遊"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p09-0b101a",
+    "stem": "「然則何時而樂耶？其必曰……歟」涉及哪幾個語氣詞？各有甚麼語法功能？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p09-0d0a43-opt0",
+    "old": "宋代實行「以文治國」（重文輕武）的政策",
+    "new": "宋代實行以文治國（重文輕武）的政策"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p09-0e42c5-opt0",
+    "old": "「銜」「吞」暗示吞吐萬物",
+    "new": "銜吞暗示吞吐萬物"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p09-1da3c0-opt0",
+    "old": "戍邊經歷使「先憂後樂」有真實人生基礎",
+    "new": "戍邊經歷使先憂後樂有真實人生基礎"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p09-1f5c6c-opt0",
+    "old": "古仁人「不以物喜，不以己悲」",
+    "new": "古仁人不以物喜，不以己悲"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p09-451b3f",
+    "stem": "第三段的感官描寫運用了哪些感官？試舉例說明。"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p09-49e2b4-opt0",
+    "old": "以「嗟夫」感歎詞過渡",
+    "new": "以嗟夫感歎詞過渡"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p09-4cb976-opt0",
+    "old": "以「古仁人」委婉寄志，含蓄有格調，不直接訴苦",
+    "new": "以古仁人委婉寄志，含蓄有格調，不直接訴苦"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p09-53a4f7-opt0",
+    "old": "白天：「春和景明」至「郁郁青青」",
+    "new": "白天：春和景明至郁郁青青"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p09-645987-opt0",
+    "old": "借記樓抒發「先憂後樂」抱負，並勉勵滕子京",
+    "new": "借記樓抒發先憂後樂抱負，並勉勵滕子京"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p09-69b7e4",
+    "stem": "第四段的景物描寫運用了動靜結合的手法。試分析哪些是動景，哪些是靜景。"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p09-7f9974",
+    "stem": "比較范仲淹《岳陽樓記》和柳宗元《始得西山宴遊記》在創作背景上的異同。"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p09-b2ccb4",
+    "stem": "第五段的語言有甚麼修辭特色？語氣詞的運用有甚麼效果？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p09-d1a9fc-opt0",
+    "old": "「先憂後樂」是「仁」的具體實踐",
+    "new": "先憂後樂是仁的具體實踐"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p09-e0b086",
+    "stem": "比較本文中「嗟夫」「歟」「噫」三個語氣詞的語法功能和位置規律。"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p09-faa80c-opt0",
+    "old": "回答是「先天下之憂而憂，後天下之樂而樂」",
+    "new": "回答是先天下之憂而憂，後天下之樂而樂"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p10-265c20",
+    "stem": "頂真（頂針）在本文中除了「弊在賂秦。賂秦而力虧」外，還有其他例子嗎？有甚麼整體效果？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-2f47df-opt0",
+    "old": "批評六國「苟且偷安」的態度",
+    "new": "批評六國苟且偷安的態度"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p10-3046aa",
+    "stem": "本文的修辭手法如何服務於「借古諷今」的寫作目的？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-34f121-opt0",
+    "old": "①「其實百倍」",
+    "new": "①其實百倍"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p10-3c5dac-opt1",
+    "old": "完全相同——都解作「像」",
+    "new": "完全相同"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p10-3c5dac-opt2",
+    "old": "完全相同——都解作「尚且」",
+    "new": "完全相同"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p10-41996a-opt0",
+    "old": "對比——把「天下之大」",
+    "new": "對比，把「天下之大」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-422df6-opt0",
+    "old": "「六國破滅」",
+    "new": "六國破滅"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-42b3dc-opt0",
+    "old": "①「奉之彌繁」的「之」",
+    "new": "①奉之彌繁的之"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-49b31a-opt0",
+    "old": "(a)「以」解作「因為」",
+    "new": "(a)以解作因為"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p10-616d34",
+    "stem": "蘇洵在文中的兩處比喻（「如棄草芥」和「猶抱薪救火」）有甚麼共同特點？效果有甚麼不同？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-692d1d-opt0",
+    "old": "解作「不矛盾」",
+    "new": "解作不矛盾"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p10-6ca207-opt0",
+    "old": "明喻——用「猶」",
+    "new": "明喻，用「猶」"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-6efeb6-opt0",
+    "old": "解作「不完全」",
+    "new": "解作不完全"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-74cd7c-opt0",
+    "old": "「向使」",
+    "new": "向使"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-781e22-opt0",
+    "old": "「理」的方面",
+    "new": "理的方面"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p10-79099f-opt1",
+    "old": "完全相同——都解作「開始」",
+    "new": "完全相同"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p10-79099f-opt2",
+    "old": "完全相同——都解作「才」",
+    "new": "完全相同"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p10-79f190-opt1",
+    "old": "完全相同——都解作「暴露」",
+    "new": "完全相同"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p10-79f190-opt2",
+    "old": "完全相同——都解作「殘暴」",
+    "new": "完全相同"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-80b6a7-opt0",
+    "old": "①「賂秦而力虧」",
+    "new": "①賂秦而力虧"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-8d60ce-opt0",
+    "old": "蘇洵認為「積威」",
+    "new": "蘇洵認為積威"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-8fe34e-opt0",
+    "old": "「治理國家的人不要被」",
+    "new": "治理國家的人不要被"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-968186-opt0",
+    "old": "對偶，「暴霜露」對「斬荊棘」",
+    "new": "對偶，暴霜露對斬荊棘"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p10-973b7d",
+    "stem": "蘇洵在文中如何綜合運用多種修辭手法來增強說服力？試以第二段為例分析。"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p10-9a9ad4",
+    "stem": "蘇洵的《六國論》在歷史上的評價如何？有甚麼爭議？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p10-9ad500",
+    "stem": "蘇洵在文中用了甚麼語言策略來增強主旨的感染力？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p10-9d73a5-opt1",
+    "old": "不同——第一個解作「固定」",
+    "new": "不同"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p10-9d73a5-opt2",
+    "old": "不同——第二個解作「堅固」",
+    "new": "不同"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-a4d6e0-opt0",
+    "old": "對比，把「賂者」和「不賂者」對比",
+    "new": "對比，把賂者和不賂者對比"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-aa83ce-opt0",
+    "old": "明喻，以「如」字作比",
+    "new": "明喻，以如字作比"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p10-add4e5-opt1",
+    "old": "完全相同——都解作「滅亡」",
+    "new": "完全相同"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p10-add4e5-opt2",
+    "old": "完全相同——都解作「喪失」",
+    "new": "完全相同"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-aeb144-opt0",
+    "old": "①「破滅之道也」",
+    "new": "①破滅之道也"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p10-b00902-opt0",
+    "old": "侍奉——用土地去侍奉秦國",
+    "new": "侍奉，用土地去侍奉秦國"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p10-bab06b",
+    "stem": "北宋的「冗兵、冗官、冗費」問題與蘇洵的主張有甚麼關聯？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "replace_dash_in_correct",
+    "opt_id": "q-ai-p10-ce6917-opt0",
+    "old": "對偶——「以賂秦之地",
+    "new": "對偶，「以賂秦之地"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p10-d24919",
+    "stem": "文中提到齊國「與嬴而不助五國」。歷史上齊國親附秦國的主要原因是甚麼？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-e02a69-opt0",
+    "old": "回應：「不賂者以賂者喪」",
+    "new": "回應：不賂者以賂者喪"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-eed75d-opt0",
+    "old": "「不甚惜」用了輕描淡寫",
+    "new": "不甚惜用了輕描淡寫"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p10-f01437",
+    "stem": "蘇洵的生平有甚麼特點？這些特點如何影響了他的文章風格？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-f106ef-opt0",
+    "old": "①「嗚呼」",
+    "new": "①嗚呼"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p10-fcb25d-opt0",
+    "old": "①「六國互喪",
+    "new": "①六國互喪"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-06463f",
+    "stem": "《念奴嬌》中蘇軾寫周瑜「小喬初嫁了」有甚麼用意？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-0dfc95",
+    "stem": "三首詞分別以甚麼主要修辭手法來表達主旨？比較三者的不同。"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-0e9ed5",
+    "stem": "《青玉案》中辛棄疾借「那人」表達了甚麼情懷？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-174278",
+    "stem": "「如今有誰堪摘」中「堪」是甚麼意思？整句是甚麼句式？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-18f6a5",
+    "stem": "「故國神遊，多情應笑我，早生華髮」的正常語序應如何排列？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-19458c",
+    "stem": "三首詞分別屬於甚麼詞派？詞派風格如何體現主旨？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-1c59b3",
+    "stem": "宋詞的「豪放派」和「婉約派」有甚麼基本區別？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p12-1c7582",
+    "stem": "南宋主和派與主戰派的爭論是怎樣的？辛棄疾處於甚麼位置？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p12-1e446b-opt0",
+    "old": "明喻——以「如」「似」等詞比較",
+    "new": "明喻——以如似等詞比較"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-24cb92",
+    "stem": "《念奴嬌》中「羽扇綸巾」的「綸巾」是甚麼意思？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-277223",
+    "stem": "《聲聲慢》中有哪些口語化的表達？這些表達有甚麼效果？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-28b4e8",
+    "stem": "三首詞中，哪位作者最直接地表露自己的情感？為甚麼？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-2e10bf",
+    "stem": "《聲聲慢》中「雁過也，正傷心，卻是舊時相識」表達了甚麼意思？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-2fa9e1",
+    "stem": "《念奴嬌》中提到的小喬是誰？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-30e3db",
+    "stem": "《青玉案》中「眾裏尋他千百度」暗示了甚麼？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-326c42",
+    "stem": "三首詞中的「孤獨」各有甚麼不同的內涵？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-3322a3",
+    "stem": "三首詞結尾的處理手法有甚麼不同？各自達到了甚麼效果？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-33e241",
+    "stem": "《念奴嬌》全詞的情感發展是怎樣的？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-36af2f",
+    "stem": "蘇軾「以詩為詞」的革新對宋詞發展有甚麼影響？三首詞中有甚麼體現？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-3db740",
+    "stem": "三首詞中的虛詞（如「卻」「還」「更」「怎」「應」）各有甚麼語氣功能？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-42df35",
+    "stem": "三首詞中都有「暗」字或相關意象（《念奴嬌》的「灰飛煙滅」、《聲聲慢》的「黑」、《青玉案》的「闌珊」），這些表示光線暗淡的"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p12-4d2fd3-opt0",
+    "old": "文人儒士裝束，突出周瑜「儒將」形象",
+    "new": "文人儒士裝束，突出周瑜儒將形象"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-4f7de6",
+    "stem": "李清照在詞學理論上有甚麼重要主張？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-4fd0e4-opt1",
+    "old": "次序——字面直譯的意思",
+    "new": "次序"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-4fd0e4-opt2",
+    "old": "第二次——字面直譯的意思",
+    "new": "第二次"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-4fd0e4-opt3",
+    "old": "弟弟——字面直譯的意思",
+    "new": "弟弟"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-500ff6",
+    "stem": "「靖康之變」是甚麼事件？對李清照有甚麼影響？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-51f625-opt1",
+    "old": "反問句——以疑問語氣表確定",
+    "new": "反問句"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-51f625-opt2",
+    "old": "倒裝句——語序與常規不同",
+    "new": "倒裝句"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-51f625-opt3",
+    "old": "省略句——省去某些句子成分",
+    "new": "省略句"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-53274d",
+    "stem": "《聲聲慢》的主旨與李清照前期作品（如《一剪梅》）有甚麼不同？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-53b0a7",
+    "stem": "蘇軾「人間如夢」和范仲淹「先天下之憂而憂」代表了甚麼不同的人生態度？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-55d9d9",
+    "stem": "三首詞分別代表了宋代文人在困境中的哪三種精神傳統？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-57190d",
+    "stem": "王維（《山居秋暝》）和蘇軾（《念奴嬌》）同樣涉及自然描寫，有甚麼不同？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-574ba4",
+    "stem": "《青玉案》中作者在人群中尋找的「那人」最後在哪裏被找到？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p12-58dc5b",
+    "stem": "《聲聲慢》中的大雁和黃花分別映照了李清照甚麼處境？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-593f66",
+    "stem": "元宵節在古代中國有甚麼特別之處？這與《青玉案》有甚麼關係？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-5c5d3d",
+    "stem": "《青玉案》中「那人」有哪些不同的解讀？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-5f7db8",
+    "stem": "《念奴嬌》中「人道是、三國周郎赤壁」的「人道是」是甚麼意思？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-618e77",
+    "stem": "「詞」和「詩」有甚麼基本區別？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-641f6a-opt1",
+    "old": "慢慢地——字面直譯的意思",
+    "new": "慢慢地"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-641f6a-opt2",
+    "old": "默默地——字面直譯的意思",
+    "new": "默默地"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-641f6a-opt3",
+    "old": "無奈地——字面直譯的意思",
+    "new": "無奈地"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-667450",
+    "stem": "《聲聲慢》中李清照以「黃花」自喻，暗示了甚麼？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-68d031",
+    "stem": "三首詞的主旨在現代社會是否仍有啟發？試結合具體的現代情境說明。"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-69c2d7",
+    "stem": "李清照屬於詞的哪個流派？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-6b103e",
+    "stem": "「大江東去」中的「東」是甚麼詞性？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-6c8512-opt1",
+    "old": "忍受——字面直譯的意思",
+    "new": "忍受"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-6c8512-opt2",
+    "old": "勘察——字面直譯的意思",
+    "new": "勘察"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-6c8512-opt3",
+    "old": "欣賞——字面直譯的意思",
+    "new": "欣賞"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-6c8abb",
+    "stem": "《聲聲慢》中「守着窗兒，獨自怎生得黑」塑造了李清照甚麼形象？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-6ed4dd",
+    "stem": "赤壁之戰是哪個歷史時期的戰役？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-707ba8",
+    "stem": "《聲聲慢》中李清照通過哪些行為表現她的孤寂？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-730ebe",
+    "stem": "《念奴嬌》中蘇軾與周瑜在哪些方面形成對比？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-760281",
+    "stem": "《聲聲慢》中「三杯兩盞淡酒」的「淡」字有甚麼深層含義？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-7825ca-opt1",
+    "old": "損壞——字面直譯的意思",
+    "new": "損壞"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-7825ca-opt2",
+    "old": "減少——字面直譯的意思",
+    "new": "減少"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-7825ca-opt3",
+    "old": "受傷——字面直譯的意思",
+    "new": "受傷"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-81b5a1",
+    "stem": "《念奴嬌·赤壁懷古》上片主要描寫甚麼？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-82733d",
+    "stem": "《青玉案》中「蛾兒雪柳黃金縷，笑語盈盈暗香去」在結構上有甚麼作用？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-830738",
+    "stem": "李清照的人生可以分為哪兩個時期？各有甚麼特點？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-833d14-opt1",
+    "old": "更加——表示程度深一層",
+    "new": "更加"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-833d14-opt2",
+    "old": "改變——轉換另一種狀態",
+    "new": "改變"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-833d14-opt3",
+    "old": "再次——表示動作的重複",
+    "new": "再次"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-88413a",
+    "stem": "《青玉案》的情感發展是怎樣的？最後的情感基調是甚麼？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-884794-opt1",
+    "old": "明喻——以「如」「似」等詞比較",
+    "new": "明喻"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-884794-opt2",
+    "old": "借代——以相關事物代替本體",
+    "new": "借代"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-884794-opt3",
+    "old": "疊字——重複用字加強語氣",
+    "new": "疊字"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-895e5d",
+    "stem": "《念奴嬌》中「亂石穿空，驚濤拍岸，捲起千堆雪」描寫了甚麼景象？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-89de5a",
+    "stem": "《青玉案》中視覺、聽覺、嗅覺的感官描寫如何交替運用？有甚麼效果？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-8b3980",
+    "stem": "有人認為三首詞雖然題材不同，但都涉及「理想與現實的落差」。你同意嗎？試結合三首詞說明。"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-8d013d",
+    "stem": "三首詞中的人物形象塑造手法各有甚麼特色？從文學批評的角度比較三者的優劣。"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-90d9dc",
+    "stem": "「三杯兩盞淡酒，怎敵他、晚來風急」中「怎敵他」的「他」指甚麼？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-96b751",
+    "stem": "三首詞分別以甚麼方式處理「個人與外在世界的關係」？試比較三者的不同。"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-96da05",
+    "stem": "《聲聲慢》如何運用「酒」的意象表達情感？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-9b5c91",
+    "stem": "《念奴嬌》中蘇軾感慨「千古風流人物」被「浪淘盡」，這表達了甚麼道理？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-9de2aa",
+    "stem": "三首詞的共同點是甚麼？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p12-9e5cb4-opt0",
+    "old": "明喻——以「如」「似」等詞比較",
+    "new": "明喻——以如似等詞比較"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-a03705",
+    "stem": "《聲聲慢·秋情》的主題是甚麼？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-a0bf13",
+    "stem": "《青玉案》中辛棄疾在尋找「那人」的過程中表現了甚麼情感？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-a2c679-opt1",
+    "old": "退卻——字面直譯的意思",
+    "new": "退卻"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-a2c679-opt2",
+    "old": "拒絕——字面直譯的意思",
+    "new": "拒絕"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-a2c679-opt3",
+    "old": "但是——字面直譯的意思",
+    "new": "但是"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-a2d095",
+    "stem": "《聲聲慢》中「滿地黃花堆積，憔悴損，如今有誰堪摘」表達了甚麼感情？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-a6ed7e",
+    "stem": "《聲聲慢》中「守着窗兒，獨自怎生得黑」的「怎生」是甚麼意思？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-a90e2b",
+    "stem": "《青玉案》中作者描寫元宵繁華盛況的目的是甚麼？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-a9b2a4",
+    "stem": "三首詞的作者面對困境時各自採取了甚麼態度？哪種態度最積極？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-aa0d01",
+    "stem": "《青玉案》中「那人」為甚麼不加入熱鬧的人群？這反映了辛棄疾甚麼內心世界？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-aaa43f-opt1",
+    "old": "城牆——字面直譯的意思",
+    "new": "城牆"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-aaa43f-opt2",
+    "old": "旗幟——字面直譯的意思",
+    "new": "旗幟"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-aaa43f-opt3",
+    "old": "武器——字面直譯的意思",
+    "new": "武器"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-ad1540",
+    "stem": "《聲聲慢》中的意象（酒、雁、花、梧桐細雨）分別運用了甚麼抒情手法？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-ae6d71",
+    "stem": "三位作者在詞中各自展現了甚麼性格特點？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-ae9328",
+    "stem": "《青玉案》上片的語法結構如何組織元宵夜景的描寫？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-b3b19b",
+    "stem": "蘇軾（《念奴嬌》）和杜甫（《登樓》）同為失意文人，面對困境的態度有甚麼不同？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-b7919f",
+    "stem": "蘇軾在《念奴嬌》中是否只是簡單地讚美周瑜？他對周瑜的態度有甚麼複雜之處？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-bbaa4d",
+    "stem": "《念奴嬌》中「多情應笑我」的「多情」在此處有甚麼特別含義？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-bbe186",
+    "stem": "《青玉案》中的「那人」是甚麼形象？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-be49b7",
+    "stem": "「念奴嬌」和「聲聲慢」作為詞牌，在格律上有甚麼不同？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-c538cb",
+    "stem": "《聲聲慢》開頭七組疊字的語法結構有甚麼特點？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-c6aa13",
+    "stem": "三首詞在句式長短的變化上各有甚麼特點？這與內容和情感有甚麼關係？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-c95e17",
+    "stem": "《念奴嬌》中蘇軾把自己和周瑜作比較，得出甚麼感慨？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-cad29c",
+    "stem": "「東風夜放花千樹」中「花千樹」是甚麼語序？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-cadb08-opt1",
+    "old": "溫度——字面直譯的意思",
+    "new": "溫度"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-cadb08-opt2",
+    "old": "程度——字面直譯的意思",
+    "new": "程度"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-cadb08-opt3",
+    "old": "一百度——字面直譯的意思",
+    "new": "一百度"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p12-ccdd43-opt0",
+    "old": "以「人間如夢」超脫自我寬解",
+    "new": "以人間如夢超脫自我寬解"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-ce6f89",
+    "stem": "「酹」是甚麼禮儀？蘇軾「一尊還酹江月」有甚麼文化含義？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-cfc2bd",
+    "stem": "《念奴嬌》中「人間如夢」與《聲聲慢》中「怎一箇愁字了得」都是全詞的核心語句，兩者在用詞上有甚麼不同的藝術效果？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-d03d2c",
+    "stem": "《聲聲慢》中的李清照呈現了甚麼形象？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-d099d2",
+    "stem": "「憔悴損」中的「損」是甚麼用法？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-d32788",
+    "stem": "《聲聲慢》全詞的情感基調是甚麼？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-d3e307",
+    "stem": "「獨自怎生得黑」中的「怎生」是甚麼意思？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-d8ee4e",
+    "stem": "《念奴嬌》的「人間如夢」是真正的超脫，還是無奈的自我安慰？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-db9c48",
+    "stem": "《青玉案·元夕》的主題是甚麼？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p12-dcc91c",
+    "stem": "周瑜在《念奴嬌》中是通過甚麼描寫方法來塑造的？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-dd9cd8",
+    "stem": "《聲聲慢》中個人命運與國家命運如何交織？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-de6bb9",
+    "stem": "《念奴嬌》中的蘇軾呈現了甚麼形象？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-df161a",
+    "stem": "《聲聲慢》中「梧桐更兼細雨，到黃昏、點點滴滴」營造了甚麼氣氛？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p12-e1ce89",
+    "stem": "李清照在《聲聲慢》中塑造的自我形象與她前期作品中的形象有甚麼變化？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-e3edeb",
+    "stem": "《聲聲慢》如何通過感官描寫來塑造李清照的形象？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-e3f595",
+    "stem": "《聲聲慢》中大雁勾起了李清照哪些愁緒？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-e586e9",
+    "stem": "「亂石穿空，驚濤拍岸，捲起千堆雪」三句在句式上有甚麼特點？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-e625c5",
+    "stem": "《青玉案》中「東風夜放花千樹」的「花千樹」是甚麼意思？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-e69f28",
+    "stem": "蘇軾除了是詞人，還在哪些領域有重要成就？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "list_format_correct",
+    "qid": "q-ai-p12-e7cfe2",
+    "stem": "三首詞對「時間」這個主題有甚麼不同的處理？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-e7f632",
+    "stem": "《青玉案·元夕》描寫的是甚麼節日的景象？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-e8da63",
+    "stem": "《念奴嬌》中「穿」、「拍」、「捲」三個動詞的運用有甚麼精妙之處？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-ee9231",
+    "stem": "「浪淘盡、千古風流人物」中「淘盡」是甚麼意思？主語是甚麼？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-eef4d9",
+    "stem": "《青玉案》中「寶馬雕車香滿路」的「香」字有甚麼修辭含義？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-ef4582",
+    "stem": "《念奴嬌》中永恆的自然與短暫的人生構成對比，這個對比帶出了甚麼主旨？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-f1310b",
+    "stem": "《念奴嬌》上片「大江東去」和末句「一尊還酹江月」都提到了江水和月亮，這有甚麼呼應？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-f2a09a-opt1",
+    "old": "對偶——上下句字數相等對應",
+    "new": "對偶"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-f2a09a-opt2",
+    "old": "疊字——重複用字加強語氣",
+    "new": "疊字"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-f2a09a-opt3",
+    "old": "反問——以疑問語氣表確定意",
+    "new": "反問"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-f2cc55-opt1",
+    "old": "明喻——以「如」「似」等詞比較",
+    "new": "明喻"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-f2cc55-opt2",
+    "old": "疊字——重複用字加強語氣",
+    "new": "疊字"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-f2cc55-opt3",
+    "old": "誇張——故意誇大以突出效果",
+    "new": "誇張"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-f2f717",
+    "stem": "《青玉案》上片的繁華描寫暗含了甚麼批評？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-f62179-opt1",
+    "old": "退卻——字面直譯的意思",
+    "new": "退卻"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-f62179-opt2",
+    "old": "拒絕——字面直譯的意思",
+    "new": "拒絕"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_dash_from_wrong",
+    "opt_id": "q-ai-p12-f62179-opt3",
+    "old": "但是——字面直譯的意思",
+    "new": "但是"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-f77b47",
+    "stem": "「談笑間、檣櫓灰飛煙滅」中省略了甚麼成分？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-f94f57",
+    "stem": "《念奴嬌》中蘇軾主要懷念的歷史人物是誰？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-f9d126",
+    "stem": "「驀然回首，那人卻在、燈火闌珊處」中「驀然」和「闌珊」分別是甚麼意思？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-faabee",
+    "stem": "《念奴嬌》最後蘇軾「一尊還酹江月」表現了他甚麼態度？"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "generic_distractors",
+    "qid": "q-ai-p12-fd32b0",
+    "stem": "《青玉案》中辛棄疾塑造的「那人」與盛裝婦女有甚麼不同？"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "strip_quotes_from_correct",
+    "opt_id": "q-ai-p12-ff77e0-opt0",
+    "old": "明喻——以「如」「似」等詞比較",
+    "new": "明喻——以如似等詞比較"
+  }
+]

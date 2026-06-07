@@ -37,11 +37,15 @@ export interface Tag {
 export interface Question {
   id: string;
   passage_id: string | null;
+  cross_passage_id: string | null;
   stem: string;
   explanation: string | null;
   difficulty: number; // 1-5
   source: string | null;
   is_active: boolean;
+  admin_flag: boolean;
+  user_flag_count: number;
+  user_flag_comments: string | null;
   options: QuestionOption[];
   tag_ids?: string[];
 }

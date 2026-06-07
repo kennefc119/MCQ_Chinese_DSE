@@ -20,7 +20,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 
 from .db.stats import fetch_db_stats
-from .graph import run_pipeline
+from .graph import run_correction_pipeline, run_pipeline
 from .llm import get_traces, reset_traces
 from .quiz_assembler import assemble_quizzes
 
@@ -85,6 +85,11 @@ class GenerateRequest(BaseModel):
 class AssembleRequest(BaseModel):
     dry_run: bool = True
     strategies: list[str] = ["passage", "skill", "difficulty"]
+
+
+class CorrectRequest(BaseModel):
+    question_id: str | None = None  # None = correct all flagged questions
+    dry_run: bool = True
 
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
@@ -461,6 +466,212 @@ def assemble(req: AssembleRequest) -> dict[str, Any]:
         log.error("assemble_error", error=str(exc))
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     return summary
+
+
+# ─── Correction Workflow ──────────────────────────────────────────────────────
+
+
+@app.get("/api/flagged")
+def list_flagged() -> list[dict[str, Any]]:
+    """Return all questions flagged by users (user_flag_count > 0)."""
+    from .db.flagged import fetch_flagged_questions
+
+    flagged = fetch_flagged_questions()
+    return [
+        {
+            "question_id": fq.question_id,
+            "passage_id": fq.passage_id,
+            "stem": fq.stem,
+            "difficulty": fq.difficulty,
+            "is_active": fq.is_active,
+            "critique_score": fq.critique_score,
+            "user_flag_count": fq.user_flag_count,
+            "user_flag_comments": fq.user_flag_comments,
+            "options": fq.options,
+            "tags": fq.tags,
+        }
+        for fq in flagged
+    ]
+
+
+@app.post("/api/correct")
+def correct(req: CorrectRequest) -> dict[str, Any]:
+    """
+    Run the correction workflow for flagged questions.
+    Processes each flagged question through Corrector → Critic loop.
+    Each result includes per-question LLM traces for dashboard display.
+    """
+    log.info(
+        "correct_start",
+        question_id=req.question_id,
+        dry_run=req.dry_run,
+    )
+
+    try:
+        results = run_correction_pipeline(
+            question_id=req.question_id,
+            dry_run=req.dry_run,
+        )
+    except Exception as exc:
+        log.error("correct_error", error=str(exc))
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    # Aggregate total tokens across all questions
+    total_tokens = sum(r.get("total_tokens", 0) for r in results)
+
+    return {
+        "results": results,
+        "total_tokens": total_tokens,
+    }
+
+
+# ─── Runtime Settings ────────────────────────────────────────────────────────
+
+
+class SettingsUpdate(BaseModel):
+    poe_bot_name: str | None = None
+    poe_bot_strategist: str | None = None
+    poe_bot_drafter: str | None = None
+    poe_bot_critic: str | None = None
+    poe_bot_corrector: str | None = None
+    max_revise_iterations: int | None = None
+    sleep_between_cycles_seconds: float | None = None
+    default_source_tag: str | None = None
+
+
+@app.get("/api/settings")
+def get_settings() -> dict[str, Any]:
+    """Return current runtime settings (no secrets exposed)."""
+    from .config import settings as cfg
+    return {
+        "poe_bot_name": cfg.poe_bot_name,
+        "poe_bot_strategist": cfg.poe_bot_strategist or "",
+        "poe_bot_drafter": cfg.poe_bot_drafter or "",
+        "poe_bot_critic": cfg.poe_bot_critic or "",
+        "poe_bot_corrector": cfg.poe_bot_corrector or "",
+        "resolved_bots": {
+            "strategist": cfg.strategist_bot,
+            "drafter": cfg.drafter_bot,
+            "critic": cfg.critic_bot,
+            "corrector": cfg.corrector_bot,
+        },
+        "max_revise_iterations": cfg.max_revise_iterations,
+        "sleep_between_cycles_seconds": cfg.sleep_between_cycles_seconds,
+        "default_source_tag": cfg.default_source_tag,
+        "max_cycles_per_run": cfg.max_cycles_per_run,
+    }
+
+
+@app.post("/api/settings")
+def update_settings(req: SettingsUpdate) -> dict[str, Any]:
+    """
+    Update runtime settings AND persist to .env file.
+    Changes survive server restarts.
+    """
+    from .config import settings as cfg
+
+    changed: list[str] = []
+
+    if req.poe_bot_name is not None and req.poe_bot_name.strip():
+        cfg.poe_bot_name = req.poe_bot_name.strip()
+        changed.append("poe_bot_name")
+
+    # For per-role bots, empty string means "use default fallback"
+    if req.poe_bot_strategist is not None:
+        cfg.poe_bot_strategist = req.poe_bot_strategist.strip() or None
+        changed.append("poe_bot_strategist")
+
+    if req.poe_bot_drafter is not None:
+        cfg.poe_bot_drafter = req.poe_bot_drafter.strip() or None
+        changed.append("poe_bot_drafter")
+
+    if req.poe_bot_critic is not None:
+        cfg.poe_bot_critic = req.poe_bot_critic.strip() or None
+        changed.append("poe_bot_critic")
+
+    if req.poe_bot_corrector is not None:
+        cfg.poe_bot_corrector = req.poe_bot_corrector.strip() or None
+        changed.append("poe_bot_corrector")
+
+    if req.max_revise_iterations is not None:
+        val = max(1, min(5, req.max_revise_iterations))
+        cfg.max_revise_iterations = val
+        changed.append("max_revise_iterations")
+
+    if req.sleep_between_cycles_seconds is not None:
+        cfg.sleep_between_cycles_seconds = max(0.0, req.sleep_between_cycles_seconds)
+        changed.append("sleep_between_cycles_seconds")
+
+    if req.default_source_tag is not None and req.default_source_tag.strip():
+        cfg.default_source_tag = req.default_source_tag.strip()
+        changed.append("default_source_tag")
+
+    # Persist to .env file
+    if changed:
+        _persist_settings_to_env(cfg)
+
+    log.info("settings_updated", changed=changed, persisted=bool(changed))
+
+    return {
+        "ok": True,
+        "changed": changed,
+        "settings": get_settings(),
+    }
+
+
+def _persist_settings_to_env(cfg) -> None:
+    """Write current settings back to .env, preserving comments and secrets."""
+    from .config import _HERE
+
+    env_path = _HERE / ".env"
+    if not env_path.exists():
+        return
+
+    lines = env_path.read_text(encoding="utf-8").splitlines()
+
+    # Map of ENV_VAR_NAME → new value (only non-secret settings)
+    updates: dict[str, str] = {
+        "POE_BOT_NAME": cfg.poe_bot_name,
+        "POE_BOT_STRATEGIST": cfg.poe_bot_strategist or "",
+        "POE_BOT_DRAFTER": cfg.poe_bot_drafter or "",
+        "POE_BOT_CRITIC": cfg.poe_bot_critic or "",
+        "POE_BOT_CORRECTOR": cfg.poe_bot_corrector or "",
+        "MAX_REVISE_ITERATIONS": str(cfg.max_revise_iterations),
+        "SLEEP_BETWEEN_CYCLES_SECONDS": str(cfg.sleep_between_cycles_seconds),
+        "DEFAULT_SOURCE_TAG": cfg.default_source_tag,
+    }
+
+    seen: set[str] = set()
+    new_lines: list[str] = []
+
+    for line in lines:
+        stripped = line.strip()
+        # Skip empty or comment lines — keep as-is
+        if not stripped or stripped.startswith("#"):
+            new_lines.append(line)
+            continue
+
+        # Parse KEY=VALUE
+        if "=" in stripped:
+            key = stripped.split("=", 1)[0].strip()
+            if key in updates:
+                value = updates[key]
+                # If value is empty, comment out the line
+                if value:
+                    new_lines.append(f"{key}={value}")
+                else:
+                    new_lines.append(f"# {key}=")
+                seen.add(key)
+                continue
+
+        new_lines.append(line)
+
+    # Append any new keys not already in the file
+    for key, value in updates.items():
+        if key not in seen and value:
+            new_lines.append(f"{key}={value}")
+
+    env_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
 
 
 # ─── Entry point ──────────────────────────────────────────────────────────────

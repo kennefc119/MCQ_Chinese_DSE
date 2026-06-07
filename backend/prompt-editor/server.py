@@ -58,6 +58,12 @@ _AGENT_PROMPTS: dict[str, dict] = {
         "filename": "critic_prompt.md",
         "description": "審核出題員的草稿，給出 PASS 或 REVISE 判決。",
     },
+    "corrector": {
+        "label": "修正員 (Corrector)",
+        "order": 5,
+        "filename": "corrector_prompt.md",
+        "description": "根據用戶投訴修正有缺陷的題目，獨立判斷意見合理性。",
+    },
 }
 
 # ---------------------------------------------------------------------------
@@ -81,11 +87,12 @@ _CLOSING_PROMPTS: dict[str, dict] = {
 # ---------------------------------------------------------------------------
 _INJECTION_CONFIG_FILE = _PROMPTS_DIR / "injection_config.json"
 _TICKABLE_VARS = ["reference_block", "school_ws_block"]
-_TICKABLE_AGENTS = ["drafter", "drafter_revision", "critic"]
+_TICKABLE_AGENTS = ["drafter", "drafter_revision", "critic", "corrector"]
 _DEFAULT_INJECTION_CONFIG: dict[str, dict] = {
     "drafter":          {"reference_block": True,  "school_ws_block": True},
     "drafter_revision": {"reference_block": False, "school_ws_block": False},
     "critic":           {"reference_block": True,  "school_ws_block": True},
+    "corrector":        {"reference_block": True,  "school_ws_block": True},
 }
 
 # ---------------------------------------------------------------------------

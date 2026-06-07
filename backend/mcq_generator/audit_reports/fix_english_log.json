@@ -1,0 +1,104 @@
+[
+  {
+    "action": "FIX_STEM",
+    "qid": "q-ai-p03-34e8e8",
+    "old": "根據《逍遙遊》，莊子認為大樗種在曠野後有甚麼好處？\n\nI. 不會被斧頭砍伐\nII. 沒有東西能傷害它\nIII. 可以供人在樹下逍遙寢卧",
+    "new": "根據《逍遙遊》，莊子認為大樗種在曠野後有甚麼好處？\n\n一、不會被斧頭砍伐\n二、沒有東西能傷害它\n三、可以供人在樹下逍遙寢卧"
+  },
+  {
+    "action": "FIX_OPTION",
+    "opt_id": "q-ai-p03-34e8e8-opt0",
+    "old": "I、II 和 III",
+    "new": "一、二和三"
+  },
+  {
+    "action": "FIX_OPTION",
+    "opt_id": "q-ai-p03-34e8e8-opt1",
+    "old": "只有 I 和 II",
+    "new": "只有一和二"
+  },
+  {
+    "action": "FIX_OPTION",
+    "opt_id": "q-ai-p03-34e8e8-opt2",
+    "old": "只有 I 和 III",
+    "new": "只有一和三"
+  },
+  {
+    "action": "FIX_OPTION",
+    "opt_id": "q-ai-p03-34e8e8-opt3",
+    "old": "只有 III",
+    "new": "只有三"
+  },
+  {
+    "action": "FIX_STEM",
+    "qid": "q-ai-p03-618adc",
+    "old": "根據《逍遙遊》，惠子嘗試用大瓠做甚麼用途時發現不可行？\n\nI. 盛水\nII. 做瓢\nIII. 做腰舟",
+    "new": "根據《逍遙遊》，惠子嘗試用大瓠做甚麼用途時發現不可行？\n\n一、盛水\n二、做瓢\n三、做腰舟"
+  },
+  {
+    "action": "FIX_OPTION",
+    "opt_id": "q-ai-p03-618adc-opt0",
+    "old": "只有 I 和 II",
+    "new": "只有一和二"
+  },
+  {
+    "action": "FIX_OPTION",
+    "opt_id": "q-ai-p03-618adc-opt1",
+    "old": "只有 I 和 III",
+    "new": "只有一和三"
+  },
+  {
+    "action": "FIX_OPTION",
+    "opt_id": "q-ai-p03-618adc-opt2",
+    "old": "只有 II 和 III",
+    "new": "只有二和三"
+  },
+  {
+    "action": "FIX_OPTION",
+    "opt_id": "q-ai-p03-618adc-opt3",
+    "old": "I、II 和 III",
+    "new": "一、二和三"
+  },
+  {
+    "action": "FIX_STEM",
+    "qid": "q-ai-p03-e0a5a4",
+    "old": "根據《逍遙遊》，大樗有哪些特點令木匠不屑一顧？\n\nI. 樹幹臃腫，不合繩墨\nII. 小枝捲曲，不合規矩\nIII. 樹葉枯黃，不能遮蔭",
+    "new": "根據《逍遙遊》，大樗有哪些特點令木匠不屑一顧？\n\n一、樹幹臃腫，不合繩墨\n二、小枝捲曲，不合規矩\n三、樹葉枯黃，不能遮蔭"
+  },
+  {
+    "action": "FIX_OPTION",
+    "opt_id": "q-ai-p03-e0a5a4-opt0",
+    "old": "只有 I 和 II",
+    "new": "只有一和二"
+  },
+  {
+    "action": "FIX_OPTION",
+    "opt_id": "q-ai-p03-e0a5a4-opt1",
+    "old": "只有 I 和 III",
+    "new": "只有一和三"
+  },
+  {
+    "action": "FIX_OPTION",
+    "opt_id": "q-ai-p03-e0a5a4-opt2",
+    "old": "只有 II 和 III",
+    "new": "只有二和三"
+  },
+  {
+    "action": "FIX_OPTION",
+    "opt_id": "q-ai-p03-e0a5a4-opt3",
+    "old": "I、II 和 III",
+    "new": "一、二和三"
+  },
+  {
+    "action": "FIX_OPTION",
+    "opt_id": "q-ai-p10-108522-opt1",
+    "old": "相同——都指故事（story）",
+    "new": "相同，都指故事"
+  },
+  {
+    "action": "FIX_OPTION",
+    "opt_id": "q-ai-p12-abc076-opt0",
+    "old": "讀作「huán」（還是）",
+    "new": "讀作「還」（粵音「環」），解作還是"
+  }
+]

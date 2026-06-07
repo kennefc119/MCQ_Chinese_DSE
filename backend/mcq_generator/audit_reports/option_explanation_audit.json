@@ -1,0 +1,626 @@
+[
+  {
+    "option_id": "q-ai-p03-f6c25d-opt0",
+    "question_id": "q-ai-p03-f6c25d",
+    "passage_id": "p03",
+    "stem": "《逍遙遊》節錄中，莊子在第一段以「何不慮以為大樽而浮乎江湖」回應惠子，在第二段以「何不樹之於無何有之鄉」回應惠子。兩處「何不」在修辭上有甚麼共同特點和作用？",
+    "label": "A",
+    "text": "兩處「何不」都是反問中帶建議語氣",
+    "is_correct": true,
+    "explanation": "既反駁惠子的錯誤觀點，又以正面建議展示超越世俗思維的新可能，使論辯兼具批判性和建設性。 此選項正確。「何不」兼有反問（你為何不？）和建議（你應該這樣做）的雙重語氣。莊子不只批評惠子的固有思維，更提出具體的替代方案，使論辯不僅是破（批判），更是立（建設）。",
+    "issues": [
+      "CORRECT_SAYS_WRONG: correct option explanation contains '錯誤' early"
+    ]
+  },
+  {
+    "option_id": "q-ai-p01-302e1e-opt0",
+    "question_id": "q-ai-p01-302e1e",
+    "passage_id": "p01",
+    "stem": "根據《論仁、論孝、論君子》，〈論君子〉首則提及「過則勿憚改」，反映孔子認為君子面對過錯應有怎樣的態度？",
+    "label": "?",
+    "text": "勇於承認過失並積極改正，不因困難而退縮",
+    "is_correct": true,
+    "explanation": "此選項正確。「勿憚改」即不害怕改正，反映君子面對錯誤應坦然承認、勇於改過的品格。",
+    "issues": [
+      "CORRECT_SAYS_WRONG: correct option explanation contains '錯誤' early"
+    ]
+  },
+  {
+    "option_id": "q-ai-p01-37d88d-opt0",
+    "question_id": "q-ai-p01-37d88d",
+    "passage_id": "p01",
+    "stem": "《論語》作為語錄體散文，下列哪一項不是其文體特色？",
+    "label": "?",
+    "text": "全書有嚴謹的結構編排，各章之間層層遞進",
+    "is_correct": true,
+    "explanation": "此選項正確（此為錯誤描述）。《論語》各章各自獨立，內容不相連貫，沒有嚴謹結構。這是語錄體的特點之一。",
+    "issues": [
+      "CORRECT_SAYS_WRONG: correct option explanation contains '錯誤' early"
+    ]
+  },
+  {
+    "option_id": "q-ai-p06-d1662c-opt0",
+    "question_id": "q-ai-p06-d1662c",
+    "passage_id": "p06",
+    "stem": "下列何者最準確綜合《出師表》全文，表現作者寫此「表」的核心目的？（請以較高層次歸納作者的意圖）",
+    "label": "A",
+    "text": "以情動人，打動後主，獲其信任助北伐",
+    "is_correct": false,
+    "explanation": "此選項僅側重於作者以情感打動後主以求信任，屬部分正確，但未涵蓋作者同時以理據分析國勢、提出具體治國與用人方略以保後方、並以自述忠誠消除疑忌的整體論述，屬片面歸納。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p01-192fb8-opt1",
+    "question_id": "q-ai-p01-192fb8",
+    "passage_id": "p01",
+    "stem": "根據《論仁》各章的分析，何者最能概括孔子對「仁」的看法？",
+    "label": "?",
+    "text": "安於實行仁德，兼重其效益",
+    "is_correct": false,
+    "explanation": "此選項錯誤，屬部分正確。原文雖有「仁者安仁，知者利仁」，但這只是說明仁者與知者對仁的不同態度，並非把「安於仁德」與「效益」合併為仁的總論；以此概括全文，重心已偏離「克己復禮為仁」。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p05-8b6ff0-opt0",
+    "question_id": "q-ai-p05-8b6ff0",
+    "passage_id": "p05",
+    "stem": "下列哪一項最能說明藺相如在「完璧歸趙」一事中採取之做法與其目的之關係？",
+    "label": "?",
+    "text": "以言詞斥責秦王，迫使其立約以保璧",
+    "is_correct": false,
+    "explanation": "此選項屬部分正確。文中確有以語言斥責秦王（如指責其禮節倨傲、無意償城），但藺相如真正的做法還包括以威脅（持璧倚柱欲碎之勢）與策略（佯稱璧有瑕、要求齋戒五日並遣從者衣褐走小路）相結合，不僅僅是用言詞迫使秦王立約。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p11-24dad1-opt1",
+    "question_id": "q-ai-p11-24dad1",
+    "passage_id": "p11",
+    "stem": "就《月下獨酌》中擬人手法的運用，下列哪一句最直接以人格化表現詩人孤獨並自我開解？",
+    "label": "?",
+    "text": "月既不解飲，影徒隨我身",
+    "is_correct": false,
+    "explanation": "此選項屬部分正確。句中確有對月影不能真正陪伴的覺察，但重點在反映無奈與現實孤寂，並非最直接呈現以人格化自我開解的動作，故非最佳選擇。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p07-049639-opt0",
+    "question_id": "q-ai-p07-049639",
+    "passage_id": "p07",
+    "stem": "根據《師說》，下列哪一選項最能概括文中第3段至第5段對當時士大夫不從師風氣的批評重點？",
+    "label": "?",
+    "text": "士大夫虛榮而恥於自我請益",
+    "is_correct": false,
+    "explanation": "此選項只強調士大夫的虛榮與羞恥，屬部分正確，但未觸及作者所批評的具體後果──即「小學而大遺」與放棄向他人學習道理的矛盾，因而非最能概括段意。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p07-ade63d-opt1",
+    "question_id": "q-ai-p07-ade63d",
+    "passage_id": "p07",
+    "stem": "下列哪一項最能說明作者如何以修辭強化「師道不傳」之論證？",
+    "label": "?",
+    "text": "以頂真承接段落，保持論述銜接語勢",
+    "is_correct": false,
+    "explanation": "此項部分正確。文中有承接語句（如「是故」「嗟乎」等）使論述銜接流暢並帶有感歎語氣，但此手法主為語勢承接與情感抒發，並非構成全文主要之遞進論證。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p07-ade63d-opt3",
+    "question_id": "q-ai-p07-ade63d",
+    "passage_id": "p07",
+    "stem": "下列哪一項最能說明作者如何以修辭強化「師道不傳」之論證？",
+    "label": "?",
+    "text": "以對偶諷刺士族，突顯倫理矛盾與語勢",
+    "is_correct": false,
+    "explanation": "此項部分正確。文中有對偶句（如「位卑則足羞，官盛則近諛」）用以諷刺士族並增強語勢，但該手法僅作局部批判與語氣強化，並非本文主要用以構築對比遞進的核心論證。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p07-332520-opt0",
+    "question_id": "q-ai-p07-332520",
+    "passage_id": "p07",
+    "stem": "下列哪一項最能說明文中「位卑則足羞，官盛則近諛」一對對偶句的修辭功能？",
+    "label": "?",
+    "text": "突顯社會階級導致恥學之態",
+    "is_correct": false,
+    "explanation": "此選項屬部分正確。句子確實涉及社會階級，但其修辭功能不僅是描述階級存在，還在於藉對偶強調士大夫行為的矛盾與可議，故僅說「突顯社會階級」未及全文旨意，屬陳述不足。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p01-cd518d-opt3",
+    "question_id": "q-ai-p01-cd518d",
+    "passage_id": "p01",
+    "stem": "根據《論仁、論孝、論君子》，「君子坦蕩蕩，小人長戚戚」一句同時運用了哪些修辭手法？",
+    "label": "?",
+    "text": "疊字、排比、反問",
+    "is_correct": false,
+    "explanation": "此選項錯誤。疊字正確，但只有兩個分句（非排比），且為陳述句（非反問）。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p08-6b778c-opt1",
+    "question_id": "q-ai-p08-6b778c",
+    "passage_id": "p08",
+    "stem": "根據《始得西山宴遊記》，下列哪一項最準確概括本文首段與結尾段在視角與主旨上的轉折？（比較首段自述與結尾領悟）",
+    "label": "B",
+    "text": "由自以為已遊遍到承認未曾真正遊過",
+    "is_correct": false,
+    "explanation": "此選項為部分正確。文本確有從「以為凡是州之山有異態者，皆我有也」到「然後知吾嚮之未始遊，遊於是乎始」的認知轉變，但僅述及對遊歷認知的改變，未涵蓋心境由『恒惴慄』至『心凝形釋，與萬化冥合』的情感與哲理層次，故不足以概括全文主旨。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p10-ae73a4-opt0",
+    "question_id": "q-ai-p10-ae73a4",
+    "passage_id": "p10",
+    "stem": "根據第二段「秦以攻取之外……則不在戰矣」及其後文，作者用「以地事秦，猶抱薪救火」主要想說明：",
+    "label": "A",
+    "text": "割地換和只換取短暫安寧",
+    "is_correct": false,
+    "explanation": "此選項屬部分正確，但過於片面。原文確有「今日割五城，明日割十城，然後得一夕安寢」之意，指出割地換和的安寧短暫，但「抱薪救火」喻意更在於割地助長秦之欲望、終致不止與滅亡，故僅說短暫安寧未及為全文主旨。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p10-6c1ce2-opt1",
+    "question_id": "q-ai-p10-6c1ce2",
+    "passage_id": "p10",
+    "stem": "下列哪一項最能概括《六國論》中作者由第二段至第四段對「賂秦」害處的整體論述重點？",
+    "label": "B",
+    "text": "賂秦短暫換取和平而終致國土拱手",
+    "is_correct": false,
+    "explanation": "此選項屬部分正確。文中確有「今日割五城，明日割十城，然後得一夕安寢」指出賂秦換取的安寧短暫，但全文重點不僅在安寧短暫，還強調割地助長秦之野心及自身國力耗損，故此選項未能涵蓋整體論述。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p06-277eb4-opt0",
+    "question_id": "q-ai-p06-277eb4",
+    "passage_id": "p06",
+    "stem": "下列哪一項最恰當地歸納《出師表》作者透過結構與情感鋪陳所要表達的核心主旨？",
+    "label": "A",
+    "text": "提醒君主正視國勢，廣開言路以振士氣",
+    "is_correct": false,
+    "explanation": "此選項部分正確。文首確有分析蜀漢危急並勸誡虛懷納諫、恢弘志士之氣，但未涵蓋作者在文末以自述身世、泣表情感來增強說服力、表明個人以報先帝與效忠後主之決心，故非全文核心主旨的完整闡述。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p06-fabad4-opt0",
+    "question_id": "q-ai-p06-fabad4",
+    "passage_id": "p06",
+    "stem": "下列哪一句最能準確概括《出師表》全文之核心主旨？",
+    "label": "A",
+    "text": "陳述國家危亡，勸君虛懷納諫",
+    "is_correct": false,
+    "explanation": "此選項只著重於文章開首及勸諫的一面，屬部分正確，但未涵蓋作者表明個人忠誠、受託任務並願以身許國以報先帝之情，故非最貼切的總結。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p09-165d0a-opt0",
+    "question_id": "q-ai-p09-165d0a",
+    "passage_id": "p09",
+    "stem": "下列哪一項最準確指出「霪雨霏霏，連月不開……薄暮冥冥，虎嘯猿啼」與「春和景明，波瀾不驚……浮光躍金，靜影沉璧」兩段在修辭手法上的主要對比效果？",
+    "label": "?",
+    "text": "以擬人與暗喻分別渲染悲喜氛圍",
+    "is_correct": false,
+    "explanation": "此選項過於籠統且屬部分正確。雖然兩段確有擬人（如「陰風怒號」）與暗喻（如「靜影沉璧」），但主導手法並非僅為擬人與暗喻之別，未能指出段落間的句式對比與映襯效果，故不夠貼切。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p09-165d0a-opt2",
+    "question_id": "q-ai-p09-165d0a",
+    "passage_id": "p09",
+    "stem": "下列哪一項最準確指出「霪雨霏霏，連月不開……薄暮冥冥，虎嘯猿啼」與「春和景明，波瀾不驚……浮光躍金，靜影沉璧」兩段在修辭手法上的主要對比效果？",
+    "label": "?",
+    "text": "以疊字與借代手法強化空間感與動態感",
+    "is_correct": false,
+    "explanation": "此選項屬部分正確。文中確有疊字（如「霪雨霏霏」「郁郁青青」）與借代（如「檣傾楫摧」），但此說法偏重描寫技巧對空間與動態的刻畫，未能概括兩段之間的主要對比功能（即以句式對照襯托心境），故不夠準確。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p05-144f9e-opt0",
+    "question_id": "q-ai-p05-144f9e",
+    "passage_id": "p05",
+    "stem": "「相如持璧倚柱，欲以擊柱」一節中，作者運用哪種修辭手法最能突顯藺相如的情緒與形象？",
+    "label": "?",
+    "text": "動作描寫與動中寓靜的襯托",
+    "is_correct": false,
+    "explanation": "此選項屬部分正確。文中確有具體動作描寫（持璧、倚柱、欲擊柱），但「動中寓靜的襯托」並非作者主要強調的效果；該句更直接以激烈行動威脅，凸顯其憤怒與果敢，而非以靜態內斂來襯托情緒。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p05-a9c6a2-opt0",
+    "question_id": "q-ai-p05-a9c6a2",
+    "passage_id": "p05",
+    "stem": "就「完璧歸趙」（段三）中「相如持其璧睨柱，欲以擊柱」一節分析，下列哪一項最準確指出作者所採用的修辭手法及其在文中之功能（限段三）？",
+    "label": "?",
+    "text": "以動作威脅，突顯其臨危果敢",
+    "is_correct": false,
+    "explanation": "此選項僅談動作本身的效果，屬部分正確。原句確實含有威脅之動作，但作者並不只以動作表現果敢，還藉此表現藺相如以身同璧、以義懷國的道德立場與策略，故此描述不夠全面，屬概念偷換。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p06-69f384-opt0",
+    "question_id": "q-ai-p06-69f384",
+    "passage_id": "p06",
+    "stem": "下列哪一項最能反映諸葛亮在〈出師表〉中以第一人稱自述身世與自我貶抑所建構之形象？（請結合語氣、用詞及修辭效果判斷）",
+    "label": "A",
+    "text": "淡泊名利、甘居幕後",
+    "is_correct": false,
+    "explanation": "此選項屬部分正確。諸葛亮確有「臣本布衣，躬耕於南陽，不求聞達於諸侯」之表述，顯示淡泊名利，但僅以此判斷為「甘居幕後」過於單一，未顧及其在表中同時表明受命以來『夙夜憂歎』、願以『庶竭駑鈍』報效先帝與陛下的積極擔當，屬於偷換概念。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p02-a778eb-opt1",
+    "question_id": "q-ai-p02-a778eb",
+    "passage_id": "p02",
+    "stem": "《魚我所欲也》中出現了多個通假字。下列哪一組全部正確列出了通假字及其本字？",
+    "label": "?",
+    "text": "「辟」通「避」、「辯」通「辨」、「與」通「耳」",
+    "is_correct": false,
+    "explanation": "此選項錯誤。前兩組正確，但「與」通的是「歟」（語氣助詞），而非「耳」。「耳」本身就是語氣助詞。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p02-a778eb-opt3",
+    "question_id": "q-ai-p02-a778eb",
+    "passage_id": "p02",
+    "stem": "《魚我所欲也》中出現了多個通假字。下列哪一組全部正確列出了通假字及其本字？",
+    "label": "?",
+    "text": "「舍」通「捨」、「惡」通「烏」、「辯」通「辨」",
+    "is_correct": false,
+    "explanation": "此選項錯誤。「舍」通「捨」和「辯」通「辨」正確，但「惡」在此不通「烏」——「惡」讀「wù」時本義即為憎厭。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p06-27d7d0-opt1",
+    "question_id": "q-ai-p06-27d7d0",
+    "passage_id": "p06",
+    "stem": "《出師表》中，諸葛亮說北伐是「報先帝而忠陛下之職分」。這句話體現了甚麼主題？",
+    "label": "B",
+    "text": "北伐是為了完成先帝未竟的統一大業",
+    "is_correct": false,
+    "explanation": "此選項部分正確。完成先帝遺志只是其中一面，原文同時強調「忠陛下」——效忠後主也是職責，屬以偏概全。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p05-77e451-opt2",
+    "question_id": "q-ai-p05-77e451",
+    "passage_id": "p05",
+    "stem": "《史記》的體例（寫作方式）是甚麼？",
+    "label": "?",
+    "text": "紀傳體斷代史",
+    "is_correct": false,
+    "explanation": "此選項錯誤。紀傳體正確，但《史記》是「通史」（從黃帝到漢武帝），而非只記一個朝代的「斷代史」。《漢書》才是紀傳體斷代史。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p06-f42e3e-opt3",
+    "question_id": "q-ai-p06-f42e3e",
+    "passage_id": "p06",
+    "stem": "《出師表》「陟罰臧否」四字分別指甚麼？",
+    "label": "D",
+    "text": "陟即升遷、罰即懲罰、臧即藏匿、否即否認",
+    "is_correct": false,
+    "explanation": "此選項錯誤。前兩字正確，但「臧」是「善」（不是「藏匿」），「否」是「惡」（不是「否認」）。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p06-339da8-opt1",
+    "question_id": "q-ai-p06-339da8",
+    "passage_id": "p06",
+    "stem": "《出師表》中，諸葛亮寫此表的直接原因是甚麼？",
+    "label": "B",
+    "text": "向後主匯報平定南方蠻族的戰功",
+    "is_correct": false,
+    "explanation": "此選項錯誤。屬部分正確。原文雖提及「五月渡瀘，深入不毛」，但平定南方只是北伐的前提條件，並非上表的直接原因。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p09-05621b-opt3",
+    "question_id": "q-ai-p09-05621b",
+    "passage_id": "p09",
+    "stem": "慶曆新政失敗的主要原因是甚麼？這與本文有甚麼關係？",
+    "label": "?",
+    "text": "揭示文人以景寫情的傳統",
+    "is_correct": false,
+    "explanation": "此選項屬過度引申或部分正確，與原文意旨不符。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p06-be6ead-opt2",
+    "question_id": "q-ai-p06-be6ead",
+    "passage_id": "p06",
+    "stem": "從歷史角度分析，《出師表》中諸葛亮同時承擔了「丞相」（行政首長）和「軍事統帥」兩個角色。這種身兼文武的體制安排有甚麼歷史背景和利弊？",
+    "label": "C",
+    "text": "出於劉備遺詔的明確規定，並非因國力所限",
+    "is_correct": false,
+    "explanation": "此選項錯誤。屬部分正確。劉備確曾託孤，但遺詔並未明令諸葛亮兼管軍事；諸葛亮統攬軍政主要是因蜀漢國力薄弱的客觀需要。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p07-c67474-opt3",
+    "question_id": "q-ai-p07-c67474",
+    "passage_id": "p07",
+    "stem": "「猶且從師而問焉」中「猶且」是甚麼意思？",
+    "label": "?",
+    "text": "反而、卻",
+    "is_correct": false,
+    "explanation": "此選項屬部分正確。「反而」表轉折，語氣近似但「猶且」強調的是「尚且、仍然」，表讓步而非轉折，兩者語法功能有別。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p09-da1fc9-opt1",
+    "question_id": "q-ai-p09-da1fc9",
+    "passage_id": "p09",
+    "stem": "范仲淹在中國歷史上有甚麼地位？",
+    "label": "?",
+    "text": "暗含對滕子京施政的批評",
+    "is_correct": false,
+    "explanation": "此選項屬過度引申或部分正確，與原文意旨不符。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p09-0d0a43-opt1",
+    "question_id": "q-ai-p09-0d0a43",
+    "passage_id": "p09",
+    "stem": "宋代「以文治國」的政策如何影響了本文的產生？",
+    "label": "?",
+    "text": "勸勉世人應及時行樂度日",
+    "is_correct": false,
+    "explanation": "此選項屬過度引申或部分正確，與原文意旨不符。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p08-a70aa3-opt2",
+    "question_id": "q-ai-p08-a70aa3",
+    "passage_id": "p08",
+    "stem": "「因坐法華西亭，望西山，始指異之」中「法華」的性質，以及它反映柳宗元甚麼思想傾向？",
+    "label": "C",
+    "text": "法華寺是佛寺，但柳宗元僅借地休憩，與佛學無關",
+    "is_correct": false,
+    "explanation": "此選項屬部分正確。法華寺確為佛寺，但「僅借地休憩」的說法不確。柳宗元在永州期間深入研習佛學，常與僧人交往探討佛家思想，並非單純借地休息。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p09-7a443b-opt3",
+    "question_id": "q-ai-p09-7a443b",
+    "passage_id": "p09",
+    "stem": "「前人之述備矣」在文中有甚麼作用？",
+    "label": "?",
+    "text": "寓意君臣應同甘共苦的期望",
+    "is_correct": false,
+    "explanation": "此選項屬過度引申或部分正確，與原文意旨不符。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p09-d1a9fc-opt1",
+    "question_id": "q-ai-p09-d1a9fc",
+    "passage_id": "p09",
+    "stem": "本文的「先憂後樂」思想與《論語》中的「仁」有甚麼關聯？",
+    "label": "?",
+    "text": "表達對朝廷施政的失望之情",
+    "is_correct": false,
+    "explanation": "此選項屬過度引申或部分正確，與原文意旨不符。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p09-9f74c9-opt1",
+    "question_id": "q-ai-p09-9f74c9",
+    "passage_id": "p09",
+    "stem": "比較本文（范仲淹）和《始得西山宴遊記》（柳宗元）在主題上的異同。",
+    "label": "?",
+    "text": "暗示治國需順應天道自然",
+    "is_correct": false,
+    "explanation": "此選項屬過度引申或部分正確，與原文意旨不符。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p09-9f74c9-opt2",
+    "question_id": "q-ai-p09-9f74c9",
+    "passage_id": "p09",
+    "stem": "比較本文（范仲淹）和《始得西山宴遊記》（柳宗元）在主題上的異同。",
+    "label": "?",
+    "text": "感慨英雄末路的無奈心境",
+    "is_correct": false,
+    "explanation": "此選項屬過度引申或部分正確，與原文意旨不符。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p09-22ca24-opt1",
+    "question_id": "q-ai-p09-22ca24",
+    "passage_id": "p09",
+    "stem": "「寵辱皆忘」和「不以物喜，不以己悲」是否表達了相同的境界？",
+    "label": "?",
+    "text": "藉景物變化比喻人生無常",
+    "is_correct": false,
+    "explanation": "此選項屬過度引申或部分正確，與原文意旨不符。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p09-d18b45-opt1",
+    "question_id": "q-ai-p09-d18b45",
+    "passage_id": "p09",
+    "stem": "本文在中國文學史和思想史上有甚麼地位和影響？",
+    "label": "?",
+    "text": "表達對被貶者的深切同情",
+    "is_correct": false,
+    "explanation": "此選項屬過度引申或部分正確，與原文意旨不符。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p09-c881ff-opt2",
+    "question_id": "q-ai-p09-c881ff",
+    "passage_id": "p09",
+    "stem": "「然則何時而樂耶？」這個設問在主題表達上有甚麼作用？",
+    "label": "?",
+    "text": "抒發歸隱山林的強烈願望",
+    "is_correct": false,
+    "explanation": "此選項屬過度引申或部分正確，與原文意旨不符。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p09-7c7a6c-opt3",
+    "question_id": "q-ai-p09-7c7a6c",
+    "passage_id": "p09",
+    "stem": "有人認為范仲淹在文中流露的情懷體現了「積極入世」的人生價值，你同意嗎？",
+    "label": "?",
+    "text": "寄寓仕途失意的自我安慰",
+    "is_correct": false,
+    "explanation": "此選項屬過度引申或部分正確，與原文意旨不符。",
+    "issues": [
+      "WRONG_SAYS_CORRECT: wrong option's explanation starts with correct marker"
+    ]
+  },
+  {
+    "option_id": "q-ai-p12-f302b0-opt1",
+    "question_id": "q-ai-p12-f302b0",
+    "passage_id": "p12",
+    "stem": "《聲聲慢》中「滿地黃花堆積，憔悴損，如今有誰堪摘？」運用了甚麼修辭手法？",
+    "label": "B",
+    "text": "明喻——以「如」「似」等詞比較",
+    "is_correct": false,
+    "explanation": "此選項錯誤。是反問句式。",
+    "issues": [
+      "TOO_SHORT: explanation only 12 chars: '此選項錯誤。是反問句式。'"
+    ]
+  },
+  {
+    "option_id": "q-ai-p12-d9290b-opt3",
+    "question_id": "q-ai-p12-d9290b",
+    "passage_id": "p12",
+    "stem": "《青玉案》中「鳳簫聲動，玉壺光轉」運用了甚麼修辭手法？",
+    "label": "D",
+    "text": "誇張——故意誇大以突出效果",
+    "is_correct": false,
+    "explanation": "此選項錯誤。是對偶。",
+    "issues": [
+      "TOO_SHORT: explanation only 10 chars: '此選項錯誤。是對偶。'"
+    ]
+  },
+  {
+    "option_id": "q-ai-p12-f2a09a-opt1",
+    "question_id": "q-ai-p12-f2a09a",
+    "passage_id": "p12",
+    "stem": "《青玉案》中「花千樹」和「香滿路」分別運用了甚麼修辭手法？",
+    "label": "B",
+    "text": "對偶",
+    "is_correct": false,
+    "explanation": "此選項錯誤。是誇飾。",
+    "issues": [
+      "TOO_SHORT: explanation only 10 chars: '此選項錯誤。是誇飾。'"
+    ]
+  },
+  {
+    "option_id": "q-ai-p12-cac179-opt2",
+    "question_id": "q-ai-p12-cac179",
+    "passage_id": "p12",
+    "stem": "「怎一箇愁字了得」是甚麼句式？",
+    "label": "C",
+    "text": "祈使句——表示請求或命令",
+    "is_correct": false,
+    "explanation": "此選項錯誤。不是祈使句。",
+    "issues": [
+      "TOO_SHORT: explanation only 12 chars: '此選項錯誤。不是祈使句。'"
+    ]
+  },
+  {
+    "option_id": "q-ai-p12-cac179-opt3",
+    "question_id": "q-ai-p12-cac179",
+    "passage_id": "p12",
+    "stem": "「怎一箇愁字了得」是甚麼句式？",
+    "label": "D",
+    "text": "感嘆句——表示強烈感情",
+    "is_correct": false,
+    "explanation": "此選項錯誤。是反問句式。",
+    "issues": [
+      "TOO_SHORT: explanation only 12 chars: '此選項錯誤。是反問句式。'"
+    ]
+  },
+  {
+    "option_id": "q-ai-p12-f62179-opt2",
+    "question_id": "q-ai-p12-f62179",
+    "passage_id": "p12",
+    "stem": "「卻」在「卻是舊時相識」中是甚麼意思和語氣？",
+    "label": "C",
+    "text": "拒絕",
+    "is_correct": false,
+    "explanation": "此選項錯誤。是語氣詞。",
+    "issues": [
+      "TOO_SHORT: explanation only 11 chars: '此選項錯誤。是語氣詞。'"
+    ]
+  }
+]

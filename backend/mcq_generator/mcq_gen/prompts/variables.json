@@ -98,5 +98,45 @@
     "source_type": "runtime",
     "editable": false,
     "example": "{ \"question_stem\": \"...\", \"options\": [...], \"mapped_spec\": {...} }"
+  },
+  "existing_stem": {
+    "label": "現有題幹",
+    "description": "被標記題目的現有題幹文字，供修正員參考。",
+    "agents": ["corrector"],
+    "source_type": "runtime",
+    "editable": false,
+    "example": "「不以物喜，不以己悲」最能體現古仁人之心，意思是："
+  },
+  "existing_options_block": {
+    "label": "現有選項與解釋",
+    "description": "被標記題目的四個選項及其解釋，格式化為可讀文字。",
+    "agents": ["corrector"],
+    "source_type": "runtime",
+    "editable": false,
+    "example": "選項 1 ✅ [正確答案]：不為外物及一己際遇而喜悲\\n  解釋：..."
+  },
+  "flag_count": {
+    "label": "投訴數量",
+    "description": "用戶投訴的總數。",
+    "agents": ["corrector"],
+    "source_type": "runtime",
+    "editable": false,
+    "example": "3"
+  },
+  "user_flag_comments": {
+    "label": "用戶投訴意見",
+    "description": "用戶提交的投訴意見（以「/」分隔多條意見），供修正員參考。",
+    "agents": ["corrector"],
+    "source_type": "runtime",
+    "editable": false,
+    "example": "正確答案應該是B不是A / 題目太簡單"
+  },
+  "user_flag_comments_block": {
+    "label": "用戶投訴區塊（審題主任）",
+    "description": "修正流程中注入審題主任的用戶投訴參考區塊。生成流程中為空字串，不影響現有功能。",
+    "agents": ["critic"],
+    "source_type": "runtime",
+    "editable": false,
+    "example": "\\n\\n## 用戶投訴意見（僅供參考）\\n..."
   }
 }

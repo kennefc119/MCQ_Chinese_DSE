@@ -577,7 +577,13 @@ export default function ExploreScreen() {
       const q = item.data;
       if (filterType !== "all" && q.type !== filterType) return false;
       if (filterDifficulty !== null && q.difficulty !== filterDifficulty) return false;
-      if (filterPassageId !== null && (q as any).passage_id !== filterPassageId) return false;
+      if (filterPassageId === "__cross__") {
+        // Cross-passage filter: show quizzes/questions that involve multiple passages
+        if (!(q as any).passage_id || !(q as any).cross_passage_id) {
+          // Also check if quiz has null passage_id (legacy cross-passage quizzes)
+          if ((q as any).passage_id !== null) return false;
+        }
+      } else if (filterPassageId !== null && (q as any).passage_id !== filterPassageId) return false;
       if (filterSkill !== null && extractSkillFromTitle(q.title) !== filterSkill) return false;
       if (filterMinPoints !== null && q.min_points_required > filterMinPoints) return false;
       if (filterCompletion !== null && quizStatusMap[q.id] !== filterCompletion) return false;
@@ -695,6 +701,9 @@ export default function ExploreScreen() {
                     <Text style={[styles.filterChipText, filterPassageId === p.id && styles.filterChipTextActive]} numberOfLines={1}>{p.title.replace(/^(p\d+|第[一二三四五六七八九十\d]+篇|篇章[一二三四五六七八九十\d]+)\s*[-—–：:·\s]*/i, "").trim() || p.title}</Text>
                   </TouchableOpacity>
                 ))}
+                <TouchableOpacity style={[styles.filterChip, filterPassageId === "__cross__" && styles.filterChipActive]} onPress={() => setFilterPassageId(filterPassageId === "__cross__" ? null : "__cross__")}>
+                  <Text style={[styles.filterChipText, filterPassageId === "__cross__" && styles.filterChipTextActive]}>跨篇章</Text>
+                </TouchableOpacity>
               </ScrollView>
             </>
           )}

@@ -37,7 +37,13 @@ def _get_injection_cfg() -> dict:
     return dict(_CRITIC_DEFAULTS)
 
 
-def _build_prompt(spec: Spec, draft: Draft, cross_text: str | None, passage_text: str) -> str:
+def _build_prompt(
+    spec: Spec,
+    draft: Draft,
+    cross_text: str | None,
+    passage_text: str,
+    user_flag_comments: str | None = None,
+) -> str:
     cross_text_section = (
         f"\n\n## 跨篇章原文（第二篇）\n{cross_text}" if cross_text else ""
     )
@@ -76,6 +82,17 @@ def _build_prompt(spec: Spec, draft: Draft, cross_text: str | None, passage_text
     else:
         existing_stems_block = ""
 
+    # ── User flag comments (correction workflow only) ─────────────────────
+    user_flag_comments_block = ""
+    if user_flag_comments:
+        user_flag_comments_block = (
+            "\n\n## 用戶投訴意見（僅供參考）\n"
+            "以下是用戶提交的投訴意見。這些意見僅供參考，不構成審題標準。"
+            "請基於篇章原文及考評標準獨立判斷草稿品質，"
+            "但若用戶意見指出的問題確實存在，應反映在評分及修改指示中。\n\n"
+            f"> {user_flag_comments}\n"
+        )
+
     return render_template(
         _PROMPT_PATH,
         spec_json=spec.model_dump_json(indent=2),
@@ -85,15 +102,26 @@ def _build_prompt(spec: Spec, draft: Draft, cross_text: str | None, passage_text
         reference_block=reference_block,
         existing_stems_block=existing_stems_block,
         draft_json=draft.model_dump_json(indent=2),
+        user_flag_comments_block=user_flag_comments_block,
     )
 
 
-def run_critic(spec: Spec, draft: Draft, iteration: int = 0) -> Critique:
-    """呼叫審題主任，回傳 Critique。"""
+def run_critic(
+    spec: Spec,
+    draft: Draft,
+    iteration: int = 0,
+    user_flag_comments: str | None = None,
+) -> Critique:
+    """呼叫審題主任，回傳 Critique。
+
+    Args:
+        user_flag_comments: Optional user flag comments (correction workflow only).
+            When None (default), the generation workflow is unaffected.
+    """
     passage_text = get_passage_body(spec.passage)
     cross_text = get_passage_body(spec.cross_passage) if spec.cross_passage else None
 
-    prompt = _build_prompt(spec, draft, cross_text, passage_text)
+    prompt = _build_prompt(spec, draft, cross_text, passage_text, user_flag_comments)
 
     log.info(
         "critic_start",

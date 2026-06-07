@@ -10,5 +10,9 @@
   "critic": {
     "reference_block": true,
     "school_ws_block": true
+  },
+  "corrector": {
+    "reference_block": true,
+    "school_ws_block": true
   }
 }

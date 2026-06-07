@@ -101,7 +101,8 @@
 # 重要規則
 - 全程使用**繁體中文**。
 - 引用課文時，盡量使用原句字詞，避免改寫成現代漢語。
-- 若 spec 為跨篇章題，題幹和解釋必須明確同時涉及兩篇。
+- 若 spec 為跨篇章題（`cross_passage` 不為 null），題幹和解釋必須明確同時涉及兩篇。`mapped_spec` 中的 `cross_passage` 必須原樣回傳 spec 中的值（系統會據此將題目歸類為跨篇章題目）。
+- 若 spec 的 `cross_passage` 為 null，則 `mapped_spec.cross_passage` 必須為 null。
 - ❌ **嚴禁在任何輸出欄位（question_stem、options、explanation）中出現篇章 ID**（如 p01、p09、p12 等）。若需提及篇章，只可使用篇章標題（如「{{passage_title}}」），不可出現任何內部編號。
 
 # 隱蔽來源原則 (Source Concealment Rule)：

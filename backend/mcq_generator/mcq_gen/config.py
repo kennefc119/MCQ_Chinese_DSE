@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     poe_bot_strategist: str | None = Field(None, description="Bot for the Strategist agent (role 1: topic planner)")
     poe_bot_drafter: str | None = Field(None, description="Bot for the Drafter agent (role 2: question writer)")
     poe_bot_critic: str | None = Field(None, description="Bot for the Critic agent (role 3: question reviewer)")
+    poe_bot_corrector: str | None = Field(None, description="Bot for the Corrector agent (question correction workflow)")
 
     # Supabase
     supabase_url: str = Field(..., description="Supabase project URL")
@@ -49,6 +50,10 @@ class Settings(BaseSettings):
     @property
     def critic_bot(self) -> str:
         return self.poe_bot_critic or self.poe_bot_name
+
+    @property
+    def corrector_bot(self) -> str:
+        return self.poe_bot_corrector or self.poe_bot_name
 
 
 # 全域單例

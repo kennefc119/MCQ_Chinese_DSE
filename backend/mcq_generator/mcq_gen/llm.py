@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import threading
 import time
 from typing import TypeVar
 
@@ -24,19 +25,26 @@ def _estimate_tokens(text: str) -> int:
     return max(1, len(text) // 2)
 
 
-# ─── Trace Capture ───────────────────────────────────────────────────────────
+# ─── Trace Capture (thread-local for parallel request safety) ────────────────
 
-_traces: list[dict] = []
+_local = threading.local()
+
+
+def _get_traces_list() -> list[dict]:
+    """Get the thread-local traces list, creating it if needed."""
+    if not hasattr(_local, "traces"):
+        _local.traces = []
+    return _local.traces
 
 
 def reset_traces() -> None:
     """Clear all captured LLM call traces (call before each run)."""
-    _traces.clear()
+    _local.traces = []
 
 
 def get_traces() -> list[dict]:
     """Return a copy of captured traces since last reset_traces() call."""
-    return list(_traces)
+    return list(_get_traces_list())
 
 
 def chat_freeform(
@@ -63,15 +71,25 @@ def chat_freeform(
     _MAX_RETRIES = 5
     response = None
     for attempt in range(1, _MAX_RETRIES + 1):
-        with httpx.Client(timeout=180.0) as client:
-            response = client.post(
-                _POE_BASE_URL,
-                headers={
-                    "Authorization": f"Bearer {settings.poe_api_key}",
-                    "Content-Type": "application/json",
-                },
-                json=payload,
-            )
+        try:
+            with httpx.Client(timeout=180.0) as client:
+                response = client.post(
+                    _POE_BASE_URL,
+                    headers={
+                        "Authorization": f"Bearer {settings.poe_api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json=payload,
+                )
+        except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError,
+                httpx.WriteError, httpx.PoolTimeout, ConnectionError, OSError) as exc:
+            if attempt < _MAX_RETRIES:
+                delay = 3 * attempt
+                log.warning("poe_connection_retry", attempt=attempt, max=_MAX_RETRIES,
+                            error=str(exc)[:200], delay_s=delay)
+                time.sleep(delay)
+                continue
+            raise RuntimeError(f"Poe API connection failed after {_MAX_RETRIES} retries: {exc}") from exc
 
         if response.status_code == 200:
             break
@@ -92,7 +110,7 @@ def chat_freeform(
 
     prompt_tokens = _estimate_tokens(merged)
     response_tokens = _estimate_tokens(raw)
-    _traces.append({
+    _get_traces_list().append({
         "agent": "freeform",
         "bot": bot_name,
         "merged_prompt": merged,
@@ -141,15 +159,25 @@ def chat_structured(
     _MAX_RETRIES = 5
     response = None
     for attempt in range(1, _MAX_RETRIES + 1):
-        with httpx.Client(timeout=180.0) as client:
-            response = client.post(
-                _POE_BASE_URL,
-                headers={
-                    "Authorization": f"Bearer {settings.poe_api_key}",
-                    "Content-Type": "application/json",
-                },
-                json=payload,
-            )
+        try:
+            with httpx.Client(timeout=180.0) as client:
+                response = client.post(
+                    _POE_BASE_URL,
+                    headers={
+                        "Authorization": f"Bearer {settings.poe_api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json=payload,
+                )
+        except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError,
+                httpx.WriteError, httpx.PoolTimeout, ConnectionError, OSError) as exc:
+            if attempt < _MAX_RETRIES:
+                delay = 3 * attempt
+                log.warning("poe_connection_retry", attempt=attempt, max=_MAX_RETRIES,
+                            error=str(exc)[:200], delay_s=delay)
+                time.sleep(delay)
+                continue
+            raise RuntimeError(f"Poe API connection failed after {_MAX_RETRIES} retries: {exc}") from exc
 
         if response.status_code == 200:
             break
@@ -178,7 +206,7 @@ def chat_structured(
     # Capture trace for dashboard visibility
     prompt_tokens   = _estimate_tokens(merged)
     response_tokens = _estimate_tokens(raw)
-    _traces.append({
+    _get_traces_list().append({
         "agent": schema.__name__,
         "bot": bot_name,
         "merged_prompt": merged,

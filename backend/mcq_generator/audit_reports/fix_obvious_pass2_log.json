@@ -1,0 +1,586 @@
+[
+  {
+    "action": "FIX_OPTION",
+    "reason": "quote_pass2",
+    "opt_id": "q-ai-p02-5a28fd-opt0",
+    "old": "取自本文首句「魚，我所欲也」",
+    "new": "取自本文首句魚，我所欲也"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "quote_pass2",
+    "opt_id": "q-ai-p02-6e9dff-opt0",
+    "old": "它是孟子性善論的重要論證篇章，為儒家倫理中「義」的核心地位提供理論支撐",
+    "new": "它是孟子性善論的重要論證篇章，為儒家倫理中義的核心地位提供理論支撐"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "quote_pass2",
+    "opt_id": "q-ai-p03-43f7ec-opt0",
+    "old": "被動句，「夭」解作「被砍伐」",
+    "new": "被動句，夭解作被砍伐"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "quote_pass2",
+    "opt_id": "q-ai-p03-78c254-opt0",
+    "old": "狸狌因機巧善捕（有用→被利用）而「中於機辟，死於罔罟」",
+    "new": "狸狌因機巧善捕（有用→被利用）而中於機辟，死於罔罟"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p03-78c254"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p03-b143d9"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p03-b3d876"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "quote_pass2",
+    "opt_id": "q-ai-p03-d99eb3-opt0",
+    "old": "省略了「將」的賓語（軍隊）",
+    "new": "省略了將的賓語（軍隊）"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p03-f38905"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p04-114877"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "quote_pass2",
+    "opt_id": "q-ai-p04-62fde0-opt0",
+    "old": "荀子主張「制天命而用之」",
+    "new": "荀子主張制天命而用之"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "quote_pass2",
+    "opt_id": "q-ai-p04-dea71b-opt0",
+    "old": "是否「善假於物」（善於借助學習）",
+    "new": "是否善假於物（善於借助學習）"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p04-dea71b"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-054539"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-0785c8"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-0d55ec"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-11dc03"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-15eb56"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-1980f0"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-1ab1b8"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-1e990a"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-2034de"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-319781"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-35aef1"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-385d20"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-3d18ac"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-3de9b4"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-3eed6f"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-419106"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-449bf1"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-46dbc1"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-4cc2fd"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "quote_pass2",
+    "opt_id": "q-ai-p05-502b5c-opt0",
+    "old": "是道義上的勝利，趙國未失璧也未失面，且讓秦國背負了「曲」（理虧）的名聲",
+    "new": "是道義上的勝利，趙國未失璧也未失面，且讓秦國背負了曲（理虧）的名聲"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-517c47"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-540f2f"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-549cc4"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-58ae75"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-5b0f80"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "quote_pass2",
+    "opt_id": "q-ai-p05-62ce16-opt0",
+    "old": "推動情節發展並深化主旨，先製造內部矛盾張力，再以和解收束，論證「先公後私」的道理",
+    "new": "推動情節發展並深化主旨，先製造內部矛盾張力，再以和解收束，論證先公後私的道理"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-62ce16"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-6431cc"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-67a65f"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-6a72bd"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-6e3bcf"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-7535a1"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-766be2"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-784b8a"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-78f063"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-7b1f18"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-7f143d"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-7f2da7"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-86831d"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-87040d"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-8b3b0b"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-8bec79"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-8e5496"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-94261e"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-98322c"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-98f70e"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-9c0fb6"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-a74704"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-a780f3"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-b2f925"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-b49c76"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-b6d1ae"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-bff3da"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-c5389e"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-c64587"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-cb7d35"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-d22254"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-d829b9"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-d8467f"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-e345fb"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-ed86e9"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-f02b7f"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-f1d35c"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-f206a5"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-f84f60"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-fa3e88"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p05-fde039"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p06-0ef37f"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p06-cd235e"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p06-dcafc1"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "quote_pass2",
+    "opt_id": "q-ai-p06-ff1b43-opt0",
+    "old": "用「悉」「皆」作總結式的肯定評價",
+    "new": "用悉皆作總結式的肯定評價"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p06-ff1b43"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "quote_pass2",
+    "opt_id": "q-ai-p07-0e8121-opt0",
+    "old": "柳宗元寫道：「由魏、晉氏以下",
+    "new": "柳宗元寫道：由魏、晉氏以下"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p07-3100bd"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p07-3f310e"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p07-8c4e65"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p07-8e12a9"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "quote_pass2",
+    "opt_id": "q-ai-p07-a9545d-opt0",
+    "old": "「獨立思考、敢於直言」的士人精神",
+    "new": "獨立思考、敢於直言的士人精神"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "quote_pass2",
+    "opt_id": "q-ai-p07-c6810f-opt0",
+    "old": "①「傳道、受業、解惑」成為定義教師職",
+    "new": "①傳道、受業、解惑成為定義教師職"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p07-d11bd8"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p09-49d9a0"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p09-9d78fa"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p10-2d1f36"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p10-373ac4"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p10-3c5dac"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "quote_pass2",
+    "opt_id": "q-ai-p10-41996a-opt0",
+    "old": "對比，把「天下之大」",
+    "new": "對比，把天下之大"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p10-4e9ff8"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "quote_pass2",
+    "opt_id": "q-ai-p10-6ca207-opt0",
+    "old": "明喻，用「猶」",
+    "new": "明喻，用猶"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p10-79099f"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "quote_pass2",
+    "opt_id": "q-ai-p10-9d73a5-opt0",
+    "old": "相同，兩處都解作「本來」",
+    "new": "相同，兩處都解作本來"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p10-9d73a5"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p10-9e27f8"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p10-add4e5"
+  },
+  {
+    "action": "FIX_OPTION",
+    "reason": "quote_pass2",
+    "opt_id": "q-ai-p10-ce6917-opt0",
+    "old": "對偶，「以賂秦之地",
+    "new": "對偶，以賂秦之地"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p12-833d14"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p12-aaa43f"
+  },
+  {
+    "action": "DEACTIVATE",
+    "reason": "extreme_length",
+    "qid": "q-ai-p12-cadb08"
+  }
+]
