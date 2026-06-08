@@ -594,25 +594,35 @@ export async function fetchQuestionAnalyticsData(
     return meta;
   }
 
-  const [{ data: tagRows, error: tagErr }, { data: optRows, error: optErr }, { data: diffRows, error: diffErr }] = await Promise.all([
-    supabase
-      .from("dsemcq_question_tags")
-      .select("question_id, tag_id")
-      .in("question_id", questionIds),
-    supabase
-      .from("dsemcq_question_options")
-      .select("id, question_id")
-      .in("question_id", questionIds)
-      .eq("is_correct", true),
-    supabase
-      .from("dsemcq_questions")
-      .select("id, difficulty")
-      .in("id", questionIds),
-  ]);
+  // Batch .in() queries to avoid exceeding Supabase row/param limits
+  const tagRows: { question_id: string; tag_id: string }[] = [];
+  const optRows: { id: string; question_id: string }[] = [];
+  const diffRows: { id: string; difficulty: number }[] = [];
 
-  if (tagErr) console.warn("[dsemcq] fetchQuestionAnalyticsData tags error:", tagErr.message);
-  if (optErr) console.warn("[dsemcq] fetchQuestionAnalyticsData options error:", optErr.message);
-  if (diffErr) console.warn("[dsemcq] fetchQuestionAnalyticsData difficulty error:", diffErr.message);
+  for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
+    const batch = questionIds.slice(i, i + BATCH_SIZE);
+    const [tagRes, optRes, diffRes] = await Promise.all([
+      supabase
+        .from("dsemcq_question_tags")
+        .select("question_id, tag_id")
+        .in("question_id", batch),
+      supabase
+        .from("dsemcq_question_options")
+        .select("id, question_id")
+        .in("question_id", batch)
+        .eq("is_correct", true),
+      supabase
+        .from("dsemcq_questions")
+        .select("id, difficulty")
+        .in("id", batch),
+    ]);
+    if (tagRes.error) console.warn("[dsemcq] fetchQuestionAnalyticsData tags error:", tagRes.error.message);
+    if (optRes.error) console.warn("[dsemcq] fetchQuestionAnalyticsData options error:", optRes.error.message);
+    if (diffRes.error) console.warn("[dsemcq] fetchQuestionAnalyticsData difficulty error:", diffRes.error.message);
+    tagRows.push(...((tagRes.data as any[]) ?? []));
+    optRows.push(...((optRes.data as any[]) ?? []));
+    diffRows.push(...((diffRes.data as any[]) ?? []));
+  }
 
   const meta: Record<string, QuestionAnalyticsMeta> = {};
   for (const id of questionIds) meta[id] = { tagIds: [], correctOptionId: null, difficulty: 1 };
@@ -631,13 +641,28 @@ export async function fetchQuestionAnalyticsData(
 export async function listUserAttempts(userId: string): Promise<Attempt[]> {
   const local = memory.attempts.filter((a) => a.user_id === userId);
   if (!isSupabaseConfigured) return local;
-  const { data, error } = await supabase
-    .from("dsemcq_attempts")
-    .select("*")
-    .eq("user_id", userId)
-    .order("started_at", { ascending: false });
-  if (error) console.warn("[dsemcq] listUserAttempts error:", error.message);
-  const remote = (data as Attempt[]) ?? [];
+
+  // Supabase returns max 1000 rows per request. Paginate to fetch all.
+  const PAGE_SIZE = 1000;
+  const remote: Attempt[] = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from("dsemcq_attempts")
+      .select("*")
+      .eq("user_id", userId)
+      .order("started_at", { ascending: false })
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) {
+      console.warn("[dsemcq] listUserAttempts error:", error.message);
+      break;
+    }
+    const rows = (data as Attempt[]) ?? [];
+    remote.push(...rows);
+    if (rows.length < PAGE_SIZE) break; // last page
+    from += PAGE_SIZE;
+  }
+
   // Merge: remote first, then any local-only attempts not yet persisted
   const remoteIds = new Set(remote.map((a) => a.id));
   return [...remote, ...local.filter((a) => !remoteIds.has(a.id))];
