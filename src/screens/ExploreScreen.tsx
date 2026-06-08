@@ -26,6 +26,7 @@ import { AppStackParamList } from "../navigation/types";
 import { extractSkillFromTitle, getQuizTypeSuffix, SKILL_LABELS, SkillLabel } from "../lib/quizDisplayUtils";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
+import ScrollingBanner from "../components/ScrollingBanner";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
@@ -497,25 +498,36 @@ export default function ExploreScreen() {
   const [filterExpanded, setFilterExpanded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [exemptIds, setExemptIds] = useState<Set<string>>(new Set());
+  const [bannerMessage, setBannerMessage] = useState("");
+  const [bannerPause, setBannerPause] = useState(2);
 
-  // Fetch exempt passage IDs from app settings
-  useEffect(() => {
+  // Fetch exempt passage IDs and banner settings from app settings
+  const loadAppSettings = async () => {
     if (!isSupabaseConfigured) return;
-    (async () => {
-      try {
-        const { data, error } = await supabase
-          .from("dsemcq_app_settings")
-          .select("value")
-          .eq("key", "exempt_passage_ids")
-          .maybeSingle();
-        if (!error && data && Array.isArray(data.value)) {
-          setExemptIds(new Set(data.value as string[]));
+    try {
+      const { data, error } = await supabase
+        .from("dsemcq_app_settings")
+        .select("key, value")
+        .in("key", ["exempt_passage_ids", "explore_banner_message", "explore_banner_pause"]);
+      if (!error && data) {
+        for (const row of data) {
+          if (row.key === "exempt_passage_ids" && Array.isArray(row.value)) {
+            setExemptIds(new Set(row.value as string[]));
+          }
+          if (row.key === "explore_banner_message" && typeof row.value === "string") {
+            setBannerMessage(row.value);
+          }
+          if (row.key === "explore_banner_pause" && typeof row.value === "number") {
+            setBannerPause(row.value);
+          }
         }
-      } catch {
-        // Table may not exist yet
       }
-    })();
-  }, []);
+    } catch {
+      // Table may not exist yet
+    }
+  };
+
+  useEffect(() => { loadAppSettings(); }, []);
 
   // Always-current ref so the AppState listener never captures a stale closure.
   const loadRef = useRef<() => Promise<void>>(async () => {});
@@ -541,6 +553,8 @@ export default function ExploreScreen() {
     } catch {
       // Timed out or network error — grid stays empty; pull-to-refresh to retry
     }
+    // Also refresh banner & exempt settings
+    loadAppSettings();
   };
 
   // Keep ref current on every render so the AppState handler always calls the
@@ -678,6 +692,9 @@ export default function ExploreScreen() {
           <Text style={styles.switchBtnText}>≡</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Scrolling announcement banner */}
+      {bannerMessage ? <ScrollingBanner message={bannerMessage} pauseSeconds={bannerPause} /> : null}
 
       {/* Filter section: chips row + optional expanded panel */}
       <View>

@@ -156,16 +156,14 @@ export async function markAnnouncementRead(userId: string, announcementId: strin
 /** Unread broadcast announcements for the current user. */
 export async function listUnreadAnnouncements(userId: string): Promise<Announcement[]> {
   if (!isSupabaseConfigured) return [];
-  const { data: reads } = await supabase
-    .from("dsemcq_announcement_reads")
-    .select("announcement_id")
-    .eq("user_id", userId);
-  const readIds = new Set((reads ?? []).map((r: { announcement_id: string }) => r.announcement_id));
-  const { data } = await supabase
-    .from("dsemcq_announcements")
-    .select("*")
-    .order("sent_at", { ascending: false });
-  return ((data as Announcement[]) ?? []).filter((a) => !readIds.has(a.id));
+  const reads = await fetchAllRows<{ announcement_id: string }>(
+    () => supabase.from("dsemcq_announcement_reads").select("announcement_id").eq("user_id", userId)
+  );
+  const readIds = new Set(reads.map((r) => r.announcement_id));
+  const all = await fetchAllRows<Announcement>(
+    () => supabase.from("dsemcq_announcements").select("*").order("sent_at", { ascending: false })
+  );
+  return all.filter((a) => !readIds.has(a.id));
 }
 
 // ── User search & detail ────────────────────────────────────────────────────
@@ -294,57 +292,45 @@ export async function fetchUserPerformanceBreakdown(userId: string): Promise<{
   if (!isSupabaseConfigured) return { skills: [], difficulties: [], passages: [] };
 
   // Pull all the user's answers (submitted attempts only)
-  const { data: attemptIdsData } = await supabase
-    .from("dsemcq_attempts")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("status", "submitted");
-  const attemptIds = ((attemptIdsData ?? []) as { id: string }[]).map((a) => a.id);
+  const attemptIdsData = await fetchAllRows<{ id: string }>(
+    () => supabase.from("dsemcq_attempts").select("id").eq("user_id", userId).eq("status", "submitted")
+  );
+  const attemptIds = attemptIdsData.map((a) => a.id);
   if (attemptIds.length === 0) return { skills: [], difficulties: [], passages: [] };
 
-  const { data: answerRows } = await supabase
-    .from("dsemcq_attempt_answers")
-    .select("question_id, is_correct")
-    .in("attempt_id", attemptIds);
-
-  const answers = ((answerRows ?? []) as { question_id: string; is_correct: boolean | null }[]).filter(
-    (r) => r.is_correct !== null
-  );
+  const answers = (await batchInQuery<{ question_id: string; is_correct: boolean | null }>(
+    "dsemcq_attempt_answers", "attempt_id", attemptIds, "question_id, is_correct"
+  )).filter((r) => r.is_correct !== null) as { question_id: string; is_correct: boolean }[];
   if (answers.length === 0) return { skills: [], difficulties: [], passages: [] };
 
   const questionIds = [...new Set(answers.map((a) => a.question_id))];
 
   // Fetch question metadata + tag mappings + tag labels + passages in parallel
-  const [{ data: qRows }, { data: tagRows }, { data: tagDefs }] = await Promise.all([
-    supabase.from("dsemcq_questions").select("id, passage_id, difficulty").in("id", questionIds),
-    supabase.from("dsemcq_question_tags").select("question_id, tag_id").in("question_id", questionIds),
-    supabase.from("dsemcq_tags").select("id, label"),
+  const [qRows, tagRows, tagDefsRows] = await Promise.all([
+    batchInQuery<{ id: string; passage_id: string | null; difficulty: number }>("dsemcq_questions", "id", questionIds, "id, passage_id, difficulty"),
+    batchInQuery<{ question_id: string; tag_id: string }>("dsemcq_question_tags", "question_id", questionIds, "question_id, tag_id"),
+    fetchAllRows<{ id: string; label: string }>(() => supabase.from("dsemcq_tags").select("id, label")),
   ]);
 
   const qMeta: Record<string, { passage_id: string | null; difficulty: number }> = {};
-  for (const q of (qRows ?? []) as { id: string; passage_id: string | null; difficulty: number }[]) {
+  for (const q of qRows) {
     qMeta[q.id] = { passage_id: q.passage_id, difficulty: q.difficulty };
   }
   const tagByQ: Record<string, string[]> = {};
-  for (const t of (tagRows ?? []) as { question_id: string; tag_id: string }[]) {
+  for (const t of tagRows) {
     if (!tagByQ[t.question_id]) tagByQ[t.question_id] = [];
     tagByQ[t.question_id].push(t.tag_id);
   }
   const tagLabel: Record<string, string> = Object.fromEntries(
-    ((tagDefs ?? []) as { id: string; label: string }[]).map((t) => [t.id, t.label])
+    tagDefsRows.map((t) => [t.id, t.label])
   );
 
   // Hydrate passage titles
   const passageIds = [...new Set(Object.values(qMeta).map((m) => m.passage_id).filter(Boolean) as string[])];
   let passageTitle: Record<string, string> = {};
   if (passageIds.length > 0) {
-    const { data: passages } = await supabase
-      .from("dsemcq_passages")
-      .select("id, title")
-      .in("id", passageIds);
-    passageTitle = Object.fromEntries(
-      ((passages ?? []) as { id: string; title: string }[]).map((p) => [p.id, p.title])
-    );
+    const passages = await batchInQuery<{ id: string; title: string }>("dsemcq_passages", "id", passageIds, "id, title");
+    passageTitle = Object.fromEntries(passages.map((p) => [p.id, p.title]));
   }
 
   // Aggregate
@@ -613,8 +599,8 @@ export async function fetchPassageSuccessRates(): Promise<PassageSuccessRate[]> 
   const passageIds = [...new Set(Object.values(qPassage).filter(Boolean) as string[])];
   let passageTitle: Record<string, string> = {};
   if (passageIds.length > 0) {
-    const { data: passages } = await supabase.from("dsemcq_passages").select("id, title").in("id", passageIds);
-    passageTitle = Object.fromEntries(((passages ?? []) as { id: string; title: string }[]).map((p) => [p.id, p.title]));
+    const passages = await batchInQuery<{ id: string; title: string }>("dsemcq_passages", "id", passageIds, "id, title");
+    passageTitle = Object.fromEntries(passages.map((p) => [p.id, p.title]));
   }
 
   const buckets: Record<string, { correct: number; total: number }> = {};
@@ -699,11 +685,9 @@ export async function fetchExerciseChoiceDistribution(): Promise<ExerciseChoiceI
   if (!isSupabaseConfigured) return [];
 
   // Get exercise-type quiz IDs
-  const { data: quizRows } = await supabase
-    .from("dsemcq_quizzes")
-    .select("id, title, passage_id, type")
-    .eq("type", "exercise");
-  const quizzes = (quizRows ?? []) as { id: string; title: string; passage_id: string | null; type: string }[];
+  const quizzes = await fetchAllRows<{ id: string; title: string; passage_id: string | null; type: string }>(
+    () => supabase.from("dsemcq_quizzes").select("id, title, passage_id, type").eq("type", "exercise")
+  );
   if (quizzes.length === 0) return [];
 
   const quizIds = quizzes.map((q) => q.id);
@@ -723,8 +707,8 @@ export async function fetchExerciseChoiceDistribution(): Promise<ExerciseChoiceI
   const passageIds = [...new Set(quizzes.map((q) => q.passage_id).filter(Boolean) as string[])];
   let passageTitle: Record<string, string> = {};
   if (passageIds.length > 0) {
-    const { data: passages } = await supabase.from("dsemcq_passages").select("id, title").in("id", passageIds);
-    passageTitle = Object.fromEntries(((passages ?? []) as { id: string; title: string }[]).map((p) => [p.id, p.title]));
+    const passages = await batchInQuery<{ id: string; title: string }>("dsemcq_passages", "id", passageIds, "id, title");
+    passageTitle = Object.fromEntries(passages.map((p) => [p.id, p.title]));
   }
 
   return quizzes
@@ -745,11 +729,10 @@ export async function fetchPerStudentExerciseCounts(): Promise<StudentExerciseCo
   if (!isSupabaseConfigured) return [];
 
   // Get exercise quiz IDs
-  const { data: quizRows } = await supabase
-    .from("dsemcq_quizzes")
-    .select("id")
-    .eq("type", "exercise");
-  const quizIds = ((quizRows ?? []) as { id: string }[]).map((q) => q.id);
+  const quizRows = await fetchAllRows<{ id: string }>(
+    () => supabase.from("dsemcq_quizzes").select("id").eq("type", "exercise")
+  );
+  const quizIds = quizRows.map((q) => q.id);
   if (quizIds.length === 0) return [];
 
   const attemptRows = await fetchAllRows<{ user_id: string }>(
@@ -764,9 +747,9 @@ export async function fetchPerStudentExerciseCounts(): Promise<StudentExerciseCo
   // Get usernames
   const userIds = Object.keys(counts);
   if (userIds.length === 0) return [];
-  const { data: profiles } = await supabase.from("dsemcq_profiles").select("id, username").in("id", userIds);
+  const profiles = await batchInQuery<{ id: string; username: string }>("dsemcq_profiles", "id", userIds, "id, username");
   const nameMap: Record<string, string> = {};
-  for (const p of (profiles ?? []) as { id: string; username: string }[]) nameMap[p.id] = p.username;
+  for (const p of profiles) nameMap[p.id] = p.username;
 
   return Object.entries(counts)
     .map(([uid, count]) => ({ user_id: uid, username: nameMap[uid] ?? uid, count }))
@@ -885,20 +868,27 @@ export async function fetchInventorySummary(): Promise<InventorySummary> {
     return { totalQuizzes: 0, totalExercises: 0, totalQuestions: 0, activeQuestions: 0, flaggedQuestions: 0, byPassage: [], byDifficulty: [], byTag: [] };
   }
 
-  const [{ data: quizRows }, { data: qRows }, { data: tagRows }, { data: tagDefs }, { data: passages }] =
+  const [quizzes, questions, tags, tagDefs, passages] =
     await Promise.all([
-      supabase.from("dsemcq_quizzes").select("id, type, passage_id"),
-      supabase.from("dsemcq_questions").select("id, passage_id, difficulty, is_active, admin_flag"),
-      supabase.from("dsemcq_question_tags").select("question_id, tag_id"),
-      supabase.from("dsemcq_tags").select("id, label"),
-      supabase.from("dsemcq_passages").select("id, title"),
+      fetchAllRows<{ id: string; type: string; passage_id: string | null }>(
+        () => supabase.from("dsemcq_quizzes").select("id, type, passage_id")
+      ),
+      fetchAllRows<{ id: string; passage_id: string | null; difficulty: number; is_active: boolean; admin_flag: boolean }>(
+        () => supabase.from("dsemcq_questions").select("id, passage_id, difficulty, is_active, admin_flag")
+      ),
+      fetchAllRows<{ question_id: string; tag_id: string }>(
+        () => supabase.from("dsemcq_question_tags").select("question_id, tag_id")
+      ),
+      fetchAllRows<{ id: string; label: string }>(
+        () => supabase.from("dsemcq_tags").select("id, label")
+      ),
+      fetchAllRows<{ id: string; title: string }>(
+        () => supabase.from("dsemcq_passages").select("id, title")
+      ),
     ]);
 
-  const quizzes = (quizRows ?? []) as { id: string; type: string; passage_id: string | null }[];
-  const questions = (qRows ?? []) as { id: string; passage_id: string | null; difficulty: number; is_active: boolean; admin_flag: boolean }[];
-  const tags = (tagRows ?? []) as { question_id: string; tag_id: string }[];
-  const tagLabels = Object.fromEntries(((tagDefs ?? []) as { id: string; label: string }[]).map((t) => [t.id, t.label]));
-  const passageMap = Object.fromEntries(((passages ?? []) as { id: string; title: string }[]).map((p) => [p.id, p.title]));
+  const tagLabels = Object.fromEntries(tagDefs.map((t) => [t.id, t.label]));
+  const passageMap = Object.fromEntries(passages.map((p) => [p.id, p.title]));
 
   const totalQuizzes = quizzes.length;
   const totalExercises = quizzes.filter((q) => q.type === "exercise").length;
@@ -1025,8 +1015,9 @@ export async function updateAppSetting(
 /** Fetch list of all quizzes (for admin to select exempt ones). */
 export async function fetchAllQuizzes(): Promise<{ id: string; title: string; type: string; passage_id: string | null }[]> {
   if (!isSupabaseConfigured) return [];
-  const { data } = await supabase.from("dsemcq_quizzes").select("id, title, type, passage_id").order("type").order("title");
-  return (data ?? []) as { id: string; title: string; type: string; passage_id: string | null }[];
+  return fetchAllRows<{ id: string; title: string; type: string; passage_id: string | null }>(
+    () => supabase.from("dsemcq_quizzes").select("id, title, type, passage_id").order("type").order("title")
+  );
 }
 
 // ── Device id helper (stable per install) ───────────────────────────────────

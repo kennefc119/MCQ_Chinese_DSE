@@ -39,6 +39,8 @@ export default function SettingsPanel() {
   const [bonusCost, setBonusCost] = useState("100");
   const [bonusMax, setBonusMax] = useState("20");
   const [exemptPassageIds, setExemptPassageIds] = useState<Set<string>>(new Set());
+  const [exploreBannerMessage, setExploreBannerMessage] = useState("");
+  const [exploreBannerPause, setExploreBannerPause] = useState("2");
 
   const [inventory, setInventory] = useState<InventorySummary | null>(null);
   const [allPassages, setAllPassages] = useState<Passage[]>([]);
@@ -58,6 +60,8 @@ export default function SettingsPanel() {
     if (settingsMap.bonus_ai_chat_cost != null) setBonusCost(String(settingsMap.bonus_ai_chat_cost));
     if (settingsMap.bonus_ai_chat_max != null) setBonusMax(String(settingsMap.bonus_ai_chat_max));
     if (Array.isArray(settingsMap.exempt_passage_ids)) setExemptPassageIds(new Set(settingsMap.exempt_passage_ids as string[]));
+    if (typeof settingsMap.explore_banner_message === "string") setExploreBannerMessage(settingsMap.explore_banner_message);
+    if (settingsMap.explore_banner_pause != null) setExploreBannerPause(String(settingsMap.explore_banner_pause));
     setAllPassages(passages);
     setInventory(inv);
     setLoading(false);
@@ -91,6 +95,8 @@ export default function SettingsPanel() {
             updateAppSetting("bonus_ai_chat_cost", costN, uid),
             updateAppSetting("bonus_ai_chat_max", maxN, uid),
             updateAppSetting("exempt_passage_ids", [...exemptPassageIds], uid),
+            updateAppSetting("explore_banner_message", exploreBannerMessage.trim(), uid),
+            updateAppSetting("explore_banner_pause", parseInt(exploreBannerPause, 10) || 2, uid),
           ]);
           setSaving(false);
           const failed = results.filter((r) => !r.ok);
@@ -158,6 +164,30 @@ export default function SettingsPanel() {
         <Text style={[styles.label, { marginTop: spacing.sm }]}>額外配額上限</Text>
         <TextInput style={styles.input} value={bonusMax} onChangeText={setBonusMax} keyboardType="number-pad" placeholder="20" />
         <Text style={styles.hint}>任何用戶可累積的最大額外配額次數</Text>
+      </CollapsibleSection>
+
+      {/* 1c. Explore Banner */}
+      <CollapsibleSection title="探索頁橫幅公告" subtitle={exploreBannerMessage ? "已設定" : "未設定"}>
+        <Text style={styles.label}>公告文字</Text>
+        <TextInput
+          style={[styles.input, { minHeight: 60, textAlignVertical: "top" }]}
+          value={exploreBannerMessage}
+          onChangeText={setExploreBannerMessage}
+          placeholder="留空則不顯示橫幅"
+          placeholderTextColor={colors.inkMuted}
+          multiline
+        />
+        <Text style={styles.hint}>文字將以跑馬燈形式顯示於探索頁標題下方。留空則不顯示。</Text>
+
+        <Text style={[styles.label, { marginTop: spacing.sm }]}>重複間隔（秒）</Text>
+        <TextInput
+          style={styles.input}
+          value={exploreBannerPause}
+          onChangeText={setExploreBannerPause}
+          keyboardType="number-pad"
+          placeholder="2"
+        />
+        <Text style={styles.hint}>每次跑馬燈播完後等待幾秒再重新播放</Text>
       </CollapsibleSection>
 
       {/* 2. Exempt Passages */}

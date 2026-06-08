@@ -35,4 +35,6 @@ taskkill /F /IM node.exe
 npm install -g @expo/ngrok
 
 # 3. Try tunnel again
+npx expo start --dev-client --tunnel --clear
+
 npx expo start --dev-client --tunnel

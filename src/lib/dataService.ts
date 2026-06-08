@@ -508,6 +508,7 @@ export async function submitAttempt(
   // The quiz RPC hides is_correct during play (anti-cheat), so we must look up the DB table.
   let correct = 0;
   const selectedOptionIds = Object.values(answers).filter(Boolean);
+  const optionCorrectness: Record<string, boolean> = {};
   if (selectedOptionIds.length > 0) {
     const { data: opts, error: optsError } = await supabase
       .from("dsemcq_question_options")
@@ -516,6 +517,9 @@ export async function submitAttempt(
     if (optsError) {
       console.warn("[dsemcq] submitAttempt: failed to fetch option correctness:", optsError.message);
     } else {
+      for (const o of (opts ?? []) as { id: string; is_correct: boolean }[]) {
+        optionCorrectness[o.id] = o.is_correct;
+      }
       correct = (opts ?? []).filter((o) => o.is_correct).length;
     }
   }
@@ -537,6 +541,7 @@ export async function submitAttempt(
         attempt_id: attemptId,
         question_id: q.id,
         selected_option_id: selectedOptionId,
+        is_correct: optionCorrectness[selectedOptionId] ?? null,
         answered_at: new Date().toISOString(),
       };
     });

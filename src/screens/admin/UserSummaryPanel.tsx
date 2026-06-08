@@ -61,19 +61,14 @@ export default function UserSummaryPanel() {
   const genderPieData = Object.entries(stats.genderBreakdown).map(([g, count]) => ({
     value: count,
     color: GENDER_COLORS[g] ?? colors.inkMuted,
+    text: `${GENDER_LABELS[g] ?? g}\n${count}`,
+    textColor: "#fff",
+    textSize: 9,
+    textBackgroundColor: GENDER_COLORS[g] ?? colors.inkMuted,
+    textBackgroundRadius: 4,
     focused: false,
     onPress: () => Alert.alert(GENDER_LABELS[g] ?? g, `${count} 人 (${((count / stats.totalUsers) * 100).toFixed(1)}%)`),
   }));
-
-  const subPieData = [
-    { value: stats.subscriptionBreakdown.free, color: colors.inkSoft, onPress: () => Alert.alert("庶民版", `${stats.subscriptionBreakdown.free} 人`) },
-    { value: stats.subscriptionBreakdown.premium, color: colors.gold, onPress: () => Alert.alert("學士版", `${stats.subscriptionBreakdown.premium} 人`) },
-  ];
-
-  const statusPieData = [
-    { value: stats.statusBreakdown.active, color: colors.success, onPress: () => Alert.alert("生效", `${stats.statusBreakdown.active} 人`) },
-    { value: stats.statusBreakdown.inactive, color: colors.primary, onPress: () => Alert.alert("未生效", `${stats.statusBreakdown.inactive} 人`) },
-  ];
 
   const dseYearData = Object.entries(stats.dseYearBreakdown)
     .sort(([a], [b]) => Number(a) - Number(b))
@@ -124,47 +119,28 @@ export default function UserSummaryPanel() {
         </View>
       </CollapsibleSection>
 
-      {/* 3. Subscription & status */}
-      <CollapsibleSection title="訂閱狀態" subtitle="等級與生效狀態">
-        <View style={styles.pieRow}>
-          <View style={{ alignItems: "center" }}>
-            <Text style={styles.pieSubtitle}>等級</Text>
-            <PieChart data={subPieData} radius={55} innerRadius={30} focusOnPress />
-            <View style={styles.miniLegend}>
-              <LegendItem color={colors.inkSoft} label={`庶民 ${stats.subscriptionBreakdown.free}`} />
-              <LegendItem color={colors.gold} label={`學士 ${stats.subscriptionBreakdown.premium}`} />
-            </View>
-          </View>
-          <View style={{ alignItems: "center" }}>
-            <Text style={styles.pieSubtitle}>狀態</Text>
-            <PieChart data={statusPieData} radius={55} innerRadius={30} focusOnPress />
-            <View style={styles.miniLegend}>
-              <LegendItem color={colors.success} label={`生效 ${stats.statusBreakdown.active}`} />
-              <LegendItem color={colors.primary} label={`未生效 ${stats.statusBreakdown.inactive}`} />
-            </View>
-          </View>
+      {/* 3. Subscription */}
+      <CollapsibleSection title="訂閱狀態" subtitle="等級分佈">
+        <View style={styles.summaryGrid}>
+          <SummaryCard label="庶民版" value={stats.subscriptionBreakdown.free} desc="免費用戶" />
+          <SummaryCard label="學士版" value={stats.subscriptionBreakdown.premium} desc="付費用戶" />
         </View>
       </CollapsibleSection>
 
       {/* 4. Gender */}
       <CollapsibleSection title="性別分佈" subtitle="所有用戶性別組成">
-        <View style={styles.pieRow}>
+        <View style={{ alignItems: "center" }}>
           <PieChart
             data={genderPieData}
-            radius={70}
+            radius={100}
             innerRadius={40}
             focusOnPress
+            showText
+            textColor="#fff"
+            textSize={9}
+            fontWeight="700"
             centerLabelComponent={() => <Text style={styles.pieCenter}>{stats.totalUsers}</Text>}
           />
-          <View style={styles.pieLegend}>
-            {Object.entries(stats.genderBreakdown).map(([g, count]) => (
-              <LegendItem
-                key={g}
-                color={GENDER_COLORS[g] ?? colors.inkMuted}
-                label={`${GENDER_LABELS[g] ?? g} ${count} (${((count / stats.totalUsers) * 100).toFixed(1)}%)`}
-              />
-            ))}
-          </View>
         </View>
       </CollapsibleSection>
 
