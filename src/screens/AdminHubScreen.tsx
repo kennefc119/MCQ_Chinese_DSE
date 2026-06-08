@@ -15,14 +15,18 @@ import AnnouncementsPanel from "./admin/AnnouncementsPanel";
 import UsageInsightsPanel from "./admin/UsageInsightsPanel";
 import UserCheckerPanel from "./admin/UserCheckerPanel";
 import GeneratorPanel from "./admin/GeneratorPanel";
+import UserSummaryPanel from "./admin/UserSummaryPanel";
+import SettingsPanel from "./admin/SettingsPanel";
 
-type AdminTab = "announce" | "usage" | "users" | "gen";
+type AdminTab = "announce" | "usage" | "summary" | "users" | "gen" | "settings";
 
 const TABS: { key: AdminTab; label: string }[] = [
   { key: "announce", label: "公告" },
   { key: "usage", label: "用量" },
+  { key: "summary", label: "總覽" },
   { key: "users", label: "用戶" },
   { key: "gen", label: "出題" },
+  { key: "settings", label: "設定" },
 ];
 
 export default function AdminHubScreen() {
@@ -35,7 +39,7 @@ export default function AdminHubScreen() {
         <Text style={styles.subtitle}>內部工具・僅管理員可見</Text>
       </View>
 
-      <View style={styles.tabBar}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabBar} contentContainerStyle={styles.tabBarContent}>
         {TABS.map((t) => {
           const active = t.key === tab;
           return (
@@ -49,13 +53,15 @@ export default function AdminHubScreen() {
             </TouchableOpacity>
           );
         })}
-      </View>
+      </ScrollView>
 
       <ScrollView style={styles.body} contentContainerStyle={{ padding: spacing.md, paddingBottom: spacing.xxl }}>
         {tab === "announce" && <AnnouncementsPanel />}
         {tab === "usage" && <UsageInsightsPanel />}
+        {tab === "summary" && <UserSummaryPanel />}
         {tab === "users" && <UserCheckerPanel />}
         {tab === "gen" && <GeneratorPanel />}
+        {tab === "settings" && <SettingsPanel />}
       </ScrollView>
     </SafeAreaView>
   );
@@ -67,16 +73,18 @@ const styles = StyleSheet.create({
   title: { ...typography.heading, color: colors.ink },
   subtitle: { ...typography.body, color: colors.inkMuted, marginTop: 2 },
   tabBar: {
-    flexDirection: "row",
-    paddingHorizontal: spacing.md,
-    gap: spacing.xs,
+    flexGrow: 0,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.hairline,
     paddingBottom: spacing.sm,
   },
+  tabBarContent: {
+    paddingHorizontal: spacing.md,
+    gap: spacing.xs,
+  },
   tabBtn: {
-    flex: 1,
     paddingVertical: 10,
+    paddingHorizontal: spacing.md,
     borderRadius: 10,
     backgroundColor: colors.surfaceAlt,
     alignItems: "center",

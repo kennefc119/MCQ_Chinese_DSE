@@ -20,6 +20,7 @@ import {
   purchasePkg,
   restorePurchases,
 } from "../lib/revenueCat";
+import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import type { PurchasesPackage } from "react-native-purchases";
 
 const PRIVACY_URL = "https://www.keeonz.ai/zh/legal/privacy/";
@@ -35,6 +36,8 @@ export default function SubscriptionScreen() {
   const [offeringUnavailable, setOfferingUnavailable] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [freeLimit, setFreeLimit] = useState(20);
+  const [premiumLimit, setPremiumLimit] = useState(300);
 
   useEffect(() => {
     getCurrentOffering().then((offering) => {
@@ -43,6 +46,25 @@ export default function SubscriptionScreen() {
       setOfferingUnavailable(!pkg);
       setLoadingOffering(false);
     });
+    // Fetch dynamic AI limits
+    if (isSupabaseConfigured) {
+      (async () => {
+        try {
+          const { data } = await supabase
+            .from("dsemcq_app_settings")
+            .select("key, value")
+            .in("key", ["max_ai_chat_basic", "max_ai_chat_premium"]);
+          if (data) {
+            for (const row of data as { key: string; value: unknown }[]) {
+              const v = typeof row.value === "number" ? row.value : parseInt(String(row.value), 10);
+              if (!Number.isFinite(v)) continue;
+              if (row.key === "max_ai_chat_basic") setFreeLimit(v);
+              if (row.key === "max_ai_chat_premium") setPremiumLimit(v);
+            }
+          }
+        } catch { /* use defaults */ }
+      })();
+    }
   }, []);
 
   // Price string from Apple via RevenueCat; falls back gracefully during load.
@@ -94,9 +116,10 @@ export default function SubscriptionScreen() {
           <View style={[styles.plan, !isPremium && styles.planActive]}>
             <Text style={styles.planName}>{SUB.freePlan.name}</Text>
             <Text style={styles.planPrice}>{SUB.freePlan.price}</Text>
-            {SUB.freePlan.perks.map((p) => (
-              <Text key={p} style={styles.perk}>• {p}</Text>
-            ))}
+            {SUB.freePlan.perks.map((p) => {
+              const display = p.includes("文淵書僮") ? `每月 ${freeLimit} 次 文淵書僮(AI) 問題（每月 1 號自動重置）` : p;
+              return <Text key={p} style={styles.perk}>• {display}</Text>;
+            })}
             {!isPremium && <Text style={styles.currentTag}>{SUB.currentPlanLabel}</Text>}
           </View>
 
@@ -110,9 +133,10 @@ export default function SubscriptionScreen() {
               <Text style={styles.planPrice}>{priceString} / 月</Text>
             )}
 
-            {SUB.premiumPlan.perks.map((p) => (
-              <Text key={p} style={styles.perk}>• {p}</Text>
-            ))}
+            {SUB.premiumPlan.perks.map((p) => {
+              const display = p.includes("文淵書僮") ? `每月 ${premiumLimit} 次 文淵書僮(AI) 問題（每月 1 號自動重置）` : p;
+              return <Text key={p} style={styles.perk}>• {display}</Text>;
+            })}
 
             {isPremium ? (
               <Text style={styles.currentTag}>{SUB.currentPlanLabel}</Text>

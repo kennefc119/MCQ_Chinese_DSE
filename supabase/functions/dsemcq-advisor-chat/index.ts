@@ -66,13 +66,34 @@ Deno.serve(async (req: Request) => {
 
     const used = countResp.count ?? 0;
     const tier = (profileResp.data as { subscription_tier?: string } | null)?.subscription_tier ?? "free";
-    const monthlyLimit = tier === "premium" ? 300 : 30;
+
+    // Read limits from app settings (fall back to defaults if not found)
+    let freeMonthlyLimit = 20;
+    let premiumMonthlyLimit = 300;
+    try {
+      const { data: settingsRows } = await supabase
+        .from("dsemcq_app_settings")
+        .select("key, value")
+        .in("key", ["max_ai_chat_basic", "max_ai_chat_premium"]);
+      if (settingsRows) {
+        for (const row of settingsRows as { key: string; value: unknown }[]) {
+          const v = typeof row.value === "number" ? row.value : parseInt(String(row.value), 10);
+          if (!Number.isFinite(v)) continue;
+          if (row.key === "max_ai_chat_basic") freeMonthlyLimit = v;
+          if (row.key === "max_ai_chat_premium") premiumMonthlyLimit = v;
+        }
+      }
+    } catch {
+      // Settings table unavailable — use defaults
+    }
+
+    const monthlyLimit = tier === "premium" ? premiumMonthlyLimit : freeMonthlyLimit;
 
     if (used >= monthlyLimit) {
       return json({
         error: tier === "premium"
-          ? `高級版每月 ${monthlyLimit} 次已用盡。如需更多請聯絡客服。`
-          : `免費版每月限 ${monthlyLimit} 次，升級至高級版可享每月 300 次。`,
+          ? `學士版每月 ${monthlyLimit} 次已用盡。如需更多請聯絡客服。`
+          : `庶民版每月限 ${monthlyLimit} 次，升級至學士版可享每月 ${premiumMonthlyLimit} 次。`,
         code: "MONTHLY_LIMIT",
       }, 200);
     }

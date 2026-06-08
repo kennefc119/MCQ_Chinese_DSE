@@ -41,9 +41,10 @@ function getDemoReply(input: string): string {
 // navigation from "Ask AI" buttons in result screens.
 let _persistedMessages: Msg[] = [INTRO_MSG];
 
-const GUEST_LIMIT = 10;
-const FREE_MONTHLY_LIMIT = 20;
-const PREMIUM_MONTHLY_LIMIT = 300;
+// Fallback defaults — overridden by dsemcq_app_settings when Supabase is configured
+const DEFAULT_GUEST_LIMIT = 10;
+const DEFAULT_FREE_MONTHLY_LIMIT = 20;
+const DEFAULT_PREMIUM_MONTHLY_LIMIT = 300;
 
 export default function AdvisorChatScreen() {
   const routeParams = useRoute<RouteProp<MainTabsParamList, "Advisor">>().params;
@@ -52,9 +53,35 @@ export default function AdvisorChatScreen() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [monthlyUsed, setMonthlyUsed] = useState<number | null>(null);
+  const [guestLimit, setGuestLimit] = useState(DEFAULT_GUEST_LIMIT);
+  const [freeLimit, setFreeLimit] = useState(DEFAULT_FREE_MONTHLY_LIMIT);
+  const [premiumLimit, setPremiumLimit] = useState(DEFAULT_PREMIUM_MONTHLY_LIMIT);
   const listRef = useRef<FlatList<Msg>>(null);
   const autoSentRef = useRef<typeof routeParams>(undefined);
   const sendRef = useRef<(text: string) => Promise<void>>(async () => {});
+
+  // Fetch chat limits from app settings
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("dsemcq_app_settings")
+          .select("key, value")
+          .in("key", ["max_ai_chat_guest", "max_ai_chat_basic", "max_ai_chat_premium"]);
+        if (error || !data) return; // table may not exist yet — use defaults
+        for (const row of data as { key: string; value: unknown }[]) {
+          const v = typeof row.value === "number" ? row.value : parseInt(String(row.value), 10);
+          if (!Number.isFinite(v)) continue;
+          if (row.key === "max_ai_chat_guest") setGuestLimit(v);
+          if (row.key === "max_ai_chat_basic") setFreeLimit(v);
+          if (row.key === "max_ai_chat_premium") setPremiumLimit(v);
+        }
+      } catch {
+        // Settings table not available — use hardcoded defaults
+      }
+    })();
+  }, []);
 
   // Fetch this month's message count for logged-in users
   const fetchMonthlyUsed = useCallback(async () => {
@@ -84,10 +111,10 @@ export default function AdvisorChatScreen() {
 
     // Guest session limit
     const currentUserMsgCount = _persistedMessages.filter(m => m.role === "user").length;
-    if (isGuest && currentUserMsgCount >= GUEST_LIMIT) {
+    if (isGuest && currentUserMsgCount >= guestLimit) {
       Alert.alert(
         "已達免費使用上限",
-        `訪客可免費使用 AI 顧問 ${GUEST_LIMIT} 次。請登入或登記帳戶以繼續對話。`,
+        `訪客可免費使用 AI 顧問 ${guestLimit} 次。請登入或登記帳戶以繼續對話。`,
         [
           { text: "稍後再算", style: "cancel" },
           { text: "前往登入", style: "default", onPress: signOut },
@@ -98,14 +125,14 @@ export default function AdvisorChatScreen() {
 
     // Monthly limit for logged-in users
     if (!isGuest && user) {
-      const limit = user.subscription_tier === "premium" ? PREMIUM_MONTHLY_LIMIT : FREE_MONTHLY_LIMIT;
+      const limit = user.subscription_tier === "premium" ? premiumLimit : freeLimit;
       const used = monthlyUsed ?? 0;
       if (used >= limit) {
         Alert.alert(
           "本月對話已達上限",
           user.subscription_tier === "premium"
-            ? `學士版每月 ${PREMIUM_MONTHLY_LIMIT} 次已用盡，如需更多請聯絡客服。`
-            : `庶民版每月 ${FREE_MONTHLY_LIMIT} 次已用盡，升級至學士版可享每月 ${PREMIUM_MONTHLY_LIMIT} 次。`,
+            ? `學士版每月 ${premiumLimit} 次已用盡，如需更多請聯絡客服。`
+            : `庶民版每月 ${freeLimit} 次已用盡，升級至學士版可享每月 ${premiumLimit} 次。`,
         );
         return;
       }
@@ -176,7 +203,7 @@ export default function AdvisorChatScreen() {
         <Text style={styles.subtitle}>文言文溫習・應試策略・情緒調節</Text>
         {isGuest && (() => {
           const used = messages.filter(m => m.role === "user").length;
-          const remaining = Math.max(0, GUEST_LIMIT - used);
+          const remaining = Math.max(0, guestLimit - used);
           return (
             <Text style={styles.guestLimit}>
               {remaining > 0 ? `訪客剩餘 ${remaining} 次免費提問` : "訪客免費次數已用盡，請登入繼續"}
@@ -184,12 +211,12 @@ export default function AdvisorChatScreen() {
           );
         })()}
         {!isGuest && user && monthlyUsed !== null && (() => {
-          const limit = user.subscription_tier === "premium" ? PREMIUM_MONTHLY_LIMIT : FREE_MONTHLY_LIMIT;
+          const limit = user.subscription_tier === "premium" ? premiumLimit : freeLimit;
           const remaining = Math.max(0, limit - monthlyUsed);
           const tierLabel = user.subscription_tier === "premium" ? "學士版" : "庶民版";
           return (
             <Text style={styles.guestLimit}>
-              {tierLabel} · 本月剩餘 {remaining} / {limit} 次
+              {tierLabel} · 本月剩餘 {remaining} / {limit} 次（每月 1 號重置）
             </Text>
           );
         })()}

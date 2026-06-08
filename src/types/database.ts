@@ -233,6 +233,104 @@ export interface UsageWindowMetrics {
   chatMessages: number;     // total advisor exchanges (user+bot pairs) in window
 }
 
+/** Single day's usage metrics for the daily bar chart. */
+export interface DailyUsageMetric {
+  date: string;           // YYYY-MM-DD
+  activeUsers: number;
+  newUsers: number;
+  loginEvents: number;
+  visitorDevices: number;
+}
+
+/** AI advisor usage statistics. */
+export interface AIUsageStats {
+  uniqueUsers: number;
+  totalConversations: number;
+  avgOutputLength: number;  // average bot_reply character count
+}
+
+/** Success rate per passage across all students. */
+export interface PassageSuccessRate {
+  passage_id: string;
+  passage_title: string;
+  correct: number;
+  total: number;
+  rate: number;             // 0-1
+}
+
+/** Success rate per difficulty level. */
+export interface DifficultySuccessRate {
+  difficulty: number;
+  correct: number;
+  total: number;
+  rate: number;
+}
+
+/** How often each exercise is chosen by students. */
+export interface ExerciseChoiceItem {
+  quiz_id: string;
+  quiz_title: string;
+  passage_title: string | null;
+  instanceCount: number;
+  percentage: number;       // 0-100
+}
+
+/** Per-student exercise attempt count. */
+export interface StudentExerciseCount {
+  user_id: string;
+  username: string;
+  count: number;
+}
+
+/** Aggregate user demographics & performance summary. */
+export interface UserSummaryStats {
+  totalUsers: number;
+  genderBreakdown: Record<string, number>;
+  dseYearBreakdown: Record<number, number>;
+  subscriptionBreakdown: { free: number; premium: number };
+  statusBreakdown: { active: number; inactive: number };
+  avgWenyuanPoints: number;
+  avgSuccessRate: number;                  // 0-100
+  medianSuccessRate: number;
+  psychTestCompletionRate: number;         // 0-100
+  psychTestCountBreakdown: Record<number, number>; // count of tests → user count
+}
+
+/** Summary of exercise/question inventory. */
+export interface InventorySummary {
+  totalQuizzes: number;
+  totalExercises: number;
+  totalQuestions: number;
+  activeQuestions: number;
+  flaggedQuestions: number;
+  byPassage: { passage_id: string; passage_title: string; questionCount: number; exerciseCount: number }[];
+  byDifficulty: { difficulty: number; count: number }[];
+  byTag: { tag_id: string; tag_label: string; count: number }[];
+}
+
+/** App setting key-value pair. */
+export interface AppSetting {
+  key: string;
+  value: unknown;
+  updated_at: string;
+
+}
+
+/** Education email domain statistics. */
+export interface EduDomainStat {
+  domain: string;
+  count: number;
+}
+
+/** Monthly signups from a specific edu domain. */
+export interface EduDomainMonthly {
+  domain: string;
+  month: string;   // YYYY-MM
+  count: number;
+}
+  updated_by: string | null;
+}
+
 /** A single quiz attempt summary for the user-history admin view. */
 export interface AttemptHistoryItem {
   attempt_id: string;

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useRef, useState, useMemo, useContext, createContext } from "react";
 import {
   View,
   Text,
@@ -25,6 +25,7 @@ import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
 import { extractSkillFromTitle, getQuizTypeSuffix, SKILL_LABELS, SkillLabel } from "../lib/quizDisplayUtils";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
+import { isSupabaseConfigured, supabase } from "../lib/supabase";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
@@ -159,10 +160,14 @@ function VerticalTileInfo({
   );
 }
 
+/** Set of passage IDs exempt from premium lock for basic users. */
+const ExemptContext = createContext<Set<string>>(new Set());
+
 function QuizTile({ item, onPress, passageName, status, tileWidth, tileHeight }: { item: Quiz; onPress: () => void; passageName?: string; status?: "passed" | "failed"; tileWidth: number; tileHeight: number }) {
   const { user, isGuest } = useAuth();
+  const exemptIds = useContext(ExemptContext);
   const pointsLocked = item.min_points_required > (user?.wenyuan_points ?? 0);
-  const tierLocked = !isGuest && !!user && user.subscription_tier !== "premium" && item.type !== "exercise";
+  const tierLocked = !isGuest && !!user && user.subscription_tier !== "premium" && item.type !== "exercise" && !(item.passage_id && exemptIds.has(item.passage_id));
   const locked = pointsLocked || tierLocked;
   const badgeColor = QUIZ_TYPE_COLORS[item.type] ?? colors.primary;
   const skillName = !passageName ? extractSkillFromTitle(item.title) : undefined;
@@ -263,6 +268,7 @@ function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () 
   const { width, height } = useWindowDimensions();
   const { feedPageHeight, feedImageHeight } = computeGridMetrics(width, height);
   const { user, isGuest } = useAuth();
+  const exemptIds = useContext(ExemptContext);
   const nav = useNavigation<Nav>();
   const locked = item.min_points_required > (user?.wenyuan_points ?? 0);
   const badgeColor = QUIZ_TYPE_COLORS[item.type] ?? colors.primary;
@@ -281,7 +287,7 @@ function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () 
       Alert.alert("請先登入", "訪客模式無法作答及儲存成績。請登入或註冊以繼續。");
       return;
     }
-    if (user.subscription_tier !== "premium" && item.type !== "exercise") {
+    if (user.subscription_tier !== "premium" && item.type !== "exercise" && !(item.passage_id && exemptIds.has(item.passage_id))) {
       Alert.alert(
         "需要學士版",
         "測驗及考試功能僅限學士版用戶。庶民版可完成所有練習題，升級即可解鎖全部內容。",
@@ -490,6 +496,26 @@ export default function ExploreScreen() {
   const [filterCompletion, setFilterCompletion] = useState<"passed" | "failed" | null>(null);
   const [filterExpanded, setFilterExpanded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [exemptIds, setExemptIds] = useState<Set<string>>(new Set());
+
+  // Fetch exempt passage IDs from app settings
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("dsemcq_app_settings")
+          .select("value")
+          .eq("key", "exempt_passage_ids")
+          .maybeSingle();
+        if (!error && data && Array.isArray(data.value)) {
+          setExemptIds(new Set(data.value as string[]));
+        }
+      } catch {
+        // Table may not exist yet
+      }
+    })();
+  }, []);
 
   // Always-current ref so the AppState listener never captures a stale closure.
   const loadRef = useRef<() => Promise<void>>(async () => {});
@@ -640,6 +666,7 @@ export default function ExploreScreen() {
   const minPointsOptions = [null, 0, 100, 200] as const;
 
   return (
+    <ExemptContext.Provider value={exemptIds}>
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
         <Text style={styles.title}>探索</Text>
@@ -832,6 +859,7 @@ export default function ExploreScreen() {
         </GestureDetector>
       </Modal>
     </SafeAreaView>
+    </ExemptContext.Provider>
   );
 }
 
