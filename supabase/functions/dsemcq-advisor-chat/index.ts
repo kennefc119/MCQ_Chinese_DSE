@@ -59,13 +59,15 @@ Deno.serve(async (req: Request) => {
         .gte("created_at", startOfMonth.toISOString()),
       supabase
         .from("dsemcq_profiles")
-        .select("subscription_tier")
+        .select("subscription_tier, bonus_ai_chat")
         .eq("id", userId)
         .single(),
     ]);
 
     const used = countResp.count ?? 0;
-    const tier = (profileResp.data as { subscription_tier?: string } | null)?.subscription_tier ?? "free";
+    const profile = profileResp.data as { subscription_tier?: string; bonus_ai_chat?: number } | null;
+    const tier = profile?.subscription_tier ?? "free";
+    const bonusChat = profile?.bonus_ai_chat ?? 0;
 
     // Read limits from app settings (fall back to defaults if not found)
     let freeMonthlyLimit = 20;
@@ -87,13 +89,14 @@ Deno.serve(async (req: Request) => {
       // Settings table unavailable — use defaults
     }
 
-    const monthlyLimit = tier === "premium" ? premiumMonthlyLimit : freeMonthlyLimit;
+    const baseLimit = tier === "premium" ? premiumMonthlyLimit : freeMonthlyLimit;
+    const monthlyLimit = baseLimit + bonusChat;
 
     if (used >= monthlyLimit) {
       return json({
         error: tier === "premium"
-          ? `學士版每月 ${monthlyLimit} 次已用盡。如需更多請聯絡客服。`
-          : `庶民版每月限 ${monthlyLimit} 次，升級至學士版可享每月 ${premiumMonthlyLimit} 次。`,
+          ? `學士版每月 ${baseLimit}${bonusChat > 0 ? ` + ${bonusChat} 額外` : ""} 次已用盡。如需更多請聯絡客服。`
+          : `庶民版每月限 ${baseLimit}${bonusChat > 0 ? ` + ${bonusChat} 額外` : ""} 次，升級至學士版可享每月 ${premiumMonthlyLimit} 次。`,
         code: "MONTHLY_LIMIT",
       }, 200);
     }

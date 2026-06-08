@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { View, Text, StyleSheet, TextInput, FlatList, KeyboardAvoidingView, Platform, TouchableOpacity, Alert } from "react-native";
+import { View, Text, StyleSheet, TextInput, FlatList, KeyboardAvoidingView, Platform, TouchableOpacity, Alert, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import Markdown from "react-native-markdown-display";
+import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, typography } from "../theme";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
@@ -48,7 +49,7 @@ const DEFAULT_PREMIUM_MONTHLY_LIMIT = 300;
 
 export default function AdvisorChatScreen() {
   const routeParams = useRoute<RouteProp<MainTabsParamList, "Advisor">>().params;
-  const { user, isGuest, signOut } = useAuth();
+  const { user, isGuest, signOut, updateProfile } = useAuth();
   const [messages, setMessages] = useState<Msg[]>(_persistedMessages);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -56,11 +57,18 @@ export default function AdvisorChatScreen() {
   const [guestLimit, setGuestLimit] = useState(DEFAULT_GUEST_LIMIT);
   const [freeLimit, setFreeLimit] = useState(DEFAULT_FREE_MONTHLY_LIMIT);
   const [premiumLimit, setPremiumLimit] = useState(DEFAULT_PREMIUM_MONTHLY_LIMIT);
+  // Bonus system
+  const [bonusCost, setBonusCost] = useState(100);   // points per 1 bonus chat
+  const [bonusMax, setBonusMax] = useState(20);       // max bonus any user can have
+  const [showBonusModal, setShowBonusModal] = useState(false);
+  const [bonusQty, setBonusQty] = useState(1);
   const listRef = useRef<FlatList<Msg>>(null);
   const autoSentRef = useRef<typeof routeParams>(undefined);
   const sendRef = useRef<(text: string) => Promise<void>>(async () => {});
 
-  // Fetch chat limits from app settings
+  const userBonus = user?.bonus_ai_chat ?? 0;
+
+  // Fetch chat limits + bonus config from app settings
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     (async () => {
@@ -68,14 +76,16 @@ export default function AdvisorChatScreen() {
         const { data, error } = await supabase
           .from("dsemcq_app_settings")
           .select("key, value")
-          .in("key", ["max_ai_chat_guest", "max_ai_chat_basic", "max_ai_chat_premium"]);
-        if (error || !data) return; // table may not exist yet — use defaults
+          .in("key", ["max_ai_chat_guest", "max_ai_chat_basic", "max_ai_chat_premium", "bonus_ai_chat_cost", "bonus_ai_chat_max"]);
+        if (error || !data) return;
         for (const row of data as { key: string; value: unknown }[]) {
           const v = typeof row.value === "number" ? row.value : parseInt(String(row.value), 10);
           if (!Number.isFinite(v)) continue;
           if (row.key === "max_ai_chat_guest") setGuestLimit(v);
           if (row.key === "max_ai_chat_basic") setFreeLimit(v);
           if (row.key === "max_ai_chat_premium") setPremiumLimit(v);
+          if (row.key === "bonus_ai_chat_cost") setBonusCost(v);
+          if (row.key === "bonus_ai_chat_max") setBonusMax(v);
         }
       } catch {
         // Settings table not available — use hardcoded defaults
@@ -125,14 +135,15 @@ export default function AdvisorChatScreen() {
 
     // Monthly limit for logged-in users
     if (!isGuest && user) {
-      const limit = user.subscription_tier === "premium" ? premiumLimit : freeLimit;
+      const baseLimit = user.subscription_tier === "premium" ? premiumLimit : freeLimit;
+      const limit = baseLimit + userBonus;
       const used = monthlyUsed ?? 0;
       if (used >= limit) {
         Alert.alert(
           "本月對話已達上限",
           user.subscription_tier === "premium"
-            ? `學士版每月 ${premiumLimit} 次已用盡，如需更多請聯絡客服。`
-            : `庶民版每月 ${freeLimit} 次已用盡，升級至學士版可享每月 ${premiumLimit} 次。`,
+            ? `學士版每月 ${premiumLimit}${userBonus > 0 ? ` + ${userBonus} 額外` : ""} 次已用盡，如需更多請聯絡客服。`
+            : `庶民版每月 ${freeLimit}${userBonus > 0 ? ` + ${userBonus} 額外` : ""} 次已用盡，升級至學士版可享每月 ${premiumLimit} 次。`,
         );
         return;
       }
@@ -195,12 +206,53 @@ export default function AdvisorChatScreen() {
     await sendMessage(text);
   };
 
+  // Bonus purchase handler
+  const canBuyBonus = !isGuest && user && (user.wenyuan_points ?? 0) >= bonusCost && userBonus < bonusMax;
+  const maxBuyable = Math.min(
+    Math.floor((user?.wenyuan_points ?? 0) / bonusCost),
+    bonusMax - userBonus
+  );
+
+  const handleBuyBonus = async () => {
+    if (!user || bonusQty < 1 || bonusQty > maxBuyable) return;
+    const cost = bonusQty * bonusCost;
+    const newBonus = userBonus + bonusQty;
+    const newPoints = (user.wenyuan_points ?? 0) - cost;
+
+    Alert.alert(
+      "確認兌換",
+      `扣除 ${cost} 文淵點，換取 ${bonusQty} 次額外月度 AI 對話配額？\n\n文淵點：${user.wenyuan_points} → ${newPoints}\n額外配額：${userBonus} → ${newBonus}`,
+      [
+        { text: "取消", style: "cancel" },
+        {
+          text: "確認兌換",
+          onPress: async () => {
+            await updateProfile({ wenyuan_points: newPoints, bonus_ai_chat: newBonus });
+            setShowBonusModal(false);
+            setBonusQty(1);
+            Alert.alert("兌換成功", `已獲得 ${bonusQty} 次額外 AI 對話配額！`);
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ContentContainer>
       <View style={styles.header}>
-        <Text style={styles.title}>{BOT_NAME}</Text>
-        <Text style={styles.subtitle}>文言文溫習・應試策略・情緒調節</Text>
+        <View style={styles.headerRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.title}>{BOT_NAME}</Text>
+            <Text style={styles.subtitle}>文言文溫習・應試策略・情緒調節</Text>
+          </View>
+          {canBuyBonus && (
+            <TouchableOpacity style={styles.bonusBtn} onPress={() => { setBonusQty(1); setShowBonusModal(true); }} activeOpacity={0.7}>
+              <Ionicons name="add-circle-outline" size={16} color={colors.gold} />
+              <Text style={styles.bonusBtnText}>兌換配額</Text>
+            </TouchableOpacity>
+          )}
+        </View>
         {isGuest && (() => {
           const used = messages.filter(m => m.role === "user").length;
           const remaining = Math.max(0, guestLimit - used);
@@ -211,16 +263,60 @@ export default function AdvisorChatScreen() {
           );
         })()}
         {!isGuest && user && monthlyUsed !== null && (() => {
-          const limit = user.subscription_tier === "premium" ? premiumLimit : freeLimit;
-          const remaining = Math.max(0, limit - monthlyUsed);
+          const baseLimit = user.subscription_tier === "premium" ? premiumLimit : freeLimit;
+          const effectiveLimit = baseLimit + userBonus;
+          const remaining = Math.max(0, effectiveLimit - monthlyUsed);
           const tierLabel = user.subscription_tier === "premium" ? "學士版" : "庶民版";
+          const bonusLabel = userBonus > 0 ? ` + ${userBonus} 額外` : "";
           return (
             <Text style={styles.guestLimit}>
-              {tierLabel} · 本月剩餘 {remaining} / {limit} 次（每月 1 號重置）
+              {tierLabel} · 本月剩餘 {remaining} / {effectiveLimit} 次{bonusLabel}（每月 1 號重置）
             </Text>
           );
         })()}
       </View>
+
+      {/* Bonus purchase modal */}
+      <Modal visible={showBonusModal} transparent animationType="fade" onRequestClose={() => setShowBonusModal(false)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowBonusModal(false)}>
+          <TouchableOpacity style={styles.modalCard} activeOpacity={1} onPress={() => {}}>
+            <Text style={styles.modalTitle}>兌換額外 AI 對話配額</Text>
+            <Text style={styles.modalDesc}>
+              使用文淵點兌換永久額外月度 AI 對話配額。{"\n"}
+              兌換比率：{bonusCost} 文淵點 = 1 次額外配額{"\n"}
+              上限：{bonusMax} 次（目前已有 {userBonus} 次）
+            </Text>
+            <Text style={styles.modalInfo}>你的文淵點：{user?.wenyuan_points ?? 0}</Text>
+            <Text style={styles.modalInfo}>可兌換數量：最多 {maxBuyable} 次</Text>
+
+            {maxBuyable > 0 ? (
+              <>
+                <View style={styles.qtyRow}>
+                  <TouchableOpacity style={styles.qtyBtn} onPress={() => setBonusQty(Math.max(1, bonusQty - 1))}>
+                    <Text style={styles.qtyBtnText}>−</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.qtyValue}>{bonusQty}</Text>
+                  <TouchableOpacity style={styles.qtyBtn} onPress={() => setBonusQty(Math.min(maxBuyable, bonusQty + 1))}>
+                    <Text style={styles.qtyBtnText}>＋</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.modalCost}>消耗 {bonusQty * bonusCost} 文淵點</Text>
+                <TouchableOpacity style={styles.modalConfirmBtn} onPress={handleBuyBonus} activeOpacity={0.8}>
+                  <Text style={styles.modalConfirmText}>確認兌換</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <Text style={styles.modalWarn}>
+                {userBonus >= bonusMax ? "已達額外配額上限" : "文淵點不足"}
+              </Text>
+            )}
+
+            <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowBonusModal(false)}>
+              <Text style={styles.modalCloseText}>關閉</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }} keyboardVerticalOffset={80}>
         <FlatList
           ref={listRef}
@@ -259,9 +355,12 @@ export default function AdvisorChatScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   header: { padding: spacing.md, borderBottomWidth: 1, borderColor: colors.border },
+  headerRow: { flexDirection: "row", alignItems: "center" },
   title: { ...typography.heading, color: colors.primary },
   subtitle: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
   guestLimit: { ...typography.caption, color: colors.warning, marginTop: 4 },
+  bonusBtn: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surfaceAlt, borderRadius: 8, paddingVertical: 6, paddingHorizontal: 10, gap: 4 },
+  bonusBtnText: { ...typography.caption, color: colors.gold, fontWeight: "600" },
   bubble: { padding: spacing.md, borderRadius: 14, marginBottom: spacing.sm, maxWidth: "85%" },
   userBubble: { backgroundColor: colors.primary, alignSelf: "flex-end" },
   aiBubble: { backgroundColor: colors.surface, alignSelf: "flex-start", borderWidth: 1, borderColor: colors.border },
@@ -271,6 +370,22 @@ const styles = StyleSheet.create({
   input: { flex: 1, color: colors.textPrimary, backgroundColor: colors.surface, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, maxHeight: 120, marginRight: spacing.sm },
   sendBtn: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20 },
   sendText: { color: "#FFFFFF", fontWeight: "700" },
+  // Bonus modal
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: spacing.lg },
+  modalCard: { backgroundColor: colors.surface, borderRadius: 16, padding: spacing.lg, width: "100%", maxWidth: 360 },
+  modalTitle: { ...typography.subheading, color: colors.ink, fontWeight: "700", marginBottom: spacing.sm },
+  modalDesc: { ...typography.caption, color: colors.inkMuted, lineHeight: 20, marginBottom: spacing.sm },
+  modalInfo: { ...typography.body, color: colors.ink, marginBottom: 4 },
+  modalCost: { ...typography.body, color: colors.primary, fontWeight: "700", textAlign: "center", marginTop: spacing.sm },
+  modalWarn: { ...typography.body, color: colors.warning, textAlign: "center", marginTop: spacing.md },
+  qtyRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.md, marginTop: spacing.md },
+  qtyBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surfaceAlt, alignItems: "center", justifyContent: "center" },
+  qtyBtnText: { fontSize: 20, color: colors.ink, fontWeight: "700" },
+  qtyValue: { ...typography.heading, color: colors.ink, fontWeight: "700", minWidth: 40, textAlign: "center" },
+  modalConfirmBtn: { backgroundColor: colors.gold, borderRadius: 10, paddingVertical: 12, alignItems: "center", marginTop: spacing.md },
+  modalConfirmText: { ...typography.button, color: "#fff" },
+  modalCloseBtn: { marginTop: spacing.sm, alignItems: "center", paddingVertical: 8 },
+  modalCloseText: { ...typography.body, color: colors.inkMuted },
 });
 
 // Markdown styles for AI reply bubbles

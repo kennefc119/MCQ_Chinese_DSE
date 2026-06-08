@@ -14,6 +14,7 @@ export interface Profile {
   role: Role;
   subscription_tier: "free" | "premium";
   subscription_status: "active" | "inactive";
+  bonus_ai_chat: number;       // permanent bonus monthly AI chat quota
   created_at: string;
 }
 

@@ -36,6 +36,8 @@ export default function SettingsPanel() {
   const [maxAIChatGuest, setMaxAIChatGuest] = useState("10");
   const [maxAIChatBasic, setMaxAIChatBasic] = useState("20");
   const [maxAIChatPremium, setMaxAIChatPremium] = useState("300");
+  const [bonusCost, setBonusCost] = useState("100");
+  const [bonusMax, setBonusMax] = useState("20");
   const [exemptPassageIds, setExemptPassageIds] = useState<Set<string>>(new Set());
 
   const [inventory, setInventory] = useState<InventorySummary | null>(null);
@@ -53,6 +55,8 @@ export default function SettingsPanel() {
     if (settingsMap.max_ai_chat_guest != null) setMaxAIChatGuest(String(settingsMap.max_ai_chat_guest));
     if (settingsMap.max_ai_chat_basic != null) setMaxAIChatBasic(String(settingsMap.max_ai_chat_basic));
     if (settingsMap.max_ai_chat_premium != null) setMaxAIChatPremium(String(settingsMap.max_ai_chat_premium));
+    if (settingsMap.bonus_ai_chat_cost != null) setBonusCost(String(settingsMap.bonus_ai_chat_cost));
+    if (settingsMap.bonus_ai_chat_max != null) setBonusMax(String(settingsMap.bonus_ai_chat_max));
     if (Array.isArray(settingsMap.exempt_passage_ids)) setExemptPassageIds(new Set(settingsMap.exempt_passage_ids as string[]));
     setAllPassages(passages);
     setInventory(inv);
@@ -73,8 +77,10 @@ export default function SettingsPanel() {
           const guestN = parseInt(maxAIChatGuest, 10);
           const basicN = parseInt(maxAIChatBasic, 10);
           const premiumN = parseInt(maxAIChatPremium, 10);
-          if ([guestN, basicN, premiumN].some((v) => !Number.isFinite(v) || v < 0)) {
-            Alert.alert("錯誤", "AI 對話上限請輸入非負整數");
+          const costN = parseInt(bonusCost, 10);
+          const maxN = parseInt(bonusMax, 10);
+          if ([guestN, basicN, premiumN, costN, maxN].some((v) => !Number.isFinite(v) || v < 0)) {
+            Alert.alert("錯誤", "所有數值請輸入非負整數");
             return;
           }
           setSaving(true);
@@ -82,6 +88,8 @@ export default function SettingsPanel() {
             updateAppSetting("max_ai_chat_guest", guestN, uid),
             updateAppSetting("max_ai_chat_basic", basicN, uid),
             updateAppSetting("max_ai_chat_premium", premiumN, uid),
+            updateAppSetting("bonus_ai_chat_cost", costN, uid),
+            updateAppSetting("bonus_ai_chat_max", maxN, uid),
             updateAppSetting("exempt_passage_ids", [...exemptPassageIds], uid),
           ]);
           setSaving(false);
@@ -139,6 +147,17 @@ export default function SettingsPanel() {
 
         <Text style={[styles.label, { marginTop: spacing.sm }]}>學士版（Premium）每月上限</Text>
         <TextInput style={styles.input} value={maxAIChatPremium} onChangeText={setMaxAIChatPremium} keyboardType="number-pad" placeholder="300" />
+      </CollapsibleSection>
+
+      {/* 1b. Bonus AI Chat */}
+      <CollapsibleSection title="文淵點兌換 AI 配額" subtitle="用戶以文淵點換取額外配額">
+        <Text style={styles.label}>兌換比率（文淵點 / 1次額外配額）</Text>
+        <TextInput style={styles.input} value={bonusCost} onChangeText={setBonusCost} keyboardType="number-pad" placeholder="100" />
+        <Text style={styles.hint}>用戶需消耗多少文淵點才能兌換 1 次永久額外月度配額</Text>
+
+        <Text style={[styles.label, { marginTop: spacing.sm }]}>額外配額上限</Text>
+        <TextInput style={styles.input} value={bonusMax} onChangeText={setBonusMax} keyboardType="number-pad" placeholder="20" />
+        <Text style={styles.hint}>任何用戶可累積的最大額外配額次數</Text>
       </CollapsibleSection>
 
       {/* 2. Exempt Passages */}
