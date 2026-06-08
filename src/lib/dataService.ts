@@ -574,6 +574,7 @@ export async function submitAttempt(
 export interface QuestionAnalyticsMeta {
   tagIds: string[];
   correctOptionId: string | null;
+  difficulty: number;
 }
 
 export async function fetchQuestionAnalyticsData(
@@ -588,12 +589,12 @@ export async function fetchQuestionAnalyticsData(
       const q = SEED_QUESTIONS.find((sq) => sq.id === id);
       if (!q) continue;
       const correctOpt = q.options.find((o) => o.is_correct);
-      meta[id] = { tagIds: q.tag_ids ?? [], correctOptionId: correctOpt?.id ?? null };
+      meta[id] = { tagIds: q.tag_ids ?? [], correctOptionId: correctOpt?.id ?? null, difficulty: q.difficulty ?? 1 };
     }
     return meta;
   }
 
-  const [{ data: tagRows, error: tagErr }, { data: optRows, error: optErr }] = await Promise.all([
+  const [{ data: tagRows, error: tagErr }, { data: optRows, error: optErr }, { data: diffRows, error: diffErr }] = await Promise.all([
     supabase
       .from("dsemcq_question_tags")
       .select("question_id, tag_id")
@@ -603,13 +604,21 @@ export async function fetchQuestionAnalyticsData(
       .select("id, question_id")
       .in("question_id", questionIds)
       .eq("is_correct", true),
+    supabase
+      .from("dsemcq_questions")
+      .select("id, difficulty")
+      .in("id", questionIds),
   ]);
 
   if (tagErr) console.warn("[dsemcq] fetchQuestionAnalyticsData tags error:", tagErr.message);
   if (optErr) console.warn("[dsemcq] fetchQuestionAnalyticsData options error:", optErr.message);
+  if (diffErr) console.warn("[dsemcq] fetchQuestionAnalyticsData difficulty error:", diffErr.message);
 
   const meta: Record<string, QuestionAnalyticsMeta> = {};
-  for (const id of questionIds) meta[id] = { tagIds: [], correctOptionId: null };
+  for (const id of questionIds) meta[id] = { tagIds: [], correctOptionId: null, difficulty: 1 };
+  for (const row of diffRows ?? []) {
+    if (meta[row.id]) meta[row.id].difficulty = row.difficulty ?? 1;
+  }
   for (const row of tagRows ?? []) {
     meta[row.question_id]?.tagIds.push(row.tag_id);
   }

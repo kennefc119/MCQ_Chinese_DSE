@@ -5,12 +5,14 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, typography } from "../theme";
+import { BarChart, PieChart } from "react-native-gifted-charts";
+import { colors, spacing, typography, QUIZ_TYPE_COLORS, QUIZ_TYPE_LABEL } from "../theme";
 import { PsychTest, Attempt, Quiz, Passage } from "../types/database";
 import { listPsychTests, listUserAttempts, listQuizzes, listPassages, listUserPsychResults, fetchQuestionAnalyticsData, QuestionAnalyticsMeta } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
 import RadarChart from "../components/RadarChart";
+import CollapsibleSection from "../components/CollapsibleSection";
 import { TABLET_BREAKPOINT, CONTENT_MAX_WIDTH } from "../hooks/useDeviceType";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
@@ -124,12 +126,196 @@ export default function DiscoverSelfScreen() {
     return { skillAxes: axes, skillValues: values };
   }, [attempts, questionMeta]);
 
+  // ── Summary metrics ──────────────────────────────────────────────────
+  const metrics = useMemo(() => {
+    const totalQuestions = attempts.reduce((s, a) => s + (a.total ?? 0), 0);
+    const totalCorrect = attempts.reduce((s, a) => s + (a.score ?? 0), 0);
+    const avgAccuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+    const quizzesCompleted = attempts.length;
+    const avgTime = attempts.length > 0
+      ? Math.round(attempts.reduce((s, a) => s + (a.time_spent_seconds ?? 0), 0) / attempts.length)
+      : 0;
+
+    // Best pass streak
+    let bestStreak = 0;
+    let currentStreak = 0;
+    for (const a of [...attempts].sort((x, y) => (x.submitted_at ?? "").localeCompare(y.submitted_at ?? ""))) {
+      const quiz = quizMap[a.quiz_id];
+      const passed = quiz && a.score != null && a.total > 0 && (a.score / a.total) >= ((quiz.pass_score ?? 60) / 100);
+      if (passed) { currentStreak++; bestStreak = Math.max(bestStreak, currentStreak); }
+      else { currentStreak = 0; }
+    }
+
+    return { totalQuestions, totalCorrect, avgAccuracy, quizzesCompleted, avgTime, bestStreak };
+  }, [attempts, quizMap]);
+
+  // ── Accuracy trend (last 20 attempts, chronological) ─────────────────
+  const accuracyTrendData = useMemo(() => {
+    const sorted = [...attempts]
+      .sort((a, b) => (a.submitted_at ?? "").localeCompare(b.submitted_at ?? ""))
+      .slice(-20);
+    return sorted.map((a, i) => ({
+      value: a.total > 0 ? Math.round(((a.score ?? 0) / a.total) * 100) : 0,
+      label: `${i + 1}`,
+      frontColor: a.total > 0 && (a.score ?? 0) / a.total >= ((quizMap[a.quiz_id]?.pass_score ?? 60) / 100)
+        ? colors.success
+        : colors.primary,
+    }));
+  }, [attempts, quizMap]);
+
+  // ── Quiz type distribution by questions (pie) ────────────────────────
+  const typeDistribution = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const a of attempts) {
+      const type = quizMap[a.quiz_id]?.type ?? "exercise";
+      counts[type] = (counts[type] ?? 0) + (a.total ?? 0);
+    }
+    const pieColors: Record<string, string> = { exercise: QUIZ_TYPE_COLORS.exercise, quiz: QUIZ_TYPE_COLORS.quiz, exam: QUIZ_TYPE_COLORS.exam };
+    return Object.entries(counts).map(([type, count]) => ({
+      value: count,
+      color: pieColors[type] ?? colors.primary,
+      text: QUIZ_TYPE_LABEL[type] ?? type,
+    }));
+  }, [attempts, quizMap]);
+
+  const totalQuestionsAnswered = useMemo(() => attempts.reduce((s, a) => s + (a.total ?? 0), 0), [attempts]);
+
+  // ── Passage distribution by questions (pie) ──────────────────────────
+  const PASSAGE_PIE_COLORS = [
+    "#B23A2E", "#B68A3E", "#5C8A50", "#4A7CA8", "#8B5E3C",
+    "#C28A1E", "#7B6B8D", "#D9847A", "#3E8A7A", "#A85C4A",
+    "#6B8A3E", "#8A5C7A",
+  ];
+  const passageDistribution = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const a of attempts) {
+      const quiz = quizMap[a.quiz_id];
+      if (!quiz?.passage_id) continue;
+      counts[quiz.passage_id] = (counts[quiz.passage_id] ?? 0) + (a.total ?? 0);
+    }
+    const passageMap = passages.reduce<Record<string, string>>((m, p) => ({ ...m, [p.id]: p.title.replace(/（節錄）$/, "") }), {});
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([pid, count], i) => ({
+        value: count,
+        color: PASSAGE_PIE_COLORS[i % PASSAGE_PIE_COLORS.length],
+        text: passageMap[pid] ?? pid,
+      }));
+  }, [attempts, quizMap, passages]);
+
+  // ── Skill distribution (pie) ─────────────────────────────────────────
+  const SKILL_PIE_COLORS = [
+    "#B23A2E", "#B68A3E", "#5C8A50", "#4A7CA8",
+    "#8B5E3C", "#C28A1E", "#7B6B8D", "#D9847A",
+  ];
+  const skillDistribution = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const attempt of attempts) {
+      for (const [questionId] of Object.entries(attempt.answers ?? {})) {
+        const meta = questionMeta[questionId];
+        if (!meta) continue;
+        for (const tagId of meta.tagIds) {
+          counts[tagId] = (counts[tagId] ?? 0) + 1;
+        }
+      }
+    }
+    return SKILL_TAGS
+      .filter((t) => (counts[t.id] ?? 0) > 0)
+      .map((t, i) => ({
+        value: counts[t.id],
+        color: SKILL_PIE_COLORS[i % SKILL_PIE_COLORS.length],
+        text: t.label,
+      }));
+  }, [attempts, questionMeta]);
+
+  // ── Accuracy by question difficulty (bar) ─────────────────────────────
+  const difficultyPassRate = useMemo(() => {
+    const correct: Record<number, number> = {};
+    const total: Record<number, number> = {};
+    for (const attempt of attempts) {
+      for (const [questionId, selectedOptionId] of Object.entries(attempt.answers ?? {})) {
+        const meta = questionMeta[questionId];
+        if (!meta) continue;
+        const diff = Math.round(meta.difficulty) || 1;
+        total[diff] = (total[diff] ?? 0) + 1;
+        if (meta.correctOptionId === selectedOptionId) {
+          correct[diff] = (correct[diff] ?? 0) + 1;
+        }
+      }
+    }
+    return [1, 2, 3, 4, 5].map((d) => ({
+      value: total[d] ? Math.round(((correct[d] ?? 0) / total[d]) * 100) : 0,
+      label: "★".repeat(d),
+      frontColor: colors.gold,
+    }));
+  }, [attempts, questionMeta]);
+
+  // ── Daily activity (last 14 days) ────────────────────────────────────
+  const dailyActivity = useMemo(() => {
+    const now = new Date();
+    const days: { date: string; label: string }[] = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      days.push({ date: d.toISOString().slice(0, 10), label: `${d.getMonth() + 1}/${d.getDate()}` });
+    }
+    const counts: Record<string, number> = {};
+    for (const a of attempts) {
+      const day = (a.submitted_at ?? a.started_at).slice(0, 10);
+      counts[day] = (counts[day] ?? 0) + (a.total ?? 0);
+    }
+    return days.map((d) => ({
+      value: counts[d.date] ?? 0,
+      label: d.label,
+      frontColor: (counts[d.date] ?? 0) > 0 ? colors.success : colors.surfaceAlt,
+    }));
+  }, [attempts]);
+
+  const formatTime = (seconds: number) => {
+    if (seconds < 60) return `${seconds}秒`;
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return s > 0 ? `${m}分${s}秒` : `${m}分鐘`;
+  };
+
+  const chartBarWidth = Math.max(contentWidth - spacing.md * 4 - 40, 200);
+
   const ListHeader = (
     <View>
       <View style={styles.header}>
         <Text style={styles.title}>認識自己</Text>
         <Text style={styles.subtitle}>輕鬆小測驗　・　了解學習風格與職涯傾向</Text>
       </View>
+
+      {/* ── Metric cards ──────────────────────────── */}
+      {attempts.length > 0 && (
+        <View style={styles.metricGrid}>
+          <View style={styles.metricCard}>
+            <Text style={styles.metricValue}>{metrics.totalQuestions}</Text>
+            <Text style={styles.metricLabel}>總作答題數</Text>
+          </View>
+          <View style={styles.metricCard}>
+            <Text style={[styles.metricValue, { color: colors.success }]}>{metrics.avgAccuracy}%</Text>
+            <Text style={styles.metricLabel}>平均正確率</Text>
+          </View>
+          <View style={styles.metricCard}>
+            <Text style={[styles.metricValue, { color: colors.gold }]}>{user?.wenyuan_points ?? 0}</Text>
+            <Text style={styles.metricLabel}>文淵點</Text>
+          </View>
+          <View style={styles.metricCard}>
+            <Text style={styles.metricValue}>{metrics.quizzesCompleted}</Text>
+            <Text style={styles.metricLabel}>完成測驗數</Text>
+          </View>
+          <View style={styles.metricCard}>
+            <Text style={[styles.metricValue, { color: colors.primary }]}>{metrics.bestStreak}</Text>
+            <Text style={styles.metricLabel}>最佳連勝</Text>
+          </View>
+          <View style={styles.metricCard}>
+            <Text style={styles.metricValue}>{formatTime(metrics.avgTime)}</Text>
+            <Text style={styles.metricLabel}>平均用時</Text>
+          </View>
+        </View>
+      )}
 
       {/* ── Passage radar ─────────────────────────── */}
       <View style={styles.analyticsCard}>
@@ -166,6 +352,175 @@ export default function DiscoverSelfScreen() {
           />
         </View>
       </View>
+
+      {/* ── Detailed analysis charts ──────────────── */}
+      {attempts.length > 0 && (
+        <>
+          {/* Accuracy trend */}
+          <CollapsibleSection title="答題正確率趨勢" subtitle={`最近 ${accuracyTrendData.length} 次`}>
+            <Text style={styles.analyticsHint}>綠色＝及格，紅色＝未及格</Text>
+            <BarChart
+              data={accuracyTrendData}
+              width={chartBarWidth}
+              barWidth={Math.max(8, Math.min(20, chartBarWidth / accuracyTrendData.length - 4))}
+              spacing={Math.max(4, chartBarWidth / accuracyTrendData.length - 20)}
+              maxValue={100}
+              noOfSections={5}
+              yAxisTextStyle={{ color: colors.textMuted, fontSize: 10 }}
+              xAxisLabelTextStyle={{ color: colors.textMuted, fontSize: 9 }}
+              yAxisSuffix="%"
+              hideRules={false}
+              rulesColor={colors.hairline}
+              barBorderRadius={3}
+              isAnimated
+            />
+          </CollapsibleSection>
+
+          {/* Distribution: 3 pie charts */}
+          {(typeDistribution.length > 0 || passageDistribution.length > 0 || skillDistribution.length > 0) && (
+            <CollapsibleSection title="題型分佈" subtitle={`按題目統計・${totalQuestionsAnswered} 題`}>
+
+              {/* 1. By quiz type */}
+              {typeDistribution.length > 0 && (
+                <>
+                  <Text style={styles.pieSubtitle}>按類型</Text>
+                  <Text style={styles.analyticsHint}>練習 / 測驗 / 模擬試（題數）</Text>
+                  <View style={styles.pieRow}>
+                    <PieChart
+                      data={typeDistribution.map((d, i) => ({ ...d, text: `${i + 1}` }))}
+                      radius={60}
+                      showText
+                      textColor="#fff"
+                      textSize={11}
+                      focusOnPress
+                      innerRadius={30}
+                      innerCircleColor={colors.surface}
+                      centerLabelComponent={() => (
+                        <View style={{ alignItems: "center" }}>
+                          <Text style={{ color: colors.ink, fontWeight: "700", fontSize: 15 }}>{totalQuestionsAnswered}</Text>
+                          <Text style={{ color: colors.textMuted, fontSize: 9 }}>題</Text>
+                        </View>
+                      )}
+                    />
+                    <View style={styles.pieSideLegend}>
+                      {typeDistribution.map((d, i) => (
+                        <View key={d.text} style={styles.pieSideLegendRow}>
+                          <View style={[styles.pieSideLegendIdx, { backgroundColor: d.color }]}>
+                            <Text style={styles.pieSideLegendIdxText}>{i + 1}</Text>
+                          </View>
+                          <Text style={styles.pieSideLegendLabel} numberOfLines={1}>{d.text}</Text>
+                          <Text style={styles.pieSideLegendValue}>{d.value}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                </>
+              )}
+
+              {/* 2. By passage */}
+              {passageDistribution.length > 0 && (
+                <>
+                  <View style={styles.pieDivider} />
+                  <Text style={styles.pieSubtitle}>按篇章</Text>
+                  <Text style={styles.analyticsHint}>各篇章的答題數量</Text>
+                  <View style={styles.pieRow}>
+                    <PieChart
+                      data={passageDistribution.map((d, i) => ({ ...d, text: `${i + 1}` }))}
+                      radius={60}
+                      showText
+                      textColor="#fff"
+                      textSize={9}
+                      focusOnPress
+                      innerRadius={30}
+                      innerCircleColor={colors.surface}
+                    />
+                    <View style={styles.pieSideLegend}>
+                      {passageDistribution.map((d, i) => (
+                        <View key={d.text} style={styles.pieSideLegendRow}>
+                          <View style={[styles.pieSideLegendIdx, { backgroundColor: d.color }]}>
+                            <Text style={styles.pieSideLegendIdxText}>{i + 1}</Text>
+                          </View>
+                          <Text style={styles.pieSideLegendLabel} numberOfLines={1}>{d.text}</Text>
+                          <Text style={styles.pieSideLegendValue}>{d.value}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                </>
+              )}
+
+              {/* 3. By skill */}
+              {skillDistribution.length > 0 && (
+                <>
+                  <View style={styles.pieDivider} />
+                  <Text style={styles.pieSubtitle}>按考核能力</Text>
+                  <Text style={styles.analyticsHint}>各技能的答題數量</Text>
+                  <View style={styles.pieRow}>
+                    <PieChart
+                      data={skillDistribution.map((d, i) => ({ ...d, text: `${i + 1}` }))}
+                      radius={60}
+                      showText
+                      textColor="#fff"
+                      textSize={9}
+                      focusOnPress
+                      innerRadius={30}
+                      innerCircleColor={colors.surface}
+                    />
+                    <View style={styles.pieSideLegend}>
+                      {skillDistribution.map((d, i) => (
+                        <View key={d.text} style={styles.pieSideLegendRow}>
+                          <View style={[styles.pieSideLegendIdx, { backgroundColor: d.color }]}>
+                            <Text style={styles.pieSideLegendIdxText}>{i + 1}</Text>
+                          </View>
+                          <Text style={styles.pieSideLegendLabel}>{d.text}</Text>
+                          <Text style={styles.pieSideLegendValue}>{d.value}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                </>
+              )}
+
+            </CollapsibleSection>
+          )}
+
+          {/* Pass rate by difficulty */}
+          <CollapsibleSection title="難度突破" subtitle="按題目難度統計正確率">
+            <BarChart
+              data={difficultyPassRate}
+              width={chartBarWidth}
+              barWidth={30}
+              spacing={20}
+              maxValue={100}
+              noOfSections={5}
+              yAxisTextStyle={{ color: colors.textMuted, fontSize: 10 }}
+              xAxisLabelTextStyle={{ color: colors.textMuted, fontSize: 10 }}
+              yAxisSuffix="%"
+              hideRules={false}
+              rulesColor={colors.hairline}
+              barBorderRadius={4}
+              isAnimated
+            />
+          </CollapsibleSection>
+
+          {/* Daily activity */}
+          <CollapsibleSection title="每日作答量" subtitle="最近 14 天">
+            <BarChart
+              data={dailyActivity}
+              width={chartBarWidth}
+              barWidth={Math.max(6, Math.min(16, chartBarWidth / 14 - 4))}
+              spacing={Math.max(2, chartBarWidth / 14 - 16)}
+              noOfSections={4}
+              yAxisTextStyle={{ color: colors.textMuted, fontSize: 10 }}
+              xAxisLabelTextStyle={{ color: colors.textMuted, fontSize: 8, width: 30, textAlign: "center" }}
+              hideRules={false}
+              rulesColor={colors.hairline}
+              barBorderRadius={3}
+              isAnimated
+            />
+          </CollapsibleSection>
+        </>
+      )}
 
       <Text style={styles.sectionLabel}>心理小測驗</Text>
     </View>
@@ -291,6 +646,117 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "800",
     lineHeight: 22,
+  },
+  // ── Metric cards ──
+  metricGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  metricCard: {
+    flex: 1,
+    minWidth: "30%",
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: spacing.sm,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  metricValue: {
+    color: colors.ink,
+    fontWeight: "800",
+    fontSize: 20,
+    marginBottom: 2,
+  },
+  metricLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  // ── Pie legend ──
+  pieLegend: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: spacing.md,
+    marginTop: spacing.sm,
+  },
+  pieLegendRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  pieLegendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  pieLegendLabel: {
+    color: colors.textSecondary,
+    fontSize: 12,
+  },
+  pieLegendValue: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  pieLegendWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+  },
+  pieSubtitle: {
+    color: colors.textPrimary,
+    fontWeight: "700",
+    fontSize: 13,
+    marginTop: spacing.sm,
+    marginBottom: 2,
+  },
+  pieDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.hairline,
+    marginVertical: spacing.md,
+  },
+  // ── Side-by-side pie + legend layout ──
+  pieRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  pieSideLegend: {
+    flex: 1,
+    gap: 3,
+  },
+  pieSideLegendRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  pieSideLegendIdx: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pieSideLegendIdxText: {
+    color: "#fff",
+    fontSize: 9,
+    fontWeight: "700",
+  },
+  pieSideLegendLabel: {
+    color: colors.textSecondary,
+    fontSize: 9,
+    flex: 1,
+  },
+  pieSideLegendValue: {
+    color: colors.ink,
+    fontSize: 9,
+    fontWeight: "700",
   },
 });
 

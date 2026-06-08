@@ -16,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, spacing, typography, QUIZ_TYPE_COLORS, QUIZ_TYPE_LABEL } from "../theme";
 import { Quiz, TipCard, Passage, Attempt } from "../types/database";
@@ -528,6 +528,13 @@ export default function ExploreScreen() {
   };
 
   useEffect(() => { loadAppSettings(); }, []);
+
+  // Re-fetch app settings every time Explore tab gains focus
+  useFocusEffect(
+    React.useCallback(() => {
+      loadAppSettings();
+    }, [])
+  );
 
   // Always-current ref so the AppState listener never captures a stale closure.
   const loadRef = useRef<() => Promise<void>>(async () => {});
