@@ -43,6 +43,7 @@ def _build_prompt(
     cross_text: str | None,
     passage_text: str,
     user_flag_comments: str | None = None,
+    is_correction: bool = False,
 ) -> str:
     cross_text_section = (
         f"\n\n## 跨篇章原文（第二篇）\n{cross_text}" if cross_text else ""
@@ -66,32 +67,52 @@ def _build_prompt(
     reference_block = ("\n\n" + "\n\n".join(ref_parts)) if ref_parts else ""
 
     # ── Existing stems for duplicate-detection ──────────────────────────────
-    # For cross-passage questions both passages are checked; otherwise only primary.
-    passage_ids = [spec.passage]
-    if spec.cross_passage and spec.skill_tested.value == "跨篇章比較":
-        passage_ids.append(spec.cross_passage)
-
-    stems = fetch_existing_stems(passage_ids, spec.skill_tested.value)
-    if stems:
-        numbered = "\n".join(f"{i + 1}. {s}" for i, s in enumerate(stems))
+    if is_correction:
+        # In the correction workflow the question being corrected already exists in
+        # the DB, so the critic will always find a near-identical stem.  Skip the
+        # duplicate check entirely and tell the critic to ignore it.
         existing_stems_block = (
-            f"\n\n## 現有題庫（同篇章 × 考核能力：{spec.skill_tested.value}）"
-            f"\n以下為題庫中已有的相同篇章及相同考核能力的 MC 題幹（共 {len(stems)} 條）。"
-            f"請對照草稿進行重複性審查，如有高度重疊須扣分並要求修改：\n\n{numbered}\n"
+            "\n\n## ⚠️ 修正工作流程專用提示（重複性篩查）\n"
+            "此草稿來自**修正工作流程**，並非全新出題。"
+            "題庫中必然存在與本草稿高度相似的原題（即正在被修正的那條題目）。"
+            "這屬正常現象，**請完全跳過第一步重複性篩查，直接進入第二步質素審核。**"
+            "不得以重複為由扣分或輸出 REVISE。\n"
         )
     else:
-        existing_stems_block = ""
+        # Normal generation workflow — fetch and check existing stems as usual.
+        passage_ids = [spec.passage]
+        if spec.cross_passage and spec.skill_tested.value == "跨篇章比較":
+            passage_ids.append(spec.cross_passage)
+
+        stems = fetch_existing_stems(passage_ids, spec.skill_tested.value)
+        if stems:
+            numbered = "\n".join(f"{i + 1}. {s}" for i, s in enumerate(stems))
+            existing_stems_block = (
+                f"\n\n## 現有題庫（同篇章 × 考核能力：{spec.skill_tested.value}）"
+                f"\n以下為題庫中已有的相同篇章及相同考核能力的 MC 題幹（共 {len(stems)} 條）。"
+                f"請對照草稿進行重複性審查，如有高度重疊須扣分並要求修改：\n\n{numbered}\n"
+            )
+        else:
+            existing_stems_block = ""
 
     # ── User flag comments (correction workflow only) ─────────────────────
     user_flag_comments_block = ""
     if user_flag_comments:
-        user_flag_comments_block = (
-            "\n\n## 用戶投訴意見（僅供參考）\n"
-            "以下是用戶提交的投訴意見。這些意見僅供參考，不構成審題標準。"
-            "請基於篇章原文及考評標準獨立判斷草稿品質，"
-            "但若用戶意見指出的問題確實存在，應反映在評分及修改指示中。\n\n"
-            f"> {user_flag_comments}\n"
-        )
+        if is_correction:
+            user_flag_comments_block = (
+                "\n\n## 用戶投訴意見（修正指令）⚠️ 必須納入評審\n"
+                "以下投訴意見是觸發本次修正的直接原因。審題時**必須驗證**修正後的草稿是否已回應每條投訴。"
+                "若草稿未回應投訴所指出的問題，須在 `revision_instructions` 中明確要求修正員針對該投訴再作修改。\n\n"
+                f"> {user_flag_comments}\n"
+            )
+        else:
+            user_flag_comments_block = (
+                "\n\n## 用戶投訴意見（僅供參考）\n"
+                "以下是用戶提交的投訴意見。這些意見僅供參考，不構成審題標準。"
+                "請基於篇章原文及考評標準獨立判斷草稿品質，"
+                "但若用戶意見指出的問題確實存在，應反映在評分及修改指示中。\n\n"
+                f"> {user_flag_comments}\n"
+            )
 
     return render_template(
         _PROMPT_PATH,
@@ -111,17 +132,21 @@ def run_critic(
     draft: Draft,
     iteration: int = 0,
     user_flag_comments: str | None = None,
+    is_correction: bool = False,
 ) -> Critique:
     """呼叫審題主任，回傳 Critique。
 
     Args:
         user_flag_comments: Optional user flag comments (correction workflow only).
-            When None (default), the generation workflow is unaffected.
+        is_correction: When True, skips duplicate-detection (the question being
+            corrected will always appear as a near-match in the DB) and treats
+            user flag comments as mandatory review criteria.  Has zero effect on
+            the normal generation workflow (default False).
     """
     passage_text = get_passage_body(spec.passage)
     cross_text = get_passage_body(spec.cross_passage) if spec.cross_passage else None
 
-    prompt = _build_prompt(spec, draft, cross_text, passage_text, user_flag_comments)
+    prompt = _build_prompt(spec, draft, cross_text, passage_text, user_flag_comments, is_correction)
 
     log.info(
         "critic_start",

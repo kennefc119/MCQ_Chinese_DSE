@@ -17,7 +17,7 @@ import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity, RefreshCont
 import { colors, spacing, typography } from "../../theme";
 import Button from "../../components/Button";
 import { listAnnouncements, sendBroadcast } from "../../lib/adminService";
-import { Announcement, AnnouncementType } from "../../types/database";
+import { Announcement, AnnouncementType, AnnouncementAudience } from "../../types/database";
 
 const TYPES: { key: AnnouncementType; label: string }[] = [
   { key: "info", label: "資訊" },
@@ -25,10 +25,17 @@ const TYPES: { key: AnnouncementType; label: string }[] = [
   { key: "warning", label: "重要" },
 ];
 
+const AUDIENCES: { key: AnnouncementAudience; label: string; desc: string }[] = [
+  { key: "all",     label: "全部用戶",   desc: "所有已登入用戶" },
+  { key: "free",    label: "庶民版用戶", desc: "subscription_tier = free" },
+  { key: "premium", label: "學士版用戶", desc: "subscription_tier = premium" },
+];
+
 export default function AnnouncementsPanel() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [type, setType] = useState<AnnouncementType>("info");
+  const [audience, setAudience] = useState<AnnouncementAudience>("all");
   const [submitting, setSubmitting] = useState(false);
   const [items, setItems] = useState<Announcement[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -50,13 +57,14 @@ export default function AnnouncementsPanel() {
       return;
     }
     setSubmitting(true);
-    const res = await sendBroadcast({ title: title.trim(), body: body.trim(), type });
+    const res = await sendBroadcast({ title: title.trim(), body: body.trim(), type, audience });
     setSubmitting(false);
     if (!res.ok) {
       Alert.alert("發送失敗", res.error ?? "未知錯誤");
       return;
     }
-    Alert.alert("已發送", `已通知 ${res.recipients ?? 0} 位用戶`);
+    const audienceLabel = AUDIENCES.find((a) => a.key === audience)?.label ?? audience;
+    Alert.alert("已發送", `已通知 ${res.recipients ?? 0} 位${audienceLabel}`);
     setTitle("");
     setBody("");
     setType("info");
@@ -102,6 +110,22 @@ export default function AnnouncementsPanel() {
           })}
         </View>
 
+        <Text style={[styles.label, { marginTop: spacing.md }]}>發送對象</Text>
+        <View style={styles.typeRow}>
+          {AUDIENCES.map((a) => {
+            const active = a.key === audience;
+            return (
+              <TouchableOpacity
+                key={a.key}
+                style={[styles.typePill, active && styles.typePillActive]}
+                onPress={() => setAudience(a.key)}
+              >
+                <Text style={[styles.typeLabel, active && styles.typeLabelActive]}>{a.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
         <Button
           title="發送公告 + 推送通知"
           icon="send"
@@ -118,7 +142,10 @@ export default function AnnouncementsPanel() {
         <View key={a.id} style={styles.card}>
           <View style={styles.histHeader}>
             <Text style={styles.histTitle}>{a.title}</Text>
-            <Text style={styles.histBadge}>{labelOf(a.type)}</Text>
+            <View style={{ flexDirection: "row", gap: 4 }}>
+              <Text style={styles.histBadge}>{labelOf(a.type)}</Text>
+              <Text style={[styles.histBadge, styles.histBadgeAudience]}>{audienceLabelOf(a.audience)}</Text>
+            </View>
           </View>
           <Text style={styles.histBody}>{a.body}</Text>
           <Text style={styles.histMeta}>
@@ -133,6 +160,10 @@ export default function AnnouncementsPanel() {
 
 function labelOf(t: AnnouncementType): string {
   return TYPES.find((x) => x.key === t)?.label ?? t;
+}
+
+function audienceLabelOf(a: AnnouncementAudience | undefined): string {
+  return AUDIENCES.find((x) => x.key === a)?.label ?? "全部用戶";
 }
 
 const styles = StyleSheet.create({
@@ -175,6 +206,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
+  },
+  histBadgeAudience: {
+    backgroundColor: colors.primary + "22",
+    color: colors.primary,
   },
   histBody: { ...typography.body, color: colors.inkSoft, marginTop: spacing.xs },
   histMeta: { ...typography.caption, color: colors.inkMuted, marginTop: spacing.xs },

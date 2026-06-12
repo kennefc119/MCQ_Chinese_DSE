@@ -350,7 +350,6 @@ def run_correction_pipeline(
     from .agents.corrector import run_corrector
     from .agents.critic import run_critic
     from .db.flagged import fetch_deactivated_questions, fetch_flagged_questions
-    from .db.writer import update_question
     from .llm import get_traces, reset_traces
 
     if source == "deactivated":
@@ -393,19 +392,13 @@ def run_correction_pipeline(
                 draft=draft,
                 iteration=iteration,
                 user_flag_comments=fq.user_flag_comments,
+                is_correction=True,
             )
 
             final_score = critique.score
 
             if critique.score >= 7:
-                # Success — update in place
-                if not dry_run:
-                    update_question(
-                        question_id=fq.question_id,
-                        stem=draft.question_stem,
-                        options=draft.options,
-                        critique_score=critique.score,
-                    )
+                # Score passed — defer write to admin confirmation via dashboard
                 status = "corrected"
                 log.info(
                     "correction_success",

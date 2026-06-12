@@ -34,6 +34,7 @@ import {
   fetchUserAttemptHistory,
   fetchUserPerformanceBreakdown,
   fetchUserPsychResults,
+  sendDirectMessage,
 } from "../lib/adminService";
 import {
   Profile,
@@ -42,6 +43,7 @@ import {
   UserDifficultyStat,
   UserPassageStat,
   PsychResult,
+  AnnouncementType,
 } from "../types/database";
 import { AppStackParamList } from "../navigation/types";
 
@@ -75,6 +77,12 @@ export default function AdminUserDetailScreen() {
   const [historyLoading, setHistoryLoading] = useState(false);
 
   const [psych, setPsych] = useState<PsychResult[]>([]);
+
+  // Direct message state
+  const [dmTitle, setDmTitle] = useState("");
+  const [dmBody, setDmBody] = useState("");
+  const [dmType, setDmType] = useState<AnnouncementType>("info");
+  const [dmSending, setDmSending] = useState(false);
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
@@ -134,6 +142,41 @@ export default function AdminUserDetailScreen() {
     }
     setProfile({ ...profile, wenyuan_points: n, subscription_tier: tier, subscription_status: status });
     Alert.alert("已儲存");
+  };
+
+  const onSendDM = async () => {
+    if (!dmTitle.trim() || !dmBody.trim()) {
+      Alert.alert("缺少資料", "請填寫標題與內容");
+      return;
+    }
+    Alert.alert(
+      "確認發送",
+      `將直接傳送訊息給 ${profile?.username || profile?.email}，並推送通知，確定嗎？`,
+      [
+        { text: "取消", style: "cancel" },
+        {
+          text: "確定發送",
+          onPress: async () => {
+            setDmSending(true);
+            const res = await sendDirectMessage({
+              target_user_id: userId,
+              title: dmTitle.trim(),
+              body: dmBody.trim(),
+              type: dmType,
+            });
+            setDmSending(false);
+            if (!res.ok) {
+              Alert.alert("發送失敗", res.error ?? "未知錯誤");
+              return;
+            }
+            Alert.alert("已發送", res.pushed ? "訊息已送達收件箱，推送通知已發出" : "訊息已送達收件箱（用戶無裝置 token，無法推送）");
+            setDmTitle("");
+            setDmBody("");
+            setDmType("info");
+          },
+        },
+      ]
+    );
   };
 
   const summary = useMemo(() => {
@@ -205,6 +248,54 @@ export default function AdminUserDetailScreen() {
           />
 
           <Button title="儲存" icon="save-outline" onPress={onSave} loading={saving} style={{ marginTop: spacing.lg }} />
+        </View>
+
+        {/* Direct message */}
+        <Text style={styles.sectionTitle}>直接發送訊息</Text>
+        <View style={styles.card}>
+          <Text style={styles.label}>標題</Text>
+          <TextInput
+            value={dmTitle}
+            onChangeText={setDmTitle}
+            placeholder="訊息標題"
+            placeholderTextColor={colors.inkMuted}
+            style={styles.input}
+          />
+
+          <Text style={[styles.label, { marginTop: spacing.md }]}>內容</Text>
+          <TextInput
+            value={dmBody}
+            onChangeText={setDmBody}
+            placeholder="訊息內容…"
+            placeholderTextColor={colors.inkMuted}
+            multiline
+            style={[styles.input, styles.textarea]}
+          />
+
+          <Text style={[styles.label, { marginTop: spacing.md }]}>類型</Text>
+          <View style={styles.toggleRow}>
+            {(["info", "success", "warning"] as AnnouncementType[]).map((t) => {
+              const labels: Record<AnnouncementType, string> = { info: "資訊", success: "好消息", warning: "重要" };
+              const active = t === dmType;
+              return (
+                <TouchableOpacity
+                  key={t}
+                  style={[styles.togglePill, active && styles.togglePillActive]}
+                  onPress={() => setDmType(t)}
+                >
+                  <Text style={[styles.toggleLabel, active && styles.toggleLabelActive]}>{labels[t]}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <Button
+            title="發送至收件箱 + 推送通知"
+            icon="send"
+            onPress={onSendDM}
+            loading={dmSending}
+            style={{ marginTop: spacing.lg }}
+          />
         </View>
 
         {/* Performance breakdown */}
@@ -365,6 +456,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     ...typography.body,
   },
+  textarea: { minHeight: 90, textAlignVertical: "top" },
   // Result card -------------------------------------------------------------
   resultCard: {
     backgroundColor: colors.surface,

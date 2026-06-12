@@ -288,6 +288,7 @@ def _make_record(
         "estimated_duration_label": EST_LABEL[quiz_type],
         "subject_area":             subject_area,
         "is_published":             True,
+        "is_active":                True,
         "question_ids":             question_ids,
         "title_id":                 title_id,
         **meta,
@@ -479,6 +480,7 @@ def _assemble_type(
 def assemble_quizzes(
     dry_run: bool = False,
     strategies: list[str] | None = None,
+    seed: int | None = None,
 ) -> dict[str, Any]:
     """
     Fetch all active questions and assemble quiz records, then upsert
@@ -487,9 +489,11 @@ def assemble_quizzes(
     Exercises are grouped by (passage, skill).
     Quizzes and exams are grouped by passage only — skills are mixed.
 
-    Each run uses a different random seed so the combinations vary.
+    seed: explicit integer seed for reproducible shuffles (e.g. repeat a
+          previous run).  Pass None (default) to use the current millisecond
+          timestamp, guaranteeing a different combination every time.
     strategies: kept for API compatibility; ignored.
-    Returns a summary dict.
+    Returns a summary dict including the effective seed used.
     """
     sb = get_supabase()
 
@@ -547,10 +551,11 @@ def assemble_quizzes(
     # Discover how many cover images exist in S3 (once per run)
     s3_image_count = _fetch_s3_image_count()
 
-    # Use a time-based seed so each run produces different combinations
-    seed = int(time.time() * 1000)
-    rng = random.Random(seed)
-    log.info("assemble_seed", seed=seed)
+    # Use the caller-supplied seed for reproducibility, or fall back to
+    # millisecond timestamp so every unspecified run is unique.
+    effective_seed: int = seed if seed is not None else int(time.time() * 1000)
+    rng = random.Random(effective_seed)
+    log.info("assemble_seed", seed=effective_seed, user_provided=(seed is not None))
 
     summary: dict[str, int] = {"exercises": 0, "quizzes": 0, "exams": 0, "updated": 0}
     to_upsert: list[dict] = []
@@ -578,6 +583,12 @@ def assemble_quizzes(
             group[0]["title_id"] = None   # only one — no numbering needed
 
     if not dry_run and to_upsert:
+        # Soft-deactivate all current quizzes before inserting the new generation.
+        # This preserves FK rows in dsemcq_attempts/attempt_answers so all user
+        # history and statistics remain cumulative and intact.
+        sb.table("dsemcq_quizzes").update({"is_active": False}).eq("is_active", True).execute()
+        log.info("quizzes_deactivated_for_reshuffle")
+
         # Batch upserts to avoid PostgREST payload size limits
         BATCH = 50
         for i in range(0, len(to_upsert), BATCH):
@@ -591,6 +602,6 @@ def assemble_quizzes(
         **summary,
         "total_new": summary["exercises"] + summary["quizzes"] + summary["exams"],
         "dry_run": dry_run,
-        "seed": seed,
+        "seed": effective_seed,
         "strategies": ["passage_skill"],
     }

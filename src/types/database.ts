@@ -189,11 +189,14 @@ export interface AdvisorMessageRecord {
 
 export type AnnouncementType = "info" | "warning" | "success";
 
+export type AnnouncementAudience = "all" | "free" | "premium";
+
 export interface Announcement {
   id: string;
   title: string;
   body: string;
   type: AnnouncementType;
+  audience: AnnouncementAudience;
   sent_by: string | null;
   sent_at: string;
   push_sent: boolean;

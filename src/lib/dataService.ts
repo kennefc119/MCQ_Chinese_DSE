@@ -65,6 +65,7 @@ export async function listQuizzes(): Promise<Quiz[]> {
     .from("dsemcq_quizzes")
     .select("*")
     .eq("is_published", true)
+    .eq("is_active", true)
     .order("order_no", { nullsFirst: false });
   if (error) {
     console.warn("[dsemcq] listQuizzes error:", error.message, "| code:", error.code, "| details:", JSON.stringify(error));
@@ -574,7 +575,6 @@ export async function submitAttempt(
 export interface QuestionAnalyticsMeta {
   tagIds: string[];
   correctOptionId: string | null;
-  difficulty: number;
 }
 
 export async function fetchQuestionAnalyticsData(
@@ -589,46 +589,28 @@ export async function fetchQuestionAnalyticsData(
       const q = SEED_QUESTIONS.find((sq) => sq.id === id);
       if (!q) continue;
       const correctOpt = q.options.find((o) => o.is_correct);
-      meta[id] = { tagIds: q.tag_ids ?? [], correctOptionId: correctOpt?.id ?? null, difficulty: q.difficulty ?? 1 };
+      meta[id] = { tagIds: q.tag_ids ?? [], correctOptionId: correctOpt?.id ?? null };
     }
     return meta;
   }
 
-  // Batch .in() queries to avoid exceeding Supabase row/param limits
-  const tagRows: { question_id: string; tag_id: string }[] = [];
-  const optRows: { id: string; question_id: string }[] = [];
-  const diffRows: { id: string; difficulty: number }[] = [];
+  const [{ data: tagRows, error: tagErr }, { data: optRows, error: optErr }] = await Promise.all([
+    supabase
+      .from("dsemcq_question_tags")
+      .select("question_id, tag_id")
+      .in("question_id", questionIds),
+    supabase
+      .from("dsemcq_question_options")
+      .select("id, question_id")
+      .in("question_id", questionIds)
+      .eq("is_correct", true),
+  ]);
 
-  for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
-    const batch = questionIds.slice(i, i + BATCH_SIZE);
-    const [tagRes, optRes, diffRes] = await Promise.all([
-      supabase
-        .from("dsemcq_question_tags")
-        .select("question_id, tag_id")
-        .in("question_id", batch),
-      supabase
-        .from("dsemcq_question_options")
-        .select("id, question_id")
-        .in("question_id", batch)
-        .eq("is_correct", true),
-      supabase
-        .from("dsemcq_questions")
-        .select("id, difficulty")
-        .in("id", batch),
-    ]);
-    if (tagRes.error) console.warn("[dsemcq] fetchQuestionAnalyticsData tags error:", tagRes.error.message);
-    if (optRes.error) console.warn("[dsemcq] fetchQuestionAnalyticsData options error:", optRes.error.message);
-    if (diffRes.error) console.warn("[dsemcq] fetchQuestionAnalyticsData difficulty error:", diffRes.error.message);
-    tagRows.push(...((tagRes.data as any[]) ?? []));
-    optRows.push(...((optRes.data as any[]) ?? []));
-    diffRows.push(...((diffRes.data as any[]) ?? []));
-  }
+  if (tagErr) console.warn("[dsemcq] fetchQuestionAnalyticsData tags error:", tagErr.message);
+  if (optErr) console.warn("[dsemcq] fetchQuestionAnalyticsData options error:", optErr.message);
 
   const meta: Record<string, QuestionAnalyticsMeta> = {};
-  for (const id of questionIds) meta[id] = { tagIds: [], correctOptionId: null, difficulty: 1 };
-  for (const row of diffRows ?? []) {
-    if (meta[row.id]) meta[row.id].difficulty = row.difficulty ?? 1;
-  }
+  for (const id of questionIds) meta[id] = { tagIds: [], correctOptionId: null };
   for (const row of tagRows ?? []) {
     meta[row.question_id]?.tagIds.push(row.tag_id);
   }
@@ -641,28 +623,13 @@ export async function fetchQuestionAnalyticsData(
 export async function listUserAttempts(userId: string): Promise<Attempt[]> {
   const local = memory.attempts.filter((a) => a.user_id === userId);
   if (!isSupabaseConfigured) return local;
-
-  // Supabase returns max 1000 rows per request. Paginate to fetch all.
-  const PAGE_SIZE = 1000;
-  const remote: Attempt[] = [];
-  let from = 0;
-  while (true) {
-    const { data, error } = await supabase
-      .from("dsemcq_attempts")
-      .select("*")
-      .eq("user_id", userId)
-      .order("started_at", { ascending: false })
-      .range(from, from + PAGE_SIZE - 1);
-    if (error) {
-      console.warn("[dsemcq] listUserAttempts error:", error.message);
-      break;
-    }
-    const rows = (data as Attempt[]) ?? [];
-    remote.push(...rows);
-    if (rows.length < PAGE_SIZE) break; // last page
-    from += PAGE_SIZE;
-  }
-
+  const { data, error } = await supabase
+    .from("dsemcq_attempts")
+    .select("*")
+    .eq("user_id", userId)
+    .order("started_at", { ascending: false });
+  if (error) console.warn("[dsemcq] listUserAttempts error:", error.message);
+  const remote = (data as Attempt[]) ?? [];
   // Merge: remote first, then any local-only attempts not yet persisted
   const remoteIds = new Set(remote.map((a) => a.id));
   return [...remote, ...local.filter((a) => !remoteIds.has(a.id))];

@@ -11,7 +11,12 @@
 //   EXPO_ACCESS_TOKEN — Expo push access token for higher throughput
 //
 // Request body:
-//   { title: string, body: string, type?: "info" | "warning" | "success" }
+//   {
+//     title:     string,
+//     body:      string,
+//     type?:     "info" | "warning" | "success"   (default "info")
+//     audience?: "all" | "free" | "premium"        (default "all")
+//   }
 //
 // Response:
 //   { ok: true, announcementId: string, recipients: number }
@@ -53,7 +58,7 @@ Deno.serve(async (req: Request) => {
   if (profile?.role !== "admin") return json({ ok: false, error: "Admin role required" }, 403);
 
   // ── 2. Validate input ───────────────────────────────────────────────────
-  let body: { title?: string; body?: string; type?: string };
+  let body: { title?: string; body?: string; type?: string; audience?: string };
   try {
     body = await req.json();
   } catch {
@@ -64,14 +69,28 @@ Deno.serve(async (req: Request) => {
   const type = (["info", "warning", "success"].includes(body.type ?? "")
     ? body.type
     : "info") as "info" | "warning" | "success";
+  const audience = (["all", "free", "premium"].includes(body.audience ?? "")
+    ? body.audience
+    : "all") as "all" | "free" | "premium";
   if (!title || !text) return json({ ok: false, error: "title and body required" }, 400);
 
-  // ── 3. Fetch all push tokens ────────────────────────────────────────────
-  const { data: tokenRows, error: tokensErr } = await supabase
-    .from("dsemcq_push_tokens")
-    .select("expo_push_token");
-  if (tokensErr) return json({ ok: false, error: tokensErr.message }, 500);
-  const tokens = ((tokenRows ?? []) as { expo_push_token: string }[]).map((r) => r.expo_push_token);
+  // ── 3. Fetch push tokens (filtered by audience / subscription_tier) ─────
+  let tokens: string[];
+  if (audience === "all") {
+    const { data: tokenRows, error: tokensErr } = await supabase
+      .from("dsemcq_push_tokens")
+      .select("expo_push_token");
+    if (tokensErr) return json({ ok: false, error: tokensErr.message }, 500);
+    tokens = ((tokenRows ?? []) as { expo_push_token: string }[]).map((r) => r.expo_push_token);
+  } else {
+    // Join push_tokens → profiles, filter by subscription_tier
+    const { data: tokenRows, error: tokensErr } = await supabase
+      .from("dsemcq_push_tokens")
+      .select("expo_push_token, dsemcq_profiles!inner(subscription_tier)")
+      .eq("dsemcq_profiles.subscription_tier", audience);
+    if (tokensErr) return json({ ok: false, error: tokensErr.message }, 500);
+    tokens = ((tokenRows ?? []) as { expo_push_token: string }[]).map((r) => r.expo_push_token);
+  }
 
   // ── 4. Insert announcement row ──────────────────────────────────────────
   const { data: announcement, error: insertErr } = await supabase
@@ -80,6 +99,7 @@ Deno.serve(async (req: Request) => {
       title,
       body: text,
       type,
+      audience,
       sent_by: userData.user.id,
       push_sent: tokens.length > 0,
       recipients: tokens.length,

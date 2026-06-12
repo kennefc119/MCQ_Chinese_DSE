@@ -10,6 +10,7 @@ import {
   Profile,
   Announcement,
   AnnouncementType,
+  AnnouncementAudience,
   AttemptHistoryItem,
   UsageWindowMetrics,
   DailyUsageMetric,
@@ -135,6 +136,7 @@ export async function sendBroadcast(args: {
   title: string;
   body: string;
   type: AnnouncementType;
+  audience: AnnouncementAudience;
 }): Promise<{ ok: boolean; recipients: number; error?: string }> {
   if (!isSupabaseConfigured) return { ok: false, recipients: 0, error: REQUIRE_SUPABASE };
   const { data, error } = await supabase.functions.invoke("dsemcq-broadcast-announcement", {
@@ -142,6 +144,28 @@ export async function sendBroadcast(args: {
   });
   if (error) return { ok: false, recipients: 0, error: error.message };
   return { ok: true, recipients: (data as { recipients?: number })?.recipients ?? 0 };
+}
+
+/**
+ * Sends a direct inbox message to a single user by invoking the
+ * dsemcq-send-direct-message Edge Function.  The message appears in the
+ * user's inbox and triggers a push notification on their device.
+ */
+export async function sendDirectMessage(args: {
+  target_user_id: string;
+  title: string;
+  body: string;
+  type: AnnouncementType;
+}): Promise<{ ok: boolean; pushed: boolean; error?: string }> {
+  if (!isSupabaseConfigured) return { ok: false, pushed: false, error: REQUIRE_SUPABASE };
+  const { data, error } = await supabase.functions.invoke("dsemcq-send-direct-message", {
+    body: args,
+  });
+  if (error) return { ok: false, pushed: false, error: error.message };
+  return {
+    ok: true,
+    pushed: (data as { pushed?: boolean })?.pushed ?? false,
+  };
 }
 
 /** Mark a broadcast announcement as read for the current user. */

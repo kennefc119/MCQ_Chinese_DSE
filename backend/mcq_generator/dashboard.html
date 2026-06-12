@@ -638,10 +638,19 @@
       <span id="assembleIco">🗂</span>
       <span id="assembleTxt">自動組合測驗</span>
     </button>
+    <div style="margin-top:8px;">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">隨機種子 <span style="font-size:10px;color:var(--dim);">(空白 = 每次自動不同)</span></div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <input type="number" id="assembleSeed" placeholder="自動"
+          style="width:88px;background:var(--surface2);border:1px solid var(--border);
+                 border-radius:6px;color:var(--text);padding:6px 8px;font-size:12px;
+                 outline:none;font-family:monospace;">
+        <button class="btn-sm" onclick="document.getElementById('assembleSeed').value=''">清除</button>
+      </div>
+      <div id="lastSeedInfo" style="font-size:10px;color:var(--dim);margin-top:3px;"></div>
+    </div>
     <button class="btn-sm" id="previewBtn" onclick="assemblePreview()"
       style="margin-top:6px;">🔬 預覽（診斷題目分佈）</button>
-    <button class="btn-sm" id="dismissBtn" onclick="dismissAll()"
-      style="margin-top:6px;background:var(--red);color:#fff;border-color:var(--red);">🗑 清除所有組卷</button>
     <div id="assembleResult" style="display:none;margin-top:10px;font-size:12px;
       background:var(--surface2);border-radius:6px;padding:10px;line-height:1.8;"></div>
   </div>
@@ -734,7 +743,7 @@
       <span id="corrStatus" style="font-size:11px;color:var(--muted);"></span>
     </div>
     <div class="panel-desc">
-      修正流程：修正員 LLM → 審題主任 LLM → 通過則更新題庫並重新啟用，不通過則保留原題。
+      修正流程：修正員 LLM → 審題主任 LLM → 分數達標後顯示修正結果，管理員確認後才寫入題庫。
     </div>
 
     <!-- Sub-tabs within correction -->
@@ -747,7 +756,7 @@
     <div id="corr-panel-flagged">
       <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
         <button class="ov-reload-btn" onclick="loadFlagged()">🔄 重新載入</button>
-        <button class="gen-btn" id="corrBatchBtn" onclick="runCorrection()">🛠️ 批量修正全部</button>
+        <button class="gen-btn" id="corrBatchBtn" onclick="runCorrection()">🛠️ 批量修正全部（需逐一確認寫入）</button>
         <button class="gen-btn" onclick="runCorrection(true)" style="background:var(--surface3);color:var(--muted);">🧪 Dry Run</button>
       </div>
 
@@ -1388,17 +1397,22 @@ async function assemble() {
   if (document.getElementById('stratDifficulty').checked) strategies.push('difficulty');
   if (strategies.length === 0) { showErr('請至少選擇一種組合策略'); return; }
 
+  // Read optional manual seed; null = let backend use timestamp
+  const seedRaw = document.getElementById('assembleSeed').value.trim();
+  const seedVal = seedRaw ? parseInt(seedRaw, 10) : null;
+
   const btn = document.getElementById('assembleBtn');
   btn.disabled = true;
   document.getElementById('assembleIco').textContent = '⏳';
   document.getElementById('assembleTxt').textContent = '組合中...';
   document.getElementById('assembleResult').style.display = 'none';
+  document.getElementById('lastSeedInfo').textContent = '';
 
   try {
     const r = await fetch(`${API}/api/assemble`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dry_run: dryRun, strategies }),
+      body: JSON.stringify({ dry_run: dryRun, strategies, seed: seedVal }),
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
@@ -1420,6 +1434,11 @@ async function assemble() {
       🔄 更新（已存在，重新組合）：<b>${updated}</b>
       ${nothingMsg}
     `;
+    // Show the effective seed used so admin can copy it to reproduce the same shuffle
+    if (d.seed != null) {
+      document.getElementById('lastSeedInfo').textContent =
+        `上次種子：${d.seed}${seedVal != null ? ' （指定）' : ' （自動時間戳記）'}`;
+    }
     if (!dryRun) loadStats();
   } catch(e) {
     showErr(`組合失敗：${e.message}`);
@@ -1427,28 +1446,6 @@ async function assemble() {
     btn.disabled = false;
     document.getElementById('assembleIco').textContent = '🗂';
     document.getElementById('assembleTxt').textContent = '自動組合測驗';
-  }
-}
-
-// ── UI helpers ────────────────────────────────────────────────────────────────
-async function dismissAll() {
-  if (!confirm('確定要刪除所有組卷記錄嗎？此操作無法復原。')) return;
-  const btn = document.getElementById('dismissBtn');
-  btn.disabled = true;
-  btn.textContent = '刪除中...';
-  try {
-    const r = await fetch(`${API}/api/dismiss-all-quizzes`, { method: 'POST' });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
-    const el = document.getElementById('assembleResult');
-    el.style.display = 'block';
-    el.innerHTML = `<span style="color:var(--red)">🗑 ${d.message}</span>`;
-    loadStats();
-  } catch(e) {
-    showErr(`清除失敗：${e.message}`);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '🗑 清除所有組卷';
   }
 }
 
@@ -1684,9 +1681,9 @@ function renderFlaggedCard(fq) {
     </div>`;
   }).join('');
 
-  const comments = (fq.user_flag_comments || '').split(' / ').map(c =>
-    `<div style="background:var(--surface2);padding:6px 10px;border-radius:6px;font-size:11px;border-left:3px solid var(--orange);line-height:1.5;">⚠️ ${esc(c)}</div>`
-  ).join('');
+  const editId = `fcedit_${fq.question_id.replace(/[^a-zA-Z0-9]/g,'_')}`;
+  const saveStatusId = `fcsave_${fq.question_id.replace(/[^a-zA-Z0-9]/g,'_')}`;
+  const commentsText = fq.user_flag_comments || '';
 
   return `<div class="card" style="margin-bottom:12px;padding:14px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -1696,9 +1693,11 @@ function renderFlaggedCard(fq) {
     <div style="font-size:13px;font-weight:600;margin-bottom:10px;line-height:1.6;">${esc(fq.stem)}</div>
     <div style="margin-bottom:10px;">${opts}</div>
     <div style="margin-bottom:10px;">
-      <div style="font-size:11px;font-weight:600;color:var(--orange);margin-bottom:5px;">用戶投訴：</div>
-      <div style="display:flex;flex-direction:column;gap:4px;">
-      ${comments}
+      <div style="font-size:11px;font-weight:600;color:var(--orange);margin-bottom:5px;">用戶投訴（可編輯，儲存後將用於 LLM 修正指令）：</div>
+      <textarea id="${editId}" style="width:100%;padding:8px;background:var(--surface2);border:1px solid var(--surface3);border-radius:6px;font-size:12px;color:var(--text);resize:vertical;min-height:64px;font-family:inherit;box-sizing:border-box;line-height:1.5;">${esc(commentsText)}</textarea>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+        <button class="gen-btn" style="font-size:11px;padding:4px 12px;" onclick="saveFlagComments('${esc(fq.question_id)}','${editId}','${saveStatusId}')">💾 儲存投訴文字</button>
+        <span id="${saveStatusId}" style="font-size:11px;color:var(--muted);"></span>
       </div>
     </div>
     <div style="display:flex;gap:8px;">
@@ -1796,6 +1795,7 @@ function renderCorrectionResults(data) {
 }
 
 let corrCardCount = 0;
+const _corrResultStore = {};
 
 const CORR_AGENTS = {
   Draft:    { lbl: '修正員',   em: '🔧', cls: 'ab-Draft'    },
@@ -1805,6 +1805,7 @@ const CORR_AGENTS = {
 function renderCorrCard(r, idx) {
   corrCardCount++;
   const id = `cc${corrCardCount}`;
+  _corrResultStore[id] = r;
   const statusColor = r.status === 'corrected' ? 'var(--green)' : 'var(--red)';
   const statusLabel = r.status === 'corrected' ? '✓ 已修正' : '⚠ 修正失敗';
   const sChip = r.score >= 8 ? 'c-green' : r.score >= 6 ? 'c-yellow' : 'c-red';
@@ -1840,6 +1841,13 @@ function renderCorrCard(r, idx) {
         </div>
       ` : ''}
       ${r.dry_run ? '<div style="font-size:10px;color:var(--yellow);margin-top:6px;">⚠️ Dry Run — 未寫入資料庫</div>' : ''}
+      ${r.status === 'corrected' && !r.dry_run ? `
+        <div style="margin-top:10px;padding:8px;background:rgba(46,160,67,.1);border-radius:6px;border:1px solid var(--green);">
+          <div style="font-size:11px;color:var(--green);margin-bottom:6px;">✅ 修正分數達標（${r.score}/10）— 尚未寫入資料庫</div>
+          <button class="gen-btn" style="background:var(--green);font-size:12px;" onclick="confirmWrite('${id}')">✅ 確認寫入資料庫</button>
+          <span id="cw-status-${id}" style="font-size:11px;color:var(--muted);margin-left:8px;"></span>
+        </div>
+      ` : ''}
     </div>
   `;
 
@@ -1930,6 +1938,61 @@ function renderCorrLLM(traces) {
       </div>
     `;
   }).join('')}</div>`;
+}
+
+// ── Flag Comments Save ────────────────────────────────────────────────────────
+
+async function saveFlagComments(questionId, textareaId, statusId) {
+  const textarea = document.getElementById(textareaId);
+  const statusEl = document.getElementById(statusId);
+  if (!textarea) return;
+  statusEl.textContent = '儲存中...';
+  statusEl.style.color = 'var(--muted)';
+  try {
+    const r = await fetch(`${API}/api/update-flag-comments`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ question_id: questionId, comments: textarea.value }),
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    statusEl.textContent = '✓ 已儲存';
+    statusEl.style.color = 'var(--green)';
+    setTimeout(() => { statusEl.textContent = ''; }, 3000);
+  } catch (e) {
+    statusEl.textContent = `儲存失敗：${e.message}`;
+    statusEl.style.color = 'var(--red)';
+  }
+}
+
+// ── Confirm Correction Write ──────────────────────────────────────────────────
+
+async function confirmWrite(cardId) {
+  const r = _corrResultStore[cardId];
+  if (!r) return;
+  const statusEl = document.getElementById(`cw-status-${cardId}`);
+  if (!confirm(`確認將修正後的題目寫入資料庫並重置投訴紀錄？\n題目 ID: ${r.question_id}\n評分: ${r.score}/10`)) return;
+  if (statusEl) { statusEl.textContent = '寫入中...'; statusEl.style.color = 'var(--muted)'; }
+  try {
+    const resp = await fetch(`${API}/api/confirm-correction`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        question_id: r.question_id,
+        stem: r.corrected_stem,
+        options: r.corrected_options,
+        score: r.score,
+      }),
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${await resp.text()}`);
+    if (statusEl) { statusEl.textContent = '✓ 已寫入資料庫'; statusEl.style.color = 'var(--green)'; }
+    // Disable the confirm button to prevent double-write
+    const btn = document.querySelector(`#${cardId}-q button[onclick="confirmWrite('${cardId}')"]`);
+    if (btn) { btn.disabled = true; btn.textContent = '✓ 已寫入'; btn.style.opacity = '0.5'; }
+    // Reload flagged list after a short delay
+    setTimeout(() => loadFlagged(), 1500);
+  } catch (e) {
+    if (statusEl) { statusEl.textContent = `寫入失敗：${e.message}`; statusEl.style.color = 'var(--red)'; }
+  }
 }
 
 // ── Deactivated Questions Correction ──────────────────────────────────────────

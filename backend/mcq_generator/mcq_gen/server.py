@@ -86,11 +86,24 @@ class GenerateRequest(BaseModel):
 class AssembleRequest(BaseModel):
     dry_run: bool = True
     strategies: list[str] = ["passage", "skill", "difficulty"]
+    seed: int | None = None   # None = use current millisecond timestamp (different every run)
 
 
 class CorrectRequest(BaseModel):
     question_id: str | None = None  # None = correct all flagged questions
     dry_run: bool = True
+
+
+class UpdateFlagCommentsRequest(BaseModel):
+    question_id: str
+    comments: str
+
+
+class ConfirmCorrectionRequest(BaseModel):
+    question_id: str
+    stem: str
+    options: list[dict]
+    score: int
 
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
@@ -434,8 +447,10 @@ def db_check() -> dict[str, Any]:
 @app.post("/api/dismiss-all-quizzes")
 def dismiss_all_quizzes() -> dict[str, Any]:
     """
-    Hard-delete ALL rows from dsemcq_quizzes.
-    Use this to wipe the assembled quiz pool so a fresh assemble run starts clean.
+    Soft-deactivate ALL active quizzes (set is_active=false).
+    Rows are retained so dsemcq_attempts FK references and all user
+    history remain intact.  A fresh assemble run will mark new quizzes
+    is_active=true, making them visible to the app again.
     """
     from .db.client import get_supabase
     sb = get_supabase()
@@ -443,13 +458,13 @@ def dismiss_all_quizzes() -> dict[str, Any]:
         count_resp = (
             sb.table("dsemcq_quizzes")
             .select("id", count="exact")
-            .limit(1)
+            .eq("is_active", True)
             .execute()
         )
         count = count_resp.count or 0
-        sb.table("dsemcq_quizzes").delete().neq("id", "").execute()
-        log.info("dismissed_all_quizzes", deleted=count)
-        return {"deleted": count, "message": f"已刪除 {count} 條組卷記錄"}
+        sb.table("dsemcq_quizzes").update({"is_active": False}).eq("is_active", True).execute()
+        log.info("dismissed_all_quizzes", deactivated=count)
+        return {"deactivated": count, "message": f"已停用 {count} 條組卷記錄（歷史保留）"}
     except Exception as exc:
         log.error("dismiss_all_error", error=str(exc))
         raise HTTPException(status_code=500, detail=str(exc)) from exc
@@ -461,9 +476,9 @@ def assemble(req: AssembleRequest) -> dict[str, Any]:
     Auto-assemble quizzes/exams/exercises from all active questions.
     Applies passage-grouping rules and creates dsemcq_quizzes rows.
     """
-    log.info("assemble_start", dry_run=req.dry_run)
+    log.info("assemble_start", dry_run=req.dry_run, seed=req.seed)
     try:
-        summary = assemble_quizzes(dry_run=req.dry_run, strategies=req.strategies)
+        summary = assemble_quizzes(dry_run=req.dry_run, strategies=req.strategies, seed=req.seed)
     except Exception as exc:
         log.error("assemble_error", error=str(exc))
         raise HTTPException(status_code=500, detail=str(exc)) from exc
@@ -494,6 +509,46 @@ def list_flagged() -> list[dict[str, Any]]:
         }
         for fq in flagged
     ]
+
+
+@app.post("/api/update-flag-comments")
+def update_flag_comments(req: UpdateFlagCommentsRequest) -> dict[str, Any]:
+    """Update the admin-edited user_flag_comments text for a question."""
+    from .db.client import get_supabase
+    sb = get_supabase()
+    try:
+        sb.table("dsemcq_questions").update(
+            {"user_flag_comments": req.comments}
+        ).eq("id", req.question_id).execute()
+        log.info("flag_comments_updated", question_id=req.question_id)
+        return {"success": True}
+    except Exception as exc:
+        log.error("update_flag_comments_error", error=str(exc))
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/confirm-correction")
+def confirm_correction(req: ConfirmCorrectionRequest) -> dict[str, Any]:
+    """Write an admin-confirmed corrected question to the database."""
+    from .db.writer import update_question
+    from .schemas import DraftOption
+    try:
+        options = [DraftOption(**o) for o in req.options]
+        success = update_question(
+            question_id=req.question_id,
+            stem=req.stem,
+            options=options,
+            critique_score=req.score,
+        )
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Question {req.question_id} not found")
+        log.info("correction_confirmed_written", question_id=req.question_id, score=req.score)
+        return {"success": True, "question_id": req.question_id}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        log.error("confirm_correction_error", error=str(exc))
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 @app.post("/api/correct")
