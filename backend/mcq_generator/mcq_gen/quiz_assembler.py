@@ -527,26 +527,13 @@ def assemble_quizzes(
     )
     passage_titles: dict[str, str] = {p["id"]: p["title"] for p in passage_title_rows}
 
-    # Load existing quiz IDs for stable upsert (preserves FK references)
-    existing = fetch_all(
-        sb.table("dsemcq_quizzes")
-        .select("id,title,passage_id,type,title_id,cover_image_url")
-    )
+    # On every reshuffle all existing combinations are deactivated and brand-new
+    # rows are inserted with fresh IDs.  We therefore pass empty maps to
+    # _make_record so it always calls _new_quiz_id() and counts every record
+    # as a new combination (not an update of a prior one).
+    # Cover images are also reassigned fresh from S3 on every run.
     existing_id_map: dict[tuple, str] = {}
-    for e in existing:
-        tid = e.get("title_id")
-        # Primary key includes title_id so each quiz instance has a unique stable ID
-        existing_id_map[(e.get("passage_id"), e.get("type"), e.get("title"), tid)] = e["id"]
-        # Backward compat: old single quizzes stored with title_id=None also map to seq=1
-        if tid is None:
-            existing_id_map.setdefault(
-                (e.get("passage_id"), e.get("type"), e.get("title"), 1), e["id"]
-            )
-    # quiz_id -> existing cover_image_url (for stable cover preservation)
-    existing_cover_map: dict[str, str] = {
-        e["id"]: (e.get("cover_image_url") or "")
-        for e in existing
-    }
+    existing_cover_map: dict[str, str] = {}
 
     # Discover how many cover images exist in S3 (once per run)
     s3_image_count = _fetch_s3_image_count()
@@ -583,11 +570,14 @@ def assemble_quizzes(
             group[0]["title_id"] = None   # only one — no numbering needed
 
     if not dry_run and to_upsert:
-        # Soft-deactivate all current quizzes before inserting the new generation.
-        # This preserves FK rows in dsemcq_attempts/attempt_answers so all user
-        # history and statistics remain cumulative and intact.
-        sb.table("dsemcq_quizzes").update({"is_active": False}).eq("is_active", True).execute()
-        log.info("quizzes_deactivated_for_reshuffle")
+        # Deactivate ALL existing quiz combinations unconditionally.
+        # We use neq('id','') as a universal filter because PostgREST requires
+        # at least one filter clause on UPDATE.
+        # Old rows remain in the table (FK safety for attempts/history) but
+        # are invisible to the app (listQuizzes filters is_active=true).
+        deact_resp = sb.table("dsemcq_quizzes").update({"is_active": False}).neq("id", "").execute()
+        deactivated = len(deact_resp.data) if deact_resp.data else "?"
+        log.info("quizzes_all_deactivated", count=deactivated)
 
         # Batch upserts to avoid PostgREST payload size limits
         BATCH = 50

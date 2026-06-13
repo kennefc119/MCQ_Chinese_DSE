@@ -41,6 +41,7 @@ export default function SettingsPanel() {
   const [exemptPassageIds, setExemptPassageIds] = useState<Set<string>>(new Set());
   const [exploreBannerMessage, setExploreBannerMessage] = useState("");
   const [exploreBannerPause, setExploreBannerPause] = useState("2");
+  const [minAppVersion, setMinAppVersion] = useState("1.0.0");
 
   const [inventory, setInventory] = useState<InventorySummary | null>(null);
   const [allPassages, setAllPassages] = useState<Passage[]>([]);
@@ -62,6 +63,7 @@ export default function SettingsPanel() {
     if (Array.isArray(settingsMap.exempt_passage_ids)) setExemptPassageIds(new Set(settingsMap.exempt_passage_ids as string[]));
     if (typeof settingsMap.explore_banner_message === "string") setExploreBannerMessage(settingsMap.explore_banner_message);
     if (settingsMap.explore_banner_pause != null) setExploreBannerPause(String(settingsMap.explore_banner_pause));
+    if (typeof settingsMap.min_app_version === "string") setMinAppVersion(settingsMap.min_app_version);
     setAllPassages(passages);
     setInventory(inv);
     setLoading(false);
@@ -87,6 +89,12 @@ export default function SettingsPanel() {
             Alert.alert("錯誤", "所有數值請輸入非負整數");
             return;
           }
+          // Validate semver format for min_app_version
+          const semverRe = /^\d+\.\d+\.\d+$/;
+          if (!semverRe.test(minAppVersion.trim())) {
+            Alert.alert("格式錯誤", "最低版本號格式應為 x.y.z，例如 1.3.0");
+            return;
+          }
           setSaving(true);
           const results = await Promise.all([
             updateAppSetting("max_ai_chat_guest", guestN, uid),
@@ -97,6 +105,7 @@ export default function SettingsPanel() {
             updateAppSetting("exempt_passage_ids", [...exemptPassageIds], uid),
             updateAppSetting("explore_banner_message", exploreBannerMessage.trim(), uid),
             updateAppSetting("explore_banner_pause", parseInt(exploreBannerPause, 10) || 2, uid),
+            updateAppSetting("min_app_version", minAppVersion.trim(), uid),
           ]);
           setSaving(false);
           const failed = results.filter((r) => !r.ok);
@@ -190,7 +199,22 @@ export default function SettingsPanel() {
         <Text style={styles.hint}>每次跑馬燈播完後等待幾秒再重新播放</Text>
       </CollapsibleSection>
 
-      {/* 2. Exempt Passages */}
+      {/* 1d. Force Update */}
+      <CollapsibleSection title="強制更新版本控制" subtitle={`目前最低版本：${minAppVersion}`}>
+        <Text style={styles.label}>最低必需版本號</Text>
+        <TextInput
+          style={styles.input}
+          value={minAppVersion}
+          onChangeText={setMinAppVersion}
+          placeholder="1.0.0"
+          autoCapitalize="none"
+          keyboardType="numbers-and-punctuation"
+        />
+        <Text style={styles.hint}>
+          住用舊於此版本的用戶將在啟動時被封鎖屏幕，強制前往 App Store / Google Play 更新。
+          格式： x.y.z（例 1.3.0）。調高此值前先確認新版本已上店。
+        </Text>
+      </CollapsibleSection>
       <CollapsibleSection title="庶民版免費開放篇章" subtitle={`已選 ${exemptPassageIds.size} 篇`}>
         <Text style={styles.cardDesc}>
           勾選篇章後，該篇章下所有測驗及考試將允許庶民版用戶免費存取。練習已預設全部免費。
