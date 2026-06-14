@@ -32,9 +32,11 @@
 # 規則
 1. 選項字數差異 ≤ 30%，句式一致
 2. 錯誤選項用陷阱：偷換概念｜過度引申｜部分正確｜常理干擾｜張冠李戴
-3. 正確選項 explanation 引用原文字句
-4. 每選項獨立 explanation。❌ 禁用 A/B/C/D。❌ 禁提其他選項
-5. ❌ 禁出現篇章 ID（p01 等），用標題（「{{passage_title}}」{{cross_passage_title}}）
+3. 長度 8–15 字，四項字數差異 ≤ １0%，句式一致，性質一致，類別一致 
+4. 正確選項字數不可以是最長，必須盡量所有選項指數非常相近
+5. 正確選項 explanation 引用原文字句
+6. 每選項獨立 explanation。❌ 禁用 A/B/C/D。❌ 禁提其他選項
+7. ❌ 禁出現篇章 ID（p01 等），用標題（「{{passage_title}}」{{cross_passage_title}}）
 6. `mapped_spec` 原樣回傳 spec 值
 
 # 輸出（嚴格 JSON，不要 markdown code block）
