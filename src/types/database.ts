@@ -286,6 +286,13 @@ export interface StudentExerciseCount {
   count: number;
 }
 
+/** Per-student ManYuen point balance snapshot. */
+export interface StudentPointStat {
+  user_id: string;
+  username: string;
+  points: number;
+}
+
 /** Aggregate user demographics & performance summary. */
 export interface UserSummaryStats {
   totalUsers: number;

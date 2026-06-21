@@ -5,7 +5,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, spacing, typography, QUIZ_TYPE_COLORS, QUIZ_TYPE_LABEL } from "../theme";
 import { Quiz, Attempt, Passage } from "../types/database";
-import { listQuizzes, listUserAttempts, listPassages } from "../lib/dataService";
+import { listQuizzes, listQuizzesByIds, listUserAttempts, listPassages } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import GuestGuard from "../components/GuestGuard";
 import { AppStackParamList } from "../navigation/types";
@@ -23,9 +23,22 @@ export default function CalendarScreen() {
 
   const load = useCallback(async () => {
     if (!user) return;
-    const [qs, as, ps] = await Promise.all([listQuizzes(), listUserAttempts(user.id), listPassages()]);
-    setQuizzes(qs);
-    setAttempts(as.filter((a) => a.status === "submitted"));
+    const [as, ps] = await Promise.all([listUserAttempts(user.id), listPassages()]);
+    const submittedAttempts = as.filter((a) => a.status === "submitted");
+    const attemptedQuizIds = [...new Set(submittedAttempts.map((a) => a.quiz_id))];
+
+    // Include historical quiz rows (inactive/unpublished) so old attempts don't render as "未知測驗".
+    const [visibleQuizzes, historicalQuizzes] = await Promise.all([
+      listQuizzes(),
+      attemptedQuizIds.length > 0 ? listQuizzesByIds(attemptedQuizIds) : Promise.resolve([]),
+    ]);
+
+    const mergedQuizMap = new Map<string, Quiz>();
+    historicalQuizzes.forEach((q) => mergedQuizMap.set(q.id, q));
+    visibleQuizzes.forEach((q) => mergedQuizMap.set(q.id, q));
+
+    setQuizzes(Array.from(mergedQuizMap.values()));
+    setAttempts(submittedAttempts);
     setPassages(ps);
   }, [user]);
 

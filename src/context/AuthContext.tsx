@@ -173,21 +173,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /**
    * Checks the user's Apple subscription status via RevenueCat and syncs it
-   * back to Supabase + local state if it differs. Fire-and-forget on sign-in.
+   * back to Supabase + local state when we can positively confirm premium.
+   *
+   * IMPORTANT:
+   * - Do NOT auto-downgrade in app on login/reinstall.
+   * - Downgrade/reset should only happen via server-side unsubscribe handling
+   *   (Apple/RevenueCat webhook) or manual admin operation.
    */
   const syncSubscription = async (userId: string, currentProfile: Profile) => {
-    await rcLogIn(userId);
-    const isPremium = await checkPremiumEntitlement();
-    const newTier = isPremium ? ("premium" as const) : ("free" as const);
-    if (newTier !== currentProfile.subscription_tier) {
-      const patch = {
-        subscription_tier: newTier,
-        subscription_status: (isPremium ? "active" : "inactive") as Profile["subscription_status"],
-      };
-      if (isSupabaseConfigured) {
-        await supabase.from("dsemcq_profiles").update(patch).eq("id", userId);
+    try {
+      await rcLogIn(userId);
+      const isPremium = await checkPremiumEntitlement();
+
+      // Only upgrade/activate when entitlement is positively present.
+      // Never downgrade here.
+      if (!isPremium) return;
+
+      if (currentProfile.subscription_tier !== "premium" || currentProfile.subscription_status !== "active") {
+        const patch = {
+          subscription_tier: "premium" as const,
+          subscription_status: "active" as Profile["subscription_status"],
+        };
+        if (isSupabaseConfigured) {
+          await supabase.from("dsemcq_profiles").update(patch).eq("id", userId);
+        }
+        await persist({ ...currentProfile, ...patch });
       }
-      await persist({ ...currentProfile, ...patch });
+    } catch {
+      // Never block login flow or force tier changes on transient RC/network errors.
     }
   };
 

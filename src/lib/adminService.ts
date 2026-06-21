@@ -19,6 +19,7 @@ import {
   DifficultySuccessRate,
   ExerciseChoiceItem,
   StudentExerciseCount,
+  StudentPointStat,
   UserSummaryStats,
   InventorySummary,
   AppSetting,
@@ -759,12 +760,13 @@ export async function fetchPerStudentExerciseCounts(): Promise<StudentExerciseCo
   const quizIds = quizRows.map((q) => q.id);
   if (quizIds.length === 0) return [];
 
-  const attemptRows = await fetchAllRows<{ user_id: string }>(
+  const attemptRows = await fetchAllRows<{ user_id: string | null }>(
     () => supabase.from("dsemcq_attempts").select("user_id").in("quiz_id", quizIds).eq("status", "submitted")
   );
 
   const counts: Record<string, number> = {};
   for (const r of attemptRows) {
+    if (!r.user_id) continue;
     counts[r.user_id] = (counts[r.user_id] ?? 0) + 1;
   }
 
@@ -778,6 +780,23 @@ export async function fetchPerStudentExerciseCounts(): Promise<StudentExerciseCo
   return Object.entries(counts)
     .map(([uid, count]) => ({ user_id: uid, username: nameMap[uid] ?? uid, count }))
     .sort((a, b) => b.count - a.count);
+}
+
+/** Per-student ManYuen points (snapshot from profiles), sorted desc. */
+export async function fetchPerStudentPointStats(): Promise<StudentPointStat[]> {
+  if (!isSupabaseConfigured) return [];
+
+  const rows = await fetchAllRows<{ id: string; username: string; wenyuan_points: number | null }>(
+    () => supabase.from("dsemcq_profiles").select("id, username, wenyuan_points")
+  );
+
+  return rows
+    .map((r) => ({
+      user_id: r.id,
+      username: r.username,
+      points: r.wenyuan_points ?? 0,
+    }))
+    .sort((a, b) => b.points - a.points);
 }
 
 // ── User summary stats (aggregate) ──────────────────────────────────────────

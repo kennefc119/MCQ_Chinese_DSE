@@ -24,6 +24,7 @@ import {
   fetchSkippingRate,
   fetchExerciseChoiceDistribution,
   fetchPerStudentExerciseCounts,
+  fetchPerStudentPointStats,
   fetchUsageMetrics,
 } from "../../lib/adminService";
 import {
@@ -33,10 +34,11 @@ import {
   DifficultySuccessRate,
   ExerciseChoiceItem,
   StudentExerciseCount,
+  StudentPointStat,
   UsageWindowMetrics,
 } from "../../types/database";
 
-const DAY_OPTIONS = [7, 14, 21, 31, 60, 90, 120] as const;
+const DAY_OPTIONS = [1, 7, 14, 21, 31, 60, 90, 120] as const;
 const METRIC_COLORS = {
   activeUsers: colors.primary,
   newUsers: colors.gold,
@@ -71,6 +73,7 @@ export default function UsageInsightsPanel() {
   const [skipping, setSkipping] = useState<{ total: number; skipped: number; rate: number } | null>(null);
   const [exerciseDist, setExerciseDist] = useState<ExerciseChoiceItem[]>([]);
   const [studentCounts, setStudentCounts] = useState<StudentExerciseCount[]>([]);
+  const [studentPointStats, setStudentPointStats] = useState<StudentPointStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [sectionLoading, setSectionLoading] = useState(true);
 
@@ -96,12 +99,13 @@ export default function UsageInsightsPanel() {
     let cancelled = false;
     (async () => {
       setSectionLoading(true);
-      const [pr, dr, sk, ed, sc] = await Promise.all([
+      const [pr, dr, sk, ed, sc, sp] = await Promise.all([
         fetchPassageSuccessRates().catch(() => []),
         fetchDifficultySuccessRates().catch(() => []),
         fetchSkippingRate().catch(() => ({ total: 0, skipped: 0, rate: 0 })),
         fetchExerciseChoiceDistribution().catch(() => []),
         fetchPerStudentExerciseCounts().catch(() => []),
+        fetchPerStudentPointStats().catch(() => []),
       ]);
       if (cancelled) return;
       setPassageRates(pr);
@@ -109,6 +113,7 @@ export default function UsageInsightsPanel() {
       setSkipping(sk);
       setExerciseDist(ed);
       setStudentCounts(sc);
+      setStudentPointStats(sp);
       setSectionLoading(false);
     })();
     return () => { cancelled = true; };
@@ -370,20 +375,32 @@ export default function UsageInsightsPanel() {
               <Text style={styles.empty}>尚無資料</Text>
             ) : (
               <>
+                {(() => {
+                  const totalPractice = studentCounts.reduce((sum, c) => sum + c.count, 0);
+                  const averagePractice = totalPractice / studentCounts.length;
+                  const maxPractice = studentCounts[0]?.count ?? 0;
+                  const medianPractice = studentCounts[Math.floor(studentCounts.length / 2)]?.count ?? 0;
+                  return (
+                    <View style={styles.statRow}>
+                      <StatBox label="總練習次數" value={totalPractice} />
+                      <StatBox label="平均次數" value={averagePractice.toFixed(1)} />
+                      <StatBox label="最多" value={maxPractice} />
+                      <StatBox label="中位數" value={medianPractice} />
+                    </View>
+                  );
+                })()}
+                <Text style={[styles.cardDesc, { marginTop: spacing.xs }]}>按 user_id 統計（同名帳號會分開計）</Text>
                 <View style={styles.statRow}>
-                  <StatBox label="總學生數" value={studentCounts.length} />
-                  <StatBox label="平均次數" value={(studentCounts.reduce((s, c) => s + c.count, 0) / studentCounts.length).toFixed(1)} />
-                  <StatBox label="最多" value={studentCounts[0]?.count ?? 0} />
-                  <StatBox label="中位數" value={studentCounts[Math.floor(studentCounts.length / 2)]?.count ?? 0} />
+                  <StatBox label="有練習學生數" value={studentCounts.length} />
                 </View>
                 <Text style={[styles.cardDesc, { marginTop: spacing.sm }]}>點擊柱形查看學生</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   <BarChart
                     data={studentCounts.slice(0, 30).map((s) => ({
                       value: s.count,
-                      label: s.username.length > 4 ? s.username.slice(0, 4) + "…" : s.username,
+                      label: buildUniqueUserLabel(s.username, s.user_id).slice(0, 8),
                       frontColor: colors.primary,
-                      onPress: () => Alert.alert(s.username, `完成 ${s.count} 次練習`),
+                      onPress: () => Alert.alert(buildUniqueUserLabel(s.username, s.user_id), `完成 ${s.count} 次練習`),
                     }))}
                     width={Math.max(studentCounts.slice(0, 30).length * 40, barChartWidth)}
                     height={180}
@@ -400,6 +417,79 @@ export default function UsageInsightsPanel() {
                     xAxisColor={colors.hairline}
                   />
                 </ScrollView>
+                <View style={styles.auditTableWrap}>
+                  <Text style={styles.auditTableTitle}>Top 20（完整帳號）</Text>
+                  {studentCounts.slice(0, 20).map((s, idx) => (
+                    <View key={`${s.user_id}-practice`} style={styles.auditTableRow}>
+                      <Text style={styles.auditRank}>{idx + 1}</Text>
+                      <View style={styles.auditIdentityCol}>
+                        <Text style={styles.auditName} numberOfLines={1}>{s.username}</Text>
+                        <Text style={styles.auditId} numberOfLines={1}>{s.user_id}</Text>
+                      </View>
+                      <Text style={styles.auditValue}>{s.count}</Text>
+                    </View>
+                  ))}
+                </View>
+              </>
+            )}
+          </CollapsibleSection>
+
+          <CollapsibleSection title="學生 ManYuen 點數" subtitle="每位學生現時文苑點數（按 user_id）">
+            {studentPointStats.length === 0 ? (
+              <Text style={styles.empty}>尚無資料</Text>
+            ) : (
+              <>
+                {(() => {
+                  const totalPoints = studentPointStats.reduce((sum, s) => sum + s.points, 0);
+                  const avgPoints = totalPoints / studentPointStats.length;
+                  const maxPoints = studentPointStats[0]?.points ?? 0;
+                  const medianPoints = studentPointStats[Math.floor(studentPointStats.length / 2)]?.points ?? 0;
+                  return (
+                    <View style={styles.statRow}>
+                      <StatBox label="總點數" value={totalPoints} />
+                      <StatBox label="平均" value={avgPoints.toFixed(1)} />
+                      <StatBox label="最多" value={maxPoints} />
+                      <StatBox label="中位數" value={medianPoints} />
+                    </View>
+                  );
+                })()}
+                <Text style={[styles.cardDesc, { marginTop: spacing.sm }]}>點擊柱形查看學生</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <BarChart
+                    data={studentPointStats.slice(0, 30).map((s) => ({
+                      value: s.points,
+                      label: buildUniqueUserLabel(s.username, s.user_id).slice(0, 8),
+                      frontColor: colors.gold,
+                      onPress: () => Alert.alert(buildUniqueUserLabel(s.username, s.user_id), `文苑點數 ${s.points}`),
+                    }))}
+                    width={Math.max(studentPointStats.slice(0, 30).length * 40, barChartWidth)}
+                    height={180}
+                    barWidth={20}
+                    spacing={12}
+                    noOfSections={4}
+                    yAxisTextStyle={styles.axisText}
+                    xAxisLabelTextStyle={{ ...styles.axisText, fontSize: 9 }}
+                    barBorderRadius={3}
+                    isAnimated
+                    rulesColor={colors.hairline}
+                    backgroundColor={colors.surface}
+                    yAxisColor={colors.hairline}
+                    xAxisColor={colors.hairline}
+                  />
+                </ScrollView>
+                <View style={styles.auditTableWrap}>
+                  <Text style={styles.auditTableTitle}>Top 20（完整帳號）</Text>
+                  {studentPointStats.slice(0, 20).map((s, idx) => (
+                    <View key={`${s.user_id}-points`} style={styles.auditTableRow}>
+                      <Text style={styles.auditRank}>{idx + 1}</Text>
+                      <View style={styles.auditIdentityCol}>
+                        <Text style={styles.auditName} numberOfLines={1}>{s.username}</Text>
+                        <Text style={styles.auditId} numberOfLines={1}>{s.user_id}</Text>
+                      </View>
+                      <Text style={styles.auditValue}>{s.points}</Text>
+                    </View>
+                  ))}
+                </View>
               </>
             )}
           </CollapsibleSection>
@@ -407,6 +497,10 @@ export default function UsageInsightsPanel() {
       )}
     </View>
   );
+}
+
+function buildUniqueUserLabel(username: string, userId: string): string {
+  return `${username} #${userId.slice(0, 6)}`;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -460,4 +554,49 @@ const styles = StyleSheet.create({
   statBox: { flex: 1, backgroundColor: colors.surfaceAlt, borderRadius: 8, padding: spacing.sm, alignItems: "center" },
   statBoxVal: { ...typography.body, color: colors.ink, fontWeight: "700" },
   statBoxLabel: { ...typography.caption, color: colors.inkMuted, marginTop: 2 },
+  auditTableWrap: {
+    marginTop: spacing.sm,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 8,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+  },
+  auditTableTitle: {
+    ...typography.caption,
+    color: colors.inkSoft,
+    fontWeight: "700",
+    marginBottom: spacing.xs,
+  },
+  auditTableRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 5,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.hairline,
+  },
+  auditRank: {
+    ...typography.caption,
+    color: colors.inkMuted,
+    width: 22,
+  },
+  auditIdentityCol: {
+    flex: 1,
+    minWidth: 0,
+  },
+  auditName: {
+    ...typography.caption,
+    color: colors.ink,
+    fontWeight: "600",
+  },
+  auditId: {
+    ...typography.caption,
+    color: colors.inkMuted,
+    fontSize: 10,
+  },
+  auditValue: {
+    ...typography.caption,
+    color: colors.ink,
+    fontWeight: "700",
+    marginLeft: spacing.sm,
+  },
 });

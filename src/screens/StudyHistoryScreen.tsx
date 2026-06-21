@@ -7,7 +7,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, typography, QUIZ_TYPE_COLORS, QUIZ_TYPE_LABEL } from "../theme";
 import { Quiz, Attempt, Passage } from "../types/database";
-import { listQuizzes, listUserAttempts, listPassages } from "../lib/dataService";
+import { listQuizzes, listQuizzesByIds, listUserAttempts, listPassages } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
 import { cleanPassageName, extractSkillFromTitle } from "../lib/quizDisplayUtils";
@@ -33,13 +33,24 @@ export default function StudyHistoryScreen() {
   useFocusEffect(
     useCallback(() => {
       if (!user) return;
-      Promise.all([listQuizzes(), listUserAttempts(user.id), listPassages()]).then(
-        ([qs, as, ps]) => {
-          setQuizzes(qs);
-          setAttempts(as.filter((a) => a.status === "submitted"));
-          setPassages(ps);
-        },
-      );
+      (async () => {
+        const [as, ps] = await Promise.all([listUserAttempts(user.id), listPassages()]);
+        const submittedAttempts = as.filter((a) => a.status === "submitted");
+        const attemptedQuizIds = [...new Set(submittedAttempts.map((a) => a.quiz_id))];
+
+        const [visibleQuizzes, historicalQuizzes] = await Promise.all([
+          listQuizzes(),
+          attemptedQuizIds.length > 0 ? listQuizzesByIds(attemptedQuizIds) : Promise.resolve([]),
+        ]);
+
+        const mergedQuizMap = new Map<string, Quiz>();
+        historicalQuizzes.forEach((q) => mergedQuizMap.set(q.id, q));
+        visibleQuizzes.forEach((q) => mergedQuizMap.set(q.id, q));
+
+        setQuizzes(Array.from(mergedQuizMap.values()));
+        setAttempts(submittedAttempts);
+        setPassages(ps);
+      })();
     }, [user]),
   );
 
