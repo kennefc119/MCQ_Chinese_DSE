@@ -338,6 +338,72 @@ def _stratified_shuffle(pool: list[dict], rng: random.Random) -> list[dict]:
     return stratified
 
 
+def _sample_group_batches(
+    pool: list[dict],
+    n: int,
+    keep_ratio: float,
+    rng: random.Random,
+    attempts: int = 12,
+) -> list[list[dict]]:
+    """
+    Sample multiple valid packings for one group and pick one randomly.
+
+    Constraints remain unchanged:
+    - filtering via keep_ratio
+    - non-overlap (slice partitioning)
+    - fixed quiz size n
+
+    When only one feasible packing exists, fallback to that single result,
+    while still shuffling question order inside each batch.
+    """
+    candidates: list[list[list[dict]]] = []
+    seen_signatures: set[tuple[tuple[str, ...], ...]] = set()
+
+    for _ in range(max(1, attempts)):
+        filtered = _filter_pool(pool, keep_ratio, rng)
+        ordered = _stratified_shuffle(filtered, rng)
+
+        n_instances = len(ordered) // n
+        if n_instances == 0:
+            continue
+
+        batches: list[list[dict]] = []
+        for i in range(n_instances):
+            batch = list(ordered[i * n : (i + 1) * n])
+            # Ensure internal order remains random even when the selected set
+            # of questions matches a previous valid solution.
+            rng.shuffle(batch)
+            batches.append(batch)
+
+        # Canonical signature by question-id sets, ignoring batch/order layout.
+        signature = tuple(
+            sorted(tuple(sorted(q["id"] for q in batch)) for batch in batches)
+        )
+        if signature in seen_signatures:
+            continue
+        seen_signatures.add(signature)
+
+        # Randomize combo ordering too (independent from within-batch order).
+        rng.shuffle(batches)
+        candidates.append(batches)
+
+    if candidates:
+        chosen = list(rng.choice(candidates))
+    else:
+        # Fallback: one-pass assembly when the pool is too constrained.
+        filtered = _filter_pool(pool, keep_ratio, rng)
+        ordered = _stratified_shuffle(filtered, rng)
+        n_instances = len(ordered) // n
+        if n_instances == 0:
+            return []
+        chosen = [list(ordered[i * n : (i + 1) * n]) for i in range(n_instances)]
+        for batch in chosen:
+            rng.shuffle(batch)
+        rng.shuffle(chosen)
+
+    return chosen
+
+
 # --- Assembly per quiz type --------------------------------------------------
 
 
@@ -401,21 +467,19 @@ def _assemble_type(
             for tag in (r.get("tags") or []):
                 groups[(pid, tag)].append(r)
 
-        for (pid, tag_id) in sorted(groups.keys()):
+        group_keys = list(groups.keys())
+        rng.shuffle(group_keys)
+        for (pid, tag_id) in group_keys:
             pool = groups[(pid, tag_id)]
-            filtered = _filter_pool(pool, keep_ratio, rng)
-            filtered = _stratified_shuffle(filtered, rng)
-
-            n_instances = len(filtered) // n
-            if n_instances == 0:
+            batches = _sample_group_batches(pool, n, keep_ratio, rng)
+            if not batches:
                 continue
 
             skill_label = TAG_LABEL.get(tag_id, tag_id)
             label = (_ptitles.get(pid) or _passage_label(pid)).removesuffix("（節錄）").strip()
             subj  = PASSAGE_SUBJECT.get(pid, "文言文")
 
-            for i in range(n_instances):
-                batch = filtered[i * n : (i + 1) * n]
+            for i, batch in enumerate(batches):
                 seq   = i + 1
                 title = f"{label}【{skill_label}】"
                 records.append(_make_record(
@@ -442,20 +506,18 @@ def _assemble_type(
                 by_passage[pid].append(r)
                 seen.add(r["id"])
 
-        for pid in sorted(by_passage.keys()):
+        passage_keys = list(by_passage.keys())
+        rng.shuffle(passage_keys)
+        for pid in passage_keys:
             pool = by_passage[pid]
-            filtered = _filter_pool(pool, keep_ratio, rng)
-            filtered = _stratified_shuffle(filtered, rng)
-
-            n_instances = len(filtered) // n
-            if n_instances == 0:
+            batches = _sample_group_batches(pool, n, keep_ratio, rng)
+            if not batches:
                 continue
 
             label = (_ptitles.get(pid) or _passage_label(pid)).removesuffix("（節錄）").strip()
             subj  = PASSAGE_SUBJECT.get(pid, "文言文")
 
-            for i in range(n_instances):
-                batch = filtered[i * n : (i + 1) * n]
+            for i, batch in enumerate(batches):
                 seq   = i + 1
                 title = label
                 records.append(_make_record(

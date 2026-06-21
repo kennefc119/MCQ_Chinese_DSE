@@ -36,7 +36,10 @@ export async function rcLogOut(): Promise<void> {
   if (Platform.OS !== "ios") return;
   try {
     await Purchases.logOut();
-  } catch (e) {
+  } catch (e: any) {
+    const msg = String(e?.message ?? "").toLowerCase();
+    // Expected when app user was never identified in RC; avoid noisy warning.
+    if (msg.includes("current user is anonymous")) return;
     console.warn("[RC] logOut failed:", e);
   }
 }
@@ -46,12 +49,24 @@ export async function rcLogOut(): Promise<void> {
  * to Apple / RevenueCat. Safe to call without a logged-in RC user.
  */
 export async function checkPremiumEntitlement(): Promise<boolean> {
-  if (Platform.OS !== "ios") return false;
+  const result = await getPremiumEntitlementStatus();
+  return result.isPremium;
+}
+
+/**
+ * Returns entitlement status with explicit error so callers can avoid false
+ * downgrades when network/API errors occur.
+ */
+export async function getPremiumEntitlementStatus(): Promise<{
+  isPremium: boolean;
+  error?: string;
+}> {
+  if (Platform.OS !== "ios") return { isPremium: false };
   try {
     const info = await Purchases.getCustomerInfo();
-    return !!info.entitlements.active[ENTITLEMENT_ID];
-  } catch {
-    return false;
+    return { isPremium: !!info.entitlements.active[ENTITLEMENT_ID] };
+  } catch (e: any) {
+    return { isPremium: false, error: e?.message ?? "無法驗證訂閱狀態" };
   }
 }
 
@@ -94,5 +109,21 @@ export async function restorePurchases(): Promise<{
     return { isPremium };
   } catch (e: any) {
     return { isPremium: false, error: e?.message ?? "恢復失敗" };
+  }
+}
+
+/**
+ * Opens Apple's in-app offer code redemption sheet on iOS.
+ */
+export async function presentOfferCodeRedemptionSheet(): Promise<{
+  opened: boolean;
+  error?: string;
+}> {
+  if (Platform.OS !== "ios") return { opened: false, error: "優惠碼兌換僅支援 iOS" };
+  try {
+    await Purchases.presentCodeRedemptionSheet();
+    return { opened: true };
+  } catch (e: any) {
+    return { opened: false, error: e?.message ?? "無法開啟優惠碼兌換" };
   }
 }

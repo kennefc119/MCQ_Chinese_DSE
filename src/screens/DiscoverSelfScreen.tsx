@@ -8,11 +8,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { BarChart, PieChart } from "react-native-gifted-charts";
 import { colors, spacing, typography, QUIZ_TYPE_COLORS, QUIZ_TYPE_LABEL } from "../theme";
 import { PsychTest, Attempt, Quiz, Passage } from "../types/database";
-import { listPsychTests, listUserAttempts, listQuizzes, listPassages, listUserPsychResults, fetchQuestionAnalyticsData, QuestionAnalyticsMeta } from "../lib/dataService";
+import { listPsychTests, listUserAttempts, listQuizzesByIds, listPassages, listUserPsychResults, fetchQuestionAnalyticsData, QuestionAnalyticsMeta } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
 import RadarChart from "../components/RadarChart";
 import CollapsibleSection from "../components/CollapsibleSection";
+import Treemap from "../components/Treemap";
 import { TABLET_BREAKPOINT, CONTENT_MAX_WIDTH } from "../hooks/useDeviceType";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
@@ -43,6 +44,8 @@ export default function DiscoverSelfScreen() {
   const contentWidth = isTablet ? Math.min(screenWidth, CONTENT_MAX_WIDTH) : screenWidth;
   // Available width inside analyticsCard (FlatList padding + card padding = 4×spacing.md)
   const CHART_W = contentWidth - spacing.md * 4;
+  const TREEMAP_W = Math.max(130, Math.min(200, CHART_W * 0.42));
+  const TREEMAP_H = Math.max(120, Math.min(160, TREEMAP_W * 0.82));
 
   const [tests, setTests]       = useState<PsychTest[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
@@ -62,10 +65,12 @@ export default function DiscoverSelfScreen() {
       setTimeout(() => reject(new Error("load_timeout")), 8000)
     );
     Promise.race([
-      Promise.all([listUserAttempts(user.id), listQuizzes(), listUserPsychResults(user.id)]),
+      Promise.all([listUserAttempts(user.id), listUserPsychResults(user.id)]),
       deadline,
-    ]).then(async ([as, qs, pr]) => {
+    ]).then(async ([as, pr]) => {
       const submitted = as.filter((a) => a.status === "submitted");
+      const quizIds = [...new Set(submitted.map((a) => a.quiz_id))];
+      const qs = await listQuizzesByIds(quizIds);
       setAttempts(submitted);
       setQuizzes(qs);
       setUserPsychResults(pr);
@@ -168,7 +173,7 @@ export default function DiscoverSelfScreen() {
     const counts: Record<string, number> = {};
     for (const a of attempts) {
       const type = quizMap[a.quiz_id]?.type ?? "exercise";
-      counts[type] = (counts[type] ?? 0) + (a.total ?? 0);
+      counts[type] = (counts[type] ?? 0) + Object.keys(a.answers ?? {}).length;
     }
     const pieColors: Record<string, string> = { exercise: QUIZ_TYPE_COLORS.exercise, quiz: QUIZ_TYPE_COLORS.quiz, exam: QUIZ_TYPE_COLORS.exam };
     return Object.entries(counts).map(([type, count]) => ({
@@ -178,7 +183,10 @@ export default function DiscoverSelfScreen() {
     }));
   }, [attempts, quizMap]);
 
-  const totalQuestionsAnswered = useMemo(() => attempts.reduce((s, a) => s + (a.total ?? 0), 0), [attempts]);
+  const totalQuestionsAnswered = useMemo(
+    () => attempts.reduce((sum, attempt) => sum + Object.keys(attempt.answers ?? {}).length, 0),
+    [attempts],
+  );
 
   // ── Passage distribution by questions (pie) ──────────────────────────
   const PASSAGE_PIE_COLORS = [
@@ -189,9 +197,20 @@ export default function DiscoverSelfScreen() {
   const passageDistribution = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const a of attempts) {
-      const quiz = quizMap[a.quiz_id];
-      if (!quiz?.passage_id) continue;
-      counts[quiz.passage_id] = (counts[quiz.passage_id] ?? 0) + (a.total ?? 0);
+      for (const questionId of Object.keys(a.answers ?? {})) {
+        const meta = questionMeta[questionId];
+        if (!meta) {
+          counts["__uncategorized__"] = (counts["__uncategorized__"] ?? 0) + 1;
+          continue;
+        }
+        if (meta.passageId) {
+          counts[meta.passageId] = (counts[meta.passageId] ?? 0) + 1;
+        } else if (meta.crossPassageId) {
+          counts["__cross_passage__"] = (counts["__cross_passage__"] ?? 0) + 1;
+        } else {
+          counts["__uncategorized__"] = (counts["__uncategorized__"] ?? 0) + 1;
+        }
+      }
     }
     const passageMap = passages.reduce<Record<string, string>>((m, p) => ({ ...m, [p.id]: p.title.replace(/（節錄）$/, "") }), {});
     return Object.entries(counts)
@@ -199,9 +218,14 @@ export default function DiscoverSelfScreen() {
       .map(([pid, count], i) => ({
         value: count,
         color: PASSAGE_PIE_COLORS[i % PASSAGE_PIE_COLORS.length],
-        text: passageMap[pid] ?? pid,
+        text: pid === "__cross_passage__"
+          ? "跨篇章"
+          : pid === "__uncategorized__"
+            ? "未分類"
+            : (passageMap[pid] ?? pid),
+        id: pid,
       }));
-  }, [attempts, quizMap, passages]);
+  }, [attempts, questionMeta, passages]);
 
   // ── Skill distribution (pie) ─────────────────────────────────────────
   const SKILL_PIE_COLORS = [
@@ -424,16 +448,13 @@ export default function DiscoverSelfScreen() {
                   <Text style={styles.pieSubtitle}>按篇章</Text>
                   <Text style={styles.analyticsHint}>各篇章的答題數量</Text>
                   <View style={styles.pieRow}>
-                    <PieChart
-                      data={passageDistribution.map((d, i) => ({ ...d, text: `${i + 1}` }))}
-                      radius={60}
-                      showText
-                      textColor="#fff"
-                      textSize={9}
-                      focusOnPress
-                      innerRadius={30}
-                      innerCircleColor={colors.surface}
-                    />
+                    <View style={styles.treemapWrap}>
+                      <Treemap
+                        data={passageDistribution.map((d) => ({ id: d.id, label: d.text, value: d.value, color: d.color }))}
+                        width={TREEMAP_W}
+                        height={TREEMAP_H}
+                      />
+                    </View>
                     <View style={styles.pieSideLegend}>
                       {passageDistribution.map((d, i) => (
                         <View key={d.text} style={styles.pieSideLegendRow}>
@@ -726,6 +747,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
+  },
+  treemapWrap: {
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    borderRadius: 10,
+    overflow: "hidden",
+    backgroundColor: colors.surfaceAlt,
   },
   pieSideLegend: {
     flex: 1,

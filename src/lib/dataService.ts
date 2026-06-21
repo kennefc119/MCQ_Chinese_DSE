@@ -54,6 +54,24 @@ async function fetchDifficultyMap(ids: string[]): Promise<Record<string, number>
   return diffMap;
 }
 
+// Generic paginated fetch helper for Supabase queries to avoid the 1000-row cap.
+async function fetchAllRows<T>(
+  buildQuery: () => ReturnType<ReturnType<typeof supabase.from>["select"]>
+): Promise<T[]> {
+  if (!isSupabaseConfigured) return [];
+  const PAGE_SIZE = 1000;
+  const all: T[] = [];
+  let from = 0;
+  while (true) {
+    const { data } = await (buildQuery() as any).range(from, from + PAGE_SIZE - 1);
+    const rows = (data ?? []) as T[];
+    all.push(...rows);
+    if (rows.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+  return all;
+}
+
 // ── Public API (works in both demo + Supabase mode) ─────────────────────
 export async function listQuizzes(): Promise<Quiz[]> {
   if (!isSupabaseConfigured) {
@@ -92,6 +110,35 @@ export async function getQuiz(id: string): Promise<Quiz | null> {
   if (!quiz) return null;
   const diffMap = await fetchDifficultyMap(quiz.question_ids);
   return applyComputedDifficulty([quiz], diffMap)[0] ?? null;
+}
+
+/**
+ * Stats-safe quiz loader: fetches quizzes by specific IDs without filtering by
+ * is_active/is_published, so historical attempts still map to their original
+ * quiz metadata after reshuffles.
+ */
+export async function listQuizzesByIds(ids: string[]): Promise<Quiz[]> {
+  if (ids.length === 0) return [];
+  if (!isSupabaseConfigured) {
+    const seedRows = SEED_QUIZZES.filter((q) => ids.includes(q.id));
+    const diffMap = Object.fromEntries(SEED_QUESTIONS.map((q) => [q.id, q.difficulty]));
+    return applyComputedDifficulty(seedRows, diffMap);
+  }
+
+  const { data, error } = await supabase
+    .from("dsemcq_quizzes")
+    .select("*")
+    .in("id", ids);
+  if (error) {
+    console.warn("[dsemcq] listQuizzesByIds error:", error.message);
+    return [];
+  }
+
+  const quizzes = (data as Quiz[]) ?? [];
+  const allIds = [...new Set(quizzes.flatMap((q) => q.question_ids))];
+  if (allIds.length === 0) return quizzes;
+  const diffMap = await fetchDifficultyMap(allIds);
+  return applyComputedDifficulty(quizzes, diffMap);
 }
 
 export async function getQuestionsForQuiz(quiz: Quiz): Promise<Question[]> {
@@ -593,6 +640,8 @@ export async function submitAttempt(
 export interface QuestionAnalyticsMeta {
   tagIds: string[];
   correctOptionId: string | null;
+  passageId: string | null;
+  crossPassageId: string | null;
 }
 
 export async function fetchQuestionAnalyticsData(
@@ -607,12 +656,17 @@ export async function fetchQuestionAnalyticsData(
       const q = SEED_QUESTIONS.find((sq) => sq.id === id);
       if (!q) continue;
       const correctOpt = q.options.find((o) => o.is_correct);
-      meta[id] = { tagIds: q.tag_ids ?? [], correctOptionId: correctOpt?.id ?? null };
+      meta[id] = {
+        tagIds: q.tag_ids ?? [],
+        correctOptionId: correctOpt?.id ?? null,
+        passageId: q.passage_id ?? null,
+        crossPassageId: q.cross_passage_id ?? null,
+      };
     }
     return meta;
   }
 
-  const [{ data: tagRows, error: tagErr }, { data: optRows, error: optErr }] = await Promise.all([
+  const [{ data: tagRows, error: tagErr }, { data: optRows, error: optErr }, { data: questionRows, error: questionErr }] = await Promise.all([
     supabase
       .from("dsemcq_question_tags")
       .select("question_id, tag_id")
@@ -622,18 +676,30 @@ export async function fetchQuestionAnalyticsData(
       .select("id, question_id")
       .in("question_id", questionIds)
       .eq("is_correct", true),
+    supabase
+      .from("dsemcq_questions")
+      .select("id, passage_id, cross_passage_id")
+      .in("id", questionIds),
   ]);
 
   if (tagErr) console.warn("[dsemcq] fetchQuestionAnalyticsData tags error:", tagErr.message);
   if (optErr) console.warn("[dsemcq] fetchQuestionAnalyticsData options error:", optErr.message);
+  if (questionErr) console.warn("[dsemcq] fetchQuestionAnalyticsData questions error:", questionErr.message);
 
   const meta: Record<string, QuestionAnalyticsMeta> = {};
-  for (const id of questionIds) meta[id] = { tagIds: [], correctOptionId: null };
+  for (const id of questionIds) {
+    meta[id] = { tagIds: [], correctOptionId: null, passageId: null, crossPassageId: null };
+  }
   for (const row of tagRows ?? []) {
     meta[row.question_id]?.tagIds.push(row.tag_id);
   }
   for (const row of optRows ?? []) {
     if (meta[row.question_id]) meta[row.question_id].correctOptionId = row.id;
+  }
+  for (const row of (questionRows ?? []) as { id: string; passage_id: string | null; cross_passage_id: string | null }[]) {
+    if (!meta[row.id]) continue;
+    meta[row.id].passageId = row.passage_id;
+    meta[row.id].crossPassageId = row.cross_passage_id;
   }
   return meta;
 }
@@ -641,13 +707,13 @@ export async function fetchQuestionAnalyticsData(
 export async function listUserAttempts(userId: string): Promise<Attempt[]> {
   const local = memory.attempts.filter((a) => a.user_id === userId);
   if (!isSupabaseConfigured) return local;
-  const { data, error } = await supabase
-    .from("dsemcq_attempts")
-    .select("*")
-    .eq("user_id", userId)
-    .order("started_at", { ascending: false });
-  if (error) console.warn("[dsemcq] listUserAttempts error:", error.message);
-  const remote = (data as Attempt[]) ?? [];
+  const remote = await fetchAllRows<Attempt>(
+    () => supabase
+      .from("dsemcq_attempts")
+      .select("*")
+      .eq("user_id", userId)
+      .order("started_at", { ascending: false })
+  );
   // Merge: remote first, then any local-only attempts not yet persisted
   const remoteIds = new Set(remote.map((a) => a.id));
   return [...remote, ...local.filter((a) => !remoteIds.has(a.id))];

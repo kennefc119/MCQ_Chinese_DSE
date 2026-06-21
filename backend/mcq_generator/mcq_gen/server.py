@@ -169,7 +169,7 @@ def get_breakdown() -> dict[str, Any]:
     """
     Return a per-passage breakdown suitable for the 題庫總覽 tab:
       • questions.total / active / by_skill / by_difficulty  (active questions only)
-      • quizzes.exercise / quiz / exam                       (published quizzes by type)
+    • quizzes.exercise / quiz / exam                       (visible quizzes by type: active + published)
     Also includes a special 'cross_passage' bucket for questions without a passage.
     """
     from .db.client import fetch_all, get_supabase
@@ -198,10 +198,12 @@ def get_breakdown() -> dict[str, Any]:
     for t in tag_rows:
         q_tags[t["question_id"]].append(t["tag_id"])
 
-    # 4. Published quizzes (type + passage_id)
+    # 4. Visible quizzes (type + passage_id): app-visible rows are both active and published
     quiz_rows = fetch_all(
         sb.table("dsemcq_quizzes")
-        .select("id,type,passage_id,is_published")
+        .select("id,type,passage_id,is_published,is_active")
+        .eq("is_active", True)
+        .eq("is_published", True)
     )
 
     # Aggregate questions per passage

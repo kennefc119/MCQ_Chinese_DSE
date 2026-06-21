@@ -76,13 +76,13 @@ def fetch_db_stats() -> DBStats:
         else:
             total_inactive += 1
 
-        source = q.get("source") or ""
-        if "needs-review" in source:
-            needs_review_count += 1
-
         # 以下統計只計 active 題目
         if not active:
             continue
+
+        source = q.get("source") or ""
+        if "needs-review" in source:
+            needs_review_count += 1
 
         pid = q.get("passage_id") or "unknown"
         by_passage[pid] = by_passage.get(pid, 0) + 1
@@ -108,5 +108,11 @@ def fetch_db_stats() -> DBStats:
         cross_passage_count=cross_passage_count,
         needs_review_count=needs_review_count,
     )
-    log.info("db_stats_fetched", total=total, by_passage=by_passage)
+    log.info(
+        "db_stats_fetched",
+        total=total,
+        total_active=total_active,
+        total_inactive=total_inactive,
+        by_passage=by_passage,
+    )
     return stats

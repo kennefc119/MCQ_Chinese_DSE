@@ -1110,14 +1110,18 @@ function toggleOvDetail(idx, row) {
 function renderStats(s) {
   const inactive = s.total_inactive ?? 0;
   const active   = s.total_active ?? s.total;
+  const total    = s.total ?? active;
   const inactiveSuffix = inactive > 0
     ? ` <span style="font-size:11px;color:var(--muted);font-weight:400">(+${inactive} 停用)</span>`
+    : '';
+  const totalSuffix = total >= active
+    ? ` <span style="font-size:11px;color:var(--muted);font-weight:400">(總量 ${total})</span>`
     : '';
   // 難度固定排序：最淺 → 淺 → 中 → 深 → 最深
   const diffOrder = ['最淺', '淺', '中', '深', '最深'];
   let h = `
     <div class="stat-grid">
-      <div class="stat-box"><div class="stat-val">${active}${inactiveSuffix}</div><div class="stat-lbl">有效題數</div></div>
+      <div class="stat-box"><div class="stat-val">${active}${inactiveSuffix}${totalSuffix}</div><div class="stat-lbl">有效題數（主指標）</div></div>
       <div class="stat-box"><div class="stat-val">${s.cross_passage_count}</div><div class="stat-lbl">跨篇章</div></div>
       <div class="stat-box"><div class="stat-val" style="color:var(--yellow)">${s.needs_review_count}</div><div class="stat-lbl">待審核</div></div>
     </div>
@@ -1363,7 +1367,7 @@ async function assemblePreview() {
 
     el.innerHTML = `
       <b>📊 題目概覽</b><br>
-      總題數：${d.total_questions} ｜ is_active=true：<b>${d.active_questions}</b> ｜ 停用：${d.inactive_questions}<br>
+      主指標（is_active=true）：<b>${d.active_questions}</b> ｜ 次要參考（總量）：${d.total_questions} ｜ 停用：${d.inactive_questions}<br>
       評分分佈：${scoreDist || '(無)'}
       <br><br>
       <b>📋 門檻要求</b><br>

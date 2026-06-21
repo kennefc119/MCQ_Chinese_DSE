@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Linking,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, spacing, typography } from "../theme";
@@ -19,6 +20,8 @@ import {
   getCurrentOffering,
   purchasePkg,
   restorePurchases,
+  getPremiumEntitlementStatus,
+  presentOfferCodeRedemptionSheet,
 } from "../lib/revenueCat";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import type { PurchasesPackage } from "react-native-purchases";
@@ -26,6 +29,7 @@ import type { PurchasesPackage } from "react-native-purchases";
 const PRIVACY_URL = "https://www.keeonz.ai/zh/legal/privacy/";
 const TERMS_URL = "https://www.keeonz.ai/zh/legal/terms/";
 const EULA_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/";
+const THREADS_URL = "https://www.threads.com/@dse.manyuen?invite=0";
 
 export default function SubscriptionScreen() {
   const { user, updateProfile } = useAuth();
@@ -36,8 +40,16 @@ export default function SubscriptionScreen() {
   const [offeringUnavailable, setOfferingUnavailable] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [redeeming, setRedeeming] = useState(false);
   const [freeLimit, setFreeLimit] = useState(20);
   const [premiumLimit, setPremiumLimit] = useState(300);
+
+  const applyTier = async (premium: boolean) => {
+    await updateProfile({
+      subscription_tier: premium ? "premium" : "free",
+      subscription_status: premium ? "active" : "inactive",
+    });
+  };
 
   useEffect(() => {
     getCurrentOffering().then((offering) => {
@@ -83,7 +95,7 @@ export default function SubscriptionScreen() {
     setPurchasing(false);
     if (result.cancelled) return;
     if (result.success) {
-      await updateProfile({ subscription_tier: "premium", subscription_status: "active" });
+      await applyTier(true);
       Alert.alert("升級成功 🎉", "已成功升級至學士版！感謝你的支持。");
     } else if (result.error) {
       Alert.alert("購買失敗", result.error);
@@ -95,14 +107,43 @@ export default function SubscriptionScreen() {
     const result = await restorePurchases();
     setRestoring(false);
     if (result.isPremium) {
-      await updateProfile({ subscription_tier: "premium", subscription_status: "active" });
+      await applyTier(true);
       Alert.alert("已恢復", "學士版訂閱已成功恢復！");
     } else {
+      if (!result.error) {
+        await applyTier(false);
+      }
       Alert.alert(
         "未找到訂閱",
         result.error ?? "找不到有效的訂閱記錄。如有疑問請聯絡客服。",
       );
     }
+  };
+
+  const handleRedeemCode = async () => {
+    setRedeeming(true);
+    const opened = await presentOfferCodeRedemptionSheet();
+    if (!opened.opened) {
+      setRedeeming(false);
+      Alert.alert("無法兌換優惠碼", opened.error ?? "請稍後再試");
+      return;
+    }
+
+    const entitlement = await getPremiumEntitlementStatus();
+    setRedeeming(false);
+
+    if (entitlement.error) {
+      Alert.alert("已開啟兌換", "若已成功兌換，請點擊「恢復購買記錄」同步訂閱。\n\n" + entitlement.error);
+      return;
+    }
+
+    if (entitlement.isPremium) {
+      await applyTier(true);
+      Alert.alert("優惠碼已生效", "已成功啟用學士版訂閱。");
+      return;
+    }
+
+    Alert.alert("尚未生效", "若你已完成兌換，請稍候後再試「恢復購買記錄」，或重新開啟 App。\n\n如仍未生效，請確認優惠碼地區/期間是否適用。");
   };
 
   return (
@@ -153,6 +194,30 @@ export default function SubscriptionScreen() {
             )}
           </View>
 
+          {/* Promo offer card (third card) */}
+          <View style={styles.promoPlanCard}>
+            <Text style={styles.promoPlanTitle}>暑假溫書推廣優惠</Text>
+            <Text style={styles.promoPlanHeadline}>輸入優惠碼即享兩個月免費學士版</Text>
+            <Text style={styles.promoPlanDesc}>
+              優惠期後將按月自動續期（{priceString}/月），可於下一次續期前至少 24 小時取消。
+            </Text>
+            <Text style={styles.promoPlanDesc}>
+              追蹤我哋嘅 Threads 並私訊我哋，即可獲取優惠碼！
+            </Text>
+            <TouchableOpacity onPress={() => Linking.openURL(THREADS_URL)} style={styles.promoThreadsLink}>
+              <Text style={styles.promoThreadsLinkText}>前往 Threads 取得優惠碼</Text>
+            </TouchableOpacity>
+            {Platform.OS === "ios" ? (
+              <Button
+                title={redeeming ? "開啟中…" : "立即兌換優惠碼"}
+                onPress={handleRedeemCode}
+                disabled={redeeming || restoring}
+              />
+            ) : (
+              <Text style={styles.promoPlatformNote}>優惠碼兌換僅支援 iOS 裝置（會開啟 Apple 兌換視窗）。</Text>
+            )}
+          </View>
+
           {/* Apple-required auto-renewal disclosure */}
           {!isPremium && (
             <Text style={styles.disclosure}>
@@ -164,7 +229,7 @@ export default function SubscriptionScreen() {
           {/* Restore Purchases — mandated by Apple */}
           <TouchableOpacity
             onPress={handleRestore}
-            disabled={restoring}
+            disabled={restoring || redeeming}
             style={styles.restoreBtn}
           >
             <Text style={styles.restoreText}>
@@ -227,6 +292,46 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 14,
     textDecorationLine: "underline",
+  },
+  promoPlanCard: {
+    backgroundColor: "rgba(178,58,46,0.07)",
+    borderColor: colors.primary,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    gap: 8,
+  },
+  promoPlanTitle: {
+    ...typography.heading,
+    color: colors.primary,
+  },
+  promoPlanHeadline: {
+    color: colors.ink,
+    fontSize: 16,
+    fontWeight: "800",
+    lineHeight: 24,
+  },
+  promoPlanDesc: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  promoThreadsLink: {
+    paddingVertical: 2,
+    alignSelf: "flex-start",
+  },
+  promoThreadsLinkText: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: "700",
+    textDecorationLine: "underline",
+  },
+  promoPlatformNote: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 18,
+    fontStyle: "italic",
   },
   legalRow: {
     flexDirection: "row",

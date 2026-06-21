@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   View, Text, StyleSheet, KeyboardAvoidingView, Platform,
-  TouchableOpacity, Alert, TextInput, ActivityIndicator, ScrollView,
+  TouchableOpacity, Alert, TextInput, ActivityIndicator, ScrollView, Linking,
 } from "react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,6 +14,8 @@ import FormInput from "../components/FormInput";
 import Icon from "../components/Icon";
 import SealMark from "../components/SealMark";
 import { AuthStackParamList } from "../navigation/types";
+
+const THREADS_URL = "https://www.threads.com/@dse.manyuen?invite=0";
 
 // Apple Review test account — DO NOT remove (used by App Store review team)
 // Email: apple.review@dsemcq.app  |  Password: DSEMcq@Review2025
@@ -102,6 +104,14 @@ export default function LoginScreen() {
       Alert.alert("登入失敗", res.error || "學校帳戶電郵或密碼不正確，如需協助請聯絡 cs@keeonz.ai");
   };
 
+  const onPromoTap = async () => {
+    try {
+      await Linking.openURL(THREADS_URL);
+    } catch {
+      Alert.alert("無法開啟連結", "請稍後再試，或手動前往 Threads 搜尋 @dse.manyuen");
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
@@ -113,6 +123,13 @@ export default function LoginScreen() {
           </View>
           <Text style={styles.title}>文淵 · DSE 中文 MCQ</Text>
           <Text style={styles.subtitle}>香港中學文憑試中文閱讀練習，靜心一題一題溫。</Text>
+
+          <TouchableOpacity style={styles.promoCard} onPress={onPromoTap} activeOpacity={0.85}>
+            <Text style={styles.promoTitle}>暑假溫書推廣優惠</Text>
+            <Text style={styles.promoText}>輸入優惠碼即享兩個月免費學士版</Text>
+            <Text style={styles.promoText}>追蹤我哋嘅 Threads 並私訊我哋，即可獲取優惠碼！</Text>
+            <Text style={styles.promoLink}>點擊此橫幅前往 Threads</Text>
+          </TouchableOpacity>
 
           <View style={{ height: spacing.xl }} />
 
@@ -279,6 +296,31 @@ const styles = StyleSheet.create({
   brandWrap: { alignItems: "center", marginBottom: spacing.md },
   title: { ...typography.title, color: colors.ink, textAlign: "center" },
   subtitle: { ...typography.body, color: colors.inkSoft, textAlign: "center", marginTop: spacing.sm },
+  promoCard: {
+    marginTop: spacing.md,
+    backgroundColor: "rgba(178,58,46,0.08)",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    padding: spacing.md,
+    gap: 4,
+  },
+  promoTitle: {
+    ...typography.heading,
+    color: colors.primary,
+    fontWeight: "800",
+  },
+  promoText: {
+    color: colors.ink,
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  promoLink: {
+    ...typography.caption,
+    color: colors.primary,
+    textDecorationLine: "underline",
+    marginTop: 2,
+  },
 
   // Apple Sign In button
   appleBtn: {
