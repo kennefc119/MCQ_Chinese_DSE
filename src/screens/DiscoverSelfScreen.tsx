@@ -7,8 +7,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { BarChart, PieChart } from "react-native-gifted-charts";
 import { colors, spacing, typography, QUIZ_TYPE_COLORS, QUIZ_TYPE_LABEL } from "../theme";
-import { PsychTest, Attempt, Quiz, Passage } from "../types/database";
-import { listPsychTests, listUserAttempts, listQuizzesByIds, listPassages, listUserPsychResults, fetchQuestionAnalyticsData, QuestionAnalyticsMeta } from "../lib/dataService";
+import { PsychTest, Attempt, Quiz, Passage, MetricBoxStats, PremiumUserComparison } from "../types/database";
+import { listPsychTests, listUserAttempts, listQuizzesByIds, listPassages, listUserPsychResults, fetchQuestionAnalyticsData, QuestionAnalyticsMeta, fetchPremiumUserComparison } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
 import RadarChart from "../components/RadarChart";
@@ -53,6 +53,12 @@ export default function DiscoverSelfScreen() {
   const [passages, setPassages] = useState<Passage[]>([]);
   const [userPsychResults, setUserPsychResults] = useState<Record<string, { result_code: string; completed_at: string }>>({});
   const [questionMeta, setQuestionMeta] = useState<Record<string, QuestionAnalyticsMeta>>({});
+  const [premiumComparison, setPremiumComparison] = useState<PremiumUserComparison | null>(null);
+  const [comparisonLoading, setComparisonLoading] = useState(false);
+  const [comparisonUnavailable, setComparisonUnavailable] = useState(false);
+
+  const isPremiumUser = user?.subscription_tier === "premium";
+  const hasPremiumComparison = Boolean(premiumComparison?.allowed);
 
   useEffect(() => {
     listPsychTests().then(setTests);
@@ -61,6 +67,9 @@ export default function DiscoverSelfScreen() {
 
   useFocusEffect(useCallback(() => {
     if (!user) return;
+    let cancelled = false;
+
+    const loadCoreAnalytics = async () => {
     const deadline = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error("load_timeout")), 8000)
     );
@@ -68,20 +77,60 @@ export default function DiscoverSelfScreen() {
       Promise.all([listUserAttempts(user.id), listUserPsychResults(user.id)]),
       deadline,
     ]).then(async ([as, pr]) => {
+      if (cancelled) return;
       const submitted = as.filter((a) => a.status === "submitted");
       const quizIds = [...new Set(submitted.map((a) => a.quiz_id))];
       const qs = await listQuizzesByIds(quizIds);
+      if (cancelled) return;
       setAttempts(submitted);
       setQuizzes(qs);
       setUserPsychResults(pr);
       const allQuestionIds = [...new Set(submitted.flatMap((a) => Object.keys(a.answers ?? {})))];
       if (allQuestionIds.length > 0) {
         const meta = await fetchQuestionAnalyticsData(allQuestionIds);
+        if (cancelled) return;
         setQuestionMeta(meta);
       }
     }).catch(() => {
       // Timed out or network error — analytics stay empty; screen remains usable
     });
+    };
+
+    const loadPremiumComparison = async () => {
+      if (user.subscription_tier !== "premium") {
+        if (!cancelled) {
+          setPremiumComparison(null);
+          setComparisonLoading(false);
+          setComparisonUnavailable(false);
+        }
+        return;
+      }
+
+      if (!cancelled) {
+        setComparisonLoading(true);
+        setComparisonUnavailable(false);
+      }
+
+      try {
+        const comparison = await fetchPremiumUserComparison(user.id);
+        if (cancelled) return;
+        setPremiumComparison(comparison);
+        setComparisonUnavailable(!comparison || !comparison.allowed);
+      } catch {
+        if (cancelled) return;
+        setPremiumComparison(null);
+        setComparisonUnavailable(true);
+      } finally {
+        if (!cancelled) setComparisonLoading(false);
+      }
+    };
+
+    void loadCoreAnalytics();
+    void loadPremiumComparison();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user]));
 
   const quizMap = useMemo(
@@ -137,9 +186,6 @@ export default function DiscoverSelfScreen() {
     const totalCorrect = attempts.reduce((s, a) => s + (a.score ?? 0), 0);
     const avgAccuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
     const quizzesCompleted = attempts.length;
-    const avgTime = attempts.length > 0
-      ? Math.round(attempts.reduce((s, a) => s + (a.time_spent_seconds ?? 0), 0) / attempts.length)
-      : 0;
 
     // Best pass streak
     let bestStreak = 0;
@@ -151,8 +197,28 @@ export default function DiscoverSelfScreen() {
       else { currentStreak = 0; }
     }
 
-    return { totalQuestions, totalCorrect, avgAccuracy, quizzesCompleted, avgTime, bestStreak };
+    return { totalQuestions, totalCorrect, avgAccuracy, quizzesCompleted, bestStreak };
   }, [attempts, quizMap]);
+
+  const passageBaselineValues = useMemo(() => {
+    const baseline = premiumComparison?.allowed ? (premiumComparison.passage_avg_by_id ?? {}) : {};
+    return passages.map((p) => Number(baseline[p.id] ?? 0));
+  }, [premiumComparison, passages]);
+
+  const skillBaselineValues = useMemo(() => {
+    const baseline = premiumComparison?.allowed ? (premiumComparison.skill_avg_by_tag ?? {}) : {};
+    return SKILL_TAGS.map((t) => Number(baseline[t.id] ?? 0));
+  }, [premiumComparison]);
+
+  const hasPassageBaseline = useMemo(
+    () => isPremiumUser && hasPremiumComparison && passageBaselineValues.some((v) => v > 0),
+    [isPremiumUser, hasPremiumComparison, passageBaselineValues],
+  );
+
+  const hasSkillBaseline = useMemo(
+    () => isPremiumUser && hasPremiumComparison && skillBaselineValues.some((v) => v > 0),
+    [isPremiumUser, hasPremiumComparison, skillBaselineValues],
+  );
 
   // ── Accuracy trend (last 20 attempts, chronological) ─────────────────
   const accuracyTrendData = useMemo(() => {
@@ -295,14 +361,15 @@ export default function DiscoverSelfScreen() {
     }));
   }, [attempts]);
 
-  const formatTime = (seconds: number) => {
-    if (seconds < 60) return `${seconds}秒`;
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return s > 0 ? `${m}分${s}秒` : `${m}分鐘`;
-  };
-
   const chartBarWidth = Math.max(contentWidth - spacing.md * 4 - 40, 200);
+
+  const percentileBand = (percentile?: number) => {
+    const p = percentile ?? 0;
+    if (p >= 90) return "Top 10%";
+    if (p >= 80) return "Top 20%";
+    if (p >= 50) return "Top 50%";
+    return "低於 50%";
+  };
 
   const ListHeader = (
     <View>
@@ -313,32 +380,56 @@ export default function DiscoverSelfScreen() {
 
       {/* ── Metric cards ──────────────────────────── */}
       {attempts.length > 0 && (
-        <View style={styles.metricGrid}>
-          <View style={styles.metricCard}>
-            <Text style={styles.metricValue}>{metrics.totalQuestions}</Text>
-            <Text style={styles.metricLabel}>總作答題數</Text>
+        <>
+          <View style={styles.metricGrid}>
+            <MetricCompareCard
+              label="總作答題數"
+              value={metrics.totalQuestions}
+              suffix=""
+              accentColor={colors.ink}
+              isPremium={isPremiumUser}
+              percentile={premiumComparison?.metrics?.completed_questions?.percentile}
+              box={premiumComparison?.metrics?.completed_questions?.box}
+            />
+            <MetricCompareCard
+              label="平均正確率"
+              value={metrics.avgAccuracy}
+              suffix="%"
+              accentColor={colors.success}
+              isPremium={isPremiumUser}
+              percentile={premiumComparison?.metrics?.accuracy?.percentile}
+              box={premiumComparison?.metrics?.accuracy?.box}
+            />
+            <MetricCompareCard
+              label="文淵點"
+              value={user?.wenyuan_points ?? 0}
+              suffix=""
+              accentColor={colors.gold}
+              isPremium={isPremiumUser}
+              percentile={premiumComparison?.metrics?.points?.percentile}
+              box={premiumComparison?.metrics?.points?.box}
+            />
+            <MetricCompareCard
+              label="完成測驗數"
+              value={metrics.quizzesCompleted}
+              suffix=""
+              accentColor={colors.primary}
+              isPremium={isPremiumUser}
+              percentile={premiumComparison?.metrics?.completed_quizzes?.percentile}
+              box={premiumComparison?.metrics?.completed_quizzes?.box}
+            />
+            <View style={styles.metricCard}>
+              <Text style={[styles.metricValue, { color: colors.primary }]}>{metrics.bestStreak}</Text>
+              <Text style={styles.metricLabel}>最佳連勝</Text>
+            </View>
           </View>
-          <View style={styles.metricCard}>
-            <Text style={[styles.metricValue, { color: colors.success }]}>{metrics.avgAccuracy}%</Text>
-            <Text style={styles.metricLabel}>平均正確率</Text>
-          </View>
-          <View style={styles.metricCard}>
-            <Text style={[styles.metricValue, { color: colors.gold }]}>{user?.wenyuan_points ?? 0}</Text>
-            <Text style={styles.metricLabel}>文淵點</Text>
-          </View>
-          <View style={styles.metricCard}>
-            <Text style={styles.metricValue}>{metrics.quizzesCompleted}</Text>
-            <Text style={styles.metricLabel}>完成測驗數</Text>
-          </View>
-          <View style={styles.metricCard}>
-            <Text style={[styles.metricValue, { color: colors.primary }]}>{metrics.bestStreak}</Text>
-            <Text style={styles.metricLabel}>最佳連勝</Text>
-          </View>
-          <View style={styles.metricCard}>
-            <Text style={styles.metricValue}>{formatTime(metrics.avgTime)}</Text>
-            <Text style={styles.metricLabel}>平均用時</Text>
-          </View>
-        </View>
+          {!isPremiumUser && (
+            <View style={styles.premiumTeaser}>
+              <Text style={styles.premiumTeaserTitle}>升級學士版解鎖進階比較</Text>
+              <Text style={styles.premiumTeaserBody}>查看你屬於 Top 幾%，掌握與同儕差距。</Text>
+            </View>
+          )}
+        </>
       )}
 
       {/* ── Passage radar ─────────────────────────── */}
@@ -351,9 +442,22 @@ export default function DiscoverSelfScreen() {
               axes={passageAxes}
               values={passageValues}
               color={colors.primary}
+              baselineValues={hasPassageBaseline ? passageBaselineValues : undefined}
+              baselineColor="rgba(52, 152, 219, 0.30)"
               width={CHART_W}
               height={CHART_W}
             />
+            {isPremiumUser && (
+              <Text style={styles.baselineHint}>
+                {comparisonLoading
+                  ? "同儕平均基準載入中…"
+                  : comparisonUnavailable
+                    ? "暫時未能取得同儕平均基準"
+                    : !hasPassageBaseline
+                      ? "同儕基準資料不足，稍後再試"
+                      : "同儕平均基準已套用（淡色虛線）"}
+              </Text>
+            )}
           </View>
         ) : (
           <View style={styles.placeholder}>
@@ -371,9 +475,22 @@ export default function DiscoverSelfScreen() {
             axes={skillAxes}
             values={skillValues}
             color={colors.accent}
+            baselineValues={hasSkillBaseline ? skillBaselineValues : undefined}
+            baselineColor="rgba(46, 204, 113, 0.28)"
             width={CHART_W}
             height={Math.round(CHART_W * 0.85)}
           />
+          {isPremiumUser && (
+            <Text style={styles.baselineHint}>
+              {comparisonLoading
+                ? "同儕平均基準載入中…"
+                : comparisonUnavailable
+                  ? "暫時未能取得同儕平均基準"
+                  : !hasSkillBaseline
+                    ? "同儕基準資料不足，稍後再試"
+                    : "同儕平均基準已套用（淡色虛線）"}
+            </Text>
+          )}
         </View>
       </View>
 
@@ -547,6 +664,47 @@ export default function DiscoverSelfScreen() {
     </View>
   );
 
+  function MetricCompareCard(props: {
+    label: string;
+    value: number;
+    suffix: string;
+    accentColor: string;
+    isPremium: boolean;
+    percentile?: number;
+    box?: MetricBoxStats;
+  }) {
+    const { label, value, suffix, accentColor, isPremium, percentile, box } = props;
+    return (
+      <View style={styles.metricCard}>
+        <Text style={[styles.metricValue, { color: accentColor }]}>{value}{suffix}</Text>
+        <Text style={styles.metricLabel}>{label}</Text>
+        {isPremium && typeof percentile === "number" && box ? (
+          <>
+            <Text style={styles.percentileBadge}>{percentileBand(percentile)}</Text>
+            <MiniBoxPlot box={box} value={value} />
+          </>
+        ) : null}
+      </View>
+    );
+  }
+
+  function MiniBoxPlot({ box, value }: { box: MetricBoxStats; value: number }) {
+    const range = Math.max(box.max - box.min, 1);
+    const q1Pct = ((box.q1 - box.min) / range) * 100;
+    const q3Pct = ((box.q3 - box.min) / range) * 100;
+    const medPct = ((box.median - box.min) / range) * 100;
+    const userPct = Math.min(100, Math.max(0, ((value - box.min) / range) * 100));
+    return (
+      <View style={styles.boxPlotWrap}>
+        <View style={styles.boxPlotTrack}>
+          <View style={[styles.boxPlotIqr, { left: `${q1Pct}%`, width: `${Math.max(q3Pct - q1Pct, 1)}%` }]} />
+          <View style={[styles.boxPlotMedian, { left: `${medPct}%` }]} />
+          <View style={[styles.boxPlotUser, { left: `${userPct}%` }]} />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <FlatList
@@ -695,6 +853,72 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 11,
     fontWeight: "500",
+    textAlign: "center",
+  },
+  percentileBadge: {
+    marginTop: 4,
+    color: colors.primary,
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  boxPlotWrap: {
+    marginTop: 6,
+    width: "100%",
+    paddingHorizontal: 6,
+  },
+  boxPlotTrack: {
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.surfaceAlt,
+    position: "relative",
+    borderWidth: 1,
+    borderColor: colors.hairline,
+  },
+  boxPlotIqr: {
+    position: "absolute",
+    top: 1,
+    bottom: 1,
+    backgroundColor: "rgba(206, 170, 75, 0.45)",
+    borderRadius: 4,
+  },
+  boxPlotMedian: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 2,
+    marginLeft: -1,
+    backgroundColor: colors.ink,
+  },
+  boxPlotUser: {
+    position: "absolute",
+    top: -2,
+    width: 6,
+    height: 16,
+    marginLeft: -3,
+    borderRadius: 3,
+    backgroundColor: colors.primary,
+  },
+  premiumTeaser: {
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 12,
+    padding: spacing.sm,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+  },
+  premiumTeaserTitle: {
+    ...typography.bodyEmphasis,
+    color: colors.primary,
+  },
+  premiumTeaserBody: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  baselineHint: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginTop: spacing.xs,
     textAlign: "center",
   },
   // ── Pie legend ──

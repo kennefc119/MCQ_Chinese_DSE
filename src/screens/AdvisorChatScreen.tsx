@@ -9,6 +9,8 @@ import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { MainTabsParamList } from "../navigation/types";
 import ContentContainer from "../components/ContentContainer";
+import { withTimeout, isTimeoutError } from "../lib/asyncTimeout";
+import { TIMEOUT_MS } from "../lib/timeoutConfig";
 
 interface Msg { id: string; role: "user" | "assistant"; text: string }
 
@@ -163,20 +165,32 @@ export default function AdvisorChatScreen() {
         const historyToSend = _persistedMessages
           .filter((m) => m.id !== "intro")
           .slice(-12);
-        const { data, error } = await supabase.functions.invoke("dsemcq-advisor-chat", {
-          body: { message: text, system: SYSTEM_PROMPT, history: historyToSend },
-        });
-        if (error || data?.error) {
-          const errMsg = data?.error ?? error?.message ?? "未知錯誤";
-          if (data?.code === "MONTHLY_LIMIT") {
-            Alert.alert("本月對話已達上限", errMsg);
+        try {
+          const { data, error } = await withTimeout(
+            supabase.functions.invoke("dsemcq-advisor-chat", {
+              body: { message: text, system: SYSTEM_PROMPT, history: historyToSend },
+            }),
+            TIMEOUT_MS.chatInvoke,
+            "advisor_chat_invoke",
+          );
+          if (error || data?.error) {
+            const errMsg = data?.error ?? error?.message ?? "未知錯誤";
+            if (data?.code === "MONTHLY_LIMIT") {
+              Alert.alert("本月對話已達上限", errMsg);
+            }
+            console.log("[AdvisorChat] error:", error, "data.error:", data?.error);
+            reply = data?.code === "MONTHLY_LIMIT" ? "" : `（顧問服務異常：${errMsg}）`;
+          } else {
+            reply = data?.reply ?? "（無回覆）";
+            // Increment local monthly counter on success
+            if (!isGuest && monthlyUsed !== null) setMonthlyUsed(monthlyUsed + 1);
           }
-          console.log("[AdvisorChat] error:", error, "data.error:", data?.error);
-          reply = data?.code === "MONTHLY_LIMIT" ? "" : `（顧問服務異常：${errMsg}）`;
-        } else {
-          reply = data?.reply ?? "（無回覆）";
-          // Increment local monthly counter on success
-          if (!isGuest && monthlyUsed !== null) setMonthlyUsed(monthlyUsed + 1);
+        } catch (e) {
+          if (isTimeoutError(e)) {
+            reply = "（顧問回應逾時，請稍後再試。）";
+          } else {
+            reply = `（顧問服務異常：${String((e as Error)?.message ?? "未知錯誤")}）`;
+          }
         }
       }
       updateMessages((p) => [...p, { id: `a-${Date.now()}`, role: "assistant", text: reply }]);

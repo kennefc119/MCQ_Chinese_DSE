@@ -293,6 +293,38 @@ export interface StudentPointStat {
   points: number;
 }
 
+export interface MetricBoxStats {
+  min: number;
+  q1: number;
+  median: number;
+  q3: number;
+  max: number;
+}
+
+export interface PremiumMetricComparison {
+  value: number;
+  percentile: number;
+  box: MetricBoxStats;
+}
+
+export interface PremiumUserComparison {
+  allowed: boolean;
+  metrics?: {
+    points: PremiumMetricComparison;
+    accuracy: PremiumMetricComparison;
+    completed_questions: PremiumMetricComparison;
+    completed_quizzes: PremiumMetricComparison;
+  };
+  passage_avg_by_id?: Record<string, number>;
+  skill_avg_by_tag?: Record<string, number>;
+}
+
+export interface QuizPercentileFeedback {
+  allowed: boolean;
+  participant_count?: number;
+  percentile?: number | null;
+}
+
 /** Aggregate user demographics & performance summary. */
 export interface UserSummaryStats {
   totalUsers: number;
@@ -324,7 +356,22 @@ export interface AppSetting {
   key: string;
   value: unknown;
   updated_at: string;
+  updated_by: string | null;
+}
 
+export interface AdminPeerBaselineSnapshotStatus {
+  generated_at: string | null;
+  generated_by: string | null;
+  users_counted: number;
+  attempts_counted: number;
+}
+
+export interface AdminPeerBaselineRefreshResult {
+  ok: boolean;
+  generated_at?: string;
+  users_counted?: number;
+  attempts_counted?: number;
+  error?: string;
 }
 
 /** Education email domain statistics. */
@@ -338,8 +385,6 @@ export interface EduDomainMonthly {
   domain: string;
   month: string;   // YYYY-MM
   count: number;
-}
-  updated_by: string | null;
 }
 
 /** A single quiz attempt summary for the user-history admin view. */

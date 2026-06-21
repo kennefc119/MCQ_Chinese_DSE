@@ -46,6 +46,8 @@ import {
   AnnouncementType,
 } from "../types/database";
 import { AppStackParamList } from "../navigation/types";
+import { withTimeout } from "../lib/asyncTimeout";
+import { TIMEOUT_MS } from "../lib/timeoutConfig";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 type Rt = RouteProp<AppStackParamList, "AdminUserDetail">;
@@ -86,10 +88,22 @@ export default function AdminUserDetailScreen() {
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
-    const [p, perf, ps] = await Promise.all([
-      getUserProfile(userId),
-      fetchUserPerformanceBreakdown(userId).catch(() => ({ skills: [], difficulties: [], passages: [] })),
-      fetchUserPsychResults(userId).catch(() => []),
+    const [p, perf, ps] = await withTimeout(
+      Promise.all([
+        getUserProfile(userId),
+        fetchUserPerformanceBreakdown(userId).catch(() => ({ skills: [], difficulties: [], passages: [] })),
+        fetchUserPsychResults(userId).catch(() => []),
+      ]),
+      TIMEOUT_MS.adminPanelLoad,
+      "admin_user_detail_profile_load",
+    ).catch(() => [
+      null,
+      { skills: [], difficulties: [], passages: [] },
+      [],
+    ] as [
+      Profile | null,
+      { skills: UserSkillStat[]; difficulties: UserDifficultyStat[]; passages: UserPassageStat[] },
+      PsychResult[],
     ]);
     if (p) {
       setProfile(p);
@@ -107,9 +121,11 @@ export default function AdminUserDetailScreen() {
   const loadMoreHistory = useCallback(async () => {
     if (!hasMore || historyLoading) return;
     setHistoryLoading(true);
-    const next = await fetchUserAttemptHistory(userId, page, PAGE_SIZE)
-      .then((r) => r.items)
-      .catch(() => [] as AttemptHistoryItem[]);
+    const next = await withTimeout(
+      fetchUserAttemptHistory(userId, page, PAGE_SIZE).then((r) => r.items),
+      TIMEOUT_MS.adminHistoryLoad,
+      "admin_user_detail_history_load",
+    ).catch(() => [] as AttemptHistoryItem[]);
     setHistory((prev) => [...prev, ...next]);
     if (next.length < PAGE_SIZE) setHasMore(false);
     setPage((p) => p + 1);

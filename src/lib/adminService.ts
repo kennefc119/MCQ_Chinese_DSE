@@ -29,6 +29,8 @@ import {
   UserDifficultyStat,
   UserPassageStat,
   PsychResult,
+  AdminPeerBaselineRefreshResult,
+  AdminPeerBaselineSnapshotStatus,
 } from "../types/database";
 import * as Application from "expo-application";
 import { Platform } from "react-native";
@@ -1053,6 +1055,31 @@ export async function updateAppSetting(
   );
   if (error) return { ok: false, error: error.message };
   return { ok: true };
+}
+
+/** Trigger a synchronous admin refresh of precomputed peer baseline snapshots. */
+export async function refreshPeerBaselines(): Promise<AdminPeerBaselineRefreshResult> {
+  if (!isSupabaseConfigured) return { ok: false, error: REQUIRE_SUPABASE };
+  const { data, error } = await supabase.rpc("admin_refresh_peer_baselines");
+  if (error) return { ok: false, error: error.message };
+  const payload = (data as Partial<AdminPeerBaselineRefreshResult> | null) ?? null;
+  return {
+    ok: Boolean(payload?.ok ?? true),
+    generated_at: payload?.generated_at,
+    users_counted: payload?.users_counted,
+    attempts_counted: payload?.attempts_counted,
+  };
+}
+
+/** Read the latest peer baseline snapshot status for admin diagnostics. */
+export async function fetchPeerBaselineSnapshotStatus(): Promise<AdminPeerBaselineSnapshotStatus | null> {
+  if (!isSupabaseConfigured) return null;
+  const { data, error } = await supabase.rpc("admin_get_peer_baseline_snapshot_status");
+  if (error) {
+    console.warn("[admin] fetchPeerBaselineSnapshotStatus:", error.message);
+    return null;
+  }
+  return (data as AdminPeerBaselineSnapshotStatus) ?? null;
 }
 
 /** Fetch list of all quizzes (for admin to select exempt ones). */

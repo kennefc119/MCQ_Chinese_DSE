@@ -13,6 +13,8 @@ import { colors, spacing, typography } from "../../theme";
 import { searchUsers } from "../../lib/adminService";
 import { Profile } from "../../types/database";
 import { AppStackParamList } from "../../navigation/types";
+import { withTimeout } from "../../lib/asyncTimeout";
+import { TIMEOUT_MS } from "../../lib/timeoutConfig";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
@@ -27,7 +29,11 @@ export default function UserCheckerPanel() {
     let cancelled = false;
     const t = setTimeout(async () => {
       setLoading(true);
-      const list = await searchUsers(query, 50).catch(() => []);
+      const list = await withTimeout(
+        searchUsers(query, 50),
+        TIMEOUT_MS.adminUserSearch,
+        "admin_user_search",
+      ).catch(() => []);
       if (!cancelled) {
         setResults(list);
         setLoading(false);

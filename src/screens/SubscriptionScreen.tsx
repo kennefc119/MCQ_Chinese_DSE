@@ -110,12 +110,9 @@ export default function SubscriptionScreen() {
       await applyTier(true);
       Alert.alert("已恢復", "學士版訂閱已成功恢復！");
     } else {
-      if (!result.error) {
-        await applyTier(false);
-      }
       Alert.alert(
         "未找到訂閱",
-        result.error ?? "找不到有效的訂閱記錄。如有疑問請聯絡客服。",
+        result.error ?? "找不到有效的訂閱記錄。若你剛取消訂閱，會員狀態會於到期時由系統自動更新。",
       );
     }
   };

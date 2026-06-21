@@ -6,6 +6,8 @@ interface Props {
   axes: string[];
   values: number[]; // 0–100
   color: string;
+  baselineValues?: number[]; // 0-100 underlay (e.g. population average)
+  baselineColor?: string;
   size?: number;    // kept for backwards compat (square charts)
   width?: number;   // override size for width
   height?: number;  // override size for height
@@ -15,7 +17,17 @@ interface Props {
   minValue?: number;
 }
 
-export default function RadarChart({ axes, values, color, size = 200, width, height, minValue = 8 }: Props) {
+export default function RadarChart({
+  axes,
+  values,
+  color,
+  baselineValues,
+  baselineColor = "rgba(31,26,20,0.22)",
+  size = 200,
+  width,
+  height,
+  minValue = 8,
+}: Props) {
   const n = axes.length;
   if (n < 3 || values.length < n) return null;
 
@@ -47,6 +59,13 @@ export default function RadarChart({ axes, values, color, size = 200, width, hei
     return `${px(r, i)},${py(r, i)}`;
   }).join(" ");
 
+  const baselinePoints = baselineValues && baselineValues.length >= n
+    ? Array.from({ length: n }, (_, i) => {
+        const r = (Math.max(baselineValues[i], minValue) / 100) * radius;
+        return `${px(r, i)},${py(r, i)}`;
+      }).join(" ")
+    : null;
+
   // Vertex positions for dots
   const vertexPoints = Array.from({ length: n }, (_, i) => ({
     x: px((visualValues[i] / 100) * radius, i),
@@ -64,6 +83,14 @@ export default function RadarChart({ axes, values, color, size = 200, width, hei
           <Line key={i} x1={cx} y1={cy} x2={px(radius, i)} y2={py(radius, i)} stroke="rgba(31,26,20,0.18)" strokeWidth={1} />
         ))}
 
+        {/* Baseline underlay (population average) */}
+        {baselinePoints && (
+          <>
+            <Polygon points={baselinePoints} fill={baselineColor} fillOpacity={0.22} stroke="none" />
+            <Polygon points={baselinePoints} fill="none" stroke={baselineColor} strokeWidth={1.4} strokeOpacity={0.85} strokeLinejoin="round" />
+          </>
+        )}
+
         {/* Outer glow layer */}
         <Polygon points={dataPoints} fill="none" stroke={color} strokeWidth={18} strokeOpacity={0.10} strokeLinejoin="round" />
         {/* Mid glow layer */}
@@ -74,6 +101,19 @@ export default function RadarChart({ axes, values, color, size = 200, width, hei
 
         {/* Outline border */}
         <Polygon points={dataPoints} fill="none" stroke={color} strokeWidth={2.5} strokeOpacity={1} strokeLinejoin="round" />
+
+        {/* Keep a subtle dashed baseline outline on top so the shadow remains visible */}
+        {baselinePoints && (
+          <Polygon
+            points={baselinePoints}
+            fill="none"
+            stroke={baselineColor}
+            strokeWidth={1.2}
+            strokeOpacity={0.75}
+            strokeDasharray="3 3"
+            strokeLinejoin="round"
+          />
+        )}
 
         {/* Vertex dots */}
         {vertexPoints.map((pt, i) => (

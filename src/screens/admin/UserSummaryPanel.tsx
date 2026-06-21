@@ -17,6 +17,8 @@ import { colors, spacing, typography } from "../../theme";
 import CollapsibleSection from "../../components/CollapsibleSection";
 import { fetchUserSummaryStats, fetchEduEmailStats } from "../../lib/adminService";
 import { UserSummaryStats, EduDomainStat, EduDomainMonthly } from "../../types/database";
+import { withTimeout } from "../../lib/asyncTimeout";
+import { TIMEOUT_MS } from "../../lib/timeoutConfig";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -33,10 +35,14 @@ export default function UserSummaryPanel() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const [s, edu] = await Promise.all([
-        fetchUserSummaryStats().catch(() => null),
-        fetchEduEmailStats().catch(() => ({ domains: [], monthly: [] })),
-      ]);
+      const [s, edu] = await withTimeout(
+        Promise.all([
+          fetchUserSummaryStats().catch(() => null),
+          fetchEduEmailStats().catch(() => ({ domains: [], monthly: [] })),
+        ]),
+        TIMEOUT_MS.adminPanelLoad,
+        "admin_user_summary_load",
+      ).catch(() => [null, { domains: [], monthly: [] }] as [UserSummaryStats | null, { domains: EduDomainStat[]; monthly: EduDomainMonthly[] }]);
       if (!cancelled) {
         setStats(s);
         setEduDomains(edu.domains);

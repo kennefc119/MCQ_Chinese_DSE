@@ -46,21 +46,63 @@ export function useForceUpdate(): ForceUpdateState {
 
   useEffect(() => {
     let cancelled = false;
+    let settled = false;
+    let timedOut = false;
+
+    const applyResult = (minVersion: string, required: boolean) => {
+      if (cancelled) return;
+      setState({ checking: false, required, currentVersion, minVersion });
+    };
+
+    const timeoutId = setTimeout(() => {
+      if (cancelled || settled) return;
+      timedOut = true;
+      console.warn("[force-update] initial check timed out after 3s; fail-open and recheck in background");
+      applyResult("0.0.0", false);
+    }, 3000);
 
     fetchMinAppVersion()
       .then((minVersion) => {
-        if (cancelled) return;
+        if (cancelled || settled) return;
+        settled = true;
+        clearTimeout(timeoutId);
         const required = isOutdated(currentVersion, minVersion);
-        setState({ checking: false, required, currentVersion, minVersion });
+        applyResult(minVersion, required);
       })
       .catch(() => {
         // Fail-open: network error → let the app proceed
-        if (!cancelled) {
-          setState({ checking: false, required: false, currentVersion, minVersion: "0.0.0" });
-        }
+        if (cancelled || settled) return;
+        settled = true;
+        clearTimeout(timeoutId);
+        applyResult("0.0.0", false);
       });
 
-    return () => { cancelled = true; };
+    // If initial check timed out, try one non-blocking recheck.
+    const recheckId = setTimeout(() => {
+      if (cancelled || !timedOut) return;
+      fetchMinAppVersion()
+        .then((minVersion) => {
+          if (cancelled) return;
+          const required = isOutdated(currentVersion, minVersion);
+          if (required) {
+            console.warn("[force-update] background recheck requires update; enforcing now");
+          }
+          setState((prev) => ({
+            ...prev,
+            required,
+            minVersion,
+          }));
+        })
+        .catch(() => {
+          // Keep fail-open state if recheck still fails.
+        });
+    }, 1200);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+      clearTimeout(recheckId);
+    };
   }, [currentVersion]);
 
   return state;

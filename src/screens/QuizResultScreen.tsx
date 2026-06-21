@@ -4,8 +4,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp, CommonActions } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, spacing, typography } from "../theme";
-import { Quiz, Question, QuestionOption, Attempt } from "../types/database";
-import { getQuiz, getQuestionsForResult, listUserAttempts } from "../lib/dataService";
+import { Quiz, Question, QuestionOption, Attempt, QuizPercentileFeedback } from "../types/database";
+import { getQuiz, getQuestionsForResult, listUserAttempts, fetchQuizPercentileFeedback } from "../lib/dataService";
 import { shuffleOptionsForAttempt } from "../lib/shuffleUtils";
 import { useAuth } from "../context/AuthContext";
 import Button from "../components/Button";
@@ -29,6 +29,7 @@ export default function QuizResultScreen() {
   const [attempt, setAttempt] = useState<Attempt | null>(
     attemptSnapshot ? (JSON.parse(attemptSnapshot) as Attempt) : null,
   );
+  const [percentileFeedback, setPercentileFeedback] = useState<QuizPercentileFeedback | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -44,9 +45,33 @@ export default function QuizResultScreen() {
     })();
   }, [quizId, attemptId, user]);
 
+  useEffect(() => {
+    (async () => {
+      if (!user || !attempt) return;
+      if (user.subscription_tier !== "premium") {
+        setPercentileFeedback(null);
+        return;
+      }
+      const feedback = await fetchQuizPercentileFeedback({
+        quizId,
+        userId: user.id,
+        attemptId: attempt.id,
+      });
+      setPercentileFeedback(feedback);
+    })();
+  }, [attempt, quizId, user]);
+
   if (!quiz || !attempt) return <LoadingScreen />;
   const pct = Math.round((attempt.score! / attempt.total) * 100);
   const passed = pct >= quiz.pass_score;
+  const isPremiumUser = user?.subscription_tier === "premium";
+  const canShowPercentile = Boolean(
+    isPremiumUser
+    && percentileFeedback?.allowed
+    && (percentileFeedback.participant_count ?? 0) > 3
+    && percentileFeedback.percentile != null,
+  );
+  const percentileValue = percentileFeedback?.percentile ?? null;
 
   // Apply the same deterministic shuffle as QuizRunnerScreen so A/B/C/D labels match.
   const displayQuestions = shuffleOptionsForAttempt(questions, attemptId);
@@ -82,6 +107,26 @@ export default function QuizResultScreen() {
         </Text>
         <Text style={styles.score}>{attempt.score} / {attempt.total}</Text>
         <Text style={styles.percent}>{pct}%</Text>
+
+        {canShowPercentile ? (
+          <View style={styles.compareCard}>
+            <Text style={styles.compareTitle}>同卷表現參考</Text>
+            {percentileValue != null && percentileValue < 50 ? (
+              <Text style={styles.compareMain}>天道酬勤，有志者成</Text>
+            ) : (
+              <Text style={styles.compareMain}>你目前超越了 {Math.round(percentileValue ?? 0)}% 同學</Text>
+            )}
+            <Text style={styles.compareSub}>低於平均，需要加油</Text>
+          </View>
+        ) : isPremiumUser ? (
+          <View style={styles.compareCardMuted}>
+          </View>
+        ) : (
+          <View style={styles.compareTeaser}>
+            <Text style={styles.compareTeaserText}>升級學士版可解鎖同卷百分位比較</Text>
+          </View>
+        )}
+
         {passed && (
           <View style={styles.rewardRow}>
             <SealMark char="淵" size={22} />
@@ -186,6 +231,38 @@ const styles = StyleSheet.create({
   title: { ...typography.heading, textAlign: "center", marginTop: spacing.xl },
   score: { ...typography.display, color: colors.ink, textAlign: "center", marginTop: spacing.sm },
   percent: { ...typography.body, color: colors.inkSoft, textAlign: "center", marginTop: 4 },
+  compareCard: {
+    marginTop: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    padding: spacing.sm,
+    alignItems: "center",
+  },
+  compareCardMuted: {
+    marginTop: spacing.sm,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    padding: spacing.sm,
+    alignItems: "center",
+  },
+  compareTitle: { ...typography.caption, color: colors.primary, fontWeight: "700" },
+  compareMain: { ...typography.bodyEmphasis, color: colors.ink, marginTop: 4 },
+  compareSub: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
+  compareMutedText: { ...typography.caption, color: colors.textMuted },
+  compareTeaser: {
+    marginTop: spacing.sm,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    padding: spacing.sm,
+    alignItems: "center",
+  },
+  compareTeaserText: { ...typography.caption, color: colors.primary, fontWeight: "600" },
   rewardRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.xs, marginTop: spacing.sm },
   reward: { ...typography.bodyEmphasis, color: colors.primary },
   sectionTitle: { ...typography.heading, color: colors.ink, marginBottom: spacing.md },

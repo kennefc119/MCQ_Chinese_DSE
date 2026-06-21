@@ -21,6 +21,8 @@ import {
   generatorGenerate,
   generatorAssemble,
 } from "../../lib/adminService";
+import { withTimeout } from "../../lib/asyncTimeout";
+import { TIMEOUT_MS } from "../../lib/timeoutConfig";
 
 type Passage = { id: string; title: string; order_no: number };
 type Skill = { value: string; label: string };
@@ -58,11 +60,19 @@ export default function GeneratorPanel() {
   const refreshLookups = async () => {
     if (!GENERATOR_ENABLED) return;
     setLoading(true);
-    const [p, s, st] = await Promise.all([
-      generatorListPassages(),
-      generatorListSkills(),
-      generatorFetchStats(),
-    ]);
+    const [p, s, st] = await withTimeout(
+      Promise.all([
+        generatorListPassages(),
+        generatorListSkills(),
+        generatorFetchStats(),
+      ]),
+      TIMEOUT_MS.adminPanelLoad,
+      "admin_generator_refresh",
+    ).catch(() => [
+      { ok: false, error: "請求逾時" },
+      { ok: false, error: "請求逾時" },
+      { ok: false, error: "請求逾時" },
+    ] as any);
     if (p.ok) setPassages(p.data);
     if (s.ok) setSkills(s.data);
     if (st.ok) setStats(st.data);
@@ -85,13 +95,17 @@ export default function GeneratorPanel() {
       return;
     }
     setGenerating(true);
-    const res = await generatorGenerate({
-      passage_id: passageId,
-      forced_difficulty: difficulty,
-      forced_skill: skill,
-      dry_run: dryRun,
-      count: n,
-    });
+    const res = await withTimeout(
+      generatorGenerate({
+        passage_id: passageId,
+        forced_difficulty: difficulty,
+        forced_skill: skill,
+        dry_run: dryRun,
+        count: n,
+      }),
+      TIMEOUT_MS.adminAction,
+      "admin_generator_generate",
+    ).catch(() => ({ ok: false, error: "請求逾時，請稍後再試" }));
     setGenerating(false);
     if (!res.ok) {
       setOutput(`[生成失敗] ${res.error}`);
@@ -107,10 +121,14 @@ export default function GeneratorPanel() {
       return;
     }
     setAssembling(true);
-    const res = await generatorAssemble({
-      dry_run: dryRun,
-      strategies: ["passage", "skill", "difficulty"],
-    });
+    const res = await withTimeout(
+      generatorAssemble({
+        dry_run: dryRun,
+        strategies: ["passage", "skill", "difficulty"],
+      }),
+      TIMEOUT_MS.adminAction,
+      "admin_generator_assemble",
+    ).catch(() => ({ ok: false, error: "請求逾時，請稍後再試" }));
     setAssembling(false);
     if (!res.ok) {
       setOutput(`[組裝失敗] ${res.error}`);

@@ -37,6 +37,8 @@ import {
   StudentPointStat,
   UsageWindowMetrics,
 } from "../../types/database";
+import { withTimeout } from "../../lib/asyncTimeout";
+import { TIMEOUT_MS } from "../../lib/timeoutConfig";
 
 const DAY_OPTIONS = [1, 7, 14, 21, 31, 60, 90, 120] as const;
 const METRIC_COLORS = {
@@ -81,11 +83,15 @@ export default function UsageInsightsPanel() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const [d, t, ai] = await Promise.all([
-        fetchDailyUsageMetrics(days).catch(() => []),
-        fetchUsageMetrics(days).catch(() => null),
-        fetchAIUsageStats(days).catch(() => null),
-      ]);
+      const [d, t, ai] = await withTimeout(
+        Promise.all([
+          fetchDailyUsageMetrics(days).catch(() => []),
+          fetchUsageMetrics(days).catch(() => null),
+          fetchAIUsageStats(days).catch(() => null),
+        ]),
+        TIMEOUT_MS.adminPanelLoad,
+        "admin_usage_primary_load",
+      ).catch(() => [[], null, null] as [DailyUsageMetric[], UsageWindowMetrics | null, AIUsageStats | null]);
       if (cancelled) return;
       setDaily(d);
       setTotals(t);
@@ -99,13 +105,31 @@ export default function UsageInsightsPanel() {
     let cancelled = false;
     (async () => {
       setSectionLoading(true);
-      const [pr, dr, sk, ed, sc, sp] = await Promise.all([
-        fetchPassageSuccessRates().catch(() => []),
-        fetchDifficultySuccessRates().catch(() => []),
-        fetchSkippingRate().catch(() => ({ total: 0, skipped: 0, rate: 0 })),
-        fetchExerciseChoiceDistribution().catch(() => []),
-        fetchPerStudentExerciseCounts().catch(() => []),
-        fetchPerStudentPointStats().catch(() => []),
+      const [pr, dr, sk, ed, sc, sp] = await withTimeout(
+        Promise.all([
+          fetchPassageSuccessRates().catch(() => []),
+          fetchDifficultySuccessRates().catch(() => []),
+          fetchSkippingRate().catch(() => ({ total: 0, skipped: 0, rate: 0 })),
+          fetchExerciseChoiceDistribution().catch(() => []),
+          fetchPerStudentExerciseCounts().catch(() => []),
+          fetchPerStudentPointStats().catch(() => []),
+        ]),
+        TIMEOUT_MS.adminPanelLoad,
+        "admin_usage_sections_load",
+      ).catch(() => [
+        [],
+        [],
+        { total: 0, skipped: 0, rate: 0 },
+        [],
+        [],
+        [],
+      ] as [
+        PassageSuccessRate[],
+        DifficultySuccessRate[],
+        { total: number; skipped: number; rate: number },
+        ExerciseChoiceItem[],
+        StudentExerciseCount[],
+        StudentPointStat[],
       ]);
       if (cancelled) return;
       setPassageRates(pr);

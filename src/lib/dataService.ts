@@ -1,4 +1,4 @@
-import { Quiz, Question, QuestionOption, Attempt, QuizSignup, InboxMessage, TipCard, PsychTest, PsychQuestion, PsychResultMapping, PsychUserResult, Passage } from "../types/database";
+import { Quiz, Question, QuestionOption, Attempt, QuizSignup, InboxMessage, TipCard, PsychTest, PsychQuestion, PsychResultMapping, PsychUserResult, Passage, PremiumUserComparison, QuizPercentileFeedback } from "../types/database";
 import { isSupabaseConfigured, supabase } from "./supabase";
 import { SEED_QUIZZES } from "../data/seedQuizzes";
 import { SEED_QUESTIONS } from "../data/seedQuestions";
@@ -757,4 +757,40 @@ export async function hasUserFlaggedQuestion(questionId: string): Promise<boolea
     .eq("question_id", questionId)
     .maybeSingle();
   return data != null;
+}
+
+// ── Premium benchmarking ──────────────────────────────────────────────────
+
+export async function fetchPremiumUserComparison(userId: string): Promise<PremiumUserComparison | null> {
+  if (!isSupabaseConfigured) return null;
+  const cached = await supabase.rpc("get_premium_user_comparison_cached", { p_user_id: userId });
+  if (!cached.error) {
+    return (cached.data as PremiumUserComparison) ?? null;
+  }
+
+  // Backward-compatible fallback for environments where cached RPC isn't deployed yet.
+  const legacy = await supabase.rpc("get_premium_user_comparison", { p_user_id: userId });
+  if (legacy.error) {
+    console.warn("[dsemcq] fetchPremiumUserComparison error:", legacy.error.message);
+    return null;
+  }
+  return (legacy.data as PremiumUserComparison) ?? null;
+}
+
+export async function fetchQuizPercentileFeedback(args: {
+  quizId: string;
+  userId: string;
+  attemptId: string;
+}): Promise<QuizPercentileFeedback | null> {
+  if (!isSupabaseConfigured) return null;
+  const { data, error } = await supabase.rpc("get_quiz_percentile_feedback", {
+    p_quiz_id: args.quizId,
+    p_user_id: args.userId,
+    p_attempt_id: args.attemptId,
+  });
+  if (error) {
+    console.warn("[dsemcq] fetchQuizPercentileFeedback error:", error.message);
+    return null;
+  }
+  return (data as QuizPercentileFeedback) ?? null;
 }

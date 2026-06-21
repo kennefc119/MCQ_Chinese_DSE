@@ -21,10 +21,14 @@ import {
   fetchAppSettings,
   updateAppSetting,
   fetchInventorySummary,
+  refreshPeerBaselines,
+  fetchPeerBaselineSnapshotStatus,
 } from "../../lib/adminService";
 import { listPassages } from "../../lib/dataService";
-import { AppSetting, InventorySummary, Passage } from "../../types/database";
+import { AppSetting, InventorySummary, Passage, AdminPeerBaselineSnapshotStatus } from "../../types/database";
 import { useAuth } from "../../context/AuthContext";
+import { withTimeout } from "../../lib/asyncTimeout";
+import { TIMEOUT_MS } from "../../lib/timeoutConfig";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -42,17 +46,24 @@ export default function SettingsPanel() {
   const [exploreBannerMessage, setExploreBannerMessage] = useState("");
   const [exploreBannerPause, setExploreBannerPause] = useState("2");
   const [minAppVersion, setMinAppVersion] = useState("1.0.0");
+  const [refreshingBaselines, setRefreshingBaselines] = useState(false);
+  const [baselineStatus, setBaselineStatus] = useState<AdminPeerBaselineSnapshotStatus | null>(null);
 
   const [inventory, setInventory] = useState<InventorySummary | null>(null);
   const [allPassages, setAllPassages] = useState<Passage[]>([]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    const [settings, passages, inv] = await Promise.all([
-      fetchAppSettings().catch(() => []),
-      listPassages().catch(() => []),
-      fetchInventorySummary().catch(() => null),
-    ]);
+    const [settings, passages, inv, status] = await withTimeout(
+      Promise.all([
+        fetchAppSettings().catch(() => []),
+        listPassages().catch(() => []),
+        fetchInventorySummary().catch(() => null),
+        fetchPeerBaselineSnapshotStatus().catch(() => null),
+      ]),
+      TIMEOUT_MS.adminPanelLoad,
+      "admin_settings_load",
+    ).catch(() => [[], [], null, null] as [AppSetting[], Passage[], InventorySummary | null, AdminPeerBaselineSnapshotStatus | null]);
     const settingsMap: Record<string, unknown> = {};
     for (const s of settings) settingsMap[s.key] = s.value;
     if (settingsMap.max_ai_chat_guest != null) setMaxAIChatGuest(String(settingsMap.max_ai_chat_guest));
@@ -66,8 +77,35 @@ export default function SettingsPanel() {
     if (typeof settingsMap.min_app_version === "string") setMinAppVersion(settingsMap.min_app_version);
     setAllPassages(passages);
     setInventory(inv);
+    setBaselineStatus(status ?? null);
     setLoading(false);
   }, []);
+
+  const handleRefreshPeerBaselines = async () => {
+    Alert.alert("重算同儕基準", "將重新計算全站同儕平均與百分位，過程可能需要數十秒，是否繼續？", [
+      { text: "取消", style: "cancel" },
+      {
+        text: "開始重算",
+        style: "destructive",
+        onPress: async () => {
+          setRefreshingBaselines(true);
+          const result = await refreshPeerBaselines();
+          setRefreshingBaselines(false);
+          if (!result.ok) {
+            Alert.alert("重算失敗", result.error ?? "未知錯誤");
+            return;
+          }
+          setBaselineStatus({
+            generated_at: result.generated_at ?? new Date().toISOString(),
+            generated_by: user?.id ?? null,
+            users_counted: result.users_counted ?? 0,
+            attempts_counted: result.attempts_counted ?? 0,
+          });
+          Alert.alert("重算完成", `用戶 ${result.users_counted ?? 0} 人，提交紀錄 ${result.attempts_counted ?? 0} 筆`);
+        },
+      },
+    ]);
+  };
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -215,6 +253,30 @@ export default function SettingsPanel() {
           格式： x.y.z（例 1.3.0）。調高此值前先確認新版本已上店。
         </Text>
       </CollapsibleSection>
+
+      <CollapsibleSection title="同儕基準快照" subtitle="手動重算雷達圖同儕平均">
+        <Text style={styles.cardDesc}>DiscoverSelf 的同儕雷達 underlay 會讀取此快照，不再每次即時計算全站資料。</Text>
+        <TouchableOpacity
+          style={[styles.refreshBtn, refreshingBaselines && { opacity: 0.6 }]}
+          onPress={handleRefreshPeerBaselines}
+          disabled={refreshingBaselines}
+          activeOpacity={0.8}
+        >
+          {refreshingBaselines ? (
+            <ActivityIndicator color={colors.primaryOnDark} />
+          ) : (
+            <Text style={styles.refreshBtnText}>立即重算同儕基準</Text>
+          )}
+        </TouchableOpacity>
+        <View style={styles.snapshotMetaWrap}>
+          <Text style={styles.snapshotMetaText}>
+            最近重算：{baselineStatus?.generated_at ? new Date(baselineStatus.generated_at).toLocaleString() : "尚未建立快照"}
+          </Text>
+          <Text style={styles.snapshotMetaText}>計算用戶數：{baselineStatus?.users_counted ?? 0}</Text>
+          <Text style={styles.snapshotMetaText}>提交紀錄數：{baselineStatus?.attempts_counted ?? 0}</Text>
+        </View>
+      </CollapsibleSection>
+
       <CollapsibleSection title="庶民版免費開放篇章" subtitle={`已選 ${exemptPassageIds.size} 篇`}>
         <Text style={styles.cardDesc}>
           勾選篇章後，該篇章下所有測驗及考試將允許庶民版用戶免費存取。練習已預設全部免費。
@@ -377,6 +439,10 @@ function SummaryCard({ label, value }: { label: string; value: number | string }
 const styles = StyleSheet.create({
   saveBtn: { backgroundColor: colors.primary, borderRadius: 10, paddingVertical: 14, alignItems: "center", marginBottom: spacing.md },
   saveBtnText: { ...typography.button, color: colors.primaryOnDark },
+  refreshBtn: { backgroundColor: colors.ink, borderRadius: 10, paddingVertical: 12, alignItems: "center", marginTop: spacing.xs },
+  refreshBtnText: { ...typography.button, color: colors.primaryOnDark },
+  snapshotMetaWrap: { marginTop: spacing.sm, gap: 2 },
+  snapshotMetaText: { ...typography.caption, color: colors.inkSoft },
   label: { ...typography.caption, color: colors.inkSoft },
   input: { backgroundColor: colors.surfaceAlt, borderRadius: 8, padding: spacing.sm, color: colors.ink, marginTop: spacing.xs, ...typography.body },
   hint: { ...typography.caption, color: colors.inkMuted, marginTop: spacing.xs },
