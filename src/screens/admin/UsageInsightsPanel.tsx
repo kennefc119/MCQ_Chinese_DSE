@@ -2,7 +2,7 @@
  * UsageInsightsPanel — Dashboard with collapsible sections.
  * Order: summary → trends → AI → skipping → passages → difficulty → exercises → students
  */
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -37,6 +37,8 @@ import {
   StudentPointStat,
   UsageWindowMetrics,
 } from "../../types/database";
+import { useAuth } from "../../context/AuthContext";
+import { useAppResume } from "../../hooks/useAppResume";
 import { withTimeout } from "../../lib/asyncTimeout";
 import { TIMEOUT_MS } from "../../lib/timeoutConfig";
 
@@ -65,6 +67,7 @@ const METRIC_DESCS: Record<MetricKey, string> = {
 const screenWidth = Dimensions.get("window").width;
 
 export default function UsageInsightsPanel() {
+  const { loading: authLoading, isSupabaseReady } = useAuth();
   const [days, setDays] = useState<number>(7);
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>("activeUsers");
   const [daily, setDaily] = useState<DailyUsageMetric[]>([]);
@@ -79,9 +82,10 @@ export default function UsageInsightsPanel() {
   const [loading, setLoading] = useState(true);
   const [sectionLoading, setSectionLoading] = useState(true);
 
-  useEffect(() => {
+  const loadPrimary = useCallback(async () => {
+    if (!isSupabaseReady) return;
     let cancelled = false;
-    (async () => {
+    try {
       setLoading(true);
       const [d, t, ai] = await withTimeout(
         Promise.all([
@@ -97,13 +101,15 @@ export default function UsageInsightsPanel() {
       setTotals(t);
       setAIStats(ai);
       setLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, [days]);
+    } finally {
+      cancelled = true;
+    }
+  }, [days, isSupabaseReady]);
 
-  useEffect(() => {
+  const loadSections = useCallback(async () => {
+    if (!isSupabaseReady) return;
     let cancelled = false;
-    (async () => {
+    try {
       setSectionLoading(true);
       const [pr, dr, sk, ed, sc, sp] = await withTimeout(
         Promise.all([
@@ -139,9 +145,25 @@ export default function UsageInsightsPanel() {
       setStudentCounts(sc);
       setStudentPointStats(sp);
       setSectionLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, []);
+    } finally {
+      cancelled = true;
+    }
+  }, [isSupabaseReady]);
+
+  useEffect(() => {
+    if (authLoading || !isSupabaseReady) return;
+    void loadPrimary();
+  }, [authLoading, isSupabaseReady, loadPrimary]);
+
+  useEffect(() => {
+    if (authLoading || !isSupabaseReady) return;
+    void loadSections();
+  }, [authLoading, isSupabaseReady, loadSections]);
+
+  useAppResume(() => {
+    void loadPrimary();
+    void loadSections();
+  }, isSupabaseReady);
 
   if (loading && sectionLoading) {
     return (

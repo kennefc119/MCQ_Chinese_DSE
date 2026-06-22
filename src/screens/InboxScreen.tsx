@@ -7,17 +7,33 @@ import { InboxMessage } from "../types/database";
 import { listInbox, markInboxRead } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import EmptyState from "../components/EmptyState";
+import { useAppResume } from "../hooks/useAppResume";
 
 export default function InboxScreen() {
-  const { user } = useAuth();
+  const { loading: authLoading, isSupabaseReady, user } = useAuth();
   const [items, setItems] = useState<InboxMessage[]>([]);
 
   const load = useCallback(async () => {
-    if (!user) return;
-    setItems(await listInbox(user.id));
-  }, [user]);
+    if (!user || !isSupabaseReady) return;
+    const deadline = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("load_timeout")), 8000)
+    );
+    try {
+      const nextItems = await Promise.race([listInbox(user.id), deadline]);
+      setItems(nextItems);
+    } catch {
+      // Timed out or network error — keep the existing screen state.
+    }
+  }, [isSupabaseReady, user]);
 
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  useFocusEffect(useCallback(() => {
+    if (authLoading || !isSupabaseReady) return;
+    void load();
+  }, [authLoading, isSupabaseReady, load]));
+
+  useAppResume(() => {
+    void load();
+  }, isSupabaseReady);
 
   const tap = async (m: InboxMessage) => {
     if (!m.read) {

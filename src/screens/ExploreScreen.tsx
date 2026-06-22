@@ -10,7 +10,6 @@ import {
   ScrollView,
   Alert,
   RefreshControl,
-  AppState,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -27,6 +26,7 @@ import { extractSkillFromTitle, getQuizTypeSuffix, SKILL_LABELS, SkillLabel } fr
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import ScrollingBanner from "../components/ScrollingBanner";
+import { useAppResume } from "../hooks/useAppResume";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
@@ -486,7 +486,7 @@ export default function ExploreScreen() {
   const [feedVisible, setFeedVisible] = useState(false);
   const [feedIndex, setFeedIndex] = useState(0);
   const feedRef = useRef<FlatList<FeedItem>>(null);
-  const { loading: authLoading, user } = useAuth();
+  const { loading: authLoading, isSupabaseReady, user } = useAuth();
 
   // Filter states
   const [filterType, setFilterType] = useState<string>("all");
@@ -536,10 +536,6 @@ export default function ExploreScreen() {
     }, [])
   );
 
-  // Always-current ref so the AppState listener never captures a stale closure.
-  const loadRef = useRef<() => Promise<void>>(async () => {});
-  const appStateRef = useRef(AppState.currentState);
-
   const load = async () => {
     const deadline = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error("load_timeout")), 8000)
@@ -564,12 +560,8 @@ export default function ExploreScreen() {
     loadAppSettings();
   };
 
-  // Keep ref current on every render so the AppState handler always calls the
-  // latest load() (which closes over the current user).
-  loadRef.current = load;
-
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || !isSupabaseReady) return;
     let mounted = true;
     const run = async () => {
       await load();
@@ -577,18 +569,11 @@ export default function ExploreScreen() {
     };
     run();
     return () => { mounted = false; };
-  }, [authLoading]);
+  }, [authLoading, isSupabaseReady]);
 
-  // Re-fetch silently whenever the app returns from background.
-  useEffect(() => {
-    const sub = AppState.addEventListener("change", (nextState) => {
-      if (appStateRef.current.match(/inactive|background/) && nextState === "active") {
-        loadRef.current();
-      }
-      appStateRef.current = nextState;
-    });
-    return () => sub.remove();
-  }, []);
+  useAppResume(() => {
+    void load();
+  }, isSupabaseReady);
 
   const onRefresh = async () => {
     setRefreshing(true);

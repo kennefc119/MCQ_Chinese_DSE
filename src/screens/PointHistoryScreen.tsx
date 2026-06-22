@@ -8,22 +8,41 @@ import { colors, spacing, typography } from "../theme";
 import { Attempt, Quiz } from "../types/database";
 import { listUserAttempts, listQuizzes } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
+import { useAppResume } from "../hooks/useAppResume";
 
 export default function PointHistoryScreen() {
   const nav = useNavigation();
-  const { user } = useAuth();
+  const { loading: authLoading, isSupabaseReady, user } = useAuth();
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
 
+  const load = useCallback(async () => {
+    if (!user || !isSupabaseReady) return;
+    const deadline = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("load_timeout")), 8000)
+    );
+    try {
+      const [as, qs] = await Promise.race([
+        Promise.all([listUserAttempts(user.id), listQuizzes()]),
+        deadline,
+      ]);
+      setAttempts(as.filter((a) => a.status === "submitted"));
+      setQuizzes(qs);
+    } catch {
+      // Timed out or network error — keep the existing screen state.
+    }
+  }, [isSupabaseReady, user]);
+
   useFocusEffect(
     useCallback(() => {
-      if (!user) return;
-      Promise.all([listUserAttempts(user.id), listQuizzes()]).then(([as, qs]) => {
-        setAttempts(as.filter((a) => a.status === "submitted"));
-        setQuizzes(qs);
-      });
-    }, [user]),
+      if (authLoading || !isSupabaseReady) return;
+      void load();
+    }, [authLoading, isSupabaseReady, load]),
   );
+
+  useAppResume(() => {
+    void load();
+  }, isSupabaseReady);
 
   const quizMap = useMemo(
     () => quizzes.reduce<Record<string, Quiz>>((m, q) => ({ ...m, [q.id]: q }), {}),

@@ -2,7 +2,7 @@
  * UserSummaryPanel — Collapsible aggregate user statistics.
  * Order: overview → performance → subscription → gender → DSE year → psych → edu emails
  */
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -17,6 +17,8 @@ import { colors, spacing, typography } from "../../theme";
 import CollapsibleSection from "../../components/CollapsibleSection";
 import { fetchUserSummaryStats, fetchEduEmailStats } from "../../lib/adminService";
 import { UserSummaryStats, EduDomainStat, EduDomainMonthly } from "../../types/database";
+import { useAuth } from "../../context/AuthContext";
+import { useAppResume } from "../../hooks/useAppResume";
 import { withTimeout } from "../../lib/asyncTimeout";
 import { TIMEOUT_MS } from "../../lib/timeoutConfig";
 
@@ -26,14 +28,16 @@ const GENDER_LABELS: Record<string, string> = { male: "男", female: "女", othe
 const GENDER_COLORS: Record<string, string> = { male: colors.primary, female: colors.gold, other: colors.inkSoft };
 
 export default function UserSummaryPanel() {
+  const { loading: authLoading, isSupabaseReady } = useAuth();
   const [stats, setStats] = useState<UserSummaryStats | null>(null);
   const [eduDomains, setEduDomains] = useState<EduDomainStat[]>([]);
   const [eduMonthly, setEduMonthly] = useState<EduDomainMonthly[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const loadData = useCallback(async () => {
+    if (!isSupabaseReady) return;
     let cancelled = false;
-    (async () => {
+    try {
       setLoading(true);
       const [s, edu] = await withTimeout(
         Promise.all([
@@ -49,9 +53,19 @@ export default function UserSummaryPanel() {
         setEduMonthly(edu.monthly);
         setLoading(false);
       }
-    })();
-    return () => { cancelled = true; };
-  }, []);
+    } finally {
+      cancelled = true;
+    }
+  }, [isSupabaseReady]);
+
+  useEffect(() => {
+    if (authLoading || !isSupabaseReady) return;
+    void loadData();
+  }, [authLoading, isSupabaseReady, loadData]);
+
+  useAppResume(() => {
+    void loadData();
+  }, isSupabaseReady);
 
   if (loading || !stats) {
     return (

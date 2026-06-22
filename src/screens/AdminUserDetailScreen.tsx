@@ -46,6 +46,8 @@ import {
   AnnouncementType,
 } from "../types/database";
 import { AppStackParamList } from "../navigation/types";
+import { useAuth } from "../context/AuthContext";
+import { useAppResume } from "../hooks/useAppResume";
 import { withTimeout } from "../lib/asyncTimeout";
 import { TIMEOUT_MS } from "../lib/timeoutConfig";
 
@@ -58,6 +60,7 @@ export default function AdminUserDetailScreen() {
   const nav = useNavigation<Nav>();
   const route = useRoute<Rt>();
   const { userId } = route.params;
+  const { loading: authLoading, isSupabaseReady } = useAuth();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -87,6 +90,7 @@ export default function AdminUserDetailScreen() {
   const [dmSending, setDmSending] = useState(false);
 
   const loadProfile = useCallback(async () => {
+    if (!isSupabaseReady) return;
     setLoading(true);
     const [p, perf, ps] = await withTimeout(
       Promise.all([
@@ -116,9 +120,24 @@ export default function AdminUserDetailScreen() {
     setPassages(perf.passages);
     setPsych(ps);
     setLoading(false);
-  }, [userId]);
+  }, [isSupabaseReady, userId]);
+
+  const loadInitialHistory = useCallback(async () => {
+    if (!isSupabaseReady) return;
+    setHistoryLoading(true);
+    const next = await withTimeout(
+      fetchUserAttemptHistory(userId, 0, PAGE_SIZE).then((r) => r.items),
+      TIMEOUT_MS.adminHistoryLoad,
+      "admin_user_detail_history_load",
+    ).catch(() => [] as AttemptHistoryItem[]);
+    setHistory(next);
+    setPage(1);
+    setHasMore(next.length >= PAGE_SIZE);
+    setHistoryLoading(false);
+  }, [isSupabaseReady, userId]);
 
   const loadMoreHistory = useCallback(async () => {
+    if (!isSupabaseReady) return;
     if (!hasMore || historyLoading) return;
     setHistoryLoading(true);
     const next = await withTimeout(
@@ -130,13 +149,18 @@ export default function AdminUserDetailScreen() {
     if (next.length < PAGE_SIZE) setHasMore(false);
     setPage((p) => p + 1);
     setHistoryLoading(false);
-  }, [userId, page, hasMore, historyLoading]);
+  }, [isSupabaseReady, userId, page, hasMore, historyLoading]);
 
   useEffect(() => {
-    loadProfile();
-    loadMoreHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
+    if (authLoading || !isSupabaseReady) return;
+    void loadProfile();
+    void loadInitialHistory();
+  }, [authLoading, isSupabaseReady, loadInitialHistory, loadProfile]);
+
+  useAppResume(() => {
+    void loadProfile();
+    void loadInitialHistory();
+  }, isSupabaseReady);
 
   const onSave = async () => {
     if (!profile) return;

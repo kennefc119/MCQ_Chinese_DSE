@@ -10,7 +10,7 @@
  * The backend itself does the heavy lifting (LLM calls, DB writes). This panel
  * is a thin UI wrapper that talks to the dsemcq-mcq-proxy edge function.
  */
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Switch } from "react-native";
 import { colors, spacing, typography } from "../../theme";
 import Button from "../../components/Button";
@@ -21,6 +21,8 @@ import {
   generatorGenerate,
   generatorAssemble,
 } from "../../lib/adminService";
+import { useAuth } from "../../context/AuthContext";
+import { useAppResume } from "../../hooks/useAppResume";
 import { withTimeout } from "../../lib/asyncTimeout";
 import { TIMEOUT_MS } from "../../lib/timeoutConfig";
 
@@ -42,6 +44,7 @@ const DIFFICULTIES = [
 ];
 
 export default function GeneratorPanel() {
+  const { loading: authLoading, isSupabaseReady } = useAuth();
   const [passages, setPassages] = useState<Passage[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [stats, setStats] = useState<Record<string, unknown> | null>(null);
@@ -57,8 +60,8 @@ export default function GeneratorPanel() {
   const [assembling, setAssembling] = useState(false);
   const [output, setOutput] = useState<string>("");
 
-  const refreshLookups = async () => {
-    if (!GENERATOR_ENABLED) return;
+  const refreshLookups = useCallback(async () => {
+    if (!GENERATOR_ENABLED || !isSupabaseReady) return;
     setLoading(true);
     const [p, s, st] = await withTimeout(
       Promise.all([
@@ -80,9 +83,16 @@ export default function GeneratorPanel() {
     if (!p.ok) setOutput((o) => o + `\n[載入篇章失敗] ${p.error}`);
     if (!s.ok) setOutput((o) => o + `\n[載入技能失敗] ${s.error}`);
     if (!st.ok) setOutput((o) => o + `\n[載入統計失敗] ${st.error}`);
-  };
+  }, [isSupabaseReady]);
 
-  useEffect(() => { refreshLookups(); }, []);
+  useEffect(() => {
+    if (authLoading || !isSupabaseReady) return;
+    void refreshLookups();
+  }, [authLoading, isSupabaseReady, refreshLookups]);
+
+  useAppResume(() => {
+    void refreshLookups();
+  }, isSupabaseReady);
 
   const onGenerate = async () => {
     if (!GENERATOR_ENABLED) {

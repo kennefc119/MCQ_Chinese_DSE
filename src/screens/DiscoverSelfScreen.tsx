@@ -15,6 +15,7 @@ import RadarChart from "../components/RadarChart";
 import CollapsibleSection from "../components/CollapsibleSection";
 import Treemap from "../components/Treemap";
 import { TABLET_BREAKPOINT, CONTENT_MAX_WIDTH } from "../hooks/useDeviceType";
+import { useAppResume } from "../hooks/useAppResume";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
@@ -37,7 +38,7 @@ const SKILL_TAGS = [
 
 export default function DiscoverSelfScreen() {
   const nav = useNavigation<Nav>();
-  const { user } = useAuth();
+  const { loading: authLoading, isSupabaseReady, user } = useAuth();
   const { width: screenWidth } = useWindowDimensions();
   const isTablet = screenWidth >= TABLET_BREAKPOINT;
   // On iPad, the sidebar takes 220px. Clamp chart container to CONTENT_MAX_WIDTH.
@@ -66,7 +67,7 @@ export default function DiscoverSelfScreen() {
   }, []);
 
   useFocusEffect(useCallback(() => {
-    if (!user) return;
+    if (authLoading || !isSupabaseReady || !user) return;
     let cancelled = false;
 
     const loadCoreAnalytics = async () => {
@@ -131,7 +132,63 @@ export default function DiscoverSelfScreen() {
     return () => {
       cancelled = true;
     };
-  }, [user]));
+  }, [authLoading, isSupabaseReady, user]));
+
+  useAppResume(() => {
+    if (authLoading || !user) return;
+
+    const loadCoreAnalytics = async () => {
+      const deadline = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("load_timeout")), 8000)
+      );
+
+      try {
+        const [as, pr] = await Promise.race([
+          Promise.all([listUserAttempts(user.id), listUserPsychResults(user.id)]),
+          deadline,
+        ]);
+        const submitted = as.filter((a) => a.status === "submitted");
+        const quizIds = [...new Set(submitted.map((a) => a.quiz_id))];
+        const qs = await listQuizzesByIds(quizIds);
+        setAttempts(submitted);
+        setQuizzes(qs);
+        setUserPsychResults(pr);
+        const allQuestionIds = [...new Set(submitted.flatMap((a) => Object.keys(a.answers ?? {})))];
+        if (allQuestionIds.length > 0) {
+          const meta = await fetchQuestionAnalyticsData(allQuestionIds);
+          setQuestionMeta(meta);
+        }
+      } catch {
+        // Timed out or network error — keep the existing analytics state.
+      }
+    };
+
+    const loadPremiumComparison = async () => {
+      if (user.subscription_tier !== "premium") {
+        setPremiumComparison(null);
+        setComparisonLoading(false);
+        setComparisonUnavailable(false);
+        return;
+      }
+
+      setComparisonLoading(true);
+      setComparisonUnavailable(false);
+
+      try {
+        const comparison = await fetchPremiumUserComparison(user.id);
+        setPremiumComparison(comparison);
+        setComparisonUnavailable(!comparison || !comparison.allowed);
+      } catch {
+        setPremiumComparison(null);
+        setComparisonUnavailable(true);
+      } finally {
+        setComparisonLoading(false);
+      }
+    };
+
+    void loadCoreAnalytics();
+    void loadPremiumComparison();
+  }, isSupabaseReady);
 
   const quizMap = useMemo(
     () => quizzes.reduce<Record<string, Quiz>>((m, q) => ({ ...m, [q.id]: q }), {}),

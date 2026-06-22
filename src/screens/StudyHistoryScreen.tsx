@@ -11,6 +11,7 @@ import { listQuizzes, listQuizzesByIds, listUserAttempts, listPassages } from ".
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
 import { cleanPassageName, extractSkillFromTitle } from "../lib/quizDisplayUtils";
+import { useAppResume } from "../hooks/useAppResume";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
@@ -25,34 +26,54 @@ type GroupedAttempt = {
 
 export default function StudyHistoryScreen() {
   const nav = useNavigation<Nav>();
-  const { user } = useAuth();
+  const { loading: authLoading, isSupabaseReady, user } = useAuth();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [passages, setPassages] = useState<Passage[]>([]);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!user) return;
-      (async () => {
-        const [as, ps] = await Promise.all([listUserAttempts(user.id), listPassages()]);
-        const submittedAttempts = as.filter((a) => a.status === "submitted");
-        const attemptedQuizIds = [...new Set(submittedAttempts.map((a) => a.quiz_id))];
+  const load = useCallback(async () => {
+    if (!user || !isSupabaseReady) return;
+    const deadline = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("load_timeout")), 8000)
+    );
+    try {
+      const [as, ps] = await Promise.race([
+        Promise.all([listUserAttempts(user.id), listPassages()]),
+        deadline,
+      ]);
+      const submittedAttempts = as.filter((a) => a.status === "submitted");
+      const attemptedQuizIds = [...new Set(submittedAttempts.map((a) => a.quiz_id))];
 
-        const [visibleQuizzes, historicalQuizzes] = await Promise.all([
+      const [visibleQuizzes, historicalQuizzes] = await Promise.race([
+        Promise.all([
           listQuizzes(),
           attemptedQuizIds.length > 0 ? listQuizzesByIds(attemptedQuizIds) : Promise.resolve([]),
-        ]);
+        ]),
+        deadline,
+      ]);
 
-        const mergedQuizMap = new Map<string, Quiz>();
-        historicalQuizzes.forEach((q) => mergedQuizMap.set(q.id, q));
-        visibleQuizzes.forEach((q) => mergedQuizMap.set(q.id, q));
+      const mergedQuizMap = new Map<string, Quiz>();
+      historicalQuizzes.forEach((q) => mergedQuizMap.set(q.id, q));
+      visibleQuizzes.forEach((q) => mergedQuizMap.set(q.id, q));
 
-        setQuizzes(Array.from(mergedQuizMap.values()));
-        setAttempts(submittedAttempts);
-        setPassages(ps);
-      })();
-    }, [user]),
+      setQuizzes(Array.from(mergedQuizMap.values()));
+      setAttempts(submittedAttempts);
+      setPassages(ps);
+    } catch {
+      // Timed out or network error — keep the existing screen state.
+    }
+  }, [isSupabaseReady, user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (authLoading || !isSupabaseReady) return;
+      void load();
+    }, [authLoading, isSupabaseReady, load]),
   );
+
+  useAppResume(() => {
+    void load();
+  }, isSupabaseReady);
 
   const quizMap = useMemo<Record<string, Quiz>>(
     () => quizzes.reduce((m, q) => ({ ...m, [q.id]: q }), {}),

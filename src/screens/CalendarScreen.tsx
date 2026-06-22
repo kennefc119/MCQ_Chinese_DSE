@@ -10,11 +10,12 @@ import { useAuth } from "../context/AuthContext";
 import GuestGuard from "../components/GuestGuard";
 import { AppStackParamList } from "../navigation/types";
 import { cleanPassageName, extractSkillFromTitle } from "../lib/quizDisplayUtils";
+import { useAppResume } from "../hooks/useAppResume";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
 export default function CalendarScreen() {
-  const { user } = useAuth();
+  const { loading: authLoading, isSupabaseReady, user } = useAuth();
   const nav = useNavigation<Nav>();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
@@ -22,27 +23,46 @@ export default function CalendarScreen() {
   const [month, setMonth] = useState(new Date());
 
   const load = useCallback(async () => {
-    if (!user) return;
-    const [as, ps] = await Promise.all([listUserAttempts(user.id), listPassages()]);
-    const submittedAttempts = as.filter((a) => a.status === "submitted");
-    const attemptedQuizIds = [...new Set(submittedAttempts.map((a) => a.quiz_id))];
+    if (!user || !isSupabaseReady) return;
+    const deadline = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("load_timeout")), 8000)
+    );
+    try {
+      const [as, ps] = await Promise.race([
+        Promise.all([listUserAttempts(user.id), listPassages()]),
+        deadline,
+      ]);
+      const submittedAttempts = as.filter((a) => a.status === "submitted");
+      const attemptedQuizIds = [...new Set(submittedAttempts.map((a) => a.quiz_id))];
 
-    // Include historical quiz rows (inactive/unpublished) so old attempts don't render as "未知測驗".
-    const [visibleQuizzes, historicalQuizzes] = await Promise.all([
-      listQuizzes(),
-      attemptedQuizIds.length > 0 ? listQuizzesByIds(attemptedQuizIds) : Promise.resolve([]),
-    ]);
+      const [visibleQuizzes, historicalQuizzes] = await Promise.race([
+        Promise.all([
+          listQuizzes(),
+          attemptedQuizIds.length > 0 ? listQuizzesByIds(attemptedQuizIds) : Promise.resolve([]),
+        ]),
+        deadline,
+      ]);
 
-    const mergedQuizMap = new Map<string, Quiz>();
-    historicalQuizzes.forEach((q) => mergedQuizMap.set(q.id, q));
-    visibleQuizzes.forEach((q) => mergedQuizMap.set(q.id, q));
+      const mergedQuizMap = new Map<string, Quiz>();
+      historicalQuizzes.forEach((q) => mergedQuizMap.set(q.id, q));
+      visibleQuizzes.forEach((q) => mergedQuizMap.set(q.id, q));
 
-    setQuizzes(Array.from(mergedQuizMap.values()));
-    setAttempts(submittedAttempts);
-    setPassages(ps);
-  }, [user]);
+      setQuizzes(Array.from(mergedQuizMap.values()));
+      setAttempts(submittedAttempts);
+      setPassages(ps);
+    } catch {
+      // Timed out or network error — keep the existing screen state.
+    }
+  }, [isSupabaseReady, user]);
 
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  useFocusEffect(useCallback(() => {
+    if (authLoading || !isSupabaseReady) return;
+    void load();
+  }, [authLoading, isSupabaseReady, load]));
+
+  useAppResume(() => {
+    void load();
+  }, isSupabaseReady);
 
   const quizMap: Record<string, Quiz> = quizzes.reduce((m, q) => ({ ...m, [q.id]: q }), {});
   const passageMap: Record<string, Passage> = passages.reduce((m, p) => ({ ...m, [p.id]: p }), {});

@@ -27,13 +27,14 @@ import {
 import { listPassages } from "../../lib/dataService";
 import { AppSetting, InventorySummary, Passage, AdminPeerBaselineSnapshotStatus } from "../../types/database";
 import { useAuth } from "../../context/AuthContext";
+import { useAppResume } from "../../hooks/useAppResume";
 import { withTimeout } from "../../lib/asyncTimeout";
 import { TIMEOUT_MS } from "../../lib/timeoutConfig";
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function SettingsPanel() {
-  const { user } = useAuth();
+  const { user, loading: authLoading, isSupabaseReady } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -53,6 +54,7 @@ export default function SettingsPanel() {
   const [allPassages, setAllPassages] = useState<Passage[]>([]);
 
   const loadData = useCallback(async () => {
+    if (!isSupabaseReady) return;
     setLoading(true);
     const [settings, passages, inv, status] = await withTimeout(
       Promise.all([
@@ -79,7 +81,7 @@ export default function SettingsPanel() {
     setInventory(inv);
     setBaselineStatus(status ?? null);
     setLoading(false);
-  }, []);
+  }, [isSupabaseReady]);
 
   const handleRefreshPeerBaselines = async () => {
     Alert.alert("重算同儕基準", "將重新計算全站同儕平均與百分位，過程可能需要數十秒，是否繼續？", [
@@ -107,7 +109,14 @@ export default function SettingsPanel() {
     ]);
   };
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    if (authLoading || !isSupabaseReady) return;
+    void loadData();
+  }, [authLoading, isSupabaseReady, loadData]);
+
+  useAppResume(() => {
+    void loadData();
+  }, isSupabaseReady);
 
   const handleSave = async () => {
     Alert.alert("確認儲存", "儲存後設定將即時生效於所有用戶，確定要繼續嗎？", [

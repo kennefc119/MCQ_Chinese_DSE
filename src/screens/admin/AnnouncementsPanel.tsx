@@ -18,6 +18,10 @@ import { colors, spacing, typography } from "../../theme";
 import Button from "../../components/Button";
 import { listAnnouncements, sendBroadcast } from "../../lib/adminService";
 import { Announcement, AnnouncementType, AnnouncementAudience } from "../../types/database";
+import { useAuth } from "../../context/AuthContext";
+import { useAppResume } from "../../hooks/useAppResume";
+import { withTimeout } from "../../lib/asyncTimeout";
+import { TIMEOUT_MS } from "../../lib/timeoutConfig";
 
 const TYPES: { key: AnnouncementType; label: string }[] = [
   { key: "info", label: "資訊" },
@@ -32,6 +36,7 @@ const AUDIENCES: { key: AnnouncementAudience; label: string; desc: string }[] = 
 ];
 
 export default function AnnouncementsPanel() {
+  const { loading: authLoading, isSupabaseReady } = useAuth();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [type, setType] = useState<AnnouncementType>("info");
@@ -41,15 +46,25 @@ export default function AnnouncementsPanel() {
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
+    if (!isSupabaseReady) return;
     setRefreshing(true);
-    const list = await listAnnouncements().catch(() => []);
+    const list = await withTimeout(
+      listAnnouncements().catch(() => []),
+      TIMEOUT_MS.adminPanelLoad,
+      "admin_announcements_load",
+    ).catch(() => [] as Announcement[]);
     setItems(list);
     setRefreshing(false);
-  }, []);
+  }, [isSupabaseReady]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    if (authLoading || !isSupabaseReady) return;
+    void load();
+  }, [authLoading, isSupabaseReady, load]);
+
+  useAppResume(() => {
+    void load();
+  }, isSupabaseReady);
 
   const onSend = async () => {
     if (!title.trim() || !body.trim()) {

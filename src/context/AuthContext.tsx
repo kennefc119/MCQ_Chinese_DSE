@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import * as SecureStore from "expo-secure-store";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { Platform } from "react-native";
@@ -35,6 +35,7 @@ const sha256Hex = async (str: string): Promise<string> => {
 interface AuthContextValue {
   user: Profile | null;
   loading: boolean;
+  isSupabaseReady: boolean;
   isGuest: boolean;
   /** True when user.role === 'admin'. */
   isAdmin: boolean;
@@ -82,6 +83,7 @@ const GUEST_PROFILE: Profile = {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSupabaseReady, setIsSupabaseReady] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
@@ -91,79 +93,110 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       SecureStore.getItemAsync(PROFILE_KEY)
         .then((cached) => { if (cached) setUser(JSON.parse(cached)); })
         .catch(() => {})
-        .finally(() => setLoading(false));
+        .finally(() => {
+          setLoading(false);
+          setIsSupabaseReady(true);
+        });
       return;
     }
 
-    // Safety deadline: on iOS cold start with an expired stored token the Supabase SDK
-    // acquires a JS-level auth lock to refresh the token.  That lock can block
-    // onAuthStateChange from ever firing, keeping loading=true forever.
-    // The deadline also covers the case where onAuthStateChange fires but the
-    // subsequent profile fetch hangs (e.g. network stall, auth lock on the DB
-    // request).  We restore from SecureStore cache so the user isn't stuck.
+    let settled = false;
+    let authSettled = false;
+
+    const settle = () => {
+      if (!settled) {
+        settled = true;
+        setLoading(false);
+      }
+    };
+
+    const settleAuth = () => {
+      if (!authSettled) {
+        authSettled = true;
+        setIsSupabaseReady(true);
+      }
+    };
+
+    // Safety valve for stalled auth restore/profile fetch.
     const deadline = setTimeout(async () => {
       try {
         const cached = await SecureStore.getItemAsync(PROFILE_KEY).catch(() => null);
         if (cached) setUser(JSON.parse(cached));
       } catch {}
-      setLoading(false);
-    }, 8000);
+      settle();
+      settleAuth();
+    }, 4000);
 
-    // 1. Subscribe to Supabase auth state changes FIRST so we never miss events.
-    //    This fires with the current session on mount (INITIAL_SESSION / SIGNED_IN).
+    // Phase 1: restore cached profile and release UI loading early.
+    SecureStore.getItemAsync(PROFILE_KEY)
+      .then((cached) => {
+        if (!cached) return;
+        try {
+          setUser(JSON.parse(cached));
+        } catch {}
+        settle();
+      })
+      .catch(() => {});
+
+    // INITIAL_SESSION is the readiness boundary for authenticated queries.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_OUT" || !session) {
-        // Clear profile unless we're in guest/demo mode
+      if (event === "INITIAL_SESSION") {
+        if (session?.user) {
+          try {
+            const { data: profile } = await supabase
+              .from("dsemcq_profiles")
+              .select("*")
+              .eq("id", session.user.id)
+              .maybeSingle();
+            if (profile) {
+              await persist(profile as Profile);
+              void syncSubscription(session.user.id, profile as Profile);
+            }
+          } catch {
+            // Keep cached profile if network/profile lookup fails.
+          }
+        } else {
+          setIsGuest((g) => {
+            if (!g) setUser(null);
+            return g;
+          });
+          SecureStore.deleteItemAsync(PROFILE_KEY).catch(() => {});
+        }
+        settle();
+        settleAuth();
+        clearTimeout(deadline);
+        return;
+      }
+
+      if (event === "TOKEN_REFRESHED" && session?.user) {
+        try {
+          const { data: profile } = await supabase
+            .from("dsemcq_profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .maybeSingle();
+          if (profile) {
+            await persist(profile as Profile);
+          }
+        } catch {
+          // Ignore refresh/profile failures silently.
+        }
+      }
+
+      if (event === "SIGNED_OUT") {
         setIsGuest((g) => {
           if (!g) setUser(null);
           return g;
         });
-        setLoading(false);
-        clearTimeout(deadline);
-        return;
+        SecureStore.deleteItemAsync(PROFILE_KEY).catch(() => {});
       }
-      // Session is valid — fetch the fresh profile from DB, fall back to SecureStore cache
-      try {
-        const { data: profile } = await supabase
-          .from("dsemcq_profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .maybeSingle();
-        if (profile) {
-          await persist(profile as Profile);
-          // Sync RC identity on every session restore (covers cold-start, not just explicit sign-in)
-          void syncSubscription(session.user.id, profile as Profile);
-        } else {
-          // Profile not yet created (user in registration flow) — keep any cached profile
-          const cached = await SecureStore.getItemAsync(PROFILE_KEY).catch(() => null);
-          if (cached) setUser(JSON.parse(cached));
-        }
-      } catch {
-        // Network error — fall back to SecureStore cache so app stays usable offline
-        const cached = await SecureStore.getItemAsync(PROFILE_KEY).catch(() => null);
-        if (cached) setUser(JSON.parse(cached));
-      }
-      setLoading(false);
-      clearTimeout(deadline);
     });
-
-    // 2. Kick off session restoration from ExpoSecureStoreAdapter.
-    //    getSession() reads the persisted JWT from storage and populates the in-memory
-    //    session.  Without this explicit call the session isn't guaranteed to be loaded
-    //    before the first DB mutation (signups/attempts inserts), causing auth.uid() to
-    //    return null and RLS to reject the insert.
-    supabase.auth.getSession().catch(() => {});
 
     return () => {
       clearTimeout(deadline);
       subscription.unsubscribe();
     };
   }, []);
-
-  // Auth token refresh on foreground resume is now handled centrally by
-  // startAutoRefresh / stopAutoRefresh in App.tsx.  The previous AppState
-  // listener here called getSession() which raced with the SDK's internal
-  // auth lock and caused the app to hang after long background periods.
 
   const persist = async (p: Profile | null) => {
     setUser(p);
@@ -406,6 +439,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         loading,
+        isSupabaseReady,
         isGuest,
         isAdmin,
         signInWithEmail,

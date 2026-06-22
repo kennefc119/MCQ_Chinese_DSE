@@ -5,7 +5,7 @@
  * adminService.searchUsers. Empty query lists the 50 most-recently-created
  * users. Tapping a row navigates to AdminUserDetailScreen.
  */
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -13,6 +13,8 @@ import { colors, spacing, typography } from "../../theme";
 import { searchUsers } from "../../lib/adminService";
 import { Profile } from "../../types/database";
 import { AppStackParamList } from "../../navigation/types";
+import { useAuth } from "../../context/AuthContext";
+import { useAppResume } from "../../hooks/useAppResume";
 import { withTimeout } from "../../lib/asyncTimeout";
 import { TIMEOUT_MS } from "../../lib/timeoutConfig";
 
@@ -20,12 +22,26 @@ type Nav = NativeStackNavigationProp<AppStackParamList>;
 
 export default function UserCheckerPanel() {
   const nav = useNavigation<Nav>();
+  const { loading: authLoading, isSupabaseReady } = useAuth();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const runSearch = useCallback(async (nextQuery: string) => {
+    if (!isSupabaseReady) return;
+    setLoading(true);
+    const list = await withTimeout(
+      searchUsers(nextQuery, 50),
+      TIMEOUT_MS.adminUserSearch,
+      "admin_user_search",
+    ).catch(() => [] as Profile[]);
+    setResults(list);
+    setLoading(false);
+  }, [isSupabaseReady]);
+
   // Debounced search
   useEffect(() => {
+    if (authLoading || !isSupabaseReady) return;
     let cancelled = false;
     const t = setTimeout(async () => {
       setLoading(true);
@@ -33,14 +49,18 @@ export default function UserCheckerPanel() {
         searchUsers(query, 50),
         TIMEOUT_MS.adminUserSearch,
         "admin_user_search",
-      ).catch(() => []);
+      ).catch(() => [] as Profile[]);
       if (!cancelled) {
         setResults(list);
         setLoading(false);
       }
     }, 250);
     return () => { cancelled = true; clearTimeout(t); };
-  }, [query]);
+  }, [authLoading, isSupabaseReady, query]);
+
+  useAppResume(() => {
+    void runSearch(query);
+  }, isSupabaseReady);
 
   return (
     <View>
