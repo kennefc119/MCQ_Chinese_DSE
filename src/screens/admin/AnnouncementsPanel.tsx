@@ -14,13 +14,14 @@
  */
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity, RefreshControl } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { colors, spacing, typography } from "../../theme";
 import Button from "../../components/Button";
 import { listAnnouncements, sendBroadcast } from "../../lib/adminService";
 import { Announcement, AnnouncementType, AnnouncementAudience } from "../../types/database";
 import { useAuth } from "../../context/AuthContext";
 import { useAppResume } from "../../hooks/useAppResume";
-import { withTimeout } from "../../lib/asyncTimeout";
+import { reliableLoad } from "../../lib/reliableLoad";
 import { TIMEOUT_MS } from "../../lib/timeoutConfig";
 
 const TYPES: { key: AnnouncementType; label: string }[] = [
@@ -48,11 +49,12 @@ export default function AnnouncementsPanel() {
   const load = useCallback(async () => {
     if (!isSupabaseReady) return;
     setRefreshing(true);
-    const list = await withTimeout(
-      listAnnouncements().catch(() => []),
-      TIMEOUT_MS.adminPanelLoad,
-      "admin_announcements_load",
-    ).catch(() => [] as Announcement[]);
+    const list = await reliableLoad({
+      task: () => listAnnouncements(),
+      timeoutMs: TIMEOUT_MS.adminPanelLoad,
+      label: "admin_announcements_load",
+      fallback: [] as Announcement[],
+    });
     setItems(list);
     setRefreshing(false);
   }, [isSupabaseReady]);
@@ -61,6 +63,11 @@ export default function AnnouncementsPanel() {
     if (authLoading || !isSupabaseReady) return;
     void load();
   }, [authLoading, isSupabaseReady, load]);
+
+  useFocusEffect(useCallback(() => {
+    if (authLoading || !isSupabaseReady) return;
+    void load();
+  }, [authLoading, isSupabaseReady, load]));
 
   useAppResume(() => {
     void load();

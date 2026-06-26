@@ -1,4 +1,4 @@
-import { Quiz, Question, QuestionOption, Attempt, QuizSignup, InboxMessage, TipCard, PsychTest, PsychQuestion, PsychResultMapping, PsychUserResult, Passage, PremiumUserComparison, QuizPercentileFeedback } from "../types/database";
+import { Quiz, Question, QuestionOption, Attempt, QuizSignup, InboxMessage, TipCard, PsychTest, PsychQuestion, PsychResultMapping, PsychUserResult, Passage, PremiumUserComparison, PremiumGlobalStats, QuizPercentileFeedback } from "../types/database";
 import { isSupabaseConfigured, supabase } from "./supabase";
 import { SEED_QUIZZES } from "../data/seedQuizzes";
 import { SEED_QUESTIONS } from "../data/seedQuestions";
@@ -13,6 +13,8 @@ const memory = {
   signups: [] as QuizSignup[],
   inbox: [...SEED_INBOX] as InboxMessage[],
 };
+
+const questionDifficultyCache = new Map<string, number>();
 
 export const localStore = memory;
 
@@ -39,18 +41,32 @@ async function fetchDifficultyMap(ids: string[]): Promise<Record<string, number>
   if (!isSupabaseConfigured) {
     return Object.fromEntries(SEED_QUESTIONS.map((q) => [q.id, q.difficulty]));
   }
+
   const diffMap: Record<string, number> = {};
-  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
-    const batch = ids.slice(i, i + BATCH_SIZE);
+  const missingIds: string[] = [];
+
+  for (const id of ids) {
+    const cached = questionDifficultyCache.get(id);
+    if (typeof cached === "number") {
+      diffMap[id] = cached;
+    } else {
+      missingIds.push(id);
+    }
+  }
+
+  for (let i = 0; i < missingIds.length; i += BATCH_SIZE) {
+    const batch = missingIds.slice(i, i + BATCH_SIZE);
     const { data: qRows, error: qErr } = await supabase
       .from("dsemcq_questions")
       .select("id, difficulty")
       .in("id", batch);
     if (qErr) console.warn("[dsemcq] fetchDifficultyMap batch error:", qErr.message);
     for (const r of (qRows ?? []) as { id: string; difficulty: number }[]) {
+      questionDifficultyCache.set(r.id, r.difficulty);
       diffMap[r.id] = r.difficulty;
     }
   }
+
   return diffMap;
 }
 
@@ -775,6 +791,16 @@ export async function fetchPremiumUserComparison(userId: string): Promise<Premiu
     return null;
   }
   return (legacy.data as PremiumUserComparison) ?? null;
+}
+
+export async function fetchPremiumGlobalStats(userId: string): Promise<PremiumGlobalStats | null> {
+  if (!isSupabaseConfigured) return null;
+  const { data, error } = await supabase.rpc("get_premium_global_stats", { p_user_id: userId });
+  if (error) {
+    console.warn("[dsemcq] fetchPremiumGlobalStats error:", error.message);
+    return null;
+  }
+  return (data as PremiumGlobalStats) ?? null;
 }
 
 export async function fetchQuizPercentileFeedback(args: {

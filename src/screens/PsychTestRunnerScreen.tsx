@@ -25,6 +25,25 @@ import SealStamp from "../components/SealStamp";
 type Nav = NativeStackNavigationProp<AppStackParamList, "PsychTest">;
 type Rt = RouteProp<AppStackParamList, "PsychTest">;
 
+function shuffleArray<T>(items: T[]): T[] {
+  const next = [...items];
+  for (let i = next.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [next[i], next[j]] = [next[j], next[i]];
+  }
+  return next;
+}
+
+function createShuffledPsychTestSession(source: PsychTest): PsychTest {
+  return {
+    ...source,
+    questions: source.questions.map((question) => ({
+      ...question,
+      options: shuffleArray(question.options),
+    })),
+  };
+}
+
 // ── ProgressBar ───────────────────────────────────────────────────────────────
 
 function ProgressBar({
@@ -84,9 +103,16 @@ export default function PsychTestRunnerScreen() {
   const [saving, setSaving] = useState(false);
   const [showBalloons, setShowBalloons] = useState(false);
 
-  useEffect(() => {
-    listPsychTests().then((all) => setTest(all.find((t) => t.id === testId) || null));
+  const loadTestSession = React.useCallback(() => {
+    listPsychTests().then((all) => {
+      const source = all.find((t) => t.id === testId) || null;
+      setTest(source ? createShuffledPsychTestSession(source) : null);
+    });
   }, [testId]);
+
+  useEffect(() => {
+    loadTestSession();
+  }, [loadTestSession]);
 
   if (!test) return <LoadingScreen />;
 
@@ -142,6 +168,7 @@ export default function PsychTestRunnerScreen() {
     setIdx(0);
     setAnswers([]);
     setShowBalloons(false);
+    loadTestSession();
   };
 
   if (done) {

@@ -12,6 +12,7 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { BarChart, PieChart } from "react-native-gifted-charts";
 import { colors, spacing, typography } from "../../theme";
 import CollapsibleSection from "../../components/CollapsibleSection";
@@ -19,7 +20,7 @@ import { fetchUserSummaryStats, fetchEduEmailStats } from "../../lib/adminServic
 import { UserSummaryStats, EduDomainStat, EduDomainMonthly } from "../../types/database";
 import { useAuth } from "../../context/AuthContext";
 import { useAppResume } from "../../hooks/useAppResume";
-import { withTimeout } from "../../lib/asyncTimeout";
+import { reliableLoad } from "../../lib/reliableLoad";
 import { TIMEOUT_MS } from "../../lib/timeoutConfig";
 
 const screenWidth = Dimensions.get("window").width;
@@ -39,14 +40,15 @@ export default function UserSummaryPanel() {
     let cancelled = false;
     try {
       setLoading(true);
-      const [s, edu] = await withTimeout(
-        Promise.all([
-          fetchUserSummaryStats().catch(() => null),
-          fetchEduEmailStats().catch(() => ({ domains: [], monthly: [] })),
+      const [s, edu] = await reliableLoad({
+        task: () => Promise.all([
+          fetchUserSummaryStats(),
+          fetchEduEmailStats(),
         ]),
-        TIMEOUT_MS.adminPanelLoad,
-        "admin_user_summary_load",
-      ).catch(() => [null, { domains: [], monthly: [] }] as [UserSummaryStats | null, { domains: EduDomainStat[]; monthly: EduDomainMonthly[] }]);
+        timeoutMs: TIMEOUT_MS.adminPanelLoad,
+        label: "admin_user_summary_load",
+        fallback: [null, { domains: [], monthly: [] }] as [UserSummaryStats | null, { domains: EduDomainStat[]; monthly: EduDomainMonthly[] }],
+      });
       if (!cancelled) {
         setStats(s);
         setEduDomains(edu.domains);
@@ -62,6 +64,11 @@ export default function UserSummaryPanel() {
     if (authLoading || !isSupabaseReady) return;
     void loadData();
   }, [authLoading, isSupabaseReady, loadData]);
+
+  useFocusEffect(useCallback(() => {
+    if (authLoading || !isSupabaseReady) return;
+    void loadData();
+  }, [authLoading, isSupabaseReady, loadData]));
 
   useAppResume(() => {
     void loadData();
@@ -115,7 +122,7 @@ export default function UserSummaryPanel() {
         <View style={styles.summaryGrid}>
           <SummaryCard label="總用戶數" value={stats.totalUsers} desc="已註冊帳號總數" />
           <SummaryCard label="平均文苑點數" value={stats.avgWenyuanPoints} desc="所有用戶的平均積分" />
-          <SummaryCard label="平均正確率" value={`${stats.avgSuccessRate}%`} desc="答題正確率平均值" />
+          <SummaryCard label="平均題目正確率" value={`${stats.avgSuccessRate}%`} desc="答題正確率平均值" />
           <SummaryCard label="中位正確率" value={`${stats.medianSuccessRate}%`} desc="正確率分佈中位數" />
         </View>
       </CollapsibleSection>

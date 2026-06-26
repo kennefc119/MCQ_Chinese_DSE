@@ -8,6 +8,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, spacing, typography } from "../../theme";
 import { searchUsers } from "../../lib/adminService";
@@ -15,7 +16,7 @@ import { Profile } from "../../types/database";
 import { AppStackParamList } from "../../navigation/types";
 import { useAuth } from "../../context/AuthContext";
 import { useAppResume } from "../../hooks/useAppResume";
-import { withTimeout } from "../../lib/asyncTimeout";
+import { reliableLoad } from "../../lib/reliableLoad";
 import { TIMEOUT_MS } from "../../lib/timeoutConfig";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
@@ -30,11 +31,12 @@ export default function UserCheckerPanel() {
   const runSearch = useCallback(async (nextQuery: string) => {
     if (!isSupabaseReady) return;
     setLoading(true);
-    const list = await withTimeout(
-      searchUsers(nextQuery, 50),
-      TIMEOUT_MS.adminUserSearch,
-      "admin_user_search",
-    ).catch(() => [] as Profile[]);
+    const list = await reliableLoad({
+      task: () => searchUsers(nextQuery, 50),
+      timeoutMs: TIMEOUT_MS.adminUserSearch,
+      label: "admin_user_search",
+      fallback: [] as Profile[],
+    });
     setResults(list);
     setLoading(false);
   }, [isSupabaseReady]);
@@ -45,11 +47,12 @@ export default function UserCheckerPanel() {
     let cancelled = false;
     const t = setTimeout(async () => {
       setLoading(true);
-      const list = await withTimeout(
-        searchUsers(query, 50),
-        TIMEOUT_MS.adminUserSearch,
-        "admin_user_search",
-      ).catch(() => [] as Profile[]);
+      const list = await reliableLoad({
+        task: () => searchUsers(query, 50),
+        timeoutMs: TIMEOUT_MS.adminUserSearch,
+        label: "admin_user_search",
+        fallback: [] as Profile[],
+      });
       if (!cancelled) {
         setResults(list);
         setLoading(false);
@@ -57,6 +60,11 @@ export default function UserCheckerPanel() {
     }, 250);
     return () => { cancelled = true; clearTimeout(t); };
   }, [authLoading, isSupabaseReady, query]);
+
+  useFocusEffect(useCallback(() => {
+    if (authLoading || !isSupabaseReady) return;
+    void runSearch(query);
+  }, [authLoading, isSupabaseReady, query, runSearch]));
 
   useAppResume(() => {
     void runSearch(query);

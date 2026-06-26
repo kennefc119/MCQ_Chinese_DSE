@@ -122,6 +122,7 @@ export interface TipCard {
   position: number;
   is_active: boolean;
   read_time_minutes?: number;
+  author?: string | null;
   cta_label?: string;
 }
 
@@ -317,6 +318,37 @@ export interface PremiumUserComparison {
   };
   passage_avg_by_id?: Record<string, number>;
   skill_avg_by_tag?: Record<string, number>;
+}
+
+export interface PremiumAnonymousRankEntry {
+  rank: number;
+  value: number;
+  is_current_user: boolean;
+  username?: string;
+}
+
+export interface PremiumGlobalMetricStats {
+  user_value: number;
+  user_percentile: number;
+  user_rank: number | null;
+  is_user_top10: boolean;
+  top10: PremiumAnonymousRankEntry[];
+  top30: PremiumAnonymousRankEntry[];
+}
+
+export interface PremiumGlobalPassageRate {
+  passage_id: string;
+  passage_title: string;
+  rate_pct: number;
+}
+
+export interface PremiumGlobalStats {
+  allowed: boolean;
+  passage_accuracy_rates?: PremiumGlobalPassageRate[];
+  cards_answered?: PremiumGlobalMetricStats;
+  man_yuen_points?: PremiumGlobalMetricStats;
+  combined_performance?: PremiumGlobalMetricStats;
+  accuracy_rate?: PremiumGlobalMetricStats;
 }
 
 export interface QuizPercentileFeedback {

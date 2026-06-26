@@ -26,6 +26,7 @@ You already have expo-dev-client in your package.json. This creates a custom Exp
 One-time build step:
 eas build --profile production --platform ios --auto-submit
 
+eas build --profile development --platform ios
 
 Test in dev
 # 1. Kill all node processes
@@ -36,5 +37,6 @@ npm install -g @expo/ngrok
 
 # 3. Try tunnel again
 npx expo start --dev-client --tunnel --clear
+npx expo start --dev-client --lan --clear
 
-npx expo start --dev-client --tunnel
+npx expo start --dev-client --tunnel~

@@ -12,6 +12,7 @@
  */
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Switch } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { colors, spacing, typography } from "../../theme";
 import Button from "../../components/Button";
 import {
@@ -23,7 +24,7 @@ import {
 } from "../../lib/adminService";
 import { useAuth } from "../../context/AuthContext";
 import { useAppResume } from "../../hooks/useAppResume";
-import { withTimeout } from "../../lib/asyncTimeout";
+import { reliableLoad } from "../../lib/reliableLoad";
 import { TIMEOUT_MS } from "../../lib/timeoutConfig";
 
 type Passage = { id: string; title: string; order_no: number };
@@ -63,19 +64,20 @@ export default function GeneratorPanel() {
   const refreshLookups = useCallback(async () => {
     if (!GENERATOR_ENABLED || !isSupabaseReady) return;
     setLoading(true);
-    const [p, s, st] = await withTimeout(
-      Promise.all([
+    const [p, s, st] = await reliableLoad({
+      task: () => Promise.all([
         generatorListPassages(),
         generatorListSkills(),
         generatorFetchStats(),
       ]),
-      TIMEOUT_MS.adminPanelLoad,
-      "admin_generator_refresh",
-    ).catch(() => [
-      { ok: false, error: "請求逾時" },
-      { ok: false, error: "請求逾時" },
-      { ok: false, error: "請求逾時" },
-    ] as any);
+      timeoutMs: TIMEOUT_MS.adminPanelLoad,
+      label: "admin_generator_refresh",
+      fallback: [
+        { ok: false, error: "請求逾時" },
+        { ok: false, error: "請求逾時" },
+        { ok: false, error: "請求逾時" },
+      ] as any,
+    });
     if (p.ok) setPassages(p.data);
     if (s.ok) setSkills(s.data);
     if (st.ok) setStats(st.data);
@@ -89,6 +91,11 @@ export default function GeneratorPanel() {
     if (authLoading || !isSupabaseReady) return;
     void refreshLookups();
   }, [authLoading, isSupabaseReady, refreshLookups]);
+
+  useFocusEffect(useCallback(() => {
+    if (authLoading || !isSupabaseReady) return;
+    void refreshLookups();
+  }, [authLoading, isSupabaseReady, refreshLookups]));
 
   useAppResume(() => {
     void refreshLookups();
@@ -105,17 +112,18 @@ export default function GeneratorPanel() {
       return;
     }
     setGenerating(true);
-    const res = await withTimeout(
-      generatorGenerate({
+    const res = await reliableLoad({
+      task: () => generatorGenerate({
         passage_id: passageId,
         forced_difficulty: difficulty,
         forced_skill: skill,
         dry_run: dryRun,
         count: n,
       }),
-      TIMEOUT_MS.adminAction,
-      "admin_generator_generate",
-    ).catch(() => ({ ok: false, error: "請求逾時，請稍後再試" }));
+      timeoutMs: TIMEOUT_MS.adminAction,
+      label: "admin_generator_generate",
+      fallback: { ok: false, error: "請求逾時，請稍後再試" },
+    });
     setGenerating(false);
     if (!res.ok) {
       setOutput(`[生成失敗] ${res.error}`);
@@ -131,14 +139,15 @@ export default function GeneratorPanel() {
       return;
     }
     setAssembling(true);
-    const res = await withTimeout(
-      generatorAssemble({
+    const res = await reliableLoad({
+      task: () => generatorAssemble({
         dry_run: dryRun,
         strategies: ["passage", "skill", "difficulty"],
       }),
-      TIMEOUT_MS.adminAction,
-      "admin_generator_assemble",
-    ).catch(() => ({ ok: false, error: "請求逾時，請稍後再試" }));
+      timeoutMs: TIMEOUT_MS.adminAction,
+      label: "admin_generator_assemble",
+      fallback: { ok: false, error: "請求逾時，請稍後再試" },
+    });
     setAssembling(false);
     if (!res.ok) {
       setOutput(`[組裝失敗] ${res.error}`);

@@ -13,6 +13,7 @@ import {
   Dimensions,
   Alert,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { BarChart } from "react-native-gifted-charts";
 import { colors, spacing, typography } from "../../theme";
 import CollapsibleSection from "../../components/CollapsibleSection";
@@ -39,7 +40,7 @@ import {
 } from "../../types/database";
 import { useAuth } from "../../context/AuthContext";
 import { useAppResume } from "../../hooks/useAppResume";
-import { withTimeout } from "../../lib/asyncTimeout";
+import { reliableLoad } from "../../lib/reliableLoad";
 import { TIMEOUT_MS } from "../../lib/timeoutConfig";
 
 const DAY_OPTIONS = [1, 7, 14, 21, 31, 60, 90, 120] as const;
@@ -87,15 +88,16 @@ export default function UsageInsightsPanel() {
     let cancelled = false;
     try {
       setLoading(true);
-      const [d, t, ai] = await withTimeout(
-        Promise.all([
-          fetchDailyUsageMetrics(days).catch(() => []),
-          fetchUsageMetrics(days).catch(() => null),
-          fetchAIUsageStats(days).catch(() => null),
+      const [d, t, ai] = await reliableLoad({
+        task: () => Promise.all([
+          fetchDailyUsageMetrics(days),
+          fetchUsageMetrics(days),
+          fetchAIUsageStats(days),
         ]),
-        TIMEOUT_MS.adminPanelLoad,
-        "admin_usage_primary_load",
-      ).catch(() => [[], null, null] as [DailyUsageMetric[], UsageWindowMetrics | null, AIUsageStats | null]);
+        timeoutMs: TIMEOUT_MS.adminPanelLoad,
+        label: "admin_usage_primary_load",
+        fallback: [[], null, null] as [DailyUsageMetric[], UsageWindowMetrics | null, AIUsageStats | null],
+      });
       if (cancelled) return;
       setDaily(d);
       setTotals(t);
@@ -111,32 +113,33 @@ export default function UsageInsightsPanel() {
     let cancelled = false;
     try {
       setSectionLoading(true);
-      const [pr, dr, sk, ed, sc, sp] = await withTimeout(
-        Promise.all([
-          fetchPassageSuccessRates().catch(() => []),
-          fetchDifficultySuccessRates().catch(() => []),
-          fetchSkippingRate().catch(() => ({ total: 0, skipped: 0, rate: 0 })),
-          fetchExerciseChoiceDistribution().catch(() => []),
-          fetchPerStudentExerciseCounts().catch(() => []),
-          fetchPerStudentPointStats().catch(() => []),
+      const [pr, dr, sk, ed, sc, sp] = await reliableLoad({
+        task: () => Promise.all([
+          fetchPassageSuccessRates(),
+          fetchDifficultySuccessRates(),
+          fetchSkippingRate(),
+          fetchExerciseChoiceDistribution(),
+          fetchPerStudentExerciseCounts(),
+          fetchPerStudentPointStats(),
         ]),
-        TIMEOUT_MS.adminPanelLoad,
-        "admin_usage_sections_load",
-      ).catch(() => [
-        [],
-        [],
-        { total: 0, skipped: 0, rate: 0 },
-        [],
-        [],
-        [],
-      ] as [
-        PassageSuccessRate[],
-        DifficultySuccessRate[],
-        { total: number; skipped: number; rate: number },
-        ExerciseChoiceItem[],
-        StudentExerciseCount[],
-        StudentPointStat[],
-      ]);
+        timeoutMs: TIMEOUT_MS.adminPanelLoad,
+        label: "admin_usage_sections_load",
+        fallback: [
+          [],
+          [],
+          { total: 0, skipped: 0, rate: 0 },
+          [],
+          [],
+          [],
+        ] as [
+          PassageSuccessRate[],
+          DifficultySuccessRate[],
+          { total: number; skipped: number; rate: number },
+          ExerciseChoiceItem[],
+          StudentExerciseCount[],
+          StudentPointStat[],
+        ],
+      });
       if (cancelled) return;
       setPassageRates(pr);
       setDiffRates(dr);
@@ -159,6 +162,12 @@ export default function UsageInsightsPanel() {
     if (authLoading || !isSupabaseReady) return;
     void loadSections();
   }, [authLoading, isSupabaseReady, loadSections]);
+
+  useFocusEffect(useCallback(() => {
+    if (authLoading || !isSupabaseReady) return;
+    void loadPrimary();
+    void loadSections();
+  }, [authLoading, isSupabaseReady, loadPrimary, loadSections]));
 
   useAppResume(() => {
     void loadPrimary();

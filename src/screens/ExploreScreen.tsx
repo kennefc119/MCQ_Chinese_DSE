@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState, useMemo, useContext, createContext } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useCallback, useEffect, useRef, useState, useMemo, useContext, createContext } from "react";
 import {
   View,
   Text,
@@ -36,6 +37,23 @@ export const GRID_PADDING = 12;
 const PHONE_COLS = 3;
 const TABLET_COLS = 5;
 const TABLET_BREAKPOINT = 768;
+
+const CACHE_KEY_EXPLORE_FEED = "dsemcq_cache_explore_feed_v1";
+const CACHE_KEY_EXPLORE_SETTINGS = "dsemcq_cache_explore_settings_v1";
+
+type ExploreFeedCache = {
+  quizzes: Quiz[];
+  tips: TipCard[];
+  passages: Passage[];
+  attempts: Attempt[];
+  quizOrder: string[];
+};
+
+type ExploreSettingsCache = {
+  exemptIds: string[];
+  bannerMessage: string;
+  bannerPause: number;
+};
 
 /** Compute tile + feed dimensions from current window size. */
 function computeGridMetrics(width: number, height: number) {
@@ -89,6 +107,48 @@ function interleave(quizzes: Quiz[], tips: TipCard[]): FeedItem[] {
     }
   }
   return out;
+}
+
+function orderQuizzes(quizzes: Quiz[], previousOrder: string[]): { quizzes: Quiz[]; quizOrder: string[] } {
+  if (quizzes.length === 0) return { quizzes: [], quizOrder: [] };
+
+  const quizMap = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
+  const ordered = previousOrder
+    .map((id) => quizMap.get(id))
+    .filter((quiz): quiz is Quiz => !!quiz);
+  const seen = new Set(ordered.map((quiz) => quiz.id));
+  const additions = quizzes.filter((quiz) => !seen.has(quiz.id));
+  const appended = additions.length > 0 ? shuffleArray([...additions]) : [];
+  const next = ordered.length > 0 || appended.length > 0
+    ? [...ordered, ...appended]
+    : shuffleArray([...quizzes]);
+
+  return {
+    quizzes: next,
+    quizOrder: next.map((quiz) => quiz.id),
+  };
+}
+
+function parseExploreSettings(rows: { key: string; value: unknown }[]): ExploreSettingsCache {
+  const settings: ExploreSettingsCache = {
+    exemptIds: [],
+    bannerMessage: "",
+    bannerPause: 2,
+  };
+
+  for (const row of rows) {
+    if (row.key === "exempt_passage_ids" && Array.isArray(row.value)) {
+      settings.exemptIds = row.value.filter((value): value is string => typeof value === "string");
+    }
+    if (row.key === "explore_banner_message" && typeof row.value === "string") {
+      settings.bannerMessage = row.value;
+    }
+    if (row.key === "explore_banner_pause" && typeof row.value === "number") {
+      settings.bannerPause = row.value;
+    }
+  }
+
+  return settings;
 }
 
 const MAX_COL_CHARS = 6; // chars per vertical column before splitting to two
@@ -500,9 +560,54 @@ export default function ExploreScreen() {
   const [exemptIds, setExemptIds] = useState<Set<string>>(new Set());
   const [bannerMessage, setBannerMessage] = useState("");
   const [bannerPause, setBannerPause] = useState(2);
+  const quizOrderRef = useRef<string[]>([]);
+
+  const applySettings = useCallback((settings: ExploreSettingsCache) => {
+    setExemptIds(new Set(settings.exemptIds));
+    setBannerMessage(settings.bannerMessage);
+    setBannerPause(settings.bannerPause);
+  }, []);
+
+  const applyFeed = useCallback((feed: ExploreFeedCache) => {
+    const ordered = orderQuizzes(feed.quizzes, feed.quizOrder);
+    quizOrderRef.current = ordered.quizOrder;
+    setAttempts(feed.attempts);
+    setItems(interleave(ordered.quizzes, feed.tips));
+    setPassages(feed.passages);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const [cachedFeedRaw, cachedSettingsRaw] = await Promise.all([
+          AsyncStorage.getItem(CACHE_KEY_EXPLORE_FEED),
+          AsyncStorage.getItem(CACHE_KEY_EXPLORE_SETTINGS),
+        ]);
+        if (cancelled) return;
+
+        if (cachedFeedRaw) {
+          const cachedFeed = JSON.parse(cachedFeedRaw) as ExploreFeedCache;
+          applyFeed(cachedFeed);
+        }
+
+        if (cachedSettingsRaw) {
+          const cachedSettings = JSON.parse(cachedSettingsRaw) as ExploreSettingsCache;
+          applySettings(cachedSettings);
+        }
+      } catch {
+        // Cache hydration is best-effort only.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [applyFeed, applySettings]);
 
   // Fetch exempt passage IDs and banner settings from app settings
-  const loadAppSettings = async () => {
+  const loadAppSettings = useCallback(async () => {
     if (!isSupabaseConfigured) return;
     try {
       const { data, error } = await supabase
@@ -510,33 +615,23 @@ export default function ExploreScreen() {
         .select("key, value")
         .in("key", ["exempt_passage_ids", "explore_banner_message", "explore_banner_pause"]);
       if (!error && data) {
-        for (const row of data) {
-          if (row.key === "exempt_passage_ids" && Array.isArray(row.value)) {
-            setExemptIds(new Set(row.value as string[]));
-          }
-          if (row.key === "explore_banner_message" && typeof row.value === "string") {
-            setBannerMessage(row.value);
-          }
-          if (row.key === "explore_banner_pause" && typeof row.value === "number") {
-            setBannerPause(row.value);
-          }
-        }
+        const settings = parseExploreSettings(data as { key: string; value: unknown }[]);
+        applySettings(settings);
+        AsyncStorage.setItem(CACHE_KEY_EXPLORE_SETTINGS, JSON.stringify(settings)).catch(() => {});
       }
     } catch {
       // Table may not exist yet
     }
-  };
-
-  useEffect(() => { loadAppSettings(); }, []);
+  }, [applySettings]);
 
   // Re-fetch app settings every time Explore tab gains focus
   useFocusEffect(
-    React.useCallback(() => {
-      loadAppSettings();
-    }, [])
+    useCallback(() => {
+      void loadAppSettings();
+    }, [loadAppSettings])
   );
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const deadline = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error("load_timeout")), 8000)
     );
@@ -550,15 +645,26 @@ export default function ExploreScreen() {
         ]),
         deadline,
       ]);
+      const feed: ExploreFeedCache = {
+        quizzes,
+        tips,
+        passages: passageList,
+        attempts: userAttempts,
+        quizOrder: quizOrderRef.current,
+      };
+      const ordered = orderQuizzes(quizzes, quizOrderRef.current);
+      quizOrderRef.current = ordered.quizOrder;
       setAttempts(userAttempts);
-      setItems(interleave(shuffleArray([...quizzes]), tips));
+      setItems(interleave(ordered.quizzes, tips));
       setPassages(passageList);
+      AsyncStorage.setItem(
+        CACHE_KEY_EXPLORE_FEED,
+        JSON.stringify({ ...feed, quizOrder: ordered.quizOrder })
+      ).catch(() => {});
     } catch {
-      // Timed out or network error — grid stays empty; pull-to-refresh to retry
+      // Timed out or network error — keep the last rendered state.
     }
-    // Also refresh banner & exempt settings
-    loadAppSettings();
-  };
+  }, [user]);
 
   useEffect(() => {
     if (authLoading || !isSupabaseReady) return;
@@ -567,9 +673,9 @@ export default function ExploreScreen() {
       await load();
       if (!mounted) setItems([]);
     };
-    run();
+    void run();
     return () => { mounted = false; };
-  }, [authLoading, isSupabaseReady]);
+  }, [authLoading, isSupabaseReady, load]);
 
   useAppResume(() => {
     void load();

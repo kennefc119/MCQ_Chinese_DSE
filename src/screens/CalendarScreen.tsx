@@ -150,7 +150,7 @@ export default function CalendarScreen() {
       <ScrollView contentContainerStyle={{ padding: spacing.md }}>
         <Text style={styles.title}>學習日曆</Text>
         <Text style={styles.subtitle}>已完成 {attempts.length} 次練習（共 {groupedAttempts.length} 個測驗）</Text>
-
+        <Text style={styles.subtitle}>公開試中表現優異的尖子，往往都是善用『分散式學習』（Distributed Learning）的高手。他們的溫習關鍵不在於單次時數，而是勝在『高頻率』。每隔 24 小時進行適量的複習，恰好能在遺忘曲線的臨界點為大腦『鞏固記憶記憶體』，將知識有效轉化為長期記憶。</Text>
         {/* Month nav */}
         <View style={styles.monthBar}>
           <TouchableOpacity onPress={() => setMonth(new Date(year, m - 1, 1))} style={styles.monthBtn}>

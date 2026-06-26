@@ -14,6 +14,7 @@ import {
   ScrollView,
   Dimensions,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { BarChart } from "react-native-gifted-charts";
 import { colors, spacing, typography } from "../../theme";
 import CollapsibleSection from "../../components/CollapsibleSection";
@@ -28,7 +29,7 @@ import { listPassages } from "../../lib/dataService";
 import { AppSetting, InventorySummary, Passage, AdminPeerBaselineSnapshotStatus } from "../../types/database";
 import { useAuth } from "../../context/AuthContext";
 import { useAppResume } from "../../hooks/useAppResume";
-import { withTimeout } from "../../lib/asyncTimeout";
+import { reliableLoad } from "../../lib/reliableLoad";
 import { TIMEOUT_MS } from "../../lib/timeoutConfig";
 
 const screenWidth = Dimensions.get("window").width;
@@ -56,16 +57,17 @@ export default function SettingsPanel() {
   const loadData = useCallback(async () => {
     if (!isSupabaseReady) return;
     setLoading(true);
-    const [settings, passages, inv, status] = await withTimeout(
-      Promise.all([
-        fetchAppSettings().catch(() => []),
-        listPassages().catch(() => []),
-        fetchInventorySummary().catch(() => null),
-        fetchPeerBaselineSnapshotStatus().catch(() => null),
+    const [settings, passages, inv, status] = await reliableLoad({
+      task: () => Promise.all([
+        fetchAppSettings(),
+        listPassages(),
+        fetchInventorySummary(),
+        fetchPeerBaselineSnapshotStatus(),
       ]),
-      TIMEOUT_MS.adminPanelLoad,
-      "admin_settings_load",
-    ).catch(() => [[], [], null, null] as [AppSetting[], Passage[], InventorySummary | null, AdminPeerBaselineSnapshotStatus | null]);
+      timeoutMs: TIMEOUT_MS.adminPanelLoad,
+      label: "admin_settings_load",
+      fallback: [[], [], null, null] as [AppSetting[], Passage[], InventorySummary | null, AdminPeerBaselineSnapshotStatus | null],
+    });
     const settingsMap: Record<string, unknown> = {};
     for (const s of settings) settingsMap[s.key] = s.value;
     if (settingsMap.max_ai_chat_guest != null) setMaxAIChatGuest(String(settingsMap.max_ai_chat_guest));
@@ -113,6 +115,11 @@ export default function SettingsPanel() {
     if (authLoading || !isSupabaseReady) return;
     void loadData();
   }, [authLoading, isSupabaseReady, loadData]);
+
+  useFocusEffect(useCallback(() => {
+    if (authLoading || !isSupabaseReady) return;
+    void loadData();
+  }, [authLoading, isSupabaseReady, loadData]));
 
   useAppResume(() => {
     void loadData();

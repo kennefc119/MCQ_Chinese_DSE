@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, useWindowDimensions } from "react-native";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -7,8 +7,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { BarChart, PieChart } from "react-native-gifted-charts";
 import { colors, spacing, typography, QUIZ_TYPE_COLORS, QUIZ_TYPE_LABEL } from "../theme";
-import { PsychTest, Attempt, Quiz, Passage, MetricBoxStats, PremiumUserComparison } from "../types/database";
-import { listPsychTests, listUserAttempts, listQuizzesByIds, listPassages, listUserPsychResults, fetchQuestionAnalyticsData, QuestionAnalyticsMeta, fetchPremiumUserComparison } from "../lib/dataService";
+import { PsychTest, Attempt, Quiz, Passage, MetricBoxStats, PremiumUserComparison, PremiumGlobalMetricStats, PremiumGlobalStats } from "../types/database";
+import { listPsychTests, listUserAttempts, listQuizzesByIds, listPassages, listUserPsychResults, fetchQuestionAnalyticsData, QuestionAnalyticsMeta, fetchPremiumUserComparison, fetchPremiumGlobalStats } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
 import RadarChart from "../components/RadarChart";
@@ -16,6 +16,8 @@ import CollapsibleSection from "../components/CollapsibleSection";
 import Treemap from "../components/Treemap";
 import { TABLET_BREAKPOINT, CONTENT_MAX_WIDTH } from "../hooks/useDeviceType";
 import { useAppResume } from "../hooks/useAppResume";
+import { reliableLoad } from "../lib/reliableLoad";
+import { TIMEOUT_MS } from "../lib/timeoutConfig";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
@@ -36,6 +38,15 @@ const SKILL_TAGS = [
   { id: "t-comparison",   label: "跨篇章比較" },
 ] as const;
 
+function shuffleArray<T>(items: T[]): T[] {
+  const next = [...items];
+  for (let i = next.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [next[i], next[j]] = [next[j], next[i]];
+  }
+  return next;
+}
+
 export default function DiscoverSelfScreen() {
   const nav = useNavigation<Nav>();
   const { loading: authLoading, isSupabaseReady, user } = useAuth();
@@ -55,6 +66,7 @@ export default function DiscoverSelfScreen() {
   const [userPsychResults, setUserPsychResults] = useState<Record<string, { result_code: string; completed_at: string }>>({});
   const [questionMeta, setQuestionMeta] = useState<Record<string, QuestionAnalyticsMeta>>({});
   const [premiumComparison, setPremiumComparison] = useState<PremiumUserComparison | null>(null);
+  const [premiumGlobalStats, setPremiumGlobalStats] = useState<PremiumGlobalStats | null>(null);
   const [comparisonLoading, setComparisonLoading] = useState(false);
   const [comparisonUnavailable, setComparisonUnavailable] = useState(false);
 
@@ -62,13 +74,44 @@ export default function DiscoverSelfScreen() {
   const hasPremiumComparison = Boolean(premiumComparison?.allowed);
 
   useEffect(() => {
-    listPsychTests().then(setTests);
-    listPassages().then(setPassages);
+    let cancelled = false;
+    void reliableLoad({
+      task: () => listPassages(),
+      timeoutMs: TIMEOUT_MS.adminPanelLoad,
+      label: "discover_self_passages_load",
+      fallback: [] as Passage[],
+    }).then((rows) => {
+      if (!cancelled) setPassages(rows);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  useFocusEffect(useCallback(() => {
+    let cancelled = false;
+
+    void reliableLoad({
+      task: () => listPsychTests(),
+      timeoutMs: TIMEOUT_MS.adminPanelLoad,
+      label: "discover_self_psych_tests_load",
+      fallback: [] as PsychTest[],
+    }).then((loaded) => {
+      if (!cancelled) {
+        setTests(shuffleArray(loaded));
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []));
 
   useFocusEffect(useCallback(() => {
     if (authLoading || !isSupabaseReady || !user) return;
     let cancelled = false;
+    let refreshTimer: ReturnType<typeof setInterval> | null = null;
 
     const loadCoreAnalytics = async () => {
     const deadline = new Promise<never>((_, reject) =>
@@ -101,6 +144,7 @@ export default function DiscoverSelfScreen() {
       if (user.subscription_tier !== "premium") {
         if (!cancelled) {
           setPremiumComparison(null);
+          setPremiumGlobalStats(null);
           setComparisonLoading(false);
           setComparisonUnavailable(false);
         }
@@ -113,13 +157,18 @@ export default function DiscoverSelfScreen() {
       }
 
       try {
-        const comparison = await fetchPremiumUserComparison(user.id);
+        const [comparison, globalStats] = await Promise.all([
+          fetchPremiumUserComparison(user.id),
+          fetchPremiumGlobalStats(user.id),
+        ]);
         if (cancelled) return;
         setPremiumComparison(comparison);
-        setComparisonUnavailable(!comparison || !comparison.allowed);
+        setPremiumGlobalStats(globalStats);
+        setComparisonUnavailable(!comparison || !comparison.allowed || !globalStats || !globalStats.allowed);
       } catch {
         if (cancelled) return;
         setPremiumComparison(null);
+        setPremiumGlobalStats(null);
         setComparisonUnavailable(true);
       } finally {
         if (!cancelled) setComparisonLoading(false);
@@ -129,8 +178,14 @@ export default function DiscoverSelfScreen() {
     void loadCoreAnalytics();
     void loadPremiumComparison();
 
+    refreshTimer = setInterval(() => {
+      void loadCoreAnalytics();
+      void loadPremiumComparison();
+    }, 60000);
+
     return () => {
       cancelled = true;
+      if (refreshTimer) clearInterval(refreshTimer);
     };
   }, [authLoading, isSupabaseReady, user]));
 
@@ -166,6 +221,7 @@ export default function DiscoverSelfScreen() {
     const loadPremiumComparison = async () => {
       if (user.subscription_tier !== "premium") {
         setPremiumComparison(null);
+        setPremiumGlobalStats(null);
         setComparisonLoading(false);
         setComparisonUnavailable(false);
         return;
@@ -175,11 +231,16 @@ export default function DiscoverSelfScreen() {
       setComparisonUnavailable(false);
 
       try {
-        const comparison = await fetchPremiumUserComparison(user.id);
+        const [comparison, globalStats] = await Promise.all([
+          fetchPremiumUserComparison(user.id),
+          fetchPremiumGlobalStats(user.id),
+        ]);
         setPremiumComparison(comparison);
-        setComparisonUnavailable(!comparison || !comparison.allowed);
+        setPremiumGlobalStats(globalStats);
+        setComparisonUnavailable(!comparison || !comparison.allowed || !globalStats || !globalStats.allowed);
       } catch {
         setPremiumComparison(null);
+        setPremiumGlobalStats(null);
         setComparisonUnavailable(true);
       } finally {
         setComparisonLoading(false);
@@ -420,6 +481,40 @@ export default function DiscoverSelfScreen() {
 
   const chartBarWidth = Math.max(contentWidth - spacing.md * 4 - 40, 200);
 
+  const premiumPassageRates = useMemo(
+    () => (premiumGlobalStats?.allowed ? (premiumGlobalStats.passage_accuracy_rates ?? []) : []),
+    [premiumGlobalStats],
+  );
+
+  const cardsAnsweredStats = useMemo(
+    () => (premiumGlobalStats?.allowed ? (premiumGlobalStats.cards_answered ?? null) : null),
+    [premiumGlobalStats],
+  );
+
+  const manYuenPointStats = useMemo(
+    () => (premiumGlobalStats?.allowed ? (premiumGlobalStats.man_yuen_points ?? null) : null),
+    [premiumGlobalStats],
+  );
+
+  const premiumPassageBarData = useMemo(
+    () => premiumPassageRates.map((item) => ({
+      value: Math.round(item.rate_pct),
+      label: item.passage_title.length > 4 ? `${item.passage_title.slice(0, 4)}…` : item.passage_title,
+      frontColor: item.rate_pct >= 70 ? colors.success : item.rate_pct >= 40 ? colors.gold : colors.primary,
+    })),
+    [premiumPassageRates],
+  );
+
+  const cardsAnsweredDistributionData = useMemo(
+    () => toDistributionBars(cardsAnsweredStats, colors.primary),
+    [cardsAnsweredStats],
+  );
+
+  const manYuenPointDistributionData = useMemo(
+    () => toDistributionBars(manYuenPointStats, colors.gold),
+    [manYuenPointStats],
+  );
+
   const percentileBand = (percentile?: number) => {
     const p = percentile ?? 0;
     if (p >= 90) return "Top 10%";
@@ -449,7 +544,7 @@ export default function DiscoverSelfScreen() {
               box={premiumComparison?.metrics?.completed_questions?.box}
             />
             <MetricCompareCard
-              label="平均正確率"
+              label="平均題目正確率"
               value={metrics.avgAccuracy}
               suffix="%"
               accentColor={colors.success}
@@ -467,7 +562,7 @@ export default function DiscoverSelfScreen() {
               box={premiumComparison?.metrics?.points?.box}
             />
             <MetricCompareCard
-              label="完成測驗數"
+              label="完成文淵卡牌數"
               value={metrics.quizzesCompleted}
               suffix=""
               accentColor={colors.primary}
@@ -477,9 +572,22 @@ export default function DiscoverSelfScreen() {
             />
             <View style={styles.metricCard}>
               <Text style={[styles.metricValue, { color: colors.primary }]}>{metrics.bestStreak}</Text>
-              <Text style={styles.metricLabel}>最佳連勝</Text>
+              <Text style={styles.metricLabel}>最佳連續合格</Text>
             </View>
           </View>
+          {isPremiumUser && hasPremiumComparison && (
+            <View style={styles.metricGridLegend}>
+              <View style={styles.metricGridLegendItem}>
+                <View style={styles.metricGridLegendMedian} />
+                <Text style={styles.metricGridLegendText}>黑線＝同儕中位數</Text>
+              </View>
+              <View style={styles.metricGridLegendItem}>
+                <View style={styles.metricGridLegendUser} />
+                <Text style={styles.metricGridLegendText}>紅線＝你的位置</Text>
+              </View>
+              <Text style={styles.metricGridLegendDirection}>左少右多／左低右高</Text>
+            </View>
+          )}
           {!isPremiumUser && (
             <View style={styles.premiumTeaser}>
               <Text style={styles.premiumTeaserTitle}>升級學士版解鎖進階比較</Text>
@@ -492,7 +600,8 @@ export default function DiscoverSelfScreen() {
       {/* ── Passage radar ─────────────────────────── */}
       <View style={styles.analyticsCard}>
         <Text style={styles.analyticsTitle}>篇章掌握度</Text>
-        <Text style={styles.analyticsHint}>各篇章答題平均得分率</Text>
+        <Text style={styles.analyticsHint}>各篇章的分數不是單看某一份卷，而是把該篇章所有已提交作答的得分與總題數加總後再計算。</Text>
+        <Text style={styles.analyticsHint}>公式是：篇章分數 = Σ(score) ÷ Σ(total) × 100，然後四捨五入成整數百分比；如果該篇章沒有作答，就顯示 0。</Text>
         {passages.length === 12 ? (
           <View style={styles.chartCenter}>
             <RadarChart
@@ -526,7 +635,8 @@ export default function DiscoverSelfScreen() {
       {/* ── Skills radar ──────────────────────────── */}
       <View style={styles.analyticsCard}>
         <Text style={styles.analyticsTitle}>能力分析</Text>
-        <Text style={styles.analyticsHint}>各語文能力答題正確率（基於種子題庫）</Text>
+        <Text style={styles.analyticsHint}>這個蜘蛛網是按每一題的標籤去算：每次作答會先找出題目的能力標籤，再把同一能力的答對次數與總次數加總。</Text>
+        <Text style={styles.analyticsHint}>公式是：能力正確率 = 該能力答對題數 ÷ 該能力總作答題數 × 100；因為是逐題累計，所以會反映你在所有已作答題目中的實際表現。</Text>
         <View style={styles.chartCenter}>
           <RadarChart
             axes={skillAxes}
@@ -550,6 +660,77 @@ export default function DiscoverSelfScreen() {
           )}
         </View>
       </View>
+
+      {/* ── Premium global anonymous figures (collapsible) ───────────── */}
+      <CollapsibleSection
+        title="全體同學統計"
+        subtitle={isPremiumUser ? "學士版" : "學士版限定"}
+      >
+        {isPremiumUser ? (
+          <>
+            <Text style={styles.analyticsHint}>只顯示百分比與數值分佈，不顯示姓名或用戶編號</Text>
+            {comparisonLoading ? (
+              <Text style={styles.placeholderText}>資料載入中…</Text>
+            ) : comparisonUnavailable ? (
+              <Text style={styles.placeholderText}>暫時未能取得同學統計</Text>
+            ) : (
+              <>
+                {premiumPassageBarData.length > 0 && (
+                  <View style={styles.premiumBlock}>
+                    <Text style={styles.premiumBlockTitle}>篇章答題正確率（全體）</Text>
+                    <Text style={styles.premiumBlockHint}>只顯示百分比，不顯示答對題數與總題數</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                      <BarChart
+                        data={premiumPassageBarData}
+                        width={Math.max(premiumPassageBarData.length * 50, chartBarWidth)}
+                        barWidth={30}
+                        spacing={14}
+                        height={200}
+                        noOfSections={5}
+                        maxValue={100}
+                        yAxisTextStyle={{ color: colors.textMuted, fontSize: 10 }}
+                        xAxisLabelTextStyle={{ color: colors.textMuted, fontSize: 9 }}
+                        hideRules={false}
+                        rulesColor={colors.hairline}
+                        barBorderRadius={4}
+                        isAnimated
+                      />
+                    </ScrollView>
+                  </View>
+                )}
+
+                <AnonymousRankingBlock
+                  title="文淵卡牌完成數分佈"
+                  hint="按完成卡牌數量排序，僅顯示數值與名次"
+                  unit="張"
+                  stats={cardsAnsweredStats}
+                  data={cardsAnsweredDistributionData}
+                  chartWidth={chartBarWidth}
+                />
+
+                <AnonymousRankingBlock
+                  title="文淵點分佈"
+                  hint="按文淵點排序，僅顯示數值與名次"
+                  unit="點"
+                  stats={manYuenPointStats}
+                  data={manYuenPointDistributionData}
+                  chartWidth={chartBarWidth}
+                />
+              </>
+            )}
+          </>
+        ) : (
+          <View>
+            <View style={styles.lockedTeaserHeader}>
+              <Ionicons name="lock-closed" size={16} color={colors.primary} />
+              <Text style={styles.lockedTeaserTitle}>全體同儕匿名統計（學士版限定）</Text>
+            </View>
+            <Text style={styles.lockedTeaserBody}>
+              升級學士版即可查看：篇章答題正確率百分比、文淵卡牌完成數分佈與 Top 10 匿名排名、文淵點分佈與 Top 10 匿名排名。
+            </Text>
+          </View>
+        )}
+      </CollapsibleSection>
 
       {/* ── Detailed analysis charts ──────────────── */}
       {attempts.length > 0 && (
@@ -762,6 +943,70 @@ export default function DiscoverSelfScreen() {
     );
   }
 
+  function AnonymousRankingBlock(props: {
+    title: string;
+    hint: string;
+    unit: string;
+    stats: PremiumGlobalMetricStats | null;
+    data: { value: number; label: string; frontColor: string }[];
+    chartWidth: number;
+  }) {
+    const { title, hint, unit, stats, data, chartWidth } = props;
+    if (!stats) return null;
+
+    return (
+      <View style={styles.premiumBlock}>
+        <Text style={styles.premiumBlockTitle}>{title}</Text>
+        <Text style={styles.premiumBlockHint}>{hint}</Text>
+        <View style={styles.premiumMetricRow}>
+          <View style={styles.premiumMetricPill}>
+            <Text style={styles.premiumMetricValue}>{stats.user_value.toLocaleString()}{unit}</Text>
+            <Text style={styles.premiumMetricLabel}>你的數值</Text>
+          </View>
+          <View style={styles.premiumMetricPill}>
+            <Text style={styles.premiumMetricValue}>{stats.user_percentile.toFixed(1)}%</Text>
+            <Text style={styles.premiumMetricLabel}>你的百分位</Text>
+          </View>
+          <View style={styles.premiumMetricPill}>
+            <Text style={styles.premiumMetricValue}>{stats.is_user_top10 ? "是" : "否"}</Text>
+            <Text style={styles.premiumMetricLabel}>你是否 Top 10</Text>
+          </View>
+        </View>
+
+        {data.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <BarChart
+              data={data}
+              width={Math.max(data.length * 34, chartWidth)}
+              barWidth={18}
+              spacing={10}
+              height={170}
+              noOfSections={4}
+              yAxisTextStyle={{ color: colors.textMuted, fontSize: 10 }}
+              xAxisLabelTextStyle={{ color: colors.textMuted, fontSize: 9 }}
+              hideRules={false}
+              rulesColor={colors.hairline}
+              barBorderRadius={3}
+              isAnimated
+            />
+          </ScrollView>
+        )}
+
+        <View style={styles.premiumTopListWrap}>
+          <Text style={styles.premiumTopListTitle}>Top 10（用戶名稱）</Text>
+          {stats.top10.map((entry) => (
+            <View key={`${title}-${entry.rank}`} style={styles.premiumTopListRow}>
+              <Text style={styles.premiumTopRank}>#{entry.rank}</Text>
+              <Text style={styles.premiumTopName} numberOfLines={1}>{entry.username ?? "-"}</Text>
+              <Text style={styles.premiumTopValue}>{entry.value.toLocaleString()}{unit}</Text>
+              <Text style={styles.premiumTopIdentity}>{entry.is_current_user ? "你" : ""}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <FlatList
@@ -804,6 +1049,18 @@ export default function DiscoverSelfScreen() {
       />
     </SafeAreaView>
   );
+}
+
+function toDistributionBars(
+  stats: PremiumGlobalMetricStats | null,
+  color: string,
+): { value: number; label: string; frontColor: string }[] {
+  if (!stats) return [];
+  return (stats.top30 ?? []).map((entry) => ({
+    value: entry.value,
+    label: `${entry.rank}`,
+    frontColor: entry.is_current_user ? colors.primary : color,
+  }));
 }
 
 const styles = StyleSheet.create({
@@ -889,6 +1146,46 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: spacing.xs,
     marginBottom: spacing.md,
+  },
+  metricGridLegend: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginTop: -spacing.xs,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+  },
+  metricGridLegendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  metricGridLegendText: {
+    color: colors.textSecondary,
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  metricGridLegendMedian: {
+    width: 2,
+    height: 12,
+    backgroundColor: colors.ink,
+  },
+  metricGridLegendUser: {
+    width: 6,
+    height: 12,
+    borderRadius: 3,
+    backgroundColor: colors.primary,
+  },
+  metricGridLegendDirection: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: "600",
   },
   metricCard: {
     flex: 1,
@@ -977,6 +1274,113 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginTop: spacing.xs,
     textAlign: "center",
+  },
+  premiumBlock: {
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.hairline,
+    gap: spacing.xs,
+  },
+  premiumBlockTitle: {
+    color: colors.textPrimary,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  premiumBlockHint: {
+    color: colors.textMuted,
+    fontSize: 11,
+  },
+  premiumMetricRow: {
+    flexDirection: "row",
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  premiumMetricPill: {
+    flex: 1,
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    borderRadius: 10,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    alignItems: "center",
+  },
+  premiumMetricValue: {
+    color: colors.ink,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  premiumMetricLabel: {
+    color: colors.textMuted,
+    fontSize: 10,
+    marginTop: 2,
+  },
+  premiumTopListWrap: {
+    marginTop: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  premiumTopListTitle: {
+    color: colors.textSecondary,
+    fontSize: 11,
+    fontWeight: "700",
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.surfaceAlt,
+  },
+  premiumTopListRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.hairline,
+  },
+  premiumTopRank: {
+    color: colors.textMuted,
+    fontSize: 11,
+    width: 34,
+  },
+  premiumTopValue: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: "700",
+    width: 80,
+    textAlign: "right",
+  },
+  premiumTopName: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    fontWeight: "600",
+    flex: 1,
+    marginRight: spacing.xs,
+  },
+  premiumTopIdentity: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: "700",
+    width: 28,
+    textAlign: "right",
+  },
+  lockedTeaserHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: spacing.xs,
+  },
+  lockedTeaserTitle: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  lockedTeaserBody: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 18,
   },
   // ── Pie legend ──
   pieLegend: {
