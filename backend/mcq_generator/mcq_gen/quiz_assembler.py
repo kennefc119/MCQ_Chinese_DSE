@@ -8,7 +8,8 @@ Grouping key: (passage_id, skill_tag, quiz_type)
 
 Filtering per quiz type (applied before assembly):
   exercise (5q)  : keep 50%, filter out 50%  — difficult questions removed first
-  quiz     (10q) : keep 75%, filter out 25%  — difficult questions removed first
+    quiz     (10q) : keep 75%, filter out 25%  — difficult questions removed first
+                                        (except cross-passage quizzes, which keep 100%)
   exam     (20q) : no filter                 — use all eligible questions
 
 Each run uses a different random seed so the combinations vary.
@@ -321,6 +322,10 @@ def _passage_mixed_desc(quiz_type: str, passage_label: str, n: int, min_score: i
     return f"共 {n} 條{passage_label}模擬考試，涵蓋多項技能，限時 45 分鐘（評分 >= {min_score}/10）"
 
 
+def _cross_mixed_desc(n: int, min_score: int) -> str:
+    return f"共 {n} 條跨篇章綜合測驗，涵蓋多項技能，限時 20 分鐘（評分 >= {min_score}/10）"
+
+
 def _stratified_shuffle(pool: list[dict], rng: random.Random) -> list[dict]:
     """Interleave difficulty levels via round-robin for variety within each quiz."""
     by_diff: dict[int, list[dict]] = defaultdict(list)
@@ -426,16 +431,21 @@ def _assemble_type(
 
     Filtering: exercise keeps 50%, quiz keeps 75%, exam keeps 100%.
     Difficult questions are filtered out first, then randomly within each level.
+    Cross-passage quizzes are a dedicated path: score threshold still applies,
+    but difficulty filtering / keep-ratio reduction do not.
     """
     min_score  = _MIN_SCORE[quiz_type]
     n          = _N_QUESTIONS[quiz_type]
     keep_ratio = _KEEP_RATIO[quiz_type]
 
     diff_lo, diff_hi = _DIFF_RANGE[quiz_type]
-    eligible = [
+    eligible_by_score = [
         r for r in all_rows
         if _score(r) >= min_score
-        and diff_lo <= r.get("difficulty", 3) <= diff_hi
+    ]
+    eligible = [
+        r for r in eligible_by_score
+        if diff_lo <= r.get("difficulty", 3) <= diff_hi
     ]
 
     if rng is None:
@@ -533,6 +543,38 @@ def _assemble_type(
                     title_id=seq,
                 ))
 
+        # ── Quiz only: cross-passage pool (max count by volume) ───────────
+        if quiz_type == "quiz":
+            cross_pool: list[dict] = []
+            cross_seen: set[str] = set()
+            for r in eligible_by_score:
+                tags = r.get("tags") or []
+                if not (r.get("cross_passage_id") or "t-comparison" in tags):
+                    continue
+                if r["id"] in cross_seen:
+                    continue
+                cross_seen.add(r["id"])
+                cross_pool.append(r)
+
+            # Keep ratio = 1.0 so cross-passage quiz count is maximized purely
+            # by eligible question volume (while still requiring score threshold).
+            cross_batches = _sample_group_batches(cross_pool, n, 1.0, rng)
+            for i, batch in enumerate(cross_batches):
+                seq = i + 1
+                title = "跨篇章綜合測驗"
+                records.append(_make_record(
+                    quiz_type=quiz_type,
+                    title=title,
+                    description=_cross_mixed_desc(n, min_score),
+                    passage_id=None,
+                    question_ids=[r["id"] for r in batch],
+                    cover_image_url=_pick_cover(None, title, seq),
+                    subject_area="跨篇章",
+                    existing_id_map=existing_id_map,
+                    summary=summary,
+                    title_id=seq,
+                ))
+
     return records
 
 
@@ -561,7 +603,7 @@ def assemble_quizzes(
 
     rows = fetch_all(
         sb.table("dsemcq_questions")
-        .select("id,passage_id,difficulty,critique_score")
+        .select("id,passage_id,cross_passage_id,difficulty,critique_score")
         .eq("is_active", True)
     )
     if not rows:

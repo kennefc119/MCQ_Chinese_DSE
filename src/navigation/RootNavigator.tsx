@@ -23,10 +23,18 @@ const navTheme = {
 
 export default function RootNavigator() {
   const { user, loading, isGuest } = useAuth();
-  const { required, currentVersion, minVersion } = useForceUpdate();
+  const { checking, required, currentVersion, minVersion, reason } = useForceUpdate();
 
-  if (loading) return <LoadingScreen />;
-  if (required) return <ForceUpdateScreen currentVersion={currentVersion} minVersion={minVersion} />;
+  if (loading || checking) return <LoadingScreen />;
+  if (required) {
+    return (
+      <ForceUpdateScreen
+        currentVersion={currentVersion}
+        minVersion={minVersion}
+        reason={reason}
+      />
+    );
+  }
   return (
     <NavigationContainer theme={navTheme}>
       {user || isGuest ? <AppStack /> : <AuthStack />}

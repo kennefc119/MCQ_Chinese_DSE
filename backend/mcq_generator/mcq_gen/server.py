@@ -333,7 +333,7 @@ def assemble_preview() -> dict[str, Any]:
     sb = get_supabase()
     rows = fetch_all(
         sb.table("dsemcq_questions")
-        .select("id,passage_id,difficulty,critique_score,is_active")
+        .select("id,passage_id,cross_passage_id,difficulty,critique_score,is_active")
     )
     tag_rows = fetch_all(
         sb.table("dsemcq_question_tags")
@@ -398,6 +398,17 @@ def assemble_preview() -> dict[str, Any]:
         s = str(_score(r))
         score_dist[s] = score_dist.get(s, 0) + 1
 
+    # Cross-passage quiz capacity (score threshold applies, difficulty ignored)
+    cross_quiz_pool_ids: set[str] = set()
+    for r in active:
+        if _score(r) < QUIZ_MIN_SCORE:
+            continue
+        tags = q_tags.get(r["id"], [])
+        if r.get("cross_passage_id") or "t-comparison" in tags:
+            cross_quiz_pool_ids.add(r["id"])
+    cross_quiz_pool = len(cross_quiz_pool_ids)
+    cross_quiz_instances = cross_quiz_pool // QUIZ_Q
+
     return {
         "total_questions": total,
         "active_questions": len(active),
@@ -407,8 +418,11 @@ def assemble_preview() -> dict[str, Any]:
         "thresholds": {
             "exercise": f"≥{EXERCISE_Q} questions with score≥{EXERCISE_MIN_SCORE} per (passage,skill), keep 50%",
             "quiz":     f"≥{QUIZ_Q} questions with score≥{QUIZ_MIN_SCORE} per (passage,skill), keep 75%",
+            "cross_quiz": f"≥{QUIZ_Q} cross-passage questions with score≥{QUIZ_MIN_SCORE}, no difficulty filter, keep 100%",
             "exam":     f"≥{EXAM_Q} questions with score≥{EXAM_MIN_SCORE} per (passage,skill), no filter",
         },
+        "cross_quiz_pool": cross_quiz_pool,
+        "cross_quiz_instances": cross_quiz_instances,
     }
 
 
