@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>非指定篇章 Admin</title>
+  <style>
+    :root {
+      --bg: #f3efe6;
+      --surface: #fffdf8;
+      --surface-2: #f8f1e2;
+      --ink: #2f2418;
+      --muted: #7a6854;
+      --line: #d8c7ab;
+      --accent: #9d4b1a;
+      --accent-2: #c66a2b;
+      --good: #2d7b4f;
+      --bad: #a33a2a;
+      --warn: #8b6b10;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Noto Serif TC", "PingFang TC", "Microsoft JhengHei", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(198,106,43,0.14), transparent 28%),
+        linear-gradient(180deg, #f8f4ec 0%, var(--bg) 100%);
+    }
+
+    .shell {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: 0 16px 40px rgba(54, 38, 20, 0.08);
+    }
+
+    .panel-inner {
+      padding: 22px;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 34px; margin-bottom: 8px; }
+    h2 { font-size: 20px; margin-bottom: 12px; }
+    h3 { font-size: 16px; margin-bottom: 10px; }
+    .sub { color: var(--muted); line-height: 1.55; }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      margin-top: 14px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--warn);
+    }
+
+    .dot.ok { background: var(--good); }
+    .dot.err { background: var(--bad); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 18px;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    textarea, input, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      padding: 12px 14px;
+      outline: none;
+    }
+
+    textarea { min-height: 140px; resize: vertical; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 18px;
+      font: inherit;
+      cursor: pointer;
+      transition: transform 0.16s ease, opacity 0.16s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.6; cursor: wait; transform: none; }
+
+    .btn-primary {
+      color: #fff9f2;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    }
+
+    .btn-secondary {
+      color: var(--ink);
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+    }
+
+    .btn-danger {
+      color: white;
+      background: var(--bad);
+    }
+
+    .loading {
+      display: none;
+      padding: 18px;
+      margin-top: 14px;
+      background: var(--surface-2);
+      border-radius: 16px;
+      color: var(--muted);
+    }
+
+    .draft-list, .manage-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .draft-card, .manage-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .draft-head, .manage-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      background: linear-gradient(180deg, #fff8ef 0%, #f8f1e6 100%);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      border: 1px solid currentColor;
+    }
+
+    .badge.ok { color: var(--good); }
+    .badge.warn { color: var(--warn); }
+    .badge.err { color: var(--bad); }
+
+    .draft-body {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .errors {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(163, 58, 42, 0.08);
+      color: var(--bad);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .trace-block {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(45, 123, 79, 0.08);
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .trace-block summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--good);
+    }
+
+    .empty {
+      min-height: 240px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      padding: 24px;
+    }
+
+    .raw-box {
+      width: 100%;
+      min-height: 220px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #2b2218;
+      color: #f7efe2;
+      padding: 16px;
+      font-family: "Cascadia Code", Consolas, monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      overflow: auto;
+    }
+
+    .image-dropzone {
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+      background: #fff;
+      padding: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .image-dropzone.active {
+      border-color: var(--accent);
+      background: #fff8ef;
+    }
+
+    .image-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .image-item {
+      display: grid;
+      grid-template-columns: 58px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 8px;
+      background: #fff;
+    }
+
+    .image-thumb {
+      width: 58px;
+      height: 58px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #f4ecdf;
+    }
+
+    .image-meta {
+      min-width: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .image-name {
+      color: var(--ink);
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      padding: 8px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .tab-btn.active {
+      color: #fff9f2;
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    @media (max-width: 1024px) {
+      .hero, .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="hero">
+      <div class="panel">
+        <div class="panel-inner">
+          <h1>非指定篇章工作流</h1>
+          <p class="sub">輸入提示後，系統會呼叫 Poe bot <strong>ChiPassageResearch</strong> 生成多篇非指定篇章草稿。你可以逐篇檢查、修改，再確認推送到 Supabase 的 <code>dsemcq_nd_passages</code>。</p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-inner">
+          <h2>服務狀態</h2>
+          <p class="sub">獨立於現有指定篇章與 MCQ workflow。</p>
+          <div class="status-pill"><span id="healthDot" class="dot"></span><span id="healthText">檢查中...</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button type="button" id="tabMainBtn" class="tab-btn active" onclick="switchTab('main')">生成與入庫</button>
+      <button type="button" id="tabTranslateBtn" class="tab-btn" onclick="switchTab('translate')">文言文詳細語譯</button>
+    </div>
+
+    <div id="tabMain" class="tab-content active">
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-inner">
+          <h2>生成設定</h2>
+          <div class="field">
+            <label for="generatorBotName">Generator Bot</label>
+            <input id="generatorBotName" value="ChiPassageResearch">
+          </div>
+          <div class="field">
+            <label for="criticBotName">Critic Bot</label>
+            <input id="criticBotName" value="ChiResearchCrit">
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="draftCount">生成數量</label>
+              <input id="draftCount" type="number" min="1" max="20" value="1">
+            </div>
+            <div class="field">
+              <label for="rawToggle">檢視模式</label>
+              <select id="rawToggle">
+                <option value="cards">卡片編輯</option>
+                <option value="raw">原始輸出</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="maxReviewRounds">最大審核輪數</label>
+              <input id="maxReviewRounds" type="number" min="1" max="5" value="2">
+            </div>
+            <div class="field">
+              <label for="showCriticTrace">顯示 Critic 結果</label>
+              <select id="showCriticTrace">
+                <option value="true">顯示</option>
+                <option value="false">隱藏</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="stopOnPass">通過即停止迭代</label>
+              <select id="stopOnPass">
+                <option value="true">是</option>
+                <option value="false">否</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>預設策略</label>
+              <input value="最多 2 輪，PASS 即停止" disabled>
+            </div>
+          </div>
+          <div class="field">
+            <label for="hint">生成提示</label>
+            <textarea id="hint" placeholder="例如：生成 3 篇適合 DSE 中文閱讀訓練的非指定篇章，其中 2 篇文言文、1 篇白話文，主題圍繞治學、品德、處世。每篇需附清楚出處與類型。"></textarea>
+          </div>
+          <div class="field">
+            <label for="imageInput">圖片輸入（上傳或 Ctrl+V 貼上）</label>
+            <input id="imageInput" type="file" accept="image/*" multiple>
+            <div id="pasteZone" class="image-dropzone" tabindex="0">點擊此區域後可直接按 Ctrl+V 貼上圖片，或用上方按鈕上傳。</div>
+            <div class="actions" style="margin-top:10px;">
+              <button class="btn-secondary" type="button" onclick="clearImages()">清空圖片</button>
+            </div>
+            <div id="imageList" class="image-list"></div>
+          </div>
+          <div class="actions">
+            <button class="btn-primary" id="generateBtn" onclick="generateDrafts()">生成草稿</button>
+            <button class="btn-secondary" onclick="loadPassages()">刷新資料庫列表</button>
+          </div>
+          <div class="loading" id="loadingBox">正在向 Poe 生成多篇非指定篇章草稿，通常需要 20 到 90 秒。</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-inner">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;">
+            <h2>草稿預覽與確認</h2>
+            <div class="actions" style="margin-top:0;">
+              <button class="btn-secondary" onclick="formatRawOutput()">格式化原始輸出</button>
+              <button class="btn-primary" id="pushBtn" onclick="pushDrafts()">確認推送到 Supabase</button>
+            </div>
+          </div>
+          <div id="draftsView" class="draft-list"></div>
+          <div id="rawView" class="raw-box" style="display:none;"></div>
+          <div id="draftEmpty" class="empty">尚未生成草稿。先輸入提示，再按「生成草稿」。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:18px;">
+      <div class="panel-inner">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;">
+          <h2>已入庫非指定篇章</h2>
+          <button class="btn-secondary" onclick="loadPassages()">重新載入</button>
+        </div>
+        <div id="manageList" class="manage-list"></div>
+      </div>
+    </div>
+    </div>
+
+    <div id="tabTranslate" class="tab-content">
+    <div class="panel">
+      <div class="panel-inner">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;">
+          <h2>文言文詳細語譯</h2>
+          <div class="actions" style="margin-top:0;">
+            <button class="btn-secondary" type="button" onclick="loadTranslationCandidates()">刷新清單</button>
+          </div>
+        </div>
+        <p class="sub" style="margin-bottom:14px;">每列使用 <strong>一次</strong> Poe 呼叫（ChiResearchTrans）生成詳細語譯，只處理文言文；白話文保持空值。</p>
+        <div class="row">
+          <div class="field">
+            <label for="translationBotName">Translation Bot</label>
+            <input id="translationBotName" value="ChiResearchTrans">
+          </div>
+          <div class="field">
+            <label for="translateOnlyMissing">只處理未翻譯</label>
+            <select id="translateOnlyMissing">
+              <option value="true">是</option>
+              <option value="false">否</option>
+            </select>
+          </div>
+        </div>
+        <div class="actions" style="margin-top:0;">
+          <button id="translateBatchBtn" class="btn-primary" type="button" onclick="runBatchTranslation()">批次執行語譯</button>
+        </div>
+        <div id="translationProgress" class="loading" style="display:none;">語譯執行中，將逐列呼叫 LLM 並即時寫回資料庫。</div>
+        <div id="translationList" class="manage-list" style="margin-top:14px;"></div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://127.0.0.1:8767';
+    let currentDrafts = [];
+    let rawOutput = '';
+    let uploadedImages = [];
+    let translationRows = [];
+
+    function switchTab(name) {
+      const mainTab = document.getElementById('tabMain');
+      const transTab = document.getElementById('tabTranslate');
+      const mainBtn = document.getElementById('tabMainBtn');
+      const transBtn = document.getElementById('tabTranslateBtn');
+      const showMain = name === 'main';
+      mainTab.classList.toggle('active', showMain);
+      transTab.classList.toggle('active', !showMain);
+      mainBtn.classList.toggle('active', showMain);
+      transBtn.classList.toggle('active', !showMain);
+      if (!showMain && !translationRows.length) {
+        loadTranslationCandidates();
+      }
+    }
+
+    function esc(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    async function checkHealth() {
+      try {
+        const res = await fetch(`${API}/api/health`);
+        const data = await res.json();
+        document.getElementById('healthText').textContent = data.status === 'ok'
+          ? `已連接 ${data.table}`
+          : (data.detail || '服務異常');
+        document.getElementById('healthDot').className = data.status === 'ok' ? 'dot ok' : 'dot err';
+      } catch (error) {
+        document.getElementById('healthText').textContent = '伺服器未連接';
+        document.getElementById('healthDot').className = 'dot err';
+      }
+    }
+
+    function renderDrafts() {
+      const draftsView = document.getElementById('draftsView');
+      const rawView = document.getElementById('rawView');
+      const empty = document.getElementById('draftEmpty');
+      const mode = document.getElementById('rawToggle').value;
+
+      if (!currentDrafts.length && !rawOutput) {
+        draftsView.innerHTML = '';
+        rawView.style.display = 'none';
+        empty.style.display = 'grid';
+        return;
+      }
+
+      empty.style.display = 'none';
+      if (mode === 'raw') {
+        draftsView.innerHTML = '';
+        rawView.style.display = 'block';
+        rawView.textContent = rawOutput || JSON.stringify(currentDrafts, null, 2);
+        return;
+      }
+
+      rawView.style.display = 'none';
+      draftsView.innerHTML = currentDrafts.map((row, index) => {
+        const errors = Array.isArray(row.validation_errors) ? row.validation_errors : [];
+        const critic = row.critic || null;
+        const showCritic = document.getElementById('showCriticTrace').value === 'true';
+        return `
+          <div class="draft-card">
+            <div class="draft-head">
+              <div>
+                <strong>${esc(row.title || `草稿 ${index + 1}`)}</strong>
+                <div style="font-size:12px;color:var(--muted);margin-top:4px;">${esc(row.code || '')} · ${esc(row.slug || '')}</div>
+              </div>
+              <div class="badges">
+                <span class="badge ${errors.length ? 'err' : 'ok'}">${errors.length ? `錯誤 ${errors.length}` : '可推送'}</span>
+                <span class="badge ${row.status === 'passed' ? 'ok' : row.status === 'max_rounds_reached' ? 'warn' : 'warn'}">${esc(row.status || 'generated')}</span>
+                <span class="badge ok">輪數 ${esc(row.iterations_used || 1)}</span>
+                ${row.duplicate_slug ? '<span class="badge warn">Slug 重複</span>' : ''}
+                ${row.duplicate_code ? '<span class="badge warn">Code 重複</span>' : ''}
+              </div>
+            </div>
+            <div class="draft-body">
+              ${errors.length ? `<div class="errors">${errors.map(esc).join('<br>')}</div>` : ''}
+              ${showCritic && critic ? `
+                <div class="errors" style="background:rgba(139,107,16,0.08);color:var(--warn);">
+                  <strong>Critic: ${esc(critic.verdict || '')}</strong>
+                  · score ${esc(critic.score || '')}
+                  · trust ${esc(critic.trust_level || '')}<br>
+                  ${Array.isArray(critic.issues) && critic.issues.length ? critic.issues.map(esc).join('<br>') : ''}
+                  ${Array.isArray(critic.revision_instructions) && critic.revision_instructions.length ? '<br><br><strong>Revision:</strong><br>' + critic.revision_instructions.map(esc).join('<br>') : ''}
+                </div>
+              ` : ''}
+              ${showCritic && Array.isArray(row.review_history) && row.review_history.length ? `
+                <details class="trace-block">
+                  <summary>查看審核歷史</summary>
+                  <div style="margin-top:8px;display:grid;gap:8px;">
+                    ${row.review_history.map(item => `
+                      <div>
+                        <strong>Round ${esc(item.round || '')}</strong>
+                        · verdict ${esc(item.verdict || '')}
+                        · score ${esc(item.score || '')}
+                        ${Array.isArray(item.issues) && item.issues.length ? '<br>' + item.issues.map(esc).join('<br>') : ''}
+                        ${Array.isArray(item.revision_instructions) && item.revision_instructions.length ? '<br><em>Revision:</em><br>' + item.revision_instructions.map(esc).join('<br>') : ''}
+                        ${item.trace && item.trace.draft_before ? `<br><br><strong>修訂前快照</strong><br><pre style="white-space:pre-wrap;background:#f5efe4;border:1px solid var(--line);padding:8px;border-radius:10px;">${esc(JSON.stringify(item.trace.draft_before, null, 2))}</pre>` : ''}
+                        ${item.trace && item.trace.draft_after ? `<strong>修訂後快照</strong><br><pre style="white-space:pre-wrap;background:#f5efe4;border:1px solid var(--line);padding:8px;border-radius:10px;">${esc(JSON.stringify(item.trace.draft_after, null, 2))}</pre>` : ''}
+                        ${item.trace && item.trace.generator_user_prompt ? `<strong>Generator 修訂提示</strong><br><pre style="white-space:pre-wrap;background:#f5efe4;border:1px solid var(--line);padding:8px;border-radius:10px;max-height:220px;overflow:auto;">${esc(item.trace.generator_user_prompt)}</pre>` : ''}
+                        ${item.trace && item.trace.critic_raw ? `<strong>Critic 原始回覆</strong><br><pre style="white-space:pre-wrap;background:#f5efe4;border:1px solid var(--line);padding:8px;border-radius:10px;max-height:220px;overflow:auto;">${esc(item.trace.critic_raw)}</pre>` : ''}
+                        ${item.trace && item.trace.generator_revision_raw ? `<strong>Generator 原始修訂輸出</strong><br><pre style="white-space:pre-wrap;background:#f5efe4;border:1px solid var(--line);padding:8px;border-radius:10px;max-height:220px;overflow:auto;">${esc(item.trace.generator_revision_raw)}</pre>` : ''}
+                      </div>
+                    `).join('')}
+                  </div>
+                </details>
+              ` : ''}
+              <div class="row">
+                <div class="field"><label>標題</label><input value="${esc(row.title || '')}" oninput="updateDraft(${index}, 'title', this.value)"></div>
+                <div class="field"><label>Representation</label><input value="${esc(row.representation || '')}" oninput="updateDraft(${index}, 'representation', this.value)"></div>
+              </div>
+              <div class="row">
+                <div class="field"><label>Type</label><input value="${esc(row.type || '')}" oninput="updateDraft(${index}, 'type', this.value)"></div>
+                <div class="field"><label>Source</label><input value="${esc(row.source || '')}" oninput="updateDraft(${index}, 'source', this.value)"></div>
+              </div>
+              <div class="row">
+                <div class="field"><label>Code</label><input value="${esc(row.code || '')}" oninput="updateDraft(${index}, 'code', this.value)"></div>
+                <div class="field"><label>Slug</label><input value="${esc(row.slug || '')}" oninput="updateDraft(${index}, 'slug', this.value)"></div>
+              </div>
+              <div class="row">
+                <div class="field"><label>朝代</label><input value="${esc(row.dynasty || '')}" oninput="updateDraft(${index}, 'dynasty', this.value)"></div>
+                <div class="field"><label>作者</label><input value="${esc(row.author || '')}" oninput="updateDraft(${index}, 'author', this.value)"></div>
+              </div>
+              <div class="field"><label>內容</label><textarea oninput="updateDraft(${index}, 'body', this.value)">${esc(row.body || '')}</textarea></div>
+              <div class="field"><label>摘要</label><textarea style="min-height:88px;" oninput="updateDraft(${index}, 'summary', this.value)">${esc(row.summary || '')}</textarea></div>
+              <div class="row">
+                <div class="field"><label>Genre</label><input value="${esc(row.genre || '')}" oninput="updateDraft(${index}, 'genre', this.value)"></div>
+                <div class="field"><label>Difficulty</label><input type="number" min="1" max="5" value="${esc(row.difficulty || 2)}" oninput="updateDraft(${index}, 'difficulty', Number(this.value || 2))"></div>
+              </div>
+              <div class="field"><label>Themes（逗號分隔）</label><input value="${esc((row.themes || []).join(', '))}" oninput="updateDraft(${index}, 'themes', this.value.split(',').map(v => v.trim()).filter(Boolean))"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateDraft(index, key, value) {
+      currentDrafts[index][key] = value;
+    }
+
+    function formatBytes(bytes) {
+      if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
+      const units = ['B', 'KB', 'MB'];
+      let size = bytes;
+      let idx = 0;
+      while (size >= 1024 && idx < units.length - 1) {
+        size /= 1024;
+        idx += 1;
+      }
+      return `${size.toFixed(idx === 0 ? 0 : 1)} ${units[idx]}`;
+    }
+
+    function renderImages() {
+      const target = document.getElementById('imageList');
+      if (!uploadedImages.length) {
+        target.innerHTML = '<div class="image-dropzone">尚未加入圖片。</div>';
+        return;
+      }
+
+      target.innerHTML = uploadedImages.map((img, index) => `
+        <div class="image-item">
+          <img class="image-thumb" src="${esc(img.data_url)}" alt="image-${index}">
+          <div class="image-meta">
+            <div class="image-name">${esc(img.name || `image-${index + 1}`)}</div>
+            <div>${esc(img.mime_type || 'image/*')} · ${esc(formatBytes(img.size_bytes || 0))}</div>
+          </div>
+          <button class="btn-danger" type="button" onclick="removeImage(${index})">移除</button>
+        </div>
+      `).join('');
+    }
+
+    function removeImage(index) {
+      uploadedImages.splice(index, 1);
+      renderImages();
+    }
+
+    function clearImages() {
+      uploadedImages = [];
+      const input = document.getElementById('imageInput');
+      if (input) input.value = '';
+      renderImages();
+    }
+
+    function addImageDataUrl(dataUrl, fileName, mimeType) {
+      if (!dataUrl || !String(dataUrl).startsWith('data:image/')) {
+        return;
+      }
+      uploadedImages.push({
+        name: fileName || `pasted-${Date.now()}.png`,
+        mime_type: mimeType || 'image/png',
+        data_url: dataUrl,
+        size_bytes: Math.round((dataUrl.length * 3) / 4),
+      });
+      renderImages();
+    }
+
+    function readFileAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('圖片讀取失敗'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function addFiles(files) {
+      const imageFiles = Array.from(files || []).filter(file => file && String(file.type || '').startsWith('image/'));
+      for (const file of imageFiles) {
+        const dataUrl = await readFileAsDataUrl(file);
+        addImageDataUrl(dataUrl, file.name, file.type || 'image/png');
+      }
+    }
+
+    async function handlePaste(event) {
+      const items = Array.from(event.clipboardData?.items || []);
+      const imageItems = items.filter(item => item.type && item.type.startsWith('image/'));
+      if (!imageItems.length) {
+        return;
+      }
+
+      event.preventDefault();
+      for (const item of imageItems) {
+        const file = item.getAsFile();
+        if (!file) continue;
+        const dataUrl = await readFileAsDataUrl(file);
+        addImageDataUrl(dataUrl, file.name || `clipboard-${Date.now()}.png`, file.type || 'image/png');
+      }
+    }
+
+    function formatRawOutput() {
+      if (!rawOutput) {
+        rawOutput = JSON.stringify(currentDrafts, null, 2);
+      }
+      try {
+        const parsed = JSON.parse(rawOutput);
+        rawOutput = JSON.stringify(parsed, null, 2);
+      } catch (_) {
+        // Keep raw text as-is if it is markdown.
+      }
+      renderDrafts();
+    }
+
+    async function generateDrafts() {
+      const button = document.getElementById('generateBtn');
+      const loading = document.getElementById('loadingBox');
+      button.disabled = true;
+      loading.style.display = 'block';
+
+      try {
+        const payload = {
+          hint: document.getElementById('hint').value.trim(),
+          count: Number(document.getElementById('draftCount').value || 3),
+          generator_bot_name: document.getElementById('generatorBotName').value.trim(),
+          critic_bot_name: document.getElementById('criticBotName').value.trim(),
+          max_review_rounds: Number(document.getElementById('maxReviewRounds').value || 2),
+          stop_on_pass: document.getElementById('stopOnPass').value === 'true',
+          images: uploadedImages.map(img => ({
+            name: img.name,
+            mime_type: img.mime_type,
+            data_url: img.data_url,
+          })),
+        };
+
+        const res = await fetch(`${API}/api/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || '生成失敗');
+        }
+
+        currentDrafts = data.rows || [];
+        rawOutput = data.raw_text || '';
+        renderDrafts();
+        const imageInfo = payload.images.length ? `（含 ${payload.images.length} 張圖片）` : '';
+        alert(`已生成 ${currentDrafts.length} 篇草稿${imageInfo}，並完成 critic 審核。請先檢查後再推送。`);
+      } catch (error) {
+        alert(`生成失敗：${error.message}`);
+      } finally {
+        button.disabled = false;
+        loading.style.display = 'none';
+      }
+    }
+
+    async function pushDrafts() {
+      if (!currentDrafts.length) {
+        alert('目前沒有可推送的草稿。');
+        return;
+      }
+
+      const button = document.getElementById('pushBtn');
+      button.disabled = true;
+
+      try {
+        const res = await fetch(`${API}/api/confirm-insert`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rows: currentDrafts }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || '推送失敗');
+        }
+
+        const inserted = data.inserted || [];
+        const rejected = data.rejected || [];
+        alert(`已推送 ${inserted.length} 篇，拒絕 ${rejected.length} 篇。`);
+        await loadPassages();
+      } catch (error) {
+        alert(`推送失敗：${error.message}`);
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function loadPassages() {
+      const target = document.getElementById('manageList');
+      target.innerHTML = '<div class="empty">載入中...</div>';
+      try {
+        const res = await fetch(`${API}/api/list-passages`);
+        const rows = await res.json();
+        if (!res.ok) {
+          throw new Error(rows.detail || '載入失敗');
+        }
+
+        if (!rows.length) {
+          target.innerHTML = '<div class="empty">資料庫中尚未有非指定篇章。</div>';
+          return;
+        }
+
+        target.innerHTML = rows.map(row => `
+          <div class="manage-card">
+            <div class="manage-head">
+              <div>
+                <strong>${esc(row.title)}</strong>
+                <div style="font-size:12px;color:var(--muted);margin-top:4px;">${esc(row.code || '')} · ${esc(row.slug || '')}</div>
+              </div>
+              <div class="badges"><span class="badge ok">order ${esc(row.order_no || '')}</span></div>
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        target.innerHTML = `<div class="empty">${esc(error.message)}</div>`;
+      }
+    }
+
+    function renderTranslationRows() {
+      const target = document.getElementById('translationList');
+      if (!translationRows.length) {
+        target.innerHTML = '<div class="empty">目前沒有可顯示的篇章。</div>';
+        return;
+      }
+
+      target.innerHTML = translationRows.map((row) => {
+        const isWenyan = row.representation === '文言文';
+        const hasTranslation = String(row.detailed_translation || '').trim().length > 0;
+        const bodyPreview = String(row.body || '').slice(0, 110);
+        return `
+          <div class="manage-card">
+            <div class="manage-head">
+              <div>
+                <strong>${esc(row.title || '')}</strong>
+                <div style="font-size:12px;color:var(--muted);margin-top:4px;">${esc(row.id || '')} · ${esc(row.representation || '')} · ${esc(row.type || '')}</div>
+              </div>
+              <div class="badges">
+                <span class="badge ${isWenyan ? 'ok' : 'warn'}">${isWenyan ? '文言文' : '白話文'}</span>
+                <span class="badge ${hasTranslation ? 'ok' : 'warn'}">${hasTranslation ? '已語譯' : '未語譯'}</span>
+              </div>
+            </div>
+            <div class="draft-body">
+              <div class="field"><label>原文（節錄）</label><div class="trace-block">${esc(bodyPreview)}${String(row.body || '').length > 110 ? '…' : ''}</div></div>
+              <div class="field"><label>詳細語譯（節錄）</label><div class="trace-block">${esc(String(row.detailed_translation || '').slice(0, 140) || '（空）')}${String(row.detailed_translation || '').length > 140 ? '…' : ''}</div></div>
+              <div class="actions" style="margin-top:0;">
+                <button class="btn-primary" type="button" ${isWenyan ? '' : 'disabled'} onclick="runOneTranslation('${esc(row.id)}')">單列語譯</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadTranslationCandidates() {
+      const onlyMissing = document.getElementById('translateOnlyMissing').value === 'true';
+      const target = document.getElementById('translationList');
+      target.innerHTML = '<div class="empty">載入中...</div>';
+      try {
+        const res = await fetch(`${API}/api/translation/candidates?only_missing=${onlyMissing ? 'true' : 'false'}&limit=400`);
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || '載入語譯清單失敗');
+        }
+        translationRows = data;
+        renderTranslationRows();
+      } catch (error) {
+        target.innerHTML = `<div class="empty">${esc(error.message)}</div>`;
+      }
+    }
+
+    async function runOneTranslation(rowId) {
+      try {
+        const botName = document.getElementById('translationBotName').value.trim();
+        const res = await fetch(`${API}/api/translation/run-one`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ row_id: rowId, bot_name: botName, force_retranslate: false }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || '單列語譯失敗');
+        }
+        alert(`完成：${data.title || rowId} (${data.status})`);
+        await loadTranslationCandidates();
+      } catch (error) {
+        alert(`語譯失敗：${error.message}`);
+      }
+    }
+
+    async function runBatchTranslation() {
+      const button = document.getElementById('translateBatchBtn');
+      const progress = document.getElementById('translationProgress');
+      button.disabled = true;
+      progress.style.display = 'block';
+      try {
+        const payload = {
+          bot_name: document.getElementById('translationBotName').value.trim(),
+          only_missing: document.getElementById('translateOnlyMissing').value === 'true',
+          force_retranslate: false,
+        };
+        const res = await fetch(`${API}/api/translation/run-batch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || '批次語譯失敗');
+        }
+        alert(`批次完成：處理 ${data.processed} 列；成功 ${data.translated}，略過 ${data.skipped}，失敗 ${data.failed}`);
+        await loadTranslationCandidates();
+      } catch (error) {
+        alert(`批次語譯失敗：${error.message}`);
+      } finally {
+        button.disabled = false;
+        progress.style.display = 'none';
+      }
+    }
+
+    document.getElementById('rawToggle').addEventListener('change', renderDrafts);
+    document.getElementById('showCriticTrace').addEventListener('change', renderDrafts);
+    document.getElementById('translateOnlyMissing').addEventListener('change', loadTranslationCandidates);
+    document.getElementById('imageInput').addEventListener('change', async (event) => {
+      try {
+        await addFiles(event.target.files);
+      } catch (error) {
+        alert(`圖片上傳失敗：${error.message}`);
+      }
+    });
+
+    const pasteZone = document.getElementById('pasteZone');
+    pasteZone.addEventListener('focus', () => pasteZone.classList.add('active'));
+    pasteZone.addEventListener('blur', () => pasteZone.classList.remove('active'));
+    pasteZone.addEventListener('paste', (event) => {
+      handlePaste(event).catch((error) => {
+        alert(`貼上圖片失敗：${error.message}`);
+      });
+    });
+    document.addEventListener('paste', (event) => {
+      const active = document.activeElement;
+      const isTextInput = active && (active.tagName === 'TEXTAREA' || active.tagName === 'INPUT');
+      if (isTextInput) return;
+      handlePaste(event).catch((error) => {
+        alert(`貼上圖片失敗：${error.message}`);
+      });
+    });
+    renderImages();
+    checkHealth();
+    loadPassages();
+    loadTranslationCandidates();
+  </script>
+</body>
+</html>

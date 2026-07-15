@@ -325,6 +325,7 @@ def assemble_preview() -> dict[str, Any]:
         EXERCISE_MIN_SCORE, EXERCISE_Q,
         QUIZ_MIN_SCORE, QUIZ_Q,
         EXAM_MIN_SCORE, EXAM_Q,
+        CROSS_QUIZ_MIN_SCORE,
         TAG_LABEL, _KEEP_RATIO,
         _passage_label,
     )
@@ -398,10 +399,11 @@ def assemble_preview() -> dict[str, Any]:
         s = str(_score(r))
         score_dist[s] = score_dist.get(s, 0) + 1
 
-    # Cross-passage quiz capacity (score threshold applies, difficulty ignored)
+    # Cross-passage quiz capacity (max utilization path: no quiz-score filter,
+    # difficulty ignored)
     cross_quiz_pool_ids: set[str] = set()
     for r in active:
-        if _score(r) < QUIZ_MIN_SCORE:
+        if _score(r) < CROSS_QUIZ_MIN_SCORE:
             continue
         tags = q_tags.get(r["id"], [])
         if r.get("cross_passage_id") or "t-comparison" in tags:
@@ -418,7 +420,7 @@ def assemble_preview() -> dict[str, Any]:
         "thresholds": {
             "exercise": f"≥{EXERCISE_Q} questions with score≥{EXERCISE_MIN_SCORE} per (passage,skill), keep 50%",
             "quiz":     f"≥{QUIZ_Q} questions with score≥{QUIZ_MIN_SCORE} per (passage,skill), keep 75%",
-            "cross_quiz": f"≥{QUIZ_Q} cross-passage questions with score≥{QUIZ_MIN_SCORE}, no difficulty filter, keep 100%",
+            "cross_quiz": f"≥{QUIZ_Q} cross-passage questions with score≥{CROSS_QUIZ_MIN_SCORE}, no difficulty filter, keep 100%",
             "exam":     f"≥{EXAM_Q} questions with score≥{EXAM_MIN_SCORE} per (passage,skill), no filter",
         },
         "cross_quiz_pool": cross_quiz_pool,

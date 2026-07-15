@@ -39,6 +39,10 @@ EXERCISE_MIN_SCORE = 6
 QUIZ_MIN_SCORE     = 7
 EXAM_MIN_SCORE     = 8
 
+# Cross-passage quiz assembly should maximize utilization of cross-passage
+# inventory, so we do not enforce critique-score filtering for this path.
+CROSS_QUIZ_MIN_SCORE = 0
+
 QUIZ_DURATION_S = 20 * 60   # 20 min
 EXAM_DURATION_S = 45 * 60   # 45 min
 
@@ -547,7 +551,12 @@ def _assemble_type(
         if quiz_type == "quiz":
             cross_pool: list[dict] = []
             cross_seen: set[str] = set()
-            for r in eligible_by_score:
+            # Use all active cross-passage questions (independent of quiz score
+            # threshold) so the assembler can produce the maximum number of
+            # non-overlapping cross-passage instances.
+            for r in all_rows:
+                if _score(r) < CROSS_QUIZ_MIN_SCORE:
+                    continue
                 tags = r.get("tags") or []
                 if not (r.get("cross_passage_id") or "t-comparison" in tags):
                     continue
@@ -557,7 +566,7 @@ def _assemble_type(
                 cross_pool.append(r)
 
             # Keep ratio = 1.0 so cross-passage quiz count is maximized purely
-            # by eligible question volume (while still requiring score threshold).
+            # by eligible question volume.
             cross_batches = _sample_group_batches(cross_pool, n, 1.0, rng)
             for i, batch in enumerate(cross_batches):
                 seq = i + 1
