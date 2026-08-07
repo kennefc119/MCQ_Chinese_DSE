@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { View, Text, StyleSheet, TextInput, FlatList, KeyboardAvoidingView, Platform, TouchableOpacity, Alert, Modal } from "react-native";
+import { View, Text, StyleSheet, TextInput, FlatList, KeyboardAvoidingView, Platform, TouchableOpacity, Alert, Modal, Switch, NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRoute, RouteProp } from "@react-navigation/native";
+import { useRoute, useFocusEffect, RouteProp } from "@react-navigation/native";
 import Markdown from "react-native-markdown-display";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 import { colors, spacing, typography } from "../theme";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
@@ -35,6 +36,14 @@ interface AdvisorQuota {
   used: number;
   limit: number;
   remaining: number;
+}
+
+interface AdvisorV2Preferences {
+  v2_opt_in: boolean;
+  conversation_history_enabled: boolean;
+  profile_enabled: boolean;
+  performance_enabled: boolean;
+  question_bank_enabled: boolean;
 }
 
 // Bot display name from .env (via app.config.ts extra.advisorBotName)
@@ -79,7 +88,16 @@ const WAITING_HINTS = [
   "正在搜尋網上資料…",
 ];
 const POLL_INTERVAL_MS = 2_000;
-const CHAT_CACHE_PREFIX = "advisor-chat-v1";
+const BOTTOM_THRESHOLD_PX = 48;
+const CHAT_CACHE_PREFIX = "advisor-chat-v2";
+const ADVISOR_V2_DEV_ENABLED = Constants.expoConfig?.extra?.advisorV2DevEnabled === true;
+const DEFAULT_V2_PREFERENCES: AdvisorV2Preferences = {
+  v2_opt_in: true,
+  conversation_history_enabled: true,
+  profile_enabled: true,
+  performance_enabled: true,
+  question_bank_enabled: true,
+};
 
 function isLegacySchemaMissingColumnError(message: string): boolean {
   const normalized = message.toLowerCase();
@@ -110,9 +128,9 @@ function createRequestId(): string {
 }
 
 function typingDelay(lastChar: string): number {
-  if (/[。！？]/.test(lastChar)) return 130;
-  if (/[，、；：]/.test(lastChar)) return 55;
-  return 20;
+  if (/[。！？]/.test(lastChar)) return 10;
+  if (/[，、；：]/.test(lastChar)) return 10;
+  return 10;
 }
 
 function dedupeMessagesById(messages: Msg[]): Msg[] {
@@ -157,7 +175,7 @@ export default function AdvisorChatScreen() {
   const [messages, setMessages] = useState<Msg[]>(_persistedMessages);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [monthlyUsed, setMonthlyUsed] = useState<number | null>(null);
+  const [monthlyQuota, setMonthlyQuota] = useState<AdvisorQuota | null>(null);
   const [guestLimit, setGuestLimit] = useState(DEFAULT_GUEST_LIMIT);
   const [freeLimit, setFreeLimit] = useState(DEFAULT_FREE_MONTHLY_LIMIT);
   const [premiumLimit, setPremiumLimit] = useState(DEFAULT_PREMIUM_MONTHLY_LIMIT);
@@ -166,16 +184,22 @@ export default function AdvisorChatScreen() {
   const [bonusMax, setBonusMax] = useState(20);       // max bonus any user can have
   const [showBonusModal, setShowBonusModal] = useState(false);
   const [bonusQty, setBonusQty] = useState(1);
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  const [v2Preferences, setV2Preferences] = useState<AdvisorV2Preferences>(DEFAULT_V2_PREFERENCES);
   const [historyHydrated, setHistoryHydrated] = useState(false);
+  const [showJumpToLatest, setShowJumpToLatest] = useState(false);
   const listRef = useRef<FlatList<Msg>>(null);
+  const isNearBottomRef = useRef(true);
   const autoSentRef = useRef<typeof routeParams>(undefined);
   const sendRef = useRef<(text: string) => Promise<void>>(async () => {});
   const pendingRequestIds = useRef(new Set<string>());
+  const v2RequestIds = useRef(new Set<string>());
   const pendingSinceMs = useRef(new Map<string, number>());
   const typingTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
   const userBonus = user?.bonus_ai_chat ?? 0;
   const storageKey = `${CHAT_CACHE_PREFIX}:${isGuest ? "guest" : (user?.id ?? "anon")}`;
+  const useAdvisorV2 = ADVISOR_V2_DEV_ENABLED && !isGuest && Boolean(user);
 
   // Fetch chat limits + bonus config from app settings
   useEffect(() => {
@@ -202,10 +226,59 @@ export default function AdvisorChatScreen() {
     })();
   }, []);
 
+  useEffect(() => {
+    if (!ADVISOR_V2_DEV_ENABLED || !user || isGuest || !isSupabaseConfigured) return;
+    let active = true;
+    const loadPreferences = async () => {
+      const { data, error } = await supabase
+        .from("dsemcq_advisor_v2_user_preferences")
+        .select("v2_opt_in, conversation_history_enabled, profile_enabled, performance_enabled, question_bank_enabled")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!active || error) return;
+      if (data) {
+        const existing = data as AdvisorV2Preferences;
+        const next = existing.v2_opt_in ? existing : { ...existing, v2_opt_in: true };
+        if (!existing.v2_opt_in) {
+          const { error: enableError } = await supabase
+            .from("dsemcq_advisor_v2_user_preferences")
+            .update({ v2_opt_in: true, updated_at: new Date().toISOString() })
+            .eq("user_id", user.id);
+          if (enableError) return;
+        }
+        setV2Preferences(next);
+        return;
+      }
+      const { error: createError } = await supabase
+        .from("dsemcq_advisor_v2_user_preferences")
+        .upsert({ user_id: user.id, ...DEFAULT_V2_PREFERENCES, updated_at: new Date().toISOString() });
+      if (!active || createError) return;
+      setV2Preferences(DEFAULT_V2_PREFERENCES);
+    };
+    void loadPreferences();
+    return () => { active = false; };
+  }, [isGuest, user]);
+
+  const updateV2Preference = async (patch: Partial<AdvisorV2Preferences>) => {
+    if (!user || isGuest || !ADVISOR_V2_DEV_ENABLED) return;
+    const next = { ...v2Preferences, ...patch };
+    setV2Preferences(next);
+    const { error } = await supabase.from("dsemcq_advisor_v2_user_preferences").upsert({
+      user_id: user.id,
+      ...next,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) {
+      setV2Preferences(v2Preferences);
+      Alert.alert("設定未能儲存", "請稍後再試。");
+    }
+  };
+
   // Fetch this month's message count for logged-in users
   const fetchMonthlyUsed = useCallback(async () => {
     if (!user || isGuest || !isSupabaseConfigured) return;
-    const { data, error } = await supabase.functions.invoke("dsemcq-advisor-chat", {
+    const functionName = useAdvisorV2 ? "dsemcq-advisor-v2-start" : "dsemcq-advisor-chat";
+    const { data, error } = await supabase.functions.invoke(functionName, {
       body: { quotaOnly: true },
     });
     const response = data as { quota?: unknown; error?: string } | null;
@@ -213,8 +286,8 @@ export default function AdvisorChatScreen() {
       console.log("[AdvisorChat] quota load error:", response?.error ?? error?.message ?? "Invalid quota response");
       return;
     }
-    setMonthlyUsed(response.quota.used);
-  }, [user, isGuest]);
+    setMonthlyQuota(response.quota);
+  }, [user, isGuest, useAdvisorV2]);
 
   useEffect(() => { fetchMonthlyUsed(); }, [fetchMonthlyUsed]);
 
@@ -226,6 +299,29 @@ export default function AdvisorChatScreen() {
       return next;
     });
   };
+
+  const scrollToLatest = useCallback((animated = true) => {
+    isNearBottomRef.current = true;
+    setShowJumpToLatest(false);
+    setTimeout(() => listRef.current?.scrollToEnd({ animated }), 0);
+  }, []);
+
+  const handleListScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const distanceFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
+    const isNearBottom = distanceFromBottom <= BOTTOM_THRESHOLD_PX;
+    if (isNearBottomRef.current === isNearBottom) return;
+    isNearBottomRef.current = isNearBottom;
+    setShowJumpToLatest(!isNearBottom);
+  }, []);
+
+  const followLatestContent = useCallback(() => {
+    if (isNearBottomRef.current) scrollToLatest(false);
+  }, [scrollToLatest]);
+
+  useFocusEffect(useCallback(() => {
+    scrollToLatest(false);
+  }, [scrollToLatest]));
 
   useEffect(() => {
     let cancelled = false;
@@ -292,6 +388,14 @@ export default function AdvisorChatScreen() {
     });
   }, []);
 
+  const keepPendingAfterInvokeError = useCallback((requestId: string) => {
+    updateMessages((previous) => previous.map((message) => (
+      message.requestId === requestId && message.role === "assistant"
+        ? { ...message, text: "（連線暫時中斷，答案完成後會自動顯示。）", waiting: true, typing: false }
+        : message
+    )));
+  }, []);
+
   const typeReply = useCallback((requestId: string, reply: string) => {
     const timer = typingTimers.current.get(requestId);
     if (timer) clearTimeout(timer);
@@ -351,36 +455,66 @@ export default function AdvisorChatScreen() {
     if (row.status === "failed") {
       pendingRequestIds.current.delete(requestId);
       pendingSinceMs.current.delete(requestId);
-      updateMessages((previous) => previous.map((message) => (
-        message.requestId === requestId && message.role === "assistant"
-          ? { ...message, text: `（顧問服務異常：${row.error_message ?? "未知錯誤"}）`, waiting: false, typing: false }
-          : message
-      )));
+      const errorText = `（顧問服務異常：${row.error_message ?? "未知錯誤"}）`;
+      updateMessages((previous) => {
+        let matched = false;
+        const next = previous.map((message) => {
+          if (message.requestId === requestId && message.role === "assistant") {
+            matched = true;
+            return { ...message, text: errorText, waiting: false, typing: false };
+          }
+          return message;
+        });
+        if (!matched) {
+          next.push(
+            { id: `u-${requestId}`, role: "user", text: row.user_text, requestId },
+            { id: `a-${requestId}-err`, role: "assistant", text: errorText, requestId },
+          );
+        }
+        return dedupeMessagesById(next);
+      });
     }
   }, [resolvePendingWithError, typeReply]);
 
   const pollAdvisorReplies = useCallback(async () => {
     if (!user || isGuest || !isSupabaseConfigured || pendingRequestIds.current.size === 0) return;
     const requestIds = [...pendingRequestIds.current].filter((id) => !id.startsWith("local-"));
-    if (requestIds.length === 0) return;
-    const { data, error } = await supabase
-      .from("dsemcq_advisor_messages")
+    if (requestIds.length > 0) {
+      const { data, error } = await supabase
+        .from("dsemcq_advisor_messages")
+        .select("id, request_id, user_text, bot_reply, status, error_message")
+        .eq("user_id", user.id)
+        .in("request_id", requestIds);
+      if (error) {
+        console.log("[AdvisorChat] polling error:", error.message);
+      } else {
+        for (const row of (data ?? []) as AdvisorRow[]) applyAdvisorRow(row, true);
+      }
+    }
+    const v2Ids = [...v2RequestIds.current];
+    if (v2Ids.length === 0) return;
+    const { data: v2Data, error: v2Error } = await supabase
+      .from("dsemcq_advisor_v2_messages")
       .select("id, request_id, user_text, bot_reply, status, error_message")
       .eq("user_id", user.id)
-      .in("request_id", requestIds);
-    if (error) {
-      console.log("[AdvisorChat] polling error:", error.message);
+      .in("request_id", v2Ids);
+    if (v2Error) {
+      console.log("[AdvisorChat] V2 polling error:", v2Error.message);
       return;
     }
-    for (const row of (data ?? []) as AdvisorRow[]) applyAdvisorRow(row, true);
+    for (const row of (v2Data ?? []) as AdvisorRow[]) {
+      if (row.status === "completed" || row.status === "failed") v2RequestIds.current.delete(row.request_id ?? "");
+      applyAdvisorRow(row, true);
+    }
   }, [applyAdvisorRow, isGuest, user]);
 
   useEffect(() => {
     if (!historyHydrated || !user || isGuest || !isSupabaseConfigured) return;
     let active = true;
     const loadHistory = async () => {
+      const messageTable = useAdvisorV2 ? "dsemcq_advisor_v2_messages" : "dsemcq_advisor_messages";
       const { data, error } = await supabase
-        .from("dsemcq_advisor_messages")
+        .from(messageTable)
         .select("id, request_id, user_text, bot_reply, status, error_message")
         .eq("user_id", user.id)
         .order("created_at", { ascending: true })
@@ -433,7 +567,7 @@ export default function AdvisorChatScreen() {
     };
     void loadHistory();
     return () => { active = false; };
-  }, [applyAdvisorRow, historyHydrated, isGuest, user]);
+  }, [applyAdvisorRow, historyHydrated, isGuest, useAdvisorV2, user]);
 
   useEffect(() => {
     const poll = setInterval(() => { void pollAdvisorReplies(); }, POLL_INTERVAL_MS);
@@ -446,7 +580,7 @@ export default function AdvisorChatScreen() {
     const hints = setInterval(() => {
       hintIndex += 1;
       for (const requestId of pendingRequestIds.current) showWaitingHint(requestId, hintIndex);
-    }, 3_500);
+    }, 1_500);
     return () => clearInterval(hints);
   }, [messages, showWaitingHint]);
 
@@ -456,12 +590,12 @@ export default function AdvisorChatScreen() {
       for (const requestId of pendingRequestIds.current) {
         const startedAt = pendingSinceMs.current.get(requestId) ?? now;
         if (now - startedAt > TIMEOUT_MS.chatInvoke + 5_000) {
-          resolvePendingWithError(requestId, "（顧問回應逾時，請稍後再試。）");
+          keepPendingAfterInvokeError(requestId);
         }
       }
     }, 5_000);
     return () => clearInterval(staleWatcher);
-  }, [resolvePendingWithError]);
+  }, [keepPendingAfterInvokeError]);
 
   useEffect(() => () => {
     for (const timer of typingTimers.current.values()) clearTimeout(timer);
@@ -486,10 +620,7 @@ export default function AdvisorChatScreen() {
 
     // Monthly limit for logged-in users
     if (!isGuest && user) {
-      const baseLimit = user.subscription_tier === "premium" ? premiumLimit : freeLimit;
-      const limit = baseLimit + userBonus;
-      const used = monthlyUsed ?? 0;
-      if (used >= limit) {
+      if (monthlyQuota && monthlyQuota.remaining <= 0) {
         Alert.alert(
           "本月對話已達上限",
           user.subscription_tier === "premium"
@@ -512,6 +643,7 @@ export default function AdvisorChatScreen() {
     const startDirectWaitingFlow = (requestId: string) => {
       pendingRequestIds.current.add(requestId);
       pendingSinceMs.current.set(requestId, Date.now());
+      scrollToLatest(false);
       updateMessages((previous) => [...previous,
         { id: `u-${requestId}`, role: "user", text: cleanText, requestId },
         { id: `a-${requestId}`, role: "assistant", text: WAITING_HINTS[0], requestId, waiting: true, typing: false },
@@ -547,7 +679,7 @@ export default function AdvisorChatScreen() {
           console.log("[AdvisorChat] error:", error, "data.error:", data?.error);
           return `（顧問服務異常：${errMsg}）`;
         }
-        if (!isGuest && isAdvisorQuota(data?.quota)) setMonthlyUsed(data.quota.used);
+        if (!isGuest && isAdvisorQuota(data?.quota)) setMonthlyQuota(data.quota);
         return data?.reply ?? "（無回覆）";
       } catch (e) {
         if (isTimeoutError(e)) return "（顧問回應逾時，請稍後再試。）";
@@ -566,7 +698,7 @@ export default function AdvisorChatScreen() {
           const requestId = createRequestId();
           activeRequestId = requestId;
           console.log("[AdvisorChat] insert pending request:", requestId);
-          const { error } = await supabase.from("dsemcq_advisor_messages").insert({
+          const { error } = await supabase.from(useAdvisorV2 ? "dsemcq_advisor_v2_messages" : "dsemcq_advisor_messages").insert({
             user_id: user.id,
             request_id: requestId,
             user_text: cleanText,
@@ -587,24 +719,33 @@ export default function AdvisorChatScreen() {
 
           pendingRequestIds.current.add(requestId);
           pendingSinceMs.current.set(requestId, Date.now());
+          scrollToLatest(false);
           updateMessages((previous) => [...previous,
             { id: `u-${requestId}`, role: "user", text: cleanText, requestId },
             { id: `a-${requestId}`, role: "assistant", text: WAITING_HINTS[0], requestId, waiting: true, typing: false },
           ]);
           hasRenderedUserMessage = true;
-          void supabase.functions.invoke("dsemcq-advisor-chat", {
-            body: { message: cleanText, system: SYSTEM_PROMPT, history: historyToSend, requestId },
+          if (useAdvisorV2) v2RequestIds.current.add(requestId);
+          void supabase.functions.invoke(useAdvisorV2 ? "dsemcq-advisor-v2-start" : "dsemcq-advisor-chat", {
+            body: useAdvisorV2
+              ? { requestId }
+              : { message: cleanText, system: SYSTEM_PROMPT, history: historyToSend, requestId },
           }).then(({ data, error }) => {
             if (error) {
               console.log("[AdvisorChat] background invocation error:", error);
-              resolvePendingWithError(requestId, formatAdvisorError(error));
+              keepPendingAfterInvokeError(requestId);
               return;
             }
-            if (isAdvisorQuota(data?.quota)) setMonthlyUsed(data.quota.used);
-            else void fetchMonthlyUsed();
+            if (isAdvisorQuota(data?.quota)) setMonthlyQuota(data.quota);
+            if (data?.code === "MONTHLY_LIMIT") {
+              v2RequestIds.current.delete(requestId);
+              resolvePendingWithError(requestId, "（本月對話已達上限。）");
+              return;
+            }
+            if (!isAdvisorQuota(data?.quota)) void fetchMonthlyUsed();
           }).catch((error) => {
             console.log("[AdvisorChat] background invocation error:", error);
-            resolvePendingWithError(requestId, formatAdvisorError(error));
+            keepPendingAfterInvokeError(requestId);
           });
           return;
         }
@@ -633,7 +774,7 @@ export default function AdvisorChatScreen() {
       }
     } finally {
       setLoading(false);
-      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
+      scrollToLatest(true);
     }
   };
 
@@ -697,6 +838,11 @@ export default function AdvisorChatScreen() {
             <Text style={styles.title}>{BOT_NAME}</Text>
             <Text style={styles.subtitle}>文言文溫習・應試策略・情緒調節</Text>
           </View>
+          {ADVISOR_V2_DEV_ENABLED && !isGuest && user && (
+            <TouchableOpacity style={styles.analysisBtn} onPress={() => setShowAnalysisModal(true)} activeOpacity={0.7}>
+              <Ionicons name="options-outline" size={16} color={colors.primary} />
+            </TouchableOpacity>
+          )}
           {canBuyBonus && (
             <TouchableOpacity style={styles.bonusBtn} onPress={() => { setBonusQty(1); setShowBonusModal(true); }} activeOpacity={0.7}>
               <Ionicons name="add-circle-outline" size={16} color={colors.gold} />
@@ -713,19 +859,33 @@ export default function AdvisorChatScreen() {
             </Text>
           );
         })()}
-        {!isGuest && user && monthlyUsed !== null && (() => {
-          const baseLimit = user.subscription_tier === "premium" ? premiumLimit : freeLimit;
-          const effectiveLimit = baseLimit + userBonus;
-          const remaining = Math.max(0, effectiveLimit - monthlyUsed);
+        {!isGuest && user && monthlyQuota !== null && (() => {
+          const remaining = monthlyQuota.remaining;
           const tierLabel = user.subscription_tier === "premium" ? "學士版" : "庶民版";
           const bonusLabel = userBonus > 0 ? ` + ${userBonus} 額外` : "";
           return (
             <Text style={styles.guestLimit}>
-              {tierLabel} · 本月剩餘 {remaining} / {effectiveLimit} 次{bonusLabel}（每月 1 號重置）
+              {tierLabel} · 本月剩餘 {remaining} / {monthlyQuota.limit} 次{bonusLabel}（每月 1 號重置）
             </Text>
           );
         })()}
       </View>
+
+      <Modal visible={showAnalysisModal} transparent animationType="fade" onRequestClose={() => setShowAnalysisModal(false)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowAnalysisModal(false)}>
+          <TouchableOpacity style={styles.modalCard} activeOpacity={1} onPress={() => {}}>
+            <Text style={styles.modalTitle}>分析資料設定</Text>
+            <Text style={styles.modalDesc}>你可選擇新顧問回答時可參考的資料。設定只會影響之後的新問題。</Text>
+            <PreferenceSwitch label="近期對話內容" value={v2Preferences.conversation_history_enabled} onChange={(value) => void updateV2Preference({ conversation_history_enabled: value })} />
+            <PreferenceSwitch label="心理測驗及學習方式" value={v2Preferences.profile_enabled} onChange={(value) => void updateV2Preference({ profile_enabled: value })} />
+            <PreferenceSwitch label="過往答題表現" value={v2Preferences.performance_enabled} onChange={(value) => void updateV2Preference({ performance_enabled: value })} />
+            <PreferenceSwitch label="題庫與篇章資料" value={v2Preferences.question_bank_enabled} onChange={(value) => void updateV2Preference({ question_bank_enabled: value })} />
+            <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowAnalysisModal(false)}>
+              <Text style={styles.modalCloseText}>完成</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
 
       {/* Bonus purchase modal */}
       <Modal visible={showBonusModal} transparent animationType="fade" onRequestClose={() => setShowBonusModal(false)}>
@@ -774,6 +934,9 @@ export default function AdvisorChatScreen() {
           data={messages}
           keyExtractor={(m) => m.id}
           contentContainerStyle={{ padding: spacing.md }}
+          onScroll={handleListScroll}
+          onContentSizeChange={followLatestContent}
+          scrollEventThrottle={16}
           renderItem={({ item }) => (
             <View
               style={[
@@ -794,6 +957,16 @@ export default function AdvisorChatScreen() {
             </View>
           )}
         />
+        {showJumpToLatest && (
+          <TouchableOpacity
+            style={styles.jumpToLatestButton}
+            onPress={() => scrollToLatest(true)}
+            accessibilityRole="button"
+            accessibilityLabel="跳到最新訊息"
+          >
+            <Ionicons name="chevron-down" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+        )}
         <View style={styles.inputRow}>
           <TextInput
             style={styles.input}
@@ -801,6 +974,7 @@ export default function AdvisorChatScreen() {
             placeholderTextColor={colors.textMuted}
             value={input}
             onChangeText={setInput}
+            onFocus={() => { if (isNearBottomRef.current) scrollToLatest(false); }}
             multiline
           />
           <TouchableOpacity style={styles.sendBtn} onPress={send} disabled={loading || !input.trim()}>
@@ -822,6 +996,7 @@ const styles = StyleSheet.create({
   guestLimit: { ...typography.caption, color: colors.warning, marginTop: 4 },
   bonusBtn: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surfaceAlt, borderRadius: 8, paddingVertical: 6, paddingHorizontal: 10, gap: 4 },
   bonusBtnText: { ...typography.caption, color: colors.gold, fontWeight: "600" },
+  analysisBtn: { width: 32, height: 32, alignItems: "center", justifyContent: "center", marginRight: spacing.sm },
   bubble: { padding: spacing.md, borderRadius: 14, marginBottom: spacing.sm, maxWidth: "85%" },
   userBubble: { backgroundColor: colors.primary, alignSelf: "flex-end" },
   aiBubble: { backgroundColor: colors.surface, alignSelf: "flex-start", borderWidth: 1, borderColor: colors.border },
@@ -838,6 +1013,7 @@ const styles = StyleSheet.create({
   aiText: { color: colors.textPrimary, lineHeight: 22 },
   aiWaitingText: { color: colors.textMuted, lineHeight: 20, fontSize: 13 },
   aiTypingText: { color: colors.textPrimary, lineHeight: 22 },
+  jumpToLatestButton: { position: "absolute", right: spacing.md, bottom: 76, width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center", elevation: 5, shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
   inputRow: { flexDirection: "row", padding: spacing.sm, borderTopWidth: 1, borderColor: colors.border, alignItems: "flex-end" },
   input: { flex: 1, color: colors.textPrimary, backgroundColor: colors.surface, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, maxHeight: 120, marginRight: spacing.sm },
   sendBtn: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20 },
@@ -850,6 +1026,9 @@ const styles = StyleSheet.create({
   modalInfo: { ...typography.body, color: colors.ink, marginBottom: 4 },
   modalCost: { ...typography.body, color: colors.primary, fontWeight: "700", textAlign: "center", marginTop: spacing.sm },
   modalWarn: { ...typography.body, color: colors.warning, textAlign: "center", marginTop: spacing.md },
+  preferenceRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: spacing.sm, borderBottomWidth: 1, borderColor: colors.border },
+  preferenceLabel: { ...typography.body, color: colors.ink, flex: 1, paddingRight: spacing.sm },
+  preferenceDisabled: { color: colors.textMuted },
   qtyRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.md, marginTop: spacing.md },
   qtyBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surfaceAlt, alignItems: "center", justifyContent: "center" },
   qtyBtnText: { fontSize: 20, color: colors.ink, fontWeight: "700" },
@@ -859,6 +1038,25 @@ const styles = StyleSheet.create({
   modalCloseBtn: { marginTop: spacing.sm, alignItems: "center", paddingVertical: 8 },
   modalCloseText: { ...typography.body, color: colors.inkMuted },
 });
+
+function PreferenceSwitch({
+  label,
+  value,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  value: boolean;
+  disabled?: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <View style={styles.preferenceRow}>
+      <Text style={[styles.preferenceLabel, disabled ? styles.preferenceDisabled : null]}>{label}</Text>
+      <Switch value={value} disabled={disabled} onValueChange={onChange} trackColor={{ false: colors.border, true: colors.primary }} />
+    </View>
+  );
+}
 
 // Markdown styles for AI reply bubbles
 const mdStyles = StyleSheet.create({

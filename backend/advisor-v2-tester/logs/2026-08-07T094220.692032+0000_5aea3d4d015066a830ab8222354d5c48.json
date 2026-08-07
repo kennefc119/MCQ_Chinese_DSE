@@ -1,0 +1,1115 @@
+{
+  "request_id": "5aea3d4d015066a830ab8222354d5c48",
+  "started_at": "2026-08-07T09:42:20.692032+00:00",
+  "mode": "poe",
+  "data_mode": "supabase",
+  "student_id": "05c32959-d1b2-4787-832a-b6216e5bc7e6",
+  "student_message": "我最近閱讀理解總是失分，應該如何改善？",
+  "enabled_sources": [
+    "profile",
+    "performance",
+    "question_bank"
+  ],
+  "prompt_hashes": {
+    "orchestrator": "93b1e9fd9591",
+    "profile": "1ebf5df17d3c",
+    "performance": "65c36418a564",
+    "question_bank": "d347753651af",
+    "synthesizer": "bb34455545a7"
+  },
+  "traces": [
+    {
+      "role": "orchestrator",
+      "label": "規劃器",
+      "status": "valid",
+      "duration_ms": 4510,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "5aea3d4d015066a830ab8222354d5c48",
+        "agent_role": "orchestrator",
+        "student_message": "我最近閱讀理解總是失分，應該如何改善？",
+        "capabilities": {
+          "enabled_sources": [
+            "profile",
+            "performance",
+            "question_bank"
+          ]
+        },
+        "inputs": {}
+      },
+      "raw_response": "```json\n{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"orchestrator\",\n  \"route\": \"PERFORMANCE_DIAGNOSIS\",\n  \"selected_sources\": [\n    \"performance\",\n    \"profile\",\n    \"question_bank\"\n  ],\n  \"response_style\": \"concise_supportive\",\n  \"requires_review\": false,\n  \"question_query\": \"閱讀理解 失分 改善\",\n  \"reason\": \"學生反映閱讀理解失分並詢問改善方法，需結合表現數據與題庫進行診斷與針對性指導。\"\n}\n```",
+      "api_response_summary": {
+        "id": "chatcmpl-1a5b1ffa7e15b11a34a35264",
+        "model": "DSE_V2AdvisorO",
+        "usage": {
+          "completion_tokens": 955,
+          "prompt_tokens": 454,
+          "total_tokens": 1409,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 811,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          }
+        }
+      },
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "orchestrator",
+        "route": "PERFORMANCE_DIAGNOSIS",
+        "selected_sources": [
+          "performance",
+          "profile",
+          "question_bank"
+        ],
+        "response_style": "concise_supportive",
+        "requires_review": false,
+        "question_query": "閱讀理解 失分 改善",
+        "reason": "學生反映閱讀理解失分並詢問改善方法，需結合表現數據與題庫進行診斷與針對性指導。"
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "performance",
+      "label": "表現分析",
+      "status": "valid",
+      "duration_ms": 1265,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "5aea3d4d015066a830ab8222354d5c48",
+        "agent_role": "performance",
+        "student_message": "我最近閱讀理解總是失分，應該如何改善？",
+        "capabilities": {
+          "enabled_sources": [
+            "performance"
+          ]
+        },
+        "inputs": {
+          "overall": {
+            "attempts": 34,
+            "correct": 20,
+            "total": 240,
+            "accuracy": 0.08333333333333333
+          },
+          "recent_attempts": [
+            {
+              "id": "37287720-e670-4844-884e-900ccfc78436",
+              "quiz_id": "quiz-ai-91e1ecce",
+              "score": 0,
+              "total": 10,
+              "submitted_at": "2026-08-07T08:13:27.097+00:00",
+              "time_spent_seconds": 5
+            },
+            {
+              "id": "bc323ecb-81ed-4f69-9dfc-c781d37b84f5",
+              "quiz_id": "quiz-ai-d5933106",
+              "score": 0,
+              "total": 10,
+              "submitted_at": "2026-08-07T06:24:02.604+00:00",
+              "time_spent_seconds": 6
+            },
+            {
+              "id": "79389a81-4da7-493b-beb3-ae03164cd9ae",
+              "quiz_id": "quiz-ai-c240cfcf",
+              "score": 0,
+              "total": 10,
+              "submitted_at": "2026-07-28T15:55:51.788+00:00",
+              "time_spent_seconds": 97
+            },
+            {
+              "id": "3d822048-3a68-472c-bd2b-a2fd1a9f0992",
+              "quiz_id": "quiz-ai-2a1f0b08",
+              "score": 0,
+              "total": 10,
+              "submitted_at": "2026-07-24T16:22:10.527+00:00",
+              "time_spent_seconds": 42
+            },
+            {
+              "id": "7779b210-d9cf-49a3-b189-acc804573657",
+              "quiz_id": "quiz-ai-6358bbec",
+              "score": 1,
+              "total": 5,
+              "submitted_at": "2026-07-23T18:24:17.677+00:00",
+              "time_spent_seconds": 9
+            },
+            {
+              "id": "6e107064-5679-4e2b-8946-78ff0ac3b01b",
+              "quiz_id": "quiz-ai-77641176",
+              "score": 1,
+              "total": 10,
+              "submitted_at": "2026-07-16T09:48:00.409+00:00",
+              "time_spent_seconds": 26
+            },
+            {
+              "id": "5966ed18-25ca-4869-8778-ba6c3339ae81",
+              "quiz_id": "quiz-ai-4be090ac",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-07-13T12:26:17.562+00:00",
+              "time_spent_seconds": 75
+            },
+            {
+              "id": "e2b016f2-1760-48e0-b3fa-19bd63942019",
+              "quiz_id": "quiz-ai-84b95897",
+              "score": 0,
+              "total": 20,
+              "submitted_at": "2026-07-10T13:55:24.541+00:00",
+              "time_spent_seconds": 35
+            },
+            {
+              "id": "c98660a2-4acd-4494-9c1a-2f5635842397",
+              "quiz_id": "quiz-ai-bae68764",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-07-05T15:31:07.593+00:00",
+              "time_spent_seconds": 43
+            },
+            {
+              "id": "08f4400c-79f5-46f0-a0c4-97f2801899be",
+              "quiz_id": "quiz-ai-efacc0ae",
+              "score": 2,
+              "total": 5,
+              "submitted_at": "2026-07-03T14:12:19.141+00:00",
+              "time_spent_seconds": 49
+            },
+            {
+              "id": "cf188a6a-0da0-4696-8242-209732c0401a",
+              "quiz_id": "quiz-ai-b0226528",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-26T16:22:26.123+00:00",
+              "time_spent_seconds": 4
+            },
+            {
+              "id": "8b6c480c-9620-463f-a6e8-1715a6d2092e",
+              "quiz_id": "quiz-ai-01a00070",
+              "score": 1,
+              "total": 5,
+              "submitted_at": "2026-06-26T10:37:01.883+00:00",
+              "time_spent_seconds": 80
+            },
+            {
+              "id": "b46ed5b5-cd7a-4fb4-9caf-026cd88a3ad8",
+              "quiz_id": "quiz-ai-b95afd5f",
+              "score": 0,
+              "total": 20,
+              "submitted_at": "2026-06-22T09:58:41.57+00:00",
+              "time_spent_seconds": 8
+            },
+            {
+              "id": "9ad4db89-ccba-442b-b565-0d2dbb36724f",
+              "quiz_id": "quiz-ai-0eda30fe",
+              "score": 2,
+              "total": 5,
+              "submitted_at": "2026-06-21T08:58:12.513+00:00",
+              "time_spent_seconds": 7
+            },
+            {
+              "id": "9425e19f-2283-4214-b706-70c6b5195d20",
+              "quiz_id": "quiz-ai-5288fa14",
+              "score": 3,
+              "total": 5,
+              "submitted_at": "2026-06-21T07:51:28.526+00:00",
+              "time_spent_seconds": 5
+            },
+            {
+              "id": "2d619a0b-e317-4b80-9a34-6f525b7eea2b",
+              "quiz_id": "quiz-ai-48493978",
+              "score": 1,
+              "total": 5,
+              "submitted_at": "2026-06-21T07:51:06.155+00:00",
+              "time_spent_seconds": 5
+            },
+            {
+              "id": "04fe29a8-816e-4650-8264-ea1051b298a9",
+              "quiz_id": "quiz-ai-0bdc8930",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-21T07:50:47.668+00:00",
+              "time_spent_seconds": 5
+            },
+            {
+              "id": "3f3a871d-229d-4733-9f99-829eb79b3876",
+              "quiz_id": "quiz-ai-064b85ab",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-21T07:36:32.565+00:00",
+              "time_spent_seconds": 4
+            },
+            {
+              "id": "59a51071-9967-498d-9d6f-3c84bec05cdb",
+              "quiz_id": "quiz-ai-66f38edc",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-13T16:12:56.586+00:00",
+              "time_spent_seconds": 6
+            },
+            {
+              "id": "e438df5c-9231-4254-b8dd-1210877919b3",
+              "quiz_id": "quiz-ai-ca93c0e1",
+              "score": 2,
+              "total": 5,
+              "submitted_at": "2026-06-13T09:51:29.455+00:00",
+              "time_spent_seconds": 7
+            },
+            {
+              "id": "487a0a29-69d8-479a-b6f1-05b50dfbd539",
+              "quiz_id": "quiz-ai-66f38edc",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-12T11:13:29.345+00:00",
+              "time_spent_seconds": 55
+            },
+            {
+              "id": "01ab7751-38c5-49ef-97d1-16bcfac46afe",
+              "quiz_id": "quiz-ai-489b6c5a",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-12T11:11:17.821+00:00",
+              "time_spent_seconds": 21
+            },
+            {
+              "id": "c01b8b9f-b991-41fe-8a0f-7f85e7021efb",
+              "quiz_id": "quiz-ai-ad187d5b",
+              "score": 0,
+              "total": 10,
+              "submitted_at": "2026-06-10T14:56:44.521+00:00",
+              "time_spent_seconds": 18
+            },
+            {
+              "id": "178abae4-eee2-4de3-8d33-e8cf23f0bad0",
+              "quiz_id": "quiz-ai-6c4f8448",
+              "score": 1,
+              "total": 5,
+              "submitted_at": "2026-06-08T11:05:48.343+00:00",
+              "time_spent_seconds": 5
+            },
+            {
+              "id": "7c50a4d9-ebe4-481d-965c-7520c6133aae",
+              "quiz_id": "quiz-ai-231d6f72",
+              "score": 2,
+              "total": 10,
+              "submitted_at": "2026-06-08T10:41:48.746+00:00",
+              "time_spent_seconds": 11
+            },
+            {
+              "id": "492f4db4-b0d3-44f1-96dc-70fdad7f7d8d",
+              "quiz_id": "quiz-ai-1f3edfed",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-08T10:41:27.558+00:00",
+              "time_spent_seconds": 6
+            },
+            {
+              "id": "e5d9beac-c164-4b99-89e0-af8071994648",
+              "quiz_id": "quiz-ai-5a47a09a",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-08T10:41:11.205+00:00",
+              "time_spent_seconds": 6
+            },
+            {
+              "id": "5f5fd027-5595-41f8-a41f-84294d97a822",
+              "quiz_id": "quiz-ai-61795629",
+              "score": 3,
+              "total": 5,
+              "submitted_at": "2026-06-08T10:40:53.668+00:00",
+              "time_spent_seconds": 5
+            },
+            {
+              "id": "8032791a-0a5d-4b28-bba9-6252dcc331bb",
+              "quiz_id": "quiz-ai-97b81fee",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-08T03:05:20.335+00:00",
+              "time_spent_seconds": 72
+            },
+            {
+              "id": "4475b699-69c9-443a-8182-5eae39898f69",
+              "quiz_id": "quiz-ai-97b81fee",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-08T03:02:19.04+00:00",
+              "time_spent_seconds": 17
+            }
+          ],
+          "skill_stats": [
+            {
+              "tag_id": "t-rhetoric",
+              "tag_label": "修辭",
+              "attempted": 1,
+              "correct": 0,
+              "accuracy": 0
+            },
+            {
+              "tag_id": "t-meaning",
+              "tag_label": "字詞解釋",
+              "attempted": 5,
+              "correct": 1,
+              "accuracy": 0.2
+            },
+            {
+              "tag_id": "t-comprehension",
+              "tag_label": "句意理解",
+              "attempted": 1,
+              "correct": 0,
+              "accuracy": 0
+            }
+          ],
+          "passage_stats": [
+            {
+              "passage_id": "p05",
+              "passage_title": "廉頗藺相如列傳（節錄）",
+              "attempted": 1,
+              "correct": 0,
+              "accuracy": 0
+            },
+            {
+              "passage_id": "p02",
+              "passage_title": "魚我所欲也",
+              "attempted": 5,
+              "correct": 1,
+              "accuracy": 0.2
+            },
+            {
+              "passage_id": "p03",
+              "passage_title": "逍遙遊（節錄）",
+              "attempted": 1,
+              "correct": 0,
+              "accuracy": 0
+            }
+          ],
+          "difficulty_stats": [
+            {
+              "difficulty": 1,
+              "attempted": 5,
+              "correct": 1,
+              "accuracy": 0.2
+            },
+            {
+              "difficulty": 2,
+              "attempted": 2,
+              "correct": 0,
+              "accuracy": 0
+            }
+          ],
+          "evidence_ids": [
+            "37287720-e670-4844-884e-900ccfc78436",
+            "bc323ecb-81ed-4f69-9dfc-c781d37b84f5",
+            "79389a81-4da7-493b-beb3-ae03164cd9ae",
+            "3d822048-3a68-472c-bd2b-a2fd1a9f0992",
+            "7779b210-d9cf-49a3-b189-acc804573657",
+            "6e107064-5679-4e2b-8946-78ff0ac3b01b",
+            "5966ed18-25ca-4869-8778-ba6c3339ae81",
+            "e2b016f2-1760-48e0-b3fa-19bd63942019",
+            "c98660a2-4acd-4494-9c1a-2f5635842397",
+            "08f4400c-79f5-46f0-a0c4-97f2801899be",
+            "cf188a6a-0da0-4696-8242-209732c0401a",
+            "8b6c480c-9620-463f-a6e8-1715a6d2092e",
+            "b46ed5b5-cd7a-4fb4-9caf-026cd88a3ad8",
+            "9ad4db89-ccba-442b-b565-0d2dbb36724f",
+            "9425e19f-2283-4214-b706-70c6b5195d20",
+            "2d619a0b-e317-4b80-9a34-6f525b7eea2b",
+            "04fe29a8-816e-4650-8264-ea1051b298a9",
+            "3f3a871d-229d-4733-9f99-829eb79b3876",
+            "59a51071-9967-498d-9d6f-3c84bec05cdb",
+            "e438df5c-9231-4254-b8dd-1210877919b3",
+            "487a0a29-69d8-479a-b6f1-05b50dfbd539",
+            "01ab7751-38c5-49ef-97d1-16bcfac46afe",
+            "c01b8b9f-b991-41fe-8a0f-7f85e7021efb",
+            "178abae4-eee2-4de3-8d33-e8cf23f0bad0",
+            "7c50a4d9-ebe4-481d-965c-7520c6133aae",
+            "492f4db4-b0d3-44f1-96dc-70fdad7f7d8d",
+            "e5d9beac-c164-4b99-89e0-af8071994648",
+            "5f5fd027-5595-41f8-a41f-84294d97a822",
+            "8032791a-0a5d-4b28-bba9-6252dcc331bb",
+            "4475b699-69c9-443a-8182-5eae39898f69",
+            "tag:t-rhetoric",
+            "tag:t-meaning",
+            "tag:t-comprehension",
+            "passage:p05",
+            "passage:p02",
+            "passage:p03"
+          ]
+        }
+      },
+      "raw_response": "```json\n{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"performance\",\n  \"output\": {\n    \"strengths\": [],\n    \"needs_attention\": [],\n    \"trends\": [],\n    \"next_practice_focus\": [],\n    \"evidence_ids\": []\n  }\n}\n```",
+      "api_response_summary": {
+        "id": "chatcmpl-34b6b96510f1c691896a0857",
+        "model": "DSE_V2PerformanceS",
+        "usage": {
+          "completion_tokens": 77,
+          "prompt_tokens": 5164,
+          "total_tokens": 5241,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          }
+        }
+      },
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "performance",
+        "output": {
+          "strengths": [],
+          "needs_attention": [],
+          "trends": [],
+          "next_practice_focus": [],
+          "evidence_ids": []
+        }
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "profile",
+      "label": "學生檔案",
+      "status": "valid",
+      "duration_ms": 2624,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "5aea3d4d015066a830ab8222354d5c48",
+        "agent_role": "profile",
+        "student_message": "我最近閱讀理解總是失分，應該如何改善？",
+        "capabilities": {
+          "enabled_sources": [
+            "profile"
+          ]
+        },
+        "inputs": {
+          "profile": {
+            "id": "05c32959-d1b2-4787-832a-b6216e5bc7e6",
+            "username": "少女",
+            "gender": "female",
+            "dse_year": 2027,
+            "subscription_tier": "premium",
+            "wenyuan_points": 310,
+            "created_at": "2026-05-08T11:01:38.94+00:00"
+          },
+          "psych_results": [
+            {
+              "test_id": "psy-dynasty-scholar-v1",
+              "result_code": "M",
+              "completed_at": "2026-06-27T10:37:48.569+00:00"
+            },
+            {
+              "test_id": "psy-writing-question-trap-v1",
+              "result_code": "關鍵詞忽略",
+              "completed_at": "2026-06-27T09:59:32.107+00:00"
+            },
+            {
+              "test_id": "psy-zuowen-potential-v1",
+              "result_code": "創意型",
+              "completed_at": "2026-06-26T17:26:02.848+00:00"
+            },
+            {
+              "test_id": "psy-dse-chinese-memorization-brain-v1",
+              "result_code": "A1",
+              "completed_at": "2026-06-26T17:25:46.08+00:00"
+            },
+            {
+              "test_id": "psy-dse-guzheng-like-v1",
+              "result_code": "taoqian",
+              "completed_at": "2026-06-13T07:06:15.862+00:00"
+            },
+            {
+              "test_id": "psy-learning-mode-hk-v1",
+              "result_code": "互動型",
+              "completed_at": "2026-05-17T07:09:30.883+00:00"
+            },
+            {
+              "test_id": "psy-dse-university-subject-fit-v1",
+              "result_code": "SCI",
+              "completed_at": "2026-05-17T07:08:52.409+00:00"
+            }
+          ],
+          "performance_snapshot": {
+            "overall": {
+              "attempts": 34,
+              "correct": 20,
+              "total": 240,
+              "accuracy": 0.08333333333333333
+            },
+            "recent_attempts": [
+              {
+                "id": "37287720-e670-4844-884e-900ccfc78436",
+                "quiz_id": "quiz-ai-91e1ecce",
+                "score": 0,
+                "total": 10,
+                "submitted_at": "2026-08-07T08:13:27.097+00:00",
+                "time_spent_seconds": 5
+              },
+              {
+                "id": "bc323ecb-81ed-4f69-9dfc-c781d37b84f5",
+                "quiz_id": "quiz-ai-d5933106",
+                "score": 0,
+                "total": 10,
+                "submitted_at": "2026-08-07T06:24:02.604+00:00",
+                "time_spent_seconds": 6
+              },
+              {
+                "id": "79389a81-4da7-493b-beb3-ae03164cd9ae",
+                "quiz_id": "quiz-ai-c240cfcf",
+                "score": 0,
+                "total": 10,
+                "submitted_at": "2026-07-28T15:55:51.788+00:00",
+                "time_spent_seconds": 97
+              },
+              {
+                "id": "3d822048-3a68-472c-bd2b-a2fd1a9f0992",
+                "quiz_id": "quiz-ai-2a1f0b08",
+                "score": 0,
+                "total": 10,
+                "submitted_at": "2026-07-24T16:22:10.527+00:00",
+                "time_spent_seconds": 42
+              },
+              {
+                "id": "7779b210-d9cf-49a3-b189-acc804573657",
+                "quiz_id": "quiz-ai-6358bbec",
+                "score": 1,
+                "total": 5,
+                "submitted_at": "2026-07-23T18:24:17.677+00:00",
+                "time_spent_seconds": 9
+              },
+              {
+                "id": "6e107064-5679-4e2b-8946-78ff0ac3b01b",
+                "quiz_id": "quiz-ai-77641176",
+                "score": 1,
+                "total": 10,
+                "submitted_at": "2026-07-16T09:48:00.409+00:00",
+                "time_spent_seconds": 26
+              },
+              {
+                "id": "5966ed18-25ca-4869-8778-ba6c3339ae81",
+                "quiz_id": "quiz-ai-4be090ac",
+                "score": 0,
+                "total": 5,
+                "submitted_at": "2026-07-13T12:26:17.562+00:00",
+                "time_spent_seconds": 75
+              },
+              {
+                "id": "e2b016f2-1760-48e0-b3fa-19bd63942019",
+                "quiz_id": "quiz-ai-84b95897",
+                "score": 0,
+                "total": 20,
+                "submitted_at": "2026-07-10T13:55:24.541+00:00",
+                "time_spent_seconds": 35
+              },
+              {
+                "id": "c98660a2-4acd-4494-9c1a-2f5635842397",
+                "quiz_id": "quiz-ai-bae68764",
+                "score": 0,
+                "total": 5,
+                "submitted_at": "2026-07-05T15:31:07.593+00:00",
+                "time_spent_seconds": 43
+              },
+              {
+                "id": "08f4400c-79f5-46f0-a0c4-97f2801899be",
+                "quiz_id": "quiz-ai-efacc0ae",
+                "score": 2,
+                "total": 5,
+                "submitted_at": "2026-07-03T14:12:19.141+00:00",
+                "time_spent_seconds": 49
+              },
+              {
+                "id": "cf188a6a-0da0-4696-8242-209732c0401a",
+                "quiz_id": "quiz-ai-b0226528",
+                "score": 0,
+                "total": 5,
+                "submitted_at": "2026-06-26T16:22:26.123+00:00",
+                "time_spent_seconds": 4
+              },
+              {
+                "id": "8b6c480c-9620-463f-a6e8-1715a6d2092e",
+                "quiz_id": "quiz-ai-01a00070",
+                "score": 1,
+                "total": 5,
+                "submitted_at": "2026-06-26T10:37:01.883+00:00",
+                "time_spent_seconds": 80
+              },
+              {
+                "id": "b46ed5b5-cd7a-4fb4-9caf-026cd88a3ad8",
+                "quiz_id": "quiz-ai-b95afd5f",
+                "score": 0,
+                "total": 20,
+                "submitted_at": "2026-06-22T09:58:41.57+00:00",
+                "time_spent_seconds": 8
+              },
+              {
+                "id": "9ad4db89-ccba-442b-b565-0d2dbb36724f",
+                "quiz_id": "quiz-ai-0eda30fe",
+                "score": 2,
+                "total": 5,
+                "submitted_at": "2026-06-21T08:58:12.513+00:00",
+                "time_spent_seconds": 7
+              },
+              {
+                "id": "9425e19f-2283-4214-b706-70c6b5195d20",
+                "quiz_id": "quiz-ai-5288fa14",
+                "score": 3,
+                "total": 5,
+                "submitted_at": "2026-06-21T07:51:28.526+00:00",
+                "time_spent_seconds": 5
+              },
+              {
+                "id": "2d619a0b-e317-4b80-9a34-6f525b7eea2b",
+                "quiz_id": "quiz-ai-48493978",
+                "score": 1,
+                "total": 5,
+                "submitted_at": "2026-06-21T07:51:06.155+00:00",
+                "time_spent_seconds": 5
+              },
+              {
+                "id": "04fe29a8-816e-4650-8264-ea1051b298a9",
+                "quiz_id": "quiz-ai-0bdc8930",
+                "score": 0,
+                "total": 5,
+                "submitted_at": "2026-06-21T07:50:47.668+00:00",
+                "time_spent_seconds": 5
+              },
+              {
+                "id": "3f3a871d-229d-4733-9f99-829eb79b3876",
+                "quiz_id": "quiz-ai-064b85ab",
+                "score": 0,
+                "total": 5,
+                "submitted_at": "2026-06-21T07:36:32.565+00:00",
+                "time_spent_seconds": 4
+              },
+              {
+                "id": "59a51071-9967-498d-9d6f-3c84bec05cdb",
+                "quiz_id": "quiz-ai-66f38edc",
+                "score": 0,
+                "total": 5,
+                "submitted_at": "2026-06-13T16:12:56.586+00:00",
+                "time_spent_seconds": 6
+              },
+              {
+                "id": "e438df5c-9231-4254-b8dd-1210877919b3",
+                "quiz_id": "quiz-ai-ca93c0e1",
+                "score": 2,
+                "total": 5,
+                "submitted_at": "2026-06-13T09:51:29.455+00:00",
+                "time_spent_seconds": 7
+              },
+              {
+                "id": "487a0a29-69d8-479a-b6f1-05b50dfbd539",
+                "quiz_id": "quiz-ai-66f38edc",
+                "score": 0,
+                "total": 5,
+                "submitted_at": "2026-06-12T11:13:29.345+00:00",
+                "time_spent_seconds": 55
+              },
+              {
+                "id": "01ab7751-38c5-49ef-97d1-16bcfac46afe",
+                "quiz_id": "quiz-ai-489b6c5a",
+                "score": 0,
+                "total": 5,
+                "submitted_at": "2026-06-12T11:11:17.821+00:00",
+                "time_spent_seconds": 21
+              },
+              {
+                "id": "c01b8b9f-b991-41fe-8a0f-7f85e7021efb",
+                "quiz_id": "quiz-ai-ad187d5b",
+                "score": 0,
+                "total": 10,
+                "submitted_at": "2026-06-10T14:56:44.521+00:00",
+                "time_spent_seconds": 18
+              },
+              {
+                "id": "178abae4-eee2-4de3-8d33-e8cf23f0bad0",
+                "quiz_id": "quiz-ai-6c4f8448",
+                "score": 1,
+                "total": 5,
+                "submitted_at": "2026-06-08T11:05:48.343+00:00",
+                "time_spent_seconds": 5
+              },
+              {
+                "id": "7c50a4d9-ebe4-481d-965c-7520c6133aae",
+                "quiz_id": "quiz-ai-231d6f72",
+                "score": 2,
+                "total": 10,
+                "submitted_at": "2026-06-08T10:41:48.746+00:00",
+                "time_spent_seconds": 11
+              },
+              {
+                "id": "492f4db4-b0d3-44f1-96dc-70fdad7f7d8d",
+                "quiz_id": "quiz-ai-1f3edfed",
+                "score": 0,
+                "total": 5,
+                "submitted_at": "2026-06-08T10:41:27.558+00:00",
+                "time_spent_seconds": 6
+              },
+              {
+                "id": "e5d9beac-c164-4b99-89e0-af8071994648",
+                "quiz_id": "quiz-ai-5a47a09a",
+                "score": 0,
+                "total": 5,
+                "submitted_at": "2026-06-08T10:41:11.205+00:00",
+                "time_spent_seconds": 6
+              },
+              {
+                "id": "5f5fd027-5595-41f8-a41f-84294d97a822",
+                "quiz_id": "quiz-ai-61795629",
+                "score": 3,
+                "total": 5,
+                "submitted_at": "2026-06-08T10:40:53.668+00:00",
+                "time_spent_seconds": 5
+              },
+              {
+                "id": "8032791a-0a5d-4b28-bba9-6252dcc331bb",
+                "quiz_id": "quiz-ai-97b81fee",
+                "score": 0,
+                "total": 5,
+                "submitted_at": "2026-06-08T03:05:20.335+00:00",
+                "time_spent_seconds": 72
+              },
+              {
+                "id": "4475b699-69c9-443a-8182-5eae39898f69",
+                "quiz_id": "quiz-ai-97b81fee",
+                "score": 0,
+                "total": 5,
+                "submitted_at": "2026-06-08T03:02:19.04+00:00",
+                "time_spent_seconds": 17
+              }
+            ],
+            "skill_stats": [
+              {
+                "tag_id": "t-rhetoric",
+                "tag_label": "修辭",
+                "attempted": 1,
+                "correct": 0,
+                "accuracy": 0
+              },
+              {
+                "tag_id": "t-meaning",
+                "tag_label": "字詞解釋",
+                "attempted": 5,
+                "correct": 1,
+                "accuracy": 0.2
+              },
+              {
+                "tag_id": "t-comprehension",
+                "tag_label": "句意理解",
+                "attempted": 1,
+                "correct": 0,
+                "accuracy": 0
+              }
+            ],
+            "passage_stats": [
+              {
+                "passage_id": "p05",
+                "passage_title": "廉頗藺相如列傳（節錄）",
+                "attempted": 1,
+                "correct": 0,
+                "accuracy": 0
+              },
+              {
+                "passage_id": "p02",
+                "passage_title": "魚我所欲也",
+                "attempted": 5,
+                "correct": 1,
+                "accuracy": 0.2
+              },
+              {
+                "passage_id": "p03",
+                "passage_title": "逍遙遊（節錄）",
+                "attempted": 1,
+                "correct": 0,
+                "accuracy": 0
+              }
+            ],
+            "difficulty_stats": [
+              {
+                "difficulty": 1,
+                "attempted": 5,
+                "correct": 1,
+                "accuracy": 0.2
+              },
+              {
+                "difficulty": 2,
+                "attempted": 2,
+                "correct": 0,
+                "accuracy": 0
+              }
+            ],
+            "evidence_ids": [
+              "37287720-e670-4844-884e-900ccfc78436",
+              "bc323ecb-81ed-4f69-9dfc-c781d37b84f5",
+              "79389a81-4da7-493b-beb3-ae03164cd9ae",
+              "3d822048-3a68-472c-bd2b-a2fd1a9f0992",
+              "7779b210-d9cf-49a3-b189-acc804573657",
+              "6e107064-5679-4e2b-8946-78ff0ac3b01b",
+              "5966ed18-25ca-4869-8778-ba6c3339ae81",
+              "e2b016f2-1760-48e0-b3fa-19bd63942019",
+              "c98660a2-4acd-4494-9c1a-2f5635842397",
+              "08f4400c-79f5-46f0-a0c4-97f2801899be",
+              "cf188a6a-0da0-4696-8242-209732c0401a",
+              "8b6c480c-9620-463f-a6e8-1715a6d2092e",
+              "b46ed5b5-cd7a-4fb4-9caf-026cd88a3ad8",
+              "9ad4db89-ccba-442b-b565-0d2dbb36724f",
+              "9425e19f-2283-4214-b706-70c6b5195d20",
+              "2d619a0b-e317-4b80-9a34-6f525b7eea2b",
+              "04fe29a8-816e-4650-8264-ea1051b298a9",
+              "3f3a871d-229d-4733-9f99-829eb79b3876",
+              "59a51071-9967-498d-9d6f-3c84bec05cdb",
+              "e438df5c-9231-4254-b8dd-1210877919b3",
+              "487a0a29-69d8-479a-b6f1-05b50dfbd539",
+              "01ab7751-38c5-49ef-97d1-16bcfac46afe",
+              "c01b8b9f-b991-41fe-8a0f-7f85e7021efb",
+              "178abae4-eee2-4de3-8d33-e8cf23f0bad0",
+              "7c50a4d9-ebe4-481d-965c-7520c6133aae",
+              "492f4db4-b0d3-44f1-96dc-70fdad7f7d8d",
+              "e5d9beac-c164-4b99-89e0-af8071994648",
+              "5f5fd027-5595-41f8-a41f-84294d97a822",
+              "8032791a-0a5d-4b28-bba9-6252dcc331bb",
+              "4475b699-69c9-443a-8182-5eae39898f69",
+              "tag:t-rhetoric",
+              "tag:t-meaning",
+              "tag:t-comprehension",
+              "passage:p05",
+              "passage:p02",
+              "passage:p03"
+            ]
+          },
+          "evidence_ids": [
+            "psych:psy-dynasty-scholar-v1:M",
+            "psych:psy-writing-question-trap-v1:關鍵詞忽略",
+            "psych:psy-zuowen-potential-v1:創意型",
+            "psych:psy-dse-chinese-memorization-brain-v1:A1",
+            "psych:psy-dse-guzheng-like-v1:taoqian",
+            "psych:psy-learning-mode-hk-v1:互動型",
+            "psych:psy-dse-university-subject-fit-v1:SCI",
+            "37287720-e670-4844-884e-900ccfc78436",
+            "bc323ecb-81ed-4f69-9dfc-c781d37b84f5",
+            "79389a81-4da7-493b-beb3-ae03164cd9ae",
+            "3d822048-3a68-472c-bd2b-a2fd1a9f0992",
+            "7779b210-d9cf-49a3-b189-acc804573657",
+            "6e107064-5679-4e2b-8946-78ff0ac3b01b",
+            "5966ed18-25ca-4869-8778-ba6c3339ae81",
+            "e2b016f2-1760-48e0-b3fa-19bd63942019",
+            "c98660a2-4acd-4494-9c1a-2f5635842397",
+            "08f4400c-79f5-46f0-a0c4-97f2801899be",
+            "cf188a6a-0da0-4696-8242-209732c0401a",
+            "8b6c480c-9620-463f-a6e8-1715a6d2092e",
+            "b46ed5b5-cd7a-4fb4-9caf-026cd88a3ad8",
+            "9ad4db89-ccba-442b-b565-0d2dbb36724f",
+            "9425e19f-2283-4214-b706-70c6b5195d20",
+            "2d619a0b-e317-4b80-9a34-6f525b7eea2b",
+            "04fe29a8-816e-4650-8264-ea1051b298a9",
+            "3f3a871d-229d-4733-9f99-829eb79b3876",
+            "59a51071-9967-498d-9d6f-3c84bec05cdb",
+            "e438df5c-9231-4254-b8dd-1210877919b3",
+            "487a0a29-69d8-479a-b6f1-05b50dfbd539",
+            "01ab7751-38c5-49ef-97d1-16bcfac46afe",
+            "c01b8b9f-b991-41fe-8a0f-7f85e7021efb",
+            "178abae4-eee2-4de3-8d33-e8cf23f0bad0",
+            "7c50a4d9-ebe4-481d-965c-7520c6133aae",
+            "492f4db4-b0d3-44f1-96dc-70fdad7f7d8d",
+            "e5d9beac-c164-4b99-89e0-af8071994648",
+            "5f5fd027-5595-41f8-a41f-84294d97a822",
+            "8032791a-0a5d-4b28-bba9-6252dcc331bb",
+            "4475b699-69c9-443a-8182-5eae39898f69",
+            "tag:t-rhetoric",
+            "tag:t-meaning",
+            "tag:t-comprehension",
+            "passage:p05",
+            "passage:p02",
+            "passage:p03"
+          ]
+        }
+      },
+      "raw_response": "```json\n{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"profile\",\n  \"output\": {\n    \"learning_preferences\": [\n      \"採用互動式引導與對話教學，配合學生偏好的學習模式\",\n      \"針對字詞解釋、句意理解及修辭手法等失分盲點加強訓練\",\n      \"提供文言文（如《魚我所欲也》、《逍遙遊》、《廉頗藺相如列傳》）的逐句拆解與關鍵詞識別訓練\"\n    ],\n    \"coaching_notes\": [\n      \"學生的心理測驗結果顯示有「關鍵詞忽略」傾向，閱讀理解時需特別提醒其圈出題幹關鍵字\",\n      \"近期練習正確率偏低且作答時間較短，建議放慢答題節奏，著重分析文意而非追求速度\",\n      \"針對詞義理解與篇章字詞掌握（如困難度較低的基礎題型）逐步建立信心\"\n    ],\n    \"evidence_ids\": [\n      \"psych:psy-writing-question-trap-v1:關鍵詞忽略\",\n      \"psych:psy-learning-mode-hk-v1:互動型\",\n      \"tag:t-meaning\",\n      \"tag:t-comprehension\",\n      \"tag:t-rhetoric\",\n      \"passage:p02\",\n      \"passage:p03\",\n      \"passage:p05\",\n      \"79389a81-4da7-493b-beb3-ae03164cd9ae\",\n      \"e2b016f2-1760-48e0-b3fa-19bd63942019\"\n    ]\n  }\n}\n```",
+      "api_response_summary": {
+        "id": "chatcmpl-5371660f965687c6d63b7068",
+        "model": "DSE_V2ProfileS",
+        "usage": {
+          "completion_tokens": 416,
+          "prompt_tokens": 6992,
+          "total_tokens": 7408,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          }
+        }
+      },
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "profile",
+        "output": {
+          "learning_preferences": [
+            "採用互動式引導與對話教學，配合學生偏好的學習模式",
+            "針對字詞解釋、句意理解及修辭手法等失分盲點加強訓練",
+            "提供文言文（如《魚我所欲也》、《逍遙遊》、《廉頗藺相如列傳》）的逐句拆解與關鍵詞識別訓練"
+          ],
+          "coaching_notes": [
+            "學生的心理測驗結果顯示有「關鍵詞忽略」傾向，閱讀理解時需特別提醒其圈出題幹關鍵字",
+            "近期練習正確率偏低且作答時間較短，建議放慢答題節奏，著重分析文意而非追求速度",
+            "針對詞義理解與篇章字詞掌握（如困難度較低的基礎題型）逐步建立信心"
+          ],
+          "evidence_ids": [
+            "psych:psy-writing-question-trap-v1:關鍵詞忽略",
+            "psych:psy-learning-mode-hk-v1:互動型",
+            "tag:t-meaning",
+            "tag:t-comprehension",
+            "tag:t-rhetoric",
+            "passage:p02",
+            "passage:p03",
+            "passage:p05",
+            "79389a81-4da7-493b-beb3-ae03164cd9ae",
+            "e2b016f2-1760-48e0-b3fa-19bd63942019"
+          ]
+        }
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "question_bank",
+      "label": "題庫研究",
+      "status": "error",
+      "duration_ms": 5991,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "5aea3d4d015066a830ab8222354d5c48",
+        "agent_role": "question_bank",
+        "student_message": "我最近閱讀理解總是失分，應該如何改善？",
+        "capabilities": {
+          "enabled_sources": [
+            "question_bank"
+          ]
+        },
+        "inputs": {
+          "questions": [],
+          "evidence_ids": []
+        }
+      },
+      "raw_response": "",
+      "api_response_summary": null,
+      "parsed_response": null,
+      "validation_errors": [
+        "Response did not contain a JSON object. Raw preview: 閱讀理解經常失分，通常是因為缺乏系統性的解題策略，或者在作答時掉入了常見的陷阱。你可以從以下幾個核心方法來改善和提升答題表現：\\n\\n### 1. 改變做題次序：先審題，後閱讀\\n* **帶著任務去讀文章**：拿到試卷時，不要急著從頭到尾盲目通讀。建議先「審題」，用筆圈出問題中的關鍵字（如：何時、何地、何人、原因等）。\\n* **鎖定目標**：清楚題目問甚麼之後，帶著「任務感」回到原文中去尋找相對應的線索和答案範圍，這樣能大大提高閱讀的針對性和準確度。\\n\\n### 2. 針對不同題型掌握解題技巧\\n* **事實／直找題**：答案通常直接在原文中。切忌毫無章法地亂抄，學會運用原文的線索並稍作文字組織，確保抄寫完整（例如抄到句號，不要漏掉關鍵的前後修飾語或代詞如「這個」、「那裡」）。\\n* **原因與推論題**：尋找文章中的因果關聯詞（如「因為」、「所以」、「於是」、「難怪」等）。如果遇到問及「角色感受」或「作者用意」的推論題，必須結合上下文的線索與合理的邏輯來推斷，不可憑空猜測。\\n* **主旨與段旨題**：通常文章的中心思想或段落大意會藏在首段（開宗明義）或末段（總結）。學會抓出每一段的中心句，並鍛鍊"
+      ]
+    },
+    {
+      "role": "synthesizer",
+      "label": "書僮整合",
+      "status": "valid",
+      "duration_ms": 2746,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "5aea3d4d015066a830ab8222354d5c48",
+        "agent_role": "synthesizer",
+        "student_message": "我最近閱讀理解總是失分，應該如何改善？",
+        "capabilities": {
+          "enabled_sources": [
+            "profile",
+            "performance",
+            "question_bank"
+          ]
+        },
+        "inputs": {
+          "reports": [
+            {
+              "source": "performance",
+              "output": {
+                "schema_version": "v1",
+                "agent_role": "performance",
+                "output": {
+                  "strengths": [],
+                  "needs_attention": [],
+                  "trends": [],
+                  "next_practice_focus": [],
+                  "evidence_ids": []
+                }
+              }
+            },
+            {
+              "source": "profile",
+              "output": {
+                "schema_version": "v1",
+                "agent_role": "profile",
+                "output": {
+                  "learning_preferences": [
+                    "採用互動式引導與對話教學，配合學生偏好的學習模式",
+                    "針對字詞解釋、句意理解及修辭手法等失分盲點加強訓練",
+                    "提供文言文（如《魚我所欲也》、《逍遙遊》、《廉頗藺相如列傳》）的逐句拆解與關鍵詞識別訓練"
+                  ],
+                  "coaching_notes": [
+                    "學生的心理測驗結果顯示有「關鍵詞忽略」傾向，閱讀理解時需特別提醒其圈出題幹關鍵字",
+                    "近期練習正確率偏低且作答時間較短，建議放慢答題節奏，著重分析文意而非追求速度",
+                    "針對詞義理解與篇章字詞掌握（如困難度較低的基礎題型）逐步建立信心"
+                  ],
+                  "evidence_ids": [
+                    "psych:psy-writing-question-trap-v1:關鍵詞忽略",
+                    "psych:psy-learning-mode-hk-v1:互動型",
+                    "tag:t-meaning",
+                    "tag:t-comprehension",
+                    "tag:t-rhetoric",
+                    "passage:p02",
+                    "passage:p03",
+                    "passage:p05",
+                    "79389a81-4da7-493b-beb3-ae03164cd9ae",
+                    "e2b016f2-1760-48e0-b3fa-19bd63942019"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "raw_response": "```json\n{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"synthesizer\",\n  \"output\": {\n    \"reply\": \"你好！面對DSE中文閱讀理解失分，我們其實可以透過幾個具體的方法來逐步改善。過往的練習顯示，你可能容易出現「關鍵詞忽略」的傾向，且有時作答節奏偏快。建議你不妨嘗試以下調整：\\n\\n1. **圈出題幹關鍵字**：每次讀題時，先用筆把題目中的要求（如「原因」、「修辭」、「比較」等）圈出來，避免因粗心而答非所問。\\n2. **放慢答題節奏**：現階段不需要追求速度，先花時間看清文章脈絡與字詞解釋，確保理解文意後再動筆。\\n3. **加強基礎訓練**：針對詞義理解、句意及修辭手法等常見失分點進行針對性練習。\\n\\n我們下一步可以嘗試一起分析一篇短文（例如文言文或白話文段落），練習如何精準抓出關鍵字與主旨，你覺得呢？\",\n    \"source_chips\": [\"學習歷程\", \"個人檔案\"],\n    \"personalization_used\": true,\n    \"evidence_ids\": [\n      \"psych:psy-writing-question-trap-v1:關鍵詞忽略\",\n      \"psych:psy-learning-mode-hk-v1:互動型\",\n      \"tag:t-meaning\",\n      \"tag:t-comprehension\"\n    ]\n  }\n}\n```",
+      "api_response_summary": {
+        "id": "chatcmpl-c544e1dcc25f295ab988be61",
+        "model": "DSE_V2TutorS",
+        "usage": {
+          "completion_tokens": 363,
+          "prompt_tokens": 689,
+          "total_tokens": 1052,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          }
+        }
+      },
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "synthesizer",
+        "output": {
+          "reply": "你好！面對DSE中文閱讀理解失分，我們其實可以透過幾個具體的方法來逐步改善。過往的練習顯示，你可能容易出現「關鍵詞忽略」的傾向，且有時作答節奏偏快。建議你不妨嘗試以下調整：\n\n1. **圈出題幹關鍵字**：每次讀題時，先用筆把題目中的要求（如「原因」、「修辭」、「比較」等）圈出來，避免因粗心而答非所問。\n2. **放慢答題節奏**：現階段不需要追求速度，先花時間看清文章脈絡與字詞解釋，確保理解文意後再動筆。\n3. **加強基礎訓練**：針對詞義理解、句意及修辭手法等常見失分點進行針對性練習。\n\n我們下一步可以嘗試一起分析一篇短文（例如文言文或白話文段落），練習如何精準抓出關鍵字與主旨，你覺得呢？",
+          "source_chips": [
+            "學習歷程",
+            "個人檔案"
+          ],
+          "personalization_used": true,
+          "evidence_ids": [
+            "psych:psy-writing-question-trap-v1:關鍵詞忽略",
+            "psych:psy-learning-mode-hk-v1:互動型",
+            "tag:t-meaning",
+            "tag:t-comprehension"
+          ]
+        }
+      },
+      "validation_errors": []
+    }
+  ]
+}

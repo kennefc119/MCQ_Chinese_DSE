@@ -8,6 +8,7 @@
 
 -- 1. Drop all dsemcq_* tables (CASCADE removes all dependent objects)
 drop table if exists dsemcq_advisor_messages    cascade;
+drop table if exists dsemcq_dse_past_exam_questions cascade;
 drop table if exists dsemcq_inbox               cascade;
 drop table if exists dsemcq_psych_user_results  cascade;
 drop table if exists dsemcq_psych_tests         cascade;

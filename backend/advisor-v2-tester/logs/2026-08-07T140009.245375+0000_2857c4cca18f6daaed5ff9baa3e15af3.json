@@ -1,0 +1,3053 @@
+{
+  "request_id": "2857c4cca18f6daaed5ff9baa3e15af3",
+  "started_at": "2026-08-07T14:00:09.245375+00:00",
+  "mode": "poe",
+  "data_mode": "supabase",
+  "student_id": "102b0700-c436-4c5b-b232-9ca3ae8a49fa",
+  "student_message": "請問我在最近最熱門嘅出師表同廉頗與論相如列傳中表現如何？我應該如何強化這兩個課文的表現，同埋我係呢兩篇課文嘅約翰強項係啲咩？同埋可唔可以話俾我知近呢10年關於呢兩篇課文出過題目可以點樣幫我做一個分析？",
+  "enabled_sources": [
+    "profile",
+    "performance",
+    "question_bank"
+  ],
+  "prompt_hashes": {
+    "orchestrator": "adabb0264a24",
+    "profile": "55be16262ae5",
+    "performance": "0d96bee2620b",
+    "question_bank": "12e41d0f1217",
+    "synthesizer": "5214a462d333"
+  },
+  "traces": [
+    {
+      "role": "orchestrator",
+      "label": "規劃器",
+      "status": "valid",
+      "duration_ms": 6077,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "2857c4cca18f6daaed5ff9baa3e15af3",
+        "agent_role": "orchestrator",
+        "student_message": "請問我在最近最熱門嘅出師表同廉頗與論相如列傳中表現如何？我應該如何強化這兩個課文的表現，同埋我係呢兩篇課文嘅約翰強項係啲咩？同埋可唔可以話俾我知近呢10年關於呢兩篇課文出過題目可以點樣幫我做一個分析？",
+        "capabilities": {
+          "enabled_sources": [
+            "profile",
+            "performance",
+            "question_bank"
+          ]
+        },
+        "inputs": {}
+      },
+      "raw_response": "{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"orchestrator\",\n  \"route\": \"PERFORMANCE_DIAGNOSIS\",\n  \"selected_sources\": [\n    \"performance\",\n    \"profile\",\n    \"question_bank\"\n  ],\n  \"response_style\": \"concise_supportive\",\n  \"requires_review\": false,\n  \"question_query\": null,\n  \"mentioned_designated_passages\": [\n    \"出師表\",\n    \"廉頗藺相如列傳\"\n  ],\n  \"question_bank_focus\": [\n    \"出師表\",\n    \"廉頗藺相如列傳\",\n    \"試題分析\"\n  ],\n  \"reason\": \"學生查詢有關《出師表》與《廉頗藺相如列傳》的個人表現、強項、強化建議及近10年題型分析，需結合表現、檔案與題庫進行綜合診斷。\",\n  \"task_breakdown\": [\n    {\n      \"source\": \"performance\",\n      \"task\": \"分析學生在《出師表》與《廉頗藺相如列傳》兩篇指定課文中的過往表現與強弱項\",\n      \"priority\": \"high\"\n    },\n    {\n      \"source\": \"profile\",\n      \"task\": \"檢視學生學習檔案以提供針對性的溫習與強化建議\",\n      \"priority\": \"medium\"\n    },\n    {\n      \"source\": \"question_bank\",\n      \"task\": \"檢索並分析近10年與《出師表》及《廉頗藺相如列傳》相關的題目分佈與考法\",\n      \"priority\": \"medium\"\n    }\n  ]\n}",
+      "api_response_summary": {
+        "id": "chatcmpl-140333eea2446bb185506d55",
+        "model": "DSE_V2AdvisorO",
+        "usage": {
+          "completion_tokens": 1695,
+          "prompt_tokens": 761,
+          "total_tokens": 2456,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 1292,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          }
+        }
+      },
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "orchestrator",
+        "route": "PERFORMANCE_DIAGNOSIS",
+        "selected_sources": [
+          "performance",
+          "profile",
+          "question_bank"
+        ],
+        "response_style": "concise_supportive",
+        "requires_review": false,
+        "question_query": null,
+        "mentioned_designated_passages": [
+          "出師表",
+          "廉頗藺相如列傳"
+        ],
+        "question_bank_focus": [
+          "出師表",
+          "廉頗藺相如列傳",
+          "試題分析"
+        ],
+        "reason": "學生查詢有關《出師表》與《廉頗藺相如列傳》的個人表現、強項、強化建議及近10年題型分析，需結合表現、檔案與題庫進行綜合診斷。",
+        "task_breakdown": [
+          {
+            "source": "performance",
+            "task": "分析學生在《出師表》與《廉頗藺相如列傳》兩篇指定課文中的過往表現與強弱項",
+            "priority": "high"
+          },
+          {
+            "source": "profile",
+            "task": "檢視學生學習檔案以提供針對性的溫習與強化建議",
+            "priority": "medium"
+          },
+          {
+            "source": "question_bank",
+            "task": "檢索並分析近10年與《出師表》及《廉頗藺相如列傳》相關的題目分佈與考法",
+            "priority": "medium"
+          }
+        ]
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "performance",
+      "label": "表現分析",
+      "status": "valid",
+      "duration_ms": 16265,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "2857c4cca18f6daaed5ff9baa3e15af3",
+        "agent_role": "performance",
+        "student_message": "請問我在最近最熱門嘅出師表同廉頗與論相如列傳中表現如何？我應該如何強化這兩個課文的表現，同埋我係呢兩篇課文嘅約翰強項係啲咩？同埋可唔可以話俾我知近呢10年關於呢兩篇課文出過題目可以點樣幫我做一個分析？",
+        "capabilities": {
+          "enabled_sources": [
+            "performance"
+          ]
+        },
+        "inputs": {
+          "retrieval_scope": {
+            "requested_passages": [
+              "出師表",
+              "廉頗藺相如列傳"
+            ],
+            "resolved_passages": [
+              {
+                "canonical_name": "出師表",
+                "app_passage_ids": [
+                  "p06"
+                ],
+                "app_titles": [
+                  "出師表"
+                ],
+                "past_exam_title_patterns": [
+                  "出師表",
+                  "出师表"
+                ]
+              },
+              {
+                "canonical_name": "廉頗藺相如列傳",
+                "app_passage_ids": [
+                  "p05"
+                ],
+                "app_titles": [
+                  "廉頗藺相如列傳（節錄）"
+                ],
+                "past_exam_title_patterns": [
+                  "廉頗藺相如列傳",
+                  "廉颇蔺相如列传",
+                  "廉頗藺相如",
+                  "廉颇蔺相如"
+                ]
+              }
+            ],
+            "unresolved_passages": []
+          },
+          "overall": {
+            "submitted_attempts": 93,
+            "answered_count": 759,
+            "correct_count": 549,
+            "incorrect_count": 210,
+            "answered_accuracy": 0.7233201581027668,
+            "quiz_score_rate": 0.9045751633986928
+          },
+          "engagement": {
+            "expected_questions": 765,
+            "skipped_count": 6,
+            "completion_rate": 0.9921568627450981,
+            "fully_skipped_attempts": 0,
+            "partial_attempts": 0
+          },
+          "focused_passage_performance": [
+            {
+              "passage_id": "p05",
+              "passage_title": "廉頗藺相如列傳（節錄）",
+              "answered": 5,
+              "correct": 5,
+              "incorrect": 0,
+              "skipped": 0,
+              "answered_accuracy": 1
+            },
+            {
+              "passage_id": "p06",
+              "passage_title": "出師表",
+              "answered": 20,
+              "correct": 16,
+              "incorrect": 4,
+              "skipped": 0,
+              "answered_accuracy": 0.8
+            }
+          ],
+          "suspicion_candidates": [
+            {
+              "question_id": "q-ai-p06-0da2c1",
+              "passage_id": "p06",
+              "passage_title": "出師表",
+              "question_text": "《出師表》「是以先帝簡拔以遺陛下」中「遺」的意思是：",
+              "tag_labels": [
+                "字詞解釋"
+              ],
+              "answered_times": 1,
+              "correct_times": 0,
+              "incorrect_times": 1,
+              "skipped_times": 0,
+              "mastery_accuracy": 0,
+              "signal": "low_mastery"
+            },
+            {
+              "question_id": "q-ai-p06-f42e3e",
+              "passage_id": "p06",
+              "passage_title": "出師表",
+              "question_text": "《出師表》「陟罰臧否」四字分別指甚麼？",
+              "tag_labels": [
+                "字詞解釋"
+              ],
+              "answered_times": 1,
+              "correct_times": 0,
+              "incorrect_times": 1,
+              "skipped_times": 0,
+              "mastery_accuracy": 0,
+              "signal": "low_mastery"
+            },
+            {
+              "question_id": "q-ai-p06-339da8",
+              "passage_id": "p06",
+              "passage_title": "出師表",
+              "question_text": "《出師表》中，諸葛亮寫此表的直接原因是甚麼？",
+              "tag_labels": [
+                "句意理解"
+              ],
+              "answered_times": 1,
+              "correct_times": 0,
+              "incorrect_times": 1,
+              "skipped_times": 0,
+              "mastery_accuracy": 0,
+              "signal": "low_mastery"
+            },
+            {
+              "question_id": "q-ai-p06-570d4c",
+              "passage_id": "p06",
+              "passage_title": "出師表",
+              "question_text": "諸葛亮在首段提出「先帝創業未半，而中道崩殂；今天下三分，益州疲弊」，他這樣開首最主要的作用是：",
+              "tag_labels": [
+                "句意理解"
+              ],
+              "answered_times": 1,
+              "correct_times": 0,
+              "incorrect_times": 1,
+              "skipped_times": 0,
+              "mastery_accuracy": 0,
+              "signal": "low_mastery"
+            },
+            {
+              "question_id": "q-ai-p01-592c5a",
+              "passage_id": "p01",
+              "passage_title": "論仁、論孝、論君子",
+              "question_text": "「知者利仁」中「利」字的用法是：",
+              "tag_labels": [
+                "句式語法"
+              ],
+              "answered_times": 0,
+              "correct_times": 0,
+              "incorrect_times": 0,
+              "skipped_times": 2,
+              "mastery_accuracy": null,
+              "signal": "repeatedly_skipped"
+            },
+            {
+              "question_id": "q-ai-p02-e94416",
+              "passage_id": "p02",
+              "passage_title": "魚我所欲也",
+              "question_text": "《魚我所欲也》「二者不可得兼，舍魚而取熊掌者也」中，「者也」的語法功能是甚麼？",
+              "tag_labels": [
+                "句式語法"
+              ],
+              "answered_times": 0,
+              "correct_times": 0,
+              "incorrect_times": 0,
+              "skipped_times": 2,
+              "mastery_accuracy": null,
+              "signal": "repeatedly_skipped"
+            },
+            {
+              "question_id": "q-ai-p10-cce219",
+              "passage_id": "p10",
+              "passage_title": "六國論",
+              "question_text": "「向使三國各愛其地」的「向使」是甚麼意思？",
+              "tag_labels": [
+                "字詞解釋"
+              ],
+              "answered_times": 0,
+              "correct_times": 0,
+              "incorrect_times": 0,
+              "skipped_times": 1,
+              "mastery_accuracy": null,
+              "signal": "low_mastery"
+            },
+            {
+              "question_id": "q-ai-p11-3e4fc5",
+              "passage_id": "p11",
+              "passage_title": "唐詩三首",
+              "question_text": "下列對「明月松間照」一句中「明月」意義的解釋，何者最符合原文語境？",
+              "tag_labels": [
+                "句意理解",
+                "字詞解釋"
+              ],
+              "answered_times": 2,
+              "correct_times": 0,
+              "incorrect_times": 2,
+              "skipped_times": 0,
+              "mastery_accuracy": 0,
+              "signal": "repeated_incorrect"
+            },
+            {
+              "question_id": "q-ai-p01-ce762e",
+              "passage_id": "p01",
+              "passage_title": "論仁、論孝、論君子",
+              "question_text": "在句子「克己復禮為仁。一日克己復禮，天下歸仁焉。」中，「克己復禮」最恰當的理解是：",
+              "tag_labels": [
+                "句意理解"
+              ],
+              "answered_times": 2,
+              "correct_times": 0,
+              "incorrect_times": 2,
+              "skipped_times": 0,
+              "mastery_accuracy": 0,
+              "signal": "repeated_incorrect"
+            },
+            {
+              "question_id": "q-ai-p01-2a7b75",
+              "passage_id": "p01",
+              "passage_title": "論仁、論孝、論君子",
+              "question_text": "孔子提倡的教育原則「有教無類」，其意思是：",
+              "tag_labels": [
+                "背景知識"
+              ],
+              "answered_times": 2,
+              "correct_times": 0,
+              "incorrect_times": 2,
+              "skipped_times": 0,
+              "mastery_accuracy": 0,
+              "signal": "repeated_incorrect"
+            }
+          ],
+          "recent_attempts": [
+            {
+              "id": "efec37df-e15d-43eb-b1c4-1f644990d580",
+              "quiz_id": "quiz-ai-9585ac11",
+              "score": 10,
+              "total": 10,
+              "submitted_at": "2026-08-07T09:43:00.238+00:00",
+              "time_spent_seconds": 77
+            },
+            {
+              "id": "c4f39043-fe86-4e5f-917d-fceaee31ed59",
+              "quiz_id": "quiz-ai-d1a0aa73",
+              "score": 19,
+              "total": 20,
+              "submitted_at": "2026-08-07T09:41:01.438+00:00",
+              "time_spent_seconds": 1436
+            },
+            {
+              "id": "6193d5a2-892f-4987-afd1-90a141ef5fa8",
+              "quiz_id": "quiz-ai-4fe5a37b",
+              "score": 18,
+              "total": 20,
+              "submitted_at": "2026-08-07T04:54:27.108+00:00",
+              "time_spent_seconds": 368
+            },
+            {
+              "id": "c1921abb-592b-4e6e-a8f9-53a924a74ff0",
+              "quiz_id": "quiz-ai-445721f3",
+              "score": 9,
+              "total": 10,
+              "submitted_at": "2026-08-07T04:27:26.005+00:00",
+              "time_spent_seconds": 112
+            },
+            {
+              "id": "c50216eb-0b85-4427-9873-6a6ffc2b5002",
+              "quiz_id": "quiz-ai-00a37fbe",
+              "score": 5,
+              "total": 5,
+              "submitted_at": "2026-08-07T04:20:46.678+00:00",
+              "time_spent_seconds": 33
+            },
+            {
+              "id": "0fa6cfe3-46cb-44b3-a44a-a8ab11f5feb7",
+              "quiz_id": "quiz-ai-70fdeed0",
+              "score": 5,
+              "total": 5,
+              "submitted_at": "2026-08-07T04:19:45.209+00:00",
+              "time_spent_seconds": 43
+            },
+            {
+              "id": "4d2c8058-ff77-47c9-a8fe-e692b373c1fa",
+              "quiz_id": "quiz-ai-3b7012cf",
+              "score": 5,
+              "total": 5,
+              "submitted_at": "2026-08-07T04:18:35.038+00:00",
+              "time_spent_seconds": 32
+            },
+            {
+              "id": "dac6e5bf-5662-42b0-b0e3-0be0626bfb88",
+              "quiz_id": "quiz-ai-6ea39b07",
+              "score": 9,
+              "total": 10,
+              "submitted_at": "2026-08-07T04:16:32.636+00:00",
+              "time_spent_seconds": 76
+            },
+            {
+              "id": "8237abf4-6f09-4695-8c0d-c9e4c1139b58",
+              "quiz_id": "quiz-ai-72546fdc",
+              "score": 10,
+              "total": 10,
+              "submitted_at": "2026-08-07T04:14:56.177+00:00",
+              "time_spent_seconds": 112
+            },
+            {
+              "id": "77283a29-ae04-4f2b-aeef-3e14b69f9c10",
+              "quiz_id": "quiz-ai-0e6cdf80",
+              "score": 10,
+              "total": 10,
+              "submitted_at": "2026-08-07T04:12:17.03+00:00",
+              "time_spent_seconds": 76
+            },
+            {
+              "id": "03e936f4-e586-4949-b94d-a5b8726c7341",
+              "quiz_id": "quiz-ai-5831303e",
+              "score": 8,
+              "total": 10,
+              "submitted_at": "2026-08-07T04:10:32.464+00:00",
+              "time_spent_seconds": 104
+            },
+            {
+              "id": "2f66d8a4-bdf5-4d2f-9e6b-d38522fad051",
+              "quiz_id": "quiz-ai-db6c0c45",
+              "score": 9,
+              "total": 10,
+              "submitted_at": "2026-08-06T13:03:54.542+00:00",
+              "time_spent_seconds": 114
+            },
+            {
+              "id": "a902f418-0178-4db2-85d6-efea55d44a05",
+              "quiz_id": "quiz-ai-95b5e3b5",
+              "score": 18,
+              "total": 20,
+              "submitted_at": "2026-08-06T13:01:23.101+00:00",
+              "time_spent_seconds": 284
+            },
+            {
+              "id": "c01414a7-7602-4867-a884-b0083caae549",
+              "quiz_id": "quiz-ai-eeaa6efd",
+              "score": 9,
+              "total": 10,
+              "submitted_at": "2026-08-06T12:55:59.176+00:00",
+              "time_spent_seconds": 111
+            },
+            {
+              "id": "a3ff9137-3318-495a-96a1-721c86901fe5",
+              "quiz_id": "quiz-ai-d8d63ac8",
+              "score": 5,
+              "total": 5,
+              "submitted_at": "2026-08-06T12:24:54.443+00:00",
+              "time_spent_seconds": 31
+            },
+            {
+              "id": "c7377a0e-888e-47e5-82f0-00ca1fbbb95f",
+              "quiz_id": "quiz-ai-86cd084f",
+              "score": 5,
+              "total": 5,
+              "submitted_at": "2026-08-06T12:24:12.17+00:00",
+              "time_spent_seconds": 14
+            },
+            {
+              "id": "05adb061-f74a-4069-b84f-7342290f0c70",
+              "quiz_id": "quiz-ai-02e169b2",
+              "score": 9,
+              "total": 10,
+              "submitted_at": "2026-08-06T12:23:16.725+00:00",
+              "time_spent_seconds": 125
+            },
+            {
+              "id": "fc3cad6e-096c-4a4f-a3ce-a029815d0980",
+              "quiz_id": "quiz-ai-e74c8106",
+              "score": 8,
+              "total": 10,
+              "submitted_at": "2026-08-06T12:20:50.76+00:00",
+              "time_spent_seconds": 108
+            },
+            {
+              "id": "d1c05a14-d7d8-4ddc-9fac-1191d40efd23",
+              "quiz_id": "quiz-ai-44c036b1",
+              "score": 5,
+              "total": 5,
+              "submitted_at": "2026-08-06T12:06:54.245+00:00",
+              "time_spent_seconds": 52
+            },
+            {
+              "id": "6c3b580b-810a-470f-9c52-ab9fdc176163",
+              "quiz_id": "quiz-ai-47d27a4c",
+              "score": 4,
+              "total": 5,
+              "submitted_at": "2026-08-06T12:04:39.832+00:00",
+              "time_spent_seconds": 52
+            },
+            {
+              "id": "ae06e235-9b66-424f-b88f-b172ea6c20ac",
+              "quiz_id": "quiz-ai-5b63937b",
+              "score": 19,
+              "total": 20,
+              "submitted_at": "2026-08-06T12:01:41.101+00:00",
+              "time_spent_seconds": 350
+            },
+            {
+              "id": "88d30f0a-2493-4561-8093-d91a0795fe68",
+              "quiz_id": "quiz-ai-706a6976",
+              "score": 5,
+              "total": 5,
+              "submitted_at": "2026-08-06T11:55:32.803+00:00",
+              "time_spent_seconds": 38
+            },
+            {
+              "id": "78e16692-0a9d-4e85-885f-8301331d35f7",
+              "quiz_id": "quiz-ai-e6b1b4ba",
+              "score": 17,
+              "total": 20,
+              "submitted_at": "2026-08-06T11:54:20.367+00:00",
+              "time_spent_seconds": 226
+            },
+            {
+              "id": "48ca727e-f178-4607-b486-ed9baff55815",
+              "quiz_id": "quiz-ai-70684759",
+              "score": 8,
+              "total": 10,
+              "submitted_at": "2026-08-06T05:17:57.133+00:00",
+              "time_spent_seconds": 138
+            },
+            {
+              "id": "ab9277da-fd13-4946-8972-b86b2e3e1001",
+              "quiz_id": "quiz-ai-cb887937",
+              "score": 19,
+              "total": 20,
+              "submitted_at": "2026-08-06T05:15:08.541+00:00",
+              "time_spent_seconds": 185
+            },
+            {
+              "id": "d04bda5e-7d70-4650-ac40-69e440f6e980",
+              "quiz_id": "quiz-ai-29744766",
+              "score": 16,
+              "total": 20,
+              "submitted_at": "2026-08-06T04:40:57.843+00:00",
+              "time_spent_seconds": 230
+            },
+            {
+              "id": "0b8caba5-4162-4ffe-9b1a-09d1926c11dd",
+              "quiz_id": "quiz-ai-d67d1ceb",
+              "score": 10,
+              "total": 10,
+              "submitted_at": "2026-08-06T04:33:01.46+00:00",
+              "time_spent_seconds": 48
+            },
+            {
+              "id": "58876959-356c-474a-bfe8-f5652967985b",
+              "quiz_id": "quiz-ai-592bf140",
+              "score": 5,
+              "total": 5,
+              "submitted_at": "2026-08-06T04:29:43.736+00:00",
+              "time_spent_seconds": 29
+            },
+            {
+              "id": "883bbcf3-6d40-4fcb-a3d9-0ce59650c214",
+              "quiz_id": "quiz-ai-cac7c75b",
+              "score": 10,
+              "total": 10,
+              "submitted_at": "2026-08-06T04:28:58.736+00:00",
+              "time_spent_seconds": 86
+            },
+            {
+              "id": "4bdc3adb-990c-432c-b85f-049038ca00eb",
+              "quiz_id": "quiz-ai-02cb1fc5",
+              "score": 10,
+              "total": 10,
+              "submitted_at": "2026-08-06T04:27:16.216+00:00",
+              "time_spent_seconds": 73
+            }
+          ],
+          "skill_stats": [
+            {
+              "tag_id": "t-meaning",
+              "tag_label": "字詞解釋",
+              "answered": 226,
+              "correct": 178,
+              "answered_accuracy": 0.7876106194690266
+            },
+            {
+              "tag_id": "t-comprehension",
+              "tag_label": "句意理解",
+              "answered": 134,
+              "correct": 99,
+              "answered_accuracy": 0.7388059701492538
+            },
+            {
+              "tag_id": "t-context",
+              "tag_label": "背景知識",
+              "answered": 77,
+              "correct": 55,
+              "answered_accuracy": 0.7142857142857143
+            },
+            {
+              "tag_id": "t-theme",
+              "tag_label": "主旨",
+              "answered": 98,
+              "correct": 65,
+              "answered_accuracy": 0.6632653061224489
+            },
+            {
+              "tag_id": "t-rhetoric",
+              "tag_label": "修辭",
+              "answered": 102,
+              "correct": 63,
+              "answered_accuracy": 0.6176470588235294
+            },
+            {
+              "tag_id": "t-grammar",
+              "tag_label": "句式語法",
+              "answered": 72,
+              "correct": 49,
+              "answered_accuracy": 0.6805555555555556
+            },
+            {
+              "tag_id": "t-character",
+              "tag_label": "人物分析",
+              "answered": 47,
+              "correct": 36,
+              "answered_accuracy": 0.7659574468085106
+            },
+            {
+              "tag_id": "t-comparison",
+              "tag_label": "比較閱讀",
+              "answered": 8,
+              "correct": 6,
+              "answered_accuracy": 0.75
+            }
+          ],
+          "passage_stats": [
+            {
+              "passage_id": "p05",
+              "passage_title": "廉頗藺相如列傳（節錄）",
+              "answered": 5,
+              "correct": 5,
+              "incorrect": 0,
+              "skipped": 0,
+              "answered_accuracy": 1
+            },
+            {
+              "passage_id": "p12",
+              "passage_title": "宋詞三首",
+              "answered": 35,
+              "correct": 25,
+              "incorrect": 10,
+              "skipped": 0,
+              "answered_accuracy": 0.7142857142857143
+            },
+            {
+              "passage_id": "p10",
+              "passage_title": "六國論",
+              "answered": 14,
+              "correct": 13,
+              "incorrect": 1,
+              "skipped": 1,
+              "answered_accuracy": 0.9285714285714286
+            },
+            {
+              "passage_id": "p04",
+              "passage_title": "勸學（節錄）",
+              "answered": 15,
+              "correct": 11,
+              "incorrect": 4,
+              "skipped": 0,
+              "answered_accuracy": 0.7333333333333333
+            },
+            {
+              "passage_id": "p11",
+              "passage_title": "唐詩三首",
+              "answered": 25,
+              "correct": 11,
+              "incorrect": 14,
+              "skipped": 0,
+              "answered_accuracy": 0.44
+            },
+            {
+              "passage_id": "p09",
+              "passage_title": "岳陽樓記",
+              "answered": 12,
+              "correct": 7,
+              "incorrect": 5,
+              "skipped": 0,
+              "answered_accuracy": 0.5833333333333334
+            },
+            {
+              "passage_id": "p07",
+              "passage_title": "師說",
+              "answered": 20,
+              "correct": 18,
+              "incorrect": 2,
+              "skipped": 0,
+              "answered_accuracy": 0.9
+            },
+            {
+              "passage_id": "p08",
+              "passage_title": "始得西山宴遊記",
+              "answered": 20,
+              "correct": 19,
+              "incorrect": 1,
+              "skipped": 0,
+              "answered_accuracy": 0.95
+            },
+            {
+              "passage_id": "p02",
+              "passage_title": "魚我所欲也",
+              "answered": 274,
+              "correct": 191,
+              "incorrect": 83,
+              "skipped": 2,
+              "answered_accuracy": 0.6970802919708029
+            },
+            {
+              "passage_id": "p01",
+              "passage_title": "論仁、論孝、論君子",
+              "answered": 327,
+              "correct": 239,
+              "incorrect": 88,
+              "skipped": 2,
+              "answered_accuracy": 0.7308868501529052
+            },
+            {
+              "passage_id": "p06",
+              "passage_title": "出師表",
+              "answered": 20,
+              "correct": 16,
+              "incorrect": 4,
+              "skipped": 0,
+              "answered_accuracy": 0.8
+            }
+          ],
+          "difficulty_stats": [
+            {
+              "difficulty": 1,
+              "answered": 137,
+              "correct": 112,
+              "answered_accuracy": 0.8175182481751825
+            },
+            {
+              "difficulty": 2,
+              "answered": 239,
+              "correct": 179,
+              "answered_accuracy": 0.7489539748953975
+            },
+            {
+              "difficulty": 3,
+              "answered": 217,
+              "correct": 153,
+              "answered_accuracy": 0.7050691244239631
+            },
+            {
+              "difficulty": 4,
+              "answered": 116,
+              "correct": 75,
+              "answered_accuracy": 0.646551724137931
+            },
+            {
+              "difficulty": 5,
+              "answered": 50,
+              "correct": 30,
+              "answered_accuracy": 0.6
+            }
+          ],
+          "top_passages_best": [
+            {
+              "passage_id": "p05",
+              "passage_title": "廉頗藺相如列傳（節錄）",
+              "answered": 5,
+              "correct": 5,
+              "incorrect": 0,
+              "skipped": 0,
+              "answered_accuracy": 1
+            },
+            {
+              "passage_id": "p08",
+              "passage_title": "始得西山宴遊記",
+              "answered": 20,
+              "correct": 19,
+              "incorrect": 1,
+              "skipped": 0,
+              "answered_accuracy": 0.95
+            },
+            {
+              "passage_id": "p10",
+              "passage_title": "六國論",
+              "answered": 14,
+              "correct": 13,
+              "incorrect": 1,
+              "skipped": 1,
+              "answered_accuracy": 0.9285714285714286
+            }
+          ],
+          "top_passages_worst": [
+            {
+              "passage_id": "p11",
+              "passage_title": "唐詩三首",
+              "answered": 25,
+              "correct": 11,
+              "incorrect": 14,
+              "skipped": 0,
+              "answered_accuracy": 0.44
+            },
+            {
+              "passage_id": "p09",
+              "passage_title": "岳陽樓記",
+              "answered": 12,
+              "correct": 7,
+              "incorrect": 5,
+              "skipped": 0,
+              "answered_accuracy": 0.5833333333333334
+            },
+            {
+              "passage_id": "p02",
+              "passage_title": "魚我所欲也",
+              "answered": 274,
+              "correct": 191,
+              "incorrect": 83,
+              "skipped": 2,
+              "answered_accuracy": 0.6970802919708029
+            }
+          ],
+          "coverage": {
+            "passages_attempted": 11,
+            "passages_total_available": 12,
+            "skills_attempted": 8,
+            "skills_total_available": 8
+          },
+          "evidence_ids": [
+            "efec37df-e15d-43eb-b1c4-1f644990d580",
+            "c4f39043-fe86-4e5f-917d-fceaee31ed59",
+            "6193d5a2-892f-4987-afd1-90a141ef5fa8",
+            "c1921abb-592b-4e6e-a8f9-53a924a74ff0",
+            "c50216eb-0b85-4427-9873-6a6ffc2b5002",
+            "0fa6cfe3-46cb-44b3-a44a-a8ab11f5feb7",
+            "4d2c8058-ff77-47c9-a8fe-e692b373c1fa",
+            "dac6e5bf-5662-42b0-b0e3-0be0626bfb88",
+            "8237abf4-6f09-4695-8c0d-c9e4c1139b58",
+            "77283a29-ae04-4f2b-aeef-3e14b69f9c10",
+            "03e936f4-e586-4949-b94d-a5b8726c7341",
+            "2f66d8a4-bdf5-4d2f-9e6b-d38522fad051",
+            "a902f418-0178-4db2-85d6-efea55d44a05",
+            "c01414a7-7602-4867-a884-b0083caae549",
+            "a3ff9137-3318-495a-96a1-721c86901fe5",
+            "c7377a0e-888e-47e5-82f0-00ca1fbbb95f",
+            "05adb061-f74a-4069-b84f-7342290f0c70",
+            "fc3cad6e-096c-4a4f-a3ce-a029815d0980",
+            "d1c05a14-d7d8-4ddc-9fac-1191d40efd23",
+            "6c3b580b-810a-470f-9c52-ab9fdc176163",
+            "ae06e235-9b66-424f-b88f-b172ea6c20ac",
+            "88d30f0a-2493-4561-8093-d91a0795fe68",
+            "78e16692-0a9d-4e85-885f-8301331d35f7",
+            "48ca727e-f178-4607-b486-ed9baff55815",
+            "ab9277da-fd13-4946-8972-b86b2e3e1001",
+            "d04bda5e-7d70-4650-ac40-69e440f6e980",
+            "0b8caba5-4162-4ffe-9b1a-09d1926c11dd",
+            "58876959-356c-474a-bfe8-f5652967985b",
+            "883bbcf3-6d40-4fcb-a3d9-0ce59650c214",
+            "4bdc3adb-990c-432c-b85f-049038ca00eb",
+            "tag:t-meaning",
+            "tag:t-comprehension",
+            "tag:t-context",
+            "tag:t-theme",
+            "tag:t-rhetoric",
+            "tag:t-grammar",
+            "tag:t-character",
+            "tag:t-comparison",
+            "passage:p05",
+            "passage:p12",
+            "passage:p10",
+            "passage:p04",
+            "passage:p11",
+            "passage:p09",
+            "passage:p07",
+            "passage:p08",
+            "passage:p02",
+            "passage:p01",
+            "passage:p06"
+          ],
+          "iteration": 1,
+          "max_iterations": 3,
+          "followup_evidence": [],
+          "prior_iteration_outputs": [
+            {
+              "iteration": 1,
+              "output": {
+                "is_final": true,
+                "strength_patterns": [
+                  "在歷史敘事與人物傳記類課文（如《廉頗藺相如列傳》p05）表現極佳，正確率達 100%（5/5），顯示出色的故事情節理解與人物形象分析能力。",
+                  "整體字詞解釋能力穩定（整體準確率 78.8%），對常見實詞與基本文言文意掌握扎實。",
+                  "測驗參與度極高，整體完成率達 99.2%（僅 6 次略過），且涵蓋了所有 11 個已嘗試的課文與 8 項核心技能。"
+                ],
+                "weakness_patterns": [
+                  "在《出師表》（p06）中出現 4 次錯誤（準確率 80%），失分集中於深層文言字詞解釋（如「遺」、「陟罰臧否」）及文章結構與寫作動機的句意理解。",
+                  "在涉及文章段落開首作用、直接寫作原因等巨觀句意理解題型時，容易混淆背景脈絡與核心主旨。"
+                ],
+                "best_passages_top3": [
+                  "廉頗藺相如列傳（節錄）（p05）- 100.0% 準確率",
+                  "始得西山宴遊記（p08）- 95.0% 準確率",
+                  "六國論（p10）- 92.9% 準確率"
+                ],
+                "worst_passages_top3": [
+                  "唐詩三首（p11）- 44.0% 準確率",
+                  "岳陽樓記（p09）- 58.3% 準確率",
+                  "魚我所欲也（p02）- 69.7% 準確率"
+                ],
+                "trap_patterns": [
+                  "選項陷阱（Option Trap）：在文言字詞解釋中，容易受現代漢語意義干擾，或將引申義與本義混淆（例如將表給予、留給的「遺」或考核賞罰的「陟罰臧否」誤判）。",
+                  "問題陷阱（Question Trap）：在分析議論文或奏議的段落用意時，容易將巨觀時代背景（如益州疲弊、先帝創業未半）與直接寫作動機／首段開首作用混淆。"
+                ],
+                "likely_error_causes": [
+                  "對奏議類政論散文（如《出師表》）中特定政治、軍事術語的古義掌握未夠精準。",
+                  "在面對結構緊湊、論說細膩的篇章時，對作者佈局草線的深層用意（如首段開首對全篇情感與勸諫的鋪墊作用）缺乏系統性梳理。"
+                ],
+                "skip_behavior_assessment": "學生學習態度極為積極，整體預期題目 765 題中僅略過 6 題，完成率高達 99.2%。略過題目極少且無特定集中趨勢，沒有明顯的逃避或低動機行為。",
+                "passage_coverage_assessment": "覆蓋率極高，在 12 個可用的範文中已嘗試了 11 個（覆蓋率 91.7%），顯示學生進行了全面而廣泛的文言文總體複習。",
+                "skill_coverage_assessment": "技能覆蓋完整，已全面練習所有 8 個核心考點（100% 覆蓋）。強項在於字詞解釋（78.8%）與人物分析（76.6%），而修辭（61.8%）與主旨（66.3%）相對較弱。",
+                "next_actions": [
+                  "針對《出師表》（p06）失分的字詞（如「遺」、「陟罰臧否」）及句意理解題進行錯題重溫，建立字詞古義筆記。",
+                  "借鏡在《廉頗藺相如列傳》（p05）中表現出的優異歷史人物與情節分析優勢，延伸至其他傳記或政論散文的結構拆解。",
+                  "參考近十年文言文公開考試題型，加強訓練奏議類文章（如《出師表》）中「寫作目的」、「段落作用」及「字詞多義」的高階題型分析。"
+                ],
+                "evidence_ids": [
+                  "efec37df-e15d-43eb-b1c4-1f644990d580",
+                  "c4f39043-fe86-4e5f-917d-fceaee31ed59",
+                  "6193d5a2-892f-4987-afd1-90a141ef5fa8",
+                  "c1921abb-592b-4e6e-a8f9-53a924a74ff0",
+                  "c50216eb-0b85-4427-9873-6a6ffc2b5002",
+                  "0fa6cfe3-46cb-44b3-a44a-a8ab11f5feb7",
+                  "4d2c8058-ff77-47c9-a8fe-e692b373c1fa",
+                  "dac6e5bf-5662-42b0-b0e3-0be0626bfb88",
+                  "8237abf4-6f09-4695-8c0d-c9e4c1139b58",
+                  "77283a29-ae04-4f2b-aeef-3e14b69f9c10",
+                  "passage:p05",
+                  "passage:p06"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "raw_response": "```json\n{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"performance\",\n  \"output\": {\n    \"is_final\": true,\n    \"strength_patterns\": [\n      \"在歷史敘事與人物傳記類課文（如《廉頗藺相如列傳》p05）表現極佳，正確率達 100%（5/5），顯示出色的故事情節理解與人物形象分析能力。\",\n      \"整體字詞解釋能力穩定（整體準確率 78.8%），對常見實詞與基本文言文意掌握扎實。\",\n      \"測驗參與度極高，整體完成率達 99.2%（僅 6 次略過），且涵蓋了所有 11 個已嘗試的課文與 8 項核心技能。\"\n    ],\n    \"weakness_patterns\": [\n      \"在《出師表》（p06）中出現 4 次錯誤（準確率 80%），失分集中於深層文言字詞解釋（如「遺」、「陟罰臧否」）及文章結構與寫作動機的句意理解。\",\n      \"在涉及文章段落開首作用、直接寫作原因等巨觀句意理解題型時，容易混淆背景脈絡與核心主旨。\"\n    ],\n    \"best_passages_top3\": [\n      \"廉頗藺相如列傳（節錄）（p05）- 100.0% 準確率\",\n      \"始得西山宴遊記（p08）- 95.0% 準確率\",\n      \"六國論（p10）- 92.9% 準確率\"\n    ],\n    \"worst_passages_top3\": [\n      \"唐詩三首（p11）- 44.0% 準確率\",\n      \"岳陽樓記（p09）- 58.3% 準確率\",\n      \"魚我所欲也（p02）- 69.7% 準確率\"\n    ],\n    \"trap_patterns\": [\n      \"選項陷阱（Option Trap）：在文言字詞解釋中，容易受現代漢語意義干擾，或將引申義與本義混淆（例如將表給予、留給的「遺」或考核賞罰的「陟罰臧否」誤判）。\",\n      \"問題陷阱（Question Trap）：在分析議論文或奏議的段落用意時，容易將巨觀時代背景（如益州疲弊、先帝創業未半）與直接寫作動機／首段開首作用混淆。\"\n    ],\n    \"likely_error_causes\": [\n      \"對奏議類政論散文（如《出師表》）中特定政治、軍事術語的古義掌握未夠精準。\",\n      \"在面對結構緊湊、論說細膩的篇章時，對作者佈局草線的深層用意（如首段開首對全篇情感與勸諫的鋪墊作用）缺乏系統性梳理。\"\n    ],\n    \"skip_behavior_assessment\": \"學生學習態度極為積極，整體預期題目 765 題中僅略過 6 題，完成率高達 99.2%。略過題目極少且無特定集中趨勢，沒有明顯的逃避或低動機行為。\",\n    \"passage_coverage_assessment\": \"覆蓋率極高，在 12 個可用的範文中已嘗試了 11 個（覆蓋率 91.7%），顯示學生進行了全面而廣泛的文言文總體複習。\",\n    \"skill_coverage_assessment\": \"技能覆蓋完整，已全面練習所有 8 個核心考點（100% 覆蓋）。強項在於字詞解釋（78.8%）與人物分析（76.6%），而修辭（61.8%）與主旨（66.3%）相對較弱。\",\n    \"next_actions\": [\n      \"針對《出師表》（p06）失分的字詞（如「遺」、「陟罰臧否」）及句意理解題進行錯題重溫，建立字詞古義筆記。\",\n      \"借鏡在《廉頗藺相如列傳》（p05）中表現出的優異歷史人物與情節分析優勢，延伸至其他傳記或政論散文的結構拆解。\",\n      \"參考近十年文言文公開考試題型，加強訓練奏議類文章（如《出師表》）中「寫作目的」、「段落作用」及「字詞多義」的高階題型分析。\"\n    ],\n    \"evidence_ids\": [\n      \"efec37df-e15d-43eb-b1c4-1f644990d580\",\n      \"c4f39043-fe86-4e5f-917d-fceaee31ed59\",\n      \"6193d5a2-892f-4987-afd1-90a141ef5fa8\",\n      \"c1921abb-592b-4e6e-a8f9-53a924a74ff0\",\n      \"c50216eb-0b85-4427-9873-6a6ffc2b5002\",\n      \"0fa6cfe3-46cb-44b3-a44a-a8ab11f5feb7\",\n      \"4d2c8058-ff77-47c9-a8fe-e692b373c1fa\",\n      \"dac6e5bf-5662-42b0-b0e3-0be0626bfb88\",\n      \"8237abf4-6f09-4695-8c0d-c9e4c1139b58\",\n      \"77283a29-ae04-4f2b-aeef-3e14b69f9c10\",\n      \"passage:p05\",\n      \"passage:p06\"\n    ]\n  }\n}\n```",
+      "api_response_summary": {
+        "id": "chatcmpl-80f92d2cb2142d4adebc3c6e",
+        "model": "DSE_V2PerformanceS",
+        "usage": {
+          "completion_tokens": 4361,
+          "prompt_tokens": 9593,
+          "total_tokens": 13954,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 2877,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          }
+        }
+      },
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "performance",
+        "output": {
+          "is_final": true,
+          "strength_patterns": [
+            "在歷史敘事與人物傳記類課文（如《廉頗藺相如列傳》p05）表現極佳，正確率達 100%（5/5），顯示出色的故事情節理解與人物形象分析能力。",
+            "整體字詞解釋能力穩定（整體準確率 78.8%），對常見實詞與基本文言文意掌握扎實。",
+            "測驗參與度極高，整體完成率達 99.2%（僅 6 次略過），且涵蓋了所有 11 個已嘗試的課文與 8 項核心技能。"
+          ],
+          "weakness_patterns": [
+            "在《出師表》（p06）中出現 4 次錯誤（準確率 80%），失分集中於深層文言字詞解釋（如「遺」、「陟罰臧否」）及文章結構與寫作動機的句意理解。",
+            "在涉及文章段落開首作用、直接寫作原因等巨觀句意理解題型時，容易混淆背景脈絡與核心主旨。"
+          ],
+          "best_passages_top3": [
+            "廉頗藺相如列傳（節錄）（p05）- 100.0% 準確率",
+            "始得西山宴遊記（p08）- 95.0% 準確率",
+            "六國論（p10）- 92.9% 準確率"
+          ],
+          "worst_passages_top3": [
+            "唐詩三首（p11）- 44.0% 準確率",
+            "岳陽樓記（p09）- 58.3% 準確率",
+            "魚我所欲也（p02）- 69.7% 準確率"
+          ],
+          "trap_patterns": [
+            "選項陷阱（Option Trap）：在文言字詞解釋中，容易受現代漢語意義干擾，或將引申義與本義混淆（例如將表給予、留給的「遺」或考核賞罰的「陟罰臧否」誤判）。",
+            "問題陷阱（Question Trap）：在分析議論文或奏議的段落用意時，容易將巨觀時代背景（如益州疲弊、先帝創業未半）與直接寫作動機／首段開首作用混淆。"
+          ],
+          "likely_error_causes": [
+            "對奏議類政論散文（如《出師表》）中特定政治、軍事術語的古義掌握未夠精準。",
+            "在面對結構緊湊、論說細膩的篇章時，對作者佈局草線的深層用意（如首段開首對全篇情感與勸諫的鋪墊作用）缺乏系統性梳理。"
+          ],
+          "skip_behavior_assessment": "學生學習態度極為積極，整體預期題目 765 題中僅略過 6 題，完成率高達 99.2%。略過題目極少且無特定集中趨勢，沒有明顯的逃避或低動機行為。",
+          "passage_coverage_assessment": "覆蓋率極高，在 12 個可用的範文中已嘗試了 11 個（覆蓋率 91.7%），顯示學生進行了全面而廣泛的文言文總體複習。",
+          "skill_coverage_assessment": "技能覆蓋完整，已全面練習所有 8 個核心考點（100% 覆蓋）。強項在於字詞解釋（78.8%）與人物分析（76.6%），而修辭（61.8%）與主旨（66.3%）相對較弱。",
+          "next_actions": [
+            "針對《出師表》（p06）失分的字詞（如「遺」、「陟罰臧否」）及句意理解題進行錯題重溫，建立字詞古義筆記。",
+            "借鏡在《廉頗藺相如列傳》（p05）中表現出的優異歷史人物與情節分析優勢，延伸至其他傳記或政論散文的結構拆解。",
+            "參考近十年文言文公開考試題型，加強訓練奏議類文章（如《出師表》）中「寫作目的」、「段落作用」及「字詞多義」的高階題型分析。"
+          ],
+          "evidence_ids": [
+            "efec37df-e15d-43eb-b1c4-1f644990d580",
+            "c4f39043-fe86-4e5f-917d-fceaee31ed59",
+            "6193d5a2-892f-4987-afd1-90a141ef5fa8",
+            "c1921abb-592b-4e6e-a8f9-53a924a74ff0",
+            "c50216eb-0b85-4427-9873-6a6ffc2b5002",
+            "0fa6cfe3-46cb-44b3-a44a-a8ab11f5feb7",
+            "4d2c8058-ff77-47c9-a8fe-e692b373c1fa",
+            "dac6e5bf-5662-42b0-b0e3-0be0626bfb88",
+            "8237abf4-6f09-4695-8c0d-c9e4c1139b58",
+            "77283a29-ae04-4f2b-aeef-3e14b69f9c10",
+            "passage:p05",
+            "passage:p06"
+          ]
+        }
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "profile",
+      "label": "學生檔案",
+      "status": "valid",
+      "duration_ms": 3524,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "2857c4cca18f6daaed5ff9baa3e15af3",
+        "agent_role": "profile",
+        "student_message": "請問我在最近最熱門嘅出師表同廉頗與論相如列傳中表現如何？我應該如何強化這兩個課文的表現，同埋我係呢兩篇課文嘅約翰強項係啲咩？同埋可唔可以話俾我知近呢10年關於呢兩篇課文出過題目可以點樣幫我做一個分析？",
+        "capabilities": {
+          "enabled_sources": [
+            "profile"
+          ]
+        },
+        "inputs": {
+          "profile": {
+            "id": "102b0700-c436-4c5b-b232-9ca3ae8a49fa",
+            "username": "Kiki",
+            "gender": "female",
+            "dse_year": 2027,
+            "subscription_tier": "premium",
+            "wenyuan_points": 1175,
+            "created_at": "2026-07-25T00:13:45.876+00:00"
+          },
+          "psych_results": [
+            {
+              "test_id": "psy-writing-question-trap-v1",
+              "result_code": "內容發散",
+              "completed_at": "2026-08-06T12:12:16.6+00:00"
+            },
+            {
+              "test_id": "psy-dse-university-subject-fit-v1",
+              "result_code": "HUM",
+              "completed_at": "2026-08-06T04:54:47.971+00:00"
+            },
+            {
+              "test_id": "psy-learning-mode-hk-v1",
+              "result_code": "整理型",
+              "completed_at": "2026-08-06T04:50:18.369+00:00"
+            },
+            {
+              "test_id": "psy-zuowen-potential-v1",
+              "result_code": "描寫型",
+              "completed_at": "2026-08-06T04:47:22.154+00:00"
+            },
+            {
+              "test_id": "psy-dse-guzheng-like-v1",
+              "result_code": "fanzhongyan",
+              "completed_at": "2026-08-06T04:44:40.599+00:00"
+            }
+          ],
+          "chat_history": [],
+          "evidence_ids": [
+            "psych:psy-writing-question-trap-v1:內容發散",
+            "psych:psy-dse-university-subject-fit-v1:HUM",
+            "psych:psy-learning-mode-hk-v1:整理型",
+            "psych:psy-zuowen-potential-v1:描寫型",
+            "psych:psy-dse-guzheng-like-v1:fanzhongyan"
+          ]
+        }
+      },
+      "raw_response": "```json\n{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"profile\",\n  \"output\": {\n    \"learning_approach_inference\": {\n      \"preferred_style\": \"整理型 (Organizer type - benefits from structured notes, synthesis, and systematic categorization of text)\",\n      \"facilitation_recommendation\": [\n        \"Provide structured breakdowns, thematic comparisons, and clear categorization for classical texts like 《出師表》 and 《廉頗藺相如列傳》.\",\n        \"Help organize past paper question types and structural frameworks over the last 10 years into clear analytical summaries.\"\n      ],\n      \"confidence\": \"high\"\n    },\n    \"student_intent_read\": {\n      \"attitude\": \"Proactive, eager to receive specific performance feedback and strategic analysis for key DSE classical texts.\",\n      \"dse_expectation\": \"Wants actionable, high-yield insights and past-paper trend analysis for 2027 DSE preparation.\",\n      \"dse_goal\": \"Master high-weight classical texts (《出師表》, 《廉頗藺相如列傳》) and understand examination patterns from the past decade.\",\n      \"interest_in_chinese\": \"High, actively engaging with core DSE syllabus content and seeking deep analytical help.\",\n      \"approach_type\": \"aggressive\"\n    },\n    \"essential_comments\": [\n      \"The student is actively seeking a structured, data-driven breakdown of two major DSE classical texts (《出師表》 and 《廉頗藺相如列傳》) along with a 10-year past paper trend analysis.\",\n      \"Given her '整理型' (Organizer) learning style, responses should be systematic, featuring clear categorization of exam patterns, strengths, and reinforcement strategies rather than vague encouragement.\"\n    ],\n    \"coaching_notes\": [\n      \"Acknowledge her proactive request for past paper analysis.\",\n      \"Provide a structured response template that addresses her performance review, text reinforcement, and a 10-year exam trend synthesis for both prescribed texts.\"\n    ],\n    \"evidence_ids\": [\n      \"psych:psy-learning-mode-hk-v1:整理型\",\n      \"profile:id:102b0700-c436-4c5b-b232-9ca3ae8a49fa\"\n    ]\n  }\n}\n```",
+      "api_response_summary": {
+        "id": "chatcmpl-503aba6c81f28dab8fe0a668",
+        "model": "DSE_V2ProfileS",
+        "usage": {
+          "completion_tokens": 533,
+          "prompt_tokens": 1121,
+          "total_tokens": 1654,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          }
+        }
+      },
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "profile",
+        "output": {
+          "learning_approach_inference": {
+            "preferred_style": "整理型 (Organizer type - benefits from structured notes, synthesis, and systematic categorization of text)",
+            "facilitation_recommendation": [
+              "Provide structured breakdowns, thematic comparisons, and clear categorization for classical texts like 《出師表》 and 《廉頗藺相如列傳》.",
+              "Help organize past paper question types and structural frameworks over the last 10 years into clear analytical summaries."
+            ],
+            "confidence": "high"
+          },
+          "student_intent_read": {
+            "attitude": "Proactive, eager to receive specific performance feedback and strategic analysis for key DSE classical texts.",
+            "dse_expectation": "Wants actionable, high-yield insights and past-paper trend analysis for 2027 DSE preparation.",
+            "dse_goal": "Master high-weight classical texts (《出師表》, 《廉頗藺相如列傳》) and understand examination patterns from the past decade.",
+            "interest_in_chinese": "High, actively engaging with core DSE syllabus content and seeking deep analytical help.",
+            "approach_type": "aggressive"
+          },
+          "essential_comments": [
+            "The student is actively seeking a structured, data-driven breakdown of two major DSE classical texts (《出師表》 and 《廉頗藺相如列傳》) along with a 10-year past paper trend analysis.",
+            "Given her '整理型' (Organizer) learning style, responses should be systematic, featuring clear categorization of exam patterns, strengths, and reinforcement strategies rather than vague encouragement."
+          ],
+          "coaching_notes": [
+            "Acknowledge her proactive request for past paper analysis.",
+            "Provide a structured response template that addresses her performance review, text reinforcement, and a 10-year exam trend synthesis for both prescribed texts."
+          ],
+          "evidence_ids": [
+            "psych:psy-learning-mode-hk-v1:整理型",
+            "profile:id:102b0700-c436-4c5b-b232-9ca3ae8a49fa"
+          ]
+        }
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "question_bank",
+      "label": "題庫研究",
+      "status": "valid",
+      "duration_ms": 9939,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "2857c4cca18f6daaed5ff9baa3e15af3",
+        "agent_role": "question_bank",
+        "student_message": "請問我在最近最熱門嘅出師表同廉頗與論相如列傳中表現如何？我應該如何強化這兩個課文的表現，同埋我係呢兩篇課文嘅約翰強項係啲咩？同埋可唔可以話俾我知近呢10年關於呢兩篇課文出過題目可以點樣幫我做一個分析？",
+        "capabilities": {
+          "enabled_sources": [
+            "question_bank"
+          ]
+        },
+        "inputs": {
+          "retrieval_coverage": {
+            "matching_question_rows_scanned": 6,
+            "matching_trend_rows_scanned": 6,
+            "evidence_rows_returned": 6
+          },
+          "resolved_request": null,
+          "retrieval_mode": {
+            "section_filter": "designated",
+            "matched_designated_passages": [
+              "出師表",
+              "廉頗藺相如列傳"
+            ],
+            "resolved_passage_scope": {
+              "requested_passages": [
+                "出師表",
+                "廉頗藺相如列傳"
+              ],
+              "resolved_passages": [
+                {
+                  "canonical_name": "出師表",
+                  "app_passage_ids": [
+                    "p06"
+                  ],
+                  "app_titles": [
+                    "出師表"
+                  ],
+                  "past_exam_title_patterns": [
+                    "出師表",
+                    "出师表"
+                  ]
+                },
+                {
+                  "canonical_name": "廉頗藺相如列傳",
+                  "app_passage_ids": [
+                    "p05"
+                  ],
+                  "app_titles": [
+                    "廉頗藺相如列傳（節錄）"
+                  ],
+                  "past_exam_title_patterns": [
+                    "廉頗藺相如列傳",
+                    "廉颇蔺相如列传",
+                    "廉頗藺相如",
+                    "廉颇蔺相如"
+                  ]
+                }
+              ],
+              "unresolved_passages": []
+            },
+            "focus_terms": [
+              "出師表",
+              "廉頗藺相如列傳",
+              "試題分析"
+            ],
+            "search_terms": [
+              "出師表",
+              "廉頗藺相如列傳",
+              "試題分析",
+              "請問我在最近最熱門嘅出師表同廉頗與論相如列傳中表現如何",
+              "我應該如何強化這兩個課文的表現",
+              "同埋我係呢兩篇課文嘅約翰強項係啲咩",
+              "同埋可唔可以話俾我知近呢10年關於呢兩篇課文出過題目可以點樣幫我做一個分析"
+            ]
+          },
+          "similar_questions": [
+            {
+              "exam_year": 2020,
+              "section_type": "designated",
+              "passage_bucket": "D4",
+              "passage_title": "《廉頗藺相如列傳》",
+              "question_number": "2",
+              "question_type_norm": "short",
+              "score": 3,
+              "question_text": "臣誠恐見欺於王而負趙。《廉頗藺相如列傳》",
+              "evidence_id": "dse:2020:designated:2"
+            },
+            {
+              "exam_year": 2020,
+              "section_type": "designated",
+              "passage_bucket": "D2",
+              "passage_title": "《出師表》",
+              "question_number": "1(ii)",
+              "question_type_norm": "short",
+              "score": 2,
+              "question_text": "侍中、尚書、長史、參軍，此悉貞良死節之臣……《出師表》 悉：__________",
+              "evidence_id": "dse:2020:designated:1(ii)"
+            },
+            {
+              "exam_year": 2018,
+              "section_type": "designated",
+              "passage_bucket": "D2",
+              "passage_title": "出師表",
+              "question_number": "5",
+              "question_type_norm": "other",
+              "score": 4,
+              "question_text": "第5題： 在《出師表》一文中，諸葛亮認為重用郭攸之、向寵等人，會為「宮中」和「營中」帶來什麼好處？試以自己的文句分別說明。(4分)",
+              "evidence_id": "dse:2018:designated:5"
+            },
+            {
+              "exam_year": 2018,
+              "section_type": "designated",
+              "passage_bucket": "D2",
+              "passage_title": "出師表",
+              "question_number": "7",
+              "question_type_norm": "other",
+              "score": 4,
+              "question_text": "第7題： 「表」為臣下向君主進言的文體，內容多為事理的陳述和分析，惟《出師表》一文帶有明顯的個人感情。諸葛亮為什麼這樣寫？試舉一例說明。 (4分)",
+              "evidence_id": "dse:2018:designated:7"
+            },
+            {
+              "exam_year": 2018,
+              "section_type": "designated",
+              "passage_bucket": "D2",
+              "passage_title": "出師表",
+              "question_number": "5.1",
+              "question_type_norm": "other",
+              "score": 2,
+              "question_text": "第5.1題：為宮中帶來的好處",
+              "evidence_id": "dse:2018:designated:5.1"
+            },
+            {
+              "exam_year": 2018,
+              "section_type": "designated",
+              "passage_bucket": "D2",
+              "passage_title": "出師表",
+              "question_number": "5.2",
+              "question_type_norm": "other",
+              "score": 2,
+              "question_text": "第5.2題：為營中帶來的好處",
+              "evidence_id": "dse:2018:designated:5.2"
+            }
+          ],
+          "trend_signals": [
+            {
+              "section_type": "designated",
+              "question_type_norm": "other",
+              "frequency": 4,
+              "avg_score": 3,
+              "recent_years": [
+                2018
+              ]
+            },
+            {
+              "section_type": "designated",
+              "question_type_norm": "short",
+              "frequency": 2,
+              "avg_score": 2.5,
+              "recent_years": [
+                2020
+              ]
+            }
+          ],
+          "marking_skill_notes": [
+            {
+              "exam_year": 2020,
+              "question_number": "2",
+              "passage_title": "《廉頗藺相如列傳》",
+              "specific_marking_notes": "評分原則： • 句譯無誤，給3分。 • 先判斷整體語意是否明顯偏離原意，如有偏離，給0分，並以IR標示。 • 如考生誤解下列字詞，整體語意即為偏離原意： ▫ 誤解「見欺於王」為「（臣）欺騙大王」。 • 整體語意無誤，則看有沒有地方扣分，扣分點： ▫ 句意不通／文句不通／錯別字，每處可扣1分，最多只扣1分。 ▫ 關鍵詞誤譯或漏譯，每個扣1分；非關鍵詞可不譯，如誤譯，每個扣1分： 關鍵字詞｜不扣分答案｜扣分答案 誠｜的確／確實／實在／真的…",
+              "suggested_answer_text": "臣確實害怕被大王欺騙而辜負趙國。（3分）",
+              "evidence_id": "dse:2020:designated:2"
+            },
+            {
+              "exam_year": 2020,
+              "question_number": "1(ii)",
+              "passage_title": "《出師表》",
+              "specific_marking_notes": "評分原則： • 每道分題給2分。 • 概念欠準確，表達欠清晰的不完備答案給1分；錯誤答案給0分。 • 答案多於一個，如包含錯誤答案，給0分；不包含錯誤答案，則選取得分較高的答案。 • 每個錯別字扣1分，請以評卷符號○標示，每道分題最多只扣一個錯別字。 答案舉隅： 分題（ii） 正確答案（2分） a. 全部／全都／全是／全 b. 皆／皆是 c. 都／都是 d. 悉數／皆為 不完備答案（1分） e. 皆（錯字） 錯誤答案（0分） f. 明…",
+              "suggested_answer_text": "（ii）悉：全部（2分）",
+              "evidence_id": "dse:2020:designated:1(ii)"
+            },
+            {
+              "exam_year": 2018,
+              "question_number": "7",
+              "passage_title": "出師表",
+              "specific_marking_notes": "第7題 評分原則： • 指出原因給1分，舉例說明最高給3分；欠缺例子，最高給1分。 • 指出原因，例子抄錄原文，不加解說，最高給2分。 • 欠缺原因，只有例子，不給分。 第7題 • 上品4分： ▫ 準確說明原因；引用事例恰當；闡述清晰飽滿。 • 中上品3分： ▫ 準確說明原因；引用事例恰當；闡述清晰。 • 中下品2分： ▫ 準確說明原因；引用事例尚恰當；闡述一般／粗疏。 • 下品1分： ▫ 尚能概括說明原因；引用事例欠準確／欠事例；闡…",
+              "suggested_answer_text": "第7題 4分示例 新答案舉隅 a 北伐在即，諸葛亮為了感激先帝的知遇之恩，才在《出師表》中向後主動之以情。 先帝當年不嫌諸葛亮出身低微，三顧草廬，多次與他商討國家大事，對他極為倚重； 他被先帝的誠意打動，才會出山相助，非為名利，而是有一種報答知己之意。 原因準確，事例合適完整，闡述飽滿清晰。",
+              "evidence_id": "dse:2018:designated:7"
+            },
+            {
+              "exam_year": 2018,
+              "question_number": "5.1",
+              "passage_title": "出師表",
+              "specific_marking_notes": "第5.1題：為宮中帶來的好處 評分原則： • 如只引錄原文(必能裨補闕漏，有所廣益)，而未有解釋，不給分。 • 好處：能補救缺失／漏洞(1分)；使政令更周詳或完善／改善施政。(1分)",
+              "suggested_answer_text": "第5.1題：答案舉隅 滿分答案（2分） a. 能補救缺失和漏洞(1)，改善施政。(1) b. 宮中大小事務在詢問他們後，定能補完缺失之處(1)，使政策完善。(1) c. 定可補救政策上的不足和漏洞(1)，達至更大的效益。(1)(前句有政策方面的配合下句的效益) d. 能夠對施政的不是作出改善(1+1)，從而讓政策更有助民生。 不完備答案（1分） f. 能夠裨補闕漏(0)，令政策加完善(1)，施行暢順。 g. 幫助修補疏漏(1)，得到莫…",
+              "evidence_id": "dse:2018:designated:5.1"
+            },
+            {
+              "exam_year": 2018,
+              "question_number": "5.2",
+              "passage_title": "出師表",
+              "specific_marking_notes": "第5.2題：為營中帶來的好處 評分原則： • 如只引錄原文(使行陣和睦，優劣得所)，而未有解釋，不給分。 • 好處：能使軍隊和睦／團結一致／上下同心(1分)；才能不同也可以在合適崗位發揮所長／因材任命，使各展所長。(1分)",
+              "suggested_answer_text": "第5.2題：答案舉隅 滿分答案（2分） a. 能使軍隊和睦(1)，才能不同的人也可以在合適崗位發揮所長／因材任命，各展所長。(1) b. 使軍中各部和睦(1)，有能者出任適合職位(1) 不完備答案（1分） c. 使軍隊間和平相處(1)，各得其所。(0) d. 激勵士氣，並使每個士兵也被分配到最合適自己的職務。(1) e. 使優秀或平庸的也能出任合適的位置。 0分答案 f. 能使軍隊陣形鼎盛／整齊。 g. 士兵們信服他們，重用他們可使後…",
+              "evidence_id": "dse:2018:designated:5.2"
+            }
+          ],
+          "data_gap_notes": [],
+          "evidence_ids": [
+            "dse:2020:designated:2",
+            "dse:2020:designated:1(ii)",
+            "dse:2018:designated:5",
+            "dse:2018:designated:7",
+            "dse:2018:designated:5.1",
+            "dse:2018:designated:5.2"
+          ],
+          "iteration": 1,
+          "max_iterations": 3,
+          "followup_evidence": [
+            {
+              "iteration": 1,
+              "detail_request": {
+                "action": "marking_scheme_deep_dive",
+                "passage_names": [
+                  "出師表",
+                  "廉頗藺相如列傳"
+                ],
+                "section_type": "designated",
+                "exam_year_from": 2015,
+                "exam_year_to": 2025,
+                "question_types": [
+                  "short",
+                  "long",
+                  "other"
+                ],
+                "focus_terms": [
+                  "出師表",
+                  "廉頗藺相如列傳"
+                ],
+                "include": [
+                  "question_text",
+                  "specific_marking_notes",
+                  "suggested_answer"
+                ],
+                "limit_questions": 15,
+                "reason": "需要深入檢視近10年（2015-2025年）關於《出師表》與《廉頗藺相如列傳》的全部試題與評卷參考，以便為考生提供更全面、覆蓋近十年考法的失分位分析與強化建議。"
+              },
+              "detail_result": {
+                "retrieval_coverage": {
+                  "matching_question_rows_scanned": 6,
+                  "matching_trend_rows_scanned": 6,
+                  "evidence_rows_returned": 6
+                },
+                "resolved_request": {
+                  "action": "marking_scheme_deep_dive",
+                  "passage_names": [
+                    "出師表",
+                    "廉頗藺相如列傳"
+                  ],
+                  "section_type": "designated",
+                  "exam_year_from": 2015,
+                  "exam_year_to": 2025,
+                  "question_types": [
+                    "short",
+                    "long",
+                    "other"
+                  ],
+                  "focus_terms": [
+                    "出師表",
+                    "廉頗藺相如列傳",
+                    "試題分析"
+                  ],
+                  "include": [
+                    "question_text",
+                    "specific_marking_notes",
+                    "suggested_answer"
+                  ],
+                  "limit_questions": 15
+                },
+                "retrieval_mode": {
+                  "section_filter": "designated",
+                  "matched_designated_passages": [
+                    "出師表",
+                    "廉頗藺相如列傳"
+                  ],
+                  "resolved_passage_scope": {
+                    "requested_passages": [
+                      "出師表",
+                      "廉頗藺相如列傳"
+                    ],
+                    "resolved_passages": [
+                      {
+                        "canonical_name": "出師表",
+                        "app_passage_ids": [
+                          "p06"
+                        ],
+                        "app_titles": [
+                          "出師表"
+                        ],
+                        "past_exam_title_patterns": [
+                          "出師表",
+                          "出师表"
+                        ]
+                      },
+                      {
+                        "canonical_name": "廉頗藺相如列傳",
+                        "app_passage_ids": [
+                          "p05"
+                        ],
+                        "app_titles": [
+                          "廉頗藺相如列傳（節錄）"
+                        ],
+                        "past_exam_title_patterns": [
+                          "廉頗藺相如列傳",
+                          "廉颇蔺相如列传",
+                          "廉頗藺相如",
+                          "廉颇蔺相如"
+                        ]
+                      }
+                    ],
+                    "unresolved_passages": []
+                  },
+                  "focus_terms": [
+                    "出師表",
+                    "廉頗藺相如列傳",
+                    "試題分析"
+                  ],
+                  "search_terms": [
+                    "出師表",
+                    "廉頗藺相如列傳",
+                    "試題分析",
+                    "請問我在最近最熱門嘅出師表同廉頗與論相如列傳中表現如何",
+                    "我應該如何強化這兩個課文的表現",
+                    "同埋我係呢兩篇課文嘅約翰強項係啲咩",
+                    "同埋可唔可以話俾我知近呢10年關於呢兩篇課文出過題目可以點樣幫我做一個分析"
+                  ]
+                },
+                "similar_questions": [
+                  {
+                    "exam_year": 2020,
+                    "section_type": "designated",
+                    "passage_bucket": "D4",
+                    "passage_title": "《廉頗藺相如列傳》",
+                    "question_number": "2",
+                    "question_type_norm": "short",
+                    "score": 3,
+                    "question_text": "臣誠恐見欺於王而負趙。《廉頗藺相如列傳》",
+                    "evidence_id": "dse:2020:designated:2"
+                  },
+                  {
+                    "exam_year": 2020,
+                    "section_type": "designated",
+                    "passage_bucket": "D2",
+                    "passage_title": "《出師表》",
+                    "question_number": "1(ii)",
+                    "question_type_norm": "short",
+                    "score": 2,
+                    "question_text": "侍中、尚書、長史、參軍，此悉貞良死節之臣……《出師表》 悉：__________",
+                    "evidence_id": "dse:2020:designated:1(ii)"
+                  },
+                  {
+                    "exam_year": 2018,
+                    "section_type": "designated",
+                    "passage_bucket": "D2",
+                    "passage_title": "出師表",
+                    "question_number": "5",
+                    "question_type_norm": "other",
+                    "score": 4,
+                    "question_text": "第5題： 在《出師表》一文中，諸葛亮認為重用郭攸之、向寵等人，會為「宮中」和「營中」帶來什麼好處？試以自己的文句分別說明。(4分)",
+                    "evidence_id": "dse:2018:designated:5"
+                  },
+                  {
+                    "exam_year": 2018,
+                    "section_type": "designated",
+                    "passage_bucket": "D2",
+                    "passage_title": "出師表",
+                    "question_number": "7",
+                    "question_type_norm": "other",
+                    "score": 4,
+                    "question_text": "第7題： 「表」為臣下向君主進言的文體，內容多為事理的陳述和分析，惟《出師表》一文帶有明顯的個人感情。諸葛亮為什麼這樣寫？試舉一例說明。 (4分)",
+                    "evidence_id": "dse:2018:designated:7"
+                  },
+                  {
+                    "exam_year": 2018,
+                    "section_type": "designated",
+                    "passage_bucket": "D2",
+                    "passage_title": "出師表",
+                    "question_number": "5.1",
+                    "question_type_norm": "other",
+                    "score": 2,
+                    "question_text": "第5.1題：為宮中帶來的好處",
+                    "evidence_id": "dse:2018:designated:5.1"
+                  },
+                  {
+                    "exam_year": 2018,
+                    "section_type": "designated",
+                    "passage_bucket": "D2",
+                    "passage_title": "出師表",
+                    "question_number": "5.2",
+                    "question_type_norm": "other",
+                    "score": 2,
+                    "question_text": "第5.2題：為營中帶來的好處",
+                    "evidence_id": "dse:2018:designated:5.2"
+                  }
+                ],
+                "trend_signals": [
+                  {
+                    "section_type": "designated",
+                    "question_type_norm": "other",
+                    "frequency": 4,
+                    "avg_score": 3,
+                    "recent_years": [
+                      2018
+                    ]
+                  },
+                  {
+                    "section_type": "designated",
+                    "question_type_norm": "short",
+                    "frequency": 2,
+                    "avg_score": 2.5,
+                    "recent_years": [
+                      2020
+                    ]
+                  }
+                ],
+                "marking_skill_notes": [
+                  {
+                    "exam_year": 2020,
+                    "question_number": "2",
+                    "passage_title": "《廉頗藺相如列傳》",
+                    "specific_marking_notes": "評分原則： • 句譯無誤，給3分。 • 先判斷整體語意是否明顯偏離原意，如有偏離，給0分，並以IR標示。 • 如考生誤解下列字詞，整體語意即為偏離原意： ▫ 誤解「見欺於王」為「（臣）欺騙大王」。 • 整體語意無誤，則看有沒有地方扣分，扣分點： ▫ 句意不通／文句不通／錯別字，每處可扣1分，最多只扣1分。 ▫ 關鍵詞誤譯或漏譯，每個扣1分；非關鍵詞可不譯，如誤譯，每個扣1分： 關鍵字詞｜不扣分答案｜扣分答案 誠｜的確／確實／實在／真的…",
+                    "suggested_answer_text": "臣確實害怕被大王欺騙而辜負趙國。（3分）",
+                    "evidence_id": "dse:2020:designated:2"
+                  },
+                  {
+                    "exam_year": 2020,
+                    "question_number": "1(ii)",
+                    "passage_title": "《出師表》",
+                    "specific_marking_notes": "評分原則： • 每道分題給2分。 • 概念欠準確，表達欠清晰的不完備答案給1分；錯誤答案給0分。 • 答案多於一個，如包含錯誤答案，給0分；不包含錯誤答案，則選取得分較高的答案。 • 每個錯別字扣1分，請以評卷符號○標示，每道分題最多只扣一個錯別字。 答案舉隅： 分題（ii） 正確答案（2分） a. 全部／全都／全是／全 b. 皆／皆是 c. 都／都是 d. 悉數／皆為 不完備答案（1分） e. 皆（錯字） 錯誤答案（0分） f. 明…",
+                    "suggested_answer_text": "（ii）悉：全部（2分）",
+                    "evidence_id": "dse:2020:designated:1(ii)"
+                  },
+                  {
+                    "exam_year": 2018,
+                    "question_number": "7",
+                    "passage_title": "出師表",
+                    "specific_marking_notes": "第7題 評分原則： • 指出原因給1分，舉例說明最高給3分；欠缺例子，最高給1分。 • 指出原因，例子抄錄原文，不加解說，最高給2分。 • 欠缺原因，只有例子，不給分。 第7題 • 上品4分： ▫ 準確說明原因；引用事例恰當；闡述清晰飽滿。 • 中上品3分： ▫ 準確說明原因；引用事例恰當；闡述清晰。 • 中下品2分： ▫ 準確說明原因；引用事例尚恰當；闡述一般／粗疏。 • 下品1分： ▫ 尚能概括說明原因；引用事例欠準確／欠事例；闡…",
+                    "suggested_answer_text": "第7題 4分示例 新答案舉隅 a 北伐在即，諸葛亮為了感激先帝的知遇之恩，才在《出師表》中向後主動之以情。 先帝當年不嫌諸葛亮出身低微，三顧草廬，多次與他商討國家大事，對他極為倚重； 他被先帝的誠意打動，才會出山相助，非為名利，而是有一種報答知己之意。 原因準確，事例合適完整，闡述飽滿清晰。",
+                    "evidence_id": "dse:2018:designated:7"
+                  },
+                  {
+                    "exam_year": 2018,
+                    "question_number": "5.1",
+                    "passage_title": "出師表",
+                    "specific_marking_notes": "第5.1題：為宮中帶來的好處 評分原則： • 如只引錄原文(必能裨補闕漏，有所廣益)，而未有解釋，不給分。 • 好處：能補救缺失／漏洞(1分)；使政令更周詳或完善／改善施政。(1分)",
+                    "suggested_answer_text": "第5.1題：答案舉隅 滿分答案（2分） a. 能補救缺失和漏洞(1)，改善施政。(1) b. 宮中大小事務在詢問他們後，定能補完缺失之處(1)，使政策完善。(1) c. 定可補救政策上的不足和漏洞(1)，達至更大的效益。(1)(前句有政策方面的配合下句的效益) d. 能夠對施政的不是作出改善(1+1)，從而讓政策更有助民生。 不完備答案（1分） f. 能夠裨補闕漏(0)，令政策加完善(1)，施行暢順。 g. 幫助修補疏漏(1)，得到莫…",
+                    "evidence_id": "dse:2018:designated:5.1"
+                  },
+                  {
+                    "exam_year": 2018,
+                    "question_number": "5.2",
+                    "passage_title": "出師表",
+                    "specific_marking_notes": "第5.2題：為營中帶來的好處 評分原則： • 如只引錄原文(使行陣和睦，優劣得所)，而未有解釋，不給分。 • 好處：能使軍隊和睦／團結一致／上下同心(1分)；才能不同也可以在合適崗位發揮所長／因材任命，使各展所長。(1分)",
+                    "suggested_answer_text": "第5.2題：答案舉隅 滿分答案（2分） a. 能使軍隊和睦(1)，才能不同的人也可以在合適崗位發揮所長／因材任命，各展所長。(1) b. 使軍中各部和睦(1)，有能者出任適合職位(1) 不完備答案（1分） c. 使軍隊間和平相處(1)，各得其所。(0) d. 激勵士氣，並使每個士兵也被分配到最合適自己的職務。(1) e. 使優秀或平庸的也能出任合適的位置。 0分答案 f. 能使軍隊陣形鼎盛／整齊。 g. 士兵們信服他們，重用他們可使後…",
+                    "evidence_id": "dse:2018:designated:5.2"
+                  }
+                ],
+                "data_gap_notes": [],
+                "evidence_ids": [
+                  "dse:2020:designated:2",
+                  "dse:2020:designated:1(ii)",
+                  "dse:2018:designated:5",
+                  "dse:2018:designated:7",
+                  "dse:2018:designated:5.1",
+                  "dse:2018:designated:5.2"
+                ]
+              }
+            }
+          ],
+          "prior_iteration_outputs": [
+            {
+              "iteration": 1,
+              "output": {
+                "is_final": false,
+                "relevant_findings": [
+                  "根據現有數據，近年的指定篇章考核（如2018及2020年）涵蓋了《出師表》的字詞解釋（如「悉」）、段落內容理解（如宮中與營中之好處）、文章情感分析（如「表」文體的個人感情表達），以及《廉頗藺相如列傳》的重點文言句子翻譯（如「見欺於王」）。",
+                  "這些題目的分分佈顯示，DSE考核既重視基本文言字詞與句譯的準確性，亦極為看重考生對文本深層次情理、人物心態及施政利弊的推論與闡述能力。"
+                ],
+                "trend_signals": [
+                  {
+                    "section_type": "指定篇章",
+                    "question_type_norm": "綜合分析與短答題",
+                    "frequency": 4,
+                    "avg_score": 3,
+                    "recent_years": [
+                      2018,
+                      2020
+                    ]
+                  }
+                ],
+                "exam_technique_feedback": [
+                  "在文言句譯題（如《廉頗藺相如列傳》）中，考生常因誤解關鍵字詞（如將「見欺於王」誤譯為自己欺騙大王）而導致全句甘願失分，顯示對被動句式與關鍵實詞的掌握仍需扎實訓練。",
+                  "在內容理解與分析題（如《出師表》中分析對宮中、營中的好處）中，評卷準則明確規定「只引錄原文而未有解釋不給分」，考生必須學懂將文言字句轉化為具體白話解說（如將「裨補闕漏」解作補救政策漏洞）。",
+                  "在情感與文體分析題（如探討《出師表》為何帶有強烈個人感情）中，高分答案須做到「明確指出原因 + 引用適當事例 + 闡述清晰飽滿」，切忌空泛而談。"
+                ],
+                "suggested_actions": [
+                  "建立個人文言字詞錯題本，重點重溫《出師表》與《廉頗藺相如列傳》中常見的實詞、虛詞、古漢語句式（如被動句）。",
+                  "加強「引文闡述題」的答題結構訓練，練習時強制自己先寫出白話解說，避免直接抄錄原文。",
+                  "系統地翻閱近10年兩篇課文的歷屆試題，歸納常考的考核切入點（如人物性格對比、文章主旨與臣子忠誠）。"
+                ],
+                "data_gap_notes": [],
+                "detail_request": {
+                  "action": "marking_scheme_deep_dive",
+                  "passage_names": [
+                    "出師表",
+                    "廉頗藺相如列傳"
+                  ],
+                  "section_type": "designated",
+                  "exam_year_from": 2015,
+                  "exam_year_to": 2025,
+                  "question_types": [
+                    "short",
+                    "long",
+                    "other"
+                  ],
+                  "focus_terms": [
+                    "出師表",
+                    "廉頗藺相如列傳"
+                  ],
+                  "include": [
+                    "question_text",
+                    "specific_marking_notes",
+                    "suggested_answer"
+                  ],
+                  "limit_questions": 15,
+                  "reason": "需要深入檢視近10年（2015-2025年）關於《出師表》與《廉頗藺相如列傳》的全部試題與評卷參考，以便為考生提供更全面、覆蓋近十年考法的失分位分析與強化建議。"
+                },
+                "evidence_ids": [
+                  "dse:2020:designated:2",
+                  "dse:2020:designated:1(ii)",
+                  "dse:2018:designated:5",
+                  "dse:2018:designated:7",
+                  "dse:2018:designated:5.1",
+                  "dse:2018:designated:5.2"
+                ]
+              }
+            },
+            {
+              "iteration": 2,
+              "output": {
+                "is_final": true,
+                "relevant_findings": [
+                  "從近年（如2018及2020年）的考核數據來看，《出師表》與《廉頗藺相如列傳》的考法涵蓋了多個核心層次：包括基本文言字詞解釋（如《出師表》中的「悉」）、重點文言句子翻譯（如《廉頗藺相如列傳》中的「見欺於王」）、段落實際效益推論（如重用賢臣對宮中與營中的好處），以及文體與情感分析（如探討《出師表》為何帶有強烈個人感情）。",
+                  "這些題目的分佈反映出DSE對指定篇章的考核要求極其全面：既要求考生具備紮實的字詞及句譯基本功，亦嚴格考核將文言文本轉化為現代白話、推論政令利弊及分析人物/作者心態的高階思維能力。"
+                ],
+                "trend_signals": [
+                  "指定篇章的考核模式趨向「基礎與深層並重」，常以「短答字詞/句譯」配搭「長答/綜合分析題」，要求考生既要懂字面意思，更要懂文本背後的深層情理與邏輯推演。"
+                ],
+                "exam_technique_feedback": [
+                  "文言句譯防陷阱：在翻譯《廉頗藺相如列傳》中之「見欺於王」時，考生常因未能準確掌握被動句式而誤譯為主動（例如誤以為是臣欺王），導致整句失分。必須加強對古漢語特殊句式的敏感度。",
+                  "切忌純粹抄錄原文：在回答內容理解題（如分析對宮中、營中的好處）時，評卷準則明確規定「只引錄原文而未有解釋不給分」。考生必須將「裨補闕漏」、「使行陣和睦」等文言轉化為具體白話（如補救政令缺失、使軍隊團結及因材施用）。",
+                  "情感與文體分析結構：面對探討文章情感或文體特點的題目（如《出師表》為何帶有個人感情），高分關鍵在於「明確指出原因 + 引用適當事例 + 闡述清晰飽滿」，切忌空泛漫談。"
+                ],
+                "suggested_actions": [
+                  "建立個人文言字詞與句式錯題本，重點重溫《出師表》與《廉頗藺相如列傳》中的常見實詞、虛詞及被動句結構，杜絕基本失分。",
+                  "進行「引文轉化訓練」，在日常練習文本分析題時，強制自己先寫出白話解說，拒絕直接抄錄原文作答。",
+                  "系統地將近10年的歷屆試題進行三向分類（字詞句譯類、內容效益分析類、主旨情感類），透過歸納常考切入點來掌握出題規律。"
+                ],
+                "data_gap_notes": [],
+                "detail_request": null,
+                "evidence_ids": [
+                  "dse:2020:designated:2",
+                  "dse:2020:designated:1(ii)",
+                  "dse:2018:designated:5",
+                  "dse:2018:designated:7",
+                  "dse:2018:designated:5.1",
+                  "dse:2018:designated:5.2"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "raw_response": "```json\n{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"question_bank\",\n  \"output\": {\n    \"is_final\": false,\n    \"relevant_findings\": [\n      \"根據現有數據，近年的指定篇章考核（如2018及2020年）涵蓋了《出師表》的字詞解釋（如「悉」）、段落內容理解（如宮中與營中之好處）、文章情感分析（如「表」文體的個人感情表達），以及《廉頗藺相如列傳》的重點文言句子翻譯（如「見欺於王」）。\",\n      \"這些題目的分分佈顯示，DSE考核既重視基本文言字詞與句譯的準確性，亦極為看重考生對文本深層次情理、人物心態及施政利弊的推論與闡述能力。\"\n    ],\n    \"trend_signals\": [\n      {\n        \"section_type\": \"指定篇章\",\n        \"question_type_norm\": \"綜合分析與短答題\",\n        \"frequency\": 4,\n        \"avg_score\": 3,\n        \"recent_years\": [2018, 2020]\n      }\n    ],\n    \"exam_technique_feedback\": [\n      \"在文言句譯題（如《廉頗藺相如列傳》）中，考生常因誤解關鍵字詞（如將「見欺於王」誤譯為自己欺騙大王）而導致全句甘願失分，顯示對被動句式與關鍵實詞的掌握仍需扎實訓練。\",\n      \"在內容理解與分析題（如《出師表》中分析對宮中、營中的好處）中，評卷準則明確規定「只引錄原文而未有解釋不給分」，考生必須學懂將文言字句轉化為具體白話解說（如將「裨補闕漏」解作補救政策漏洞）。\",\n      \"在情感與文體分析題（如探討《出師表》為何帶有強烈個人感情）中，高分答案須做到「明確指出原因 + 引用適當事例 + 闡述清晰飽滿」，切忌空泛而談。\"\n    ],\n    \"suggested_actions\": [\n      \"建立個人文言字詞錯題本，重點重溫《出師表》與《廉頗藺相如列傳》中常見的實詞、虛詞、古漢語句式（如被動句）。\",\n      \"加強「引文闡述題」的答題結構訓練，練習時強制自己先寫出白話解說，避免直接抄錄原文。\",\n      \"系統地翻閱近10年兩篇課文的歷屆試題，歸納常考的考核切入點（如人物性格對比、文章主旨與臣子忠誠）。\"\n    ],\n    \"data_gap_notes\": [],\n    \"detail_request\": {\n      \"action\": \"marking_scheme_deep_dive\",\n      \"passage_names\": [\n        \"出師表\",\n        \"廉頗藺相如列傳\"\n      ],\n      \"section_type\": \"designated\",\n      \"exam_year_from\": 2015,\n      \"exam_year_to\": 2025,\n      \"question_types\": [\n        \"short\",\n        \"long\",\n        \"other\"\n      ],\n      \"focus_terms\": [\n        \"出師表\",\n        \"廉頗藺相如列傳\"\n      ],\n      \"include\": [\n        \"question_text\",\n        \"specific_marking_notes\",\n        \"suggested_answer\"\n      ],\n      \"limit_questions\": 15,\n      \"reason\": \"需要深入檢視近10年（2015-2025年）關於《出師表》與《廉頗藺相如列傳》的全部試題與評卷參考，以便為考生提供更全面、覆蓋近十年考法的失分位分析與強化建議。\"\n    },\n    \"evidence_ids\": [\n      \"dse:2020:designated:2\",\n      \"dse:2020:designated:1(ii)\",\n      \"dse:2018:designated:5\",\n      \"dse:2018:designated:7\",\n      \"dse:2018:designated:5.1\",\n      \"dse:2018:designated:5.2\"\n    ]\n  }\n}\n```",
+      "api_response_summary": {
+        "id": "chatcmpl-850809595009fc2f9a137490",
+        "model": "DSE_V2QuestionBankS",
+        "usage": {
+          "completion_tokens": 2605,
+          "prompt_tokens": 3857,
+          "total_tokens": 6462,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 1542,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          }
+        }
+      },
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "question_bank",
+        "output": {
+          "is_final": false,
+          "relevant_findings": [
+            "根據現有數據，近年的指定篇章考核（如2018及2020年）涵蓋了《出師表》的字詞解釋（如「悉」）、段落內容理解（如宮中與營中之好處）、文章情感分析（如「表」文體的個人感情表達），以及《廉頗藺相如列傳》的重點文言句子翻譯（如「見欺於王」）。",
+            "這些題目的分分佈顯示，DSE考核既重視基本文言字詞與句譯的準確性，亦極為看重考生對文本深層次情理、人物心態及施政利弊的推論與闡述能力。"
+          ],
+          "trend_signals": [
+            {
+              "section_type": "指定篇章",
+              "question_type_norm": "綜合分析與短答題",
+              "frequency": 4,
+              "avg_score": 3,
+              "recent_years": [
+                2018,
+                2020
+              ]
+            }
+          ],
+          "exam_technique_feedback": [
+            "在文言句譯題（如《廉頗藺相如列傳》）中，考生常因誤解關鍵字詞（如將「見欺於王」誤譯為自己欺騙大王）而導致全句甘願失分，顯示對被動句式與關鍵實詞的掌握仍需扎實訓練。",
+            "在內容理解與分析題（如《出師表》中分析對宮中、營中的好處）中，評卷準則明確規定「只引錄原文而未有解釋不給分」，考生必須學懂將文言字句轉化為具體白話解說（如將「裨補闕漏」解作補救政策漏洞）。",
+            "在情感與文體分析題（如探討《出師表》為何帶有強烈個人感情）中，高分答案須做到「明確指出原因 + 引用適當事例 + 闡述清晰飽滿」，切忌空泛而談。"
+          ],
+          "suggested_actions": [
+            "建立個人文言字詞錯題本，重點重溫《出師表》與《廉頗藺相如列傳》中常見的實詞、虛詞、古漢語句式（如被動句）。",
+            "加強「引文闡述題」的答題結構訓練，練習時強制自己先寫出白話解說，避免直接抄錄原文。",
+            "系統地翻閱近10年兩篇課文的歷屆試題，歸納常考的考核切入點（如人物性格對比、文章主旨與臣子忠誠）。"
+          ],
+          "data_gap_notes": [],
+          "detail_request": {
+            "action": "marking_scheme_deep_dive",
+            "passage_names": [
+              "出師表",
+              "廉頗藺相如列傳"
+            ],
+            "section_type": "designated",
+            "exam_year_from": 2015,
+            "exam_year_to": 2025,
+            "question_types": [
+              "short",
+              "long",
+              "other"
+            ],
+            "focus_terms": [
+              "出師表",
+              "廉頗藺相如列傳"
+            ],
+            "include": [
+              "question_text",
+              "specific_marking_notes",
+              "suggested_answer"
+            ],
+            "limit_questions": 15,
+            "reason": "需要深入檢視近10年（2015-2025年）關於《出師表》與《廉頗藺相如列傳》的全部試題與評卷參考，以便為考生提供更全面、覆蓋近十年考法的失分位分析與強化建議。"
+          },
+          "evidence_ids": [
+            "dse:2020:designated:2",
+            "dse:2020:designated:1(ii)",
+            "dse:2018:designated:5",
+            "dse:2018:designated:7",
+            "dse:2018:designated:5.1",
+            "dse:2018:designated:5.2"
+          ]
+        }
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "question_bank_detail_lookup",
+      "label": "題庫補充檢索",
+      "status": "valid",
+      "duration_ms": 1302,
+      "request": {
+        "schema_version": "v1",
+        "agent_role": "question_bank_detail_lookup",
+        "inputs": {
+          "iteration": 1,
+          "detail_request": {
+            "action": "marking_scheme_deep_dive",
+            "passage_names": [
+              "出師表",
+              "廉頗藺相如列傳"
+            ],
+            "section_type": "designated",
+            "exam_year_from": 2015,
+            "exam_year_to": 2025,
+            "question_types": [
+              "short",
+              "long",
+              "other"
+            ],
+            "focus_terms": [
+              "出師表",
+              "廉頗藺相如列傳"
+            ],
+            "include": [
+              "question_text",
+              "specific_marking_notes",
+              "suggested_answer"
+            ],
+            "limit_questions": 15,
+            "reason": "需要深入檢視近10年（2015-2025年）關於《出師表》與《廉頗藺相如列傳》的全部試題與評卷參考，以便為考生提供更全面、覆蓋近十年考法的失分位分析與強化建議。"
+          },
+          "retrieval_hints": {
+            "mentionedDesignatedPassages": [
+              "出師表",
+              "廉頗藺相如列傳"
+            ],
+            "questionBankFocus": [
+              "出師表",
+              "廉頗藺相如列傳",
+              "試題分析"
+            ]
+          },
+          "prior_iteration_outputs": [
+            {
+              "iteration": 1,
+              "output": {
+                "is_final": false,
+                "relevant_findings": [
+                  "根據現有數據，近年的指定篇章考核（如2018及2020年）涵蓋了《出師表》的字詞解釋（如「悉」）、段落內容理解（如宮中與營中之好處）、文章情感分析（如「表」文體的個人感情表達），以及《廉頗藺相如列傳》的重點文言句子翻譯（如「見欺於王」）。",
+                  "這些題目的分分佈顯示，DSE考核既重視基本文言字詞與句譯的準確性，亦極為看重考生對文本深層次情理、人物心態及施政利弊的推論與闡述能力。"
+                ],
+                "trend_signals": [
+                  {
+                    "section_type": "指定篇章",
+                    "question_type_norm": "綜合分析與短答題",
+                    "frequency": 4,
+                    "avg_score": 3,
+                    "recent_years": [
+                      2018,
+                      2020
+                    ]
+                  }
+                ],
+                "exam_technique_feedback": [
+                  "在文言句譯題（如《廉頗藺相如列傳》）中，考生常因誤解關鍵字詞（如將「見欺於王」誤譯為自己欺騙大王）而導致全句甘願失分，顯示對被動句式與關鍵實詞的掌握仍需扎實訓練。",
+                  "在內容理解與分析題（如《出師表》中分析對宮中、營中的好處）中，評卷準則明確規定「只引錄原文而未有解釋不給分」，考生必須學懂將文言字句轉化為具體白話解說（如將「裨補闕漏」解作補救政策漏洞）。",
+                  "在情感與文體分析題（如探討《出師表》為何帶有強烈個人感情）中，高分答案須做到「明確指出原因 + 引用適當事例 + 闡述清晰飽滿」，切忌空泛而談。"
+                ],
+                "suggested_actions": [
+                  "建立個人文言字詞錯題本，重點重溫《出師表》與《廉頗藺相如列傳》中常見的實詞、虛詞、古漢語句式（如被動句）。",
+                  "加強「引文闡述題」的答題結構訓練，練習時強制自己先寫出白話解說，避免直接抄錄原文。",
+                  "系統地翻閱近10年兩篇課文的歷屆試題，歸納常考的考核切入點（如人物性格對比、文章主旨與臣子忠誠）。"
+                ],
+                "data_gap_notes": [],
+                "detail_request": {
+                  "action": "marking_scheme_deep_dive",
+                  "passage_names": [
+                    "出師表",
+                    "廉頗藺相如列傳"
+                  ],
+                  "section_type": "designated",
+                  "exam_year_from": 2015,
+                  "exam_year_to": 2025,
+                  "question_types": [
+                    "short",
+                    "long",
+                    "other"
+                  ],
+                  "focus_terms": [
+                    "出師表",
+                    "廉頗藺相如列傳"
+                  ],
+                  "include": [
+                    "question_text",
+                    "specific_marking_notes",
+                    "suggested_answer"
+                  ],
+                  "limit_questions": 15,
+                  "reason": "需要深入檢視近10年（2015-2025年）關於《出師表》與《廉頗藺相如列傳》的全部試題與評卷參考，以便為考生提供更全面、覆蓋近十年考法的失分位分析與強化建議。"
+                },
+                "evidence_ids": [
+                  "dse:2020:designated:2",
+                  "dse:2020:designated:1(ii)",
+                  "dse:2018:designated:5",
+                  "dse:2018:designated:7",
+                  "dse:2018:designated:5.1",
+                  "dse:2018:designated:5.2"
+                ]
+              }
+            },
+            {
+              "iteration": 2,
+              "output": {
+                "is_final": true,
+                "relevant_findings": [
+                  "從近年（如2018及2020年）的考核數據來看，《出師表》與《廉頗藺相如列傳》的考法涵蓋了多個核心層次：包括基本文言字詞解釋（如《出師表》中的「悉」）、重點文言句子翻譯（如《廉頗藺相如列傳》中的「見欺於王」）、段落實際效益推論（如重用賢臣對宮中與營中的好處），以及文體與情感分析（如探討《出師表》為何帶有強烈個人感情）。",
+                  "這些題目的分佈反映出DSE對指定篇章的考核要求極其全面：既要求考生具備紮實的字詞及句譯基本功，亦嚴格考核將文言文本轉化為現代白話、推論政令利弊及分析人物/作者心態的高階思維能力。"
+                ],
+                "trend_signals": [
+                  "指定篇章的考核模式趨向「基礎與深層並重」，常以「短答字詞/句譯」配搭「長答/綜合分析題」，要求考生既要懂字面意思，更要懂文本背後的深層情理與邏輯推演。"
+                ],
+                "exam_technique_feedback": [
+                  "文言句譯防陷阱：在翻譯《廉頗藺相如列傳》中之「見欺於王」時，考生常因未能準確掌握被動句式而誤譯為主動（例如誤以為是臣欺王），導致整句失分。必須加強對古漢語特殊句式的敏感度。",
+                  "切忌純粹抄錄原文：在回答內容理解題（如分析對宮中、營中的好處）時，評卷準則明確規定「只引錄原文而未有解釋不給分」。考生必須將「裨補闕漏」、「使行陣和睦」等文言轉化為具體白話（如補救政令缺失、使軍隊團結及因材施用）。",
+                  "情感與文體分析結構：面對探討文章情感或文體特點的題目（如《出師表》為何帶有個人感情），高分關鍵在於「明確指出原因 + 引用適當事例 + 闡述清晰飽滿」，切忌空泛漫談。"
+                ],
+                "suggested_actions": [
+                  "建立個人文言字詞與句式錯題本，重點重溫《出師表》與《廉頗藺相如列傳》中的常見實詞、虛詞及被動句結構，杜絕基本失分。",
+                  "進行「引文轉化訓練」，在日常練習文本分析題時，強制自己先寫出白話解說，拒絕直接抄錄原文作答。",
+                  "系統地將近10年的歷屆試題進行三向分類（字詞句譯類、內容效益分析類、主旨情感類），透過歸納常考切入點來掌握出題規律。"
+                ],
+                "data_gap_notes": [],
+                "detail_request": null,
+                "evidence_ids": [
+                  "dse:2020:designated:2",
+                  "dse:2020:designated:1(ii)",
+                  "dse:2018:designated:5",
+                  "dse:2018:designated:7",
+                  "dse:2018:designated:5.1",
+                  "dse:2018:designated:5.2"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "raw_response": "",
+      "api_response_summary": null,
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "question_bank_detail_lookup",
+        "output": {
+          "retrieval_coverage": {
+            "matching_question_rows_scanned": 6,
+            "matching_trend_rows_scanned": 6,
+            "evidence_rows_returned": 6
+          },
+          "resolved_request": {
+            "action": "marking_scheme_deep_dive",
+            "passage_names": [
+              "出師表",
+              "廉頗藺相如列傳"
+            ],
+            "section_type": "designated",
+            "exam_year_from": 2015,
+            "exam_year_to": 2025,
+            "question_types": [
+              "short",
+              "long",
+              "other"
+            ],
+            "focus_terms": [
+              "出師表",
+              "廉頗藺相如列傳",
+              "試題分析"
+            ],
+            "include": [
+              "question_text",
+              "specific_marking_notes",
+              "suggested_answer"
+            ],
+            "limit_questions": 15
+          },
+          "retrieval_mode": {
+            "section_filter": "designated",
+            "matched_designated_passages": [
+              "出師表",
+              "廉頗藺相如列傳"
+            ],
+            "resolved_passage_scope": {
+              "requested_passages": [
+                "出師表",
+                "廉頗藺相如列傳"
+              ],
+              "resolved_passages": [
+                {
+                  "canonical_name": "出師表",
+                  "app_passage_ids": [
+                    "p06"
+                  ],
+                  "app_titles": [
+                    "出師表"
+                  ],
+                  "past_exam_title_patterns": [
+                    "出師表",
+                    "出师表"
+                  ]
+                },
+                {
+                  "canonical_name": "廉頗藺相如列傳",
+                  "app_passage_ids": [
+                    "p05"
+                  ],
+                  "app_titles": [
+                    "廉頗藺相如列傳（節錄）"
+                  ],
+                  "past_exam_title_patterns": [
+                    "廉頗藺相如列傳",
+                    "廉颇蔺相如列传",
+                    "廉頗藺相如",
+                    "廉颇蔺相如"
+                  ]
+                }
+              ],
+              "unresolved_passages": []
+            },
+            "focus_terms": [
+              "出師表",
+              "廉頗藺相如列傳",
+              "試題分析"
+            ],
+            "search_terms": [
+              "出師表",
+              "廉頗藺相如列傳",
+              "試題分析",
+              "請問我在最近最熱門嘅出師表同廉頗與論相如列傳中表現如何",
+              "我應該如何強化這兩個課文的表現",
+              "同埋我係呢兩篇課文嘅約翰強項係啲咩",
+              "同埋可唔可以話俾我知近呢10年關於呢兩篇課文出過題目可以點樣幫我做一個分析"
+            ]
+          },
+          "similar_questions": [
+            {
+              "exam_year": 2020,
+              "section_type": "designated",
+              "passage_bucket": "D4",
+              "passage_title": "《廉頗藺相如列傳》",
+              "question_number": "2",
+              "question_type_norm": "short",
+              "score": 3,
+              "question_text": "臣誠恐見欺於王而負趙。《廉頗藺相如列傳》",
+              "evidence_id": "dse:2020:designated:2"
+            },
+            {
+              "exam_year": 2020,
+              "section_type": "designated",
+              "passage_bucket": "D2",
+              "passage_title": "《出師表》",
+              "question_number": "1(ii)",
+              "question_type_norm": "short",
+              "score": 2,
+              "question_text": "侍中、尚書、長史、參軍，此悉貞良死節之臣……《出師表》 悉：__________",
+              "evidence_id": "dse:2020:designated:1(ii)"
+            },
+            {
+              "exam_year": 2018,
+              "section_type": "designated",
+              "passage_bucket": "D2",
+              "passage_title": "出師表",
+              "question_number": "5",
+              "question_type_norm": "other",
+              "score": 4,
+              "question_text": "第5題： 在《出師表》一文中，諸葛亮認為重用郭攸之、向寵等人，會為「宮中」和「營中」帶來什麼好處？試以自己的文句分別說明。(4分)",
+              "evidence_id": "dse:2018:designated:5"
+            },
+            {
+              "exam_year": 2018,
+              "section_type": "designated",
+              "passage_bucket": "D2",
+              "passage_title": "出師表",
+              "question_number": "7",
+              "question_type_norm": "other",
+              "score": 4,
+              "question_text": "第7題： 「表」為臣下向君主進言的文體，內容多為事理的陳述和分析，惟《出師表》一文帶有明顯的個人感情。諸葛亮為什麼這樣寫？試舉一例說明。 (4分)",
+              "evidence_id": "dse:2018:designated:7"
+            },
+            {
+              "exam_year": 2018,
+              "section_type": "designated",
+              "passage_bucket": "D2",
+              "passage_title": "出師表",
+              "question_number": "5.1",
+              "question_type_norm": "other",
+              "score": 2,
+              "question_text": "第5.1題：為宮中帶來的好處",
+              "evidence_id": "dse:2018:designated:5.1"
+            },
+            {
+              "exam_year": 2018,
+              "section_type": "designated",
+              "passage_bucket": "D2",
+              "passage_title": "出師表",
+              "question_number": "5.2",
+              "question_type_norm": "other",
+              "score": 2,
+              "question_text": "第5.2題：為營中帶來的好處",
+              "evidence_id": "dse:2018:designated:5.2"
+            }
+          ],
+          "trend_signals": [
+            {
+              "section_type": "designated",
+              "question_type_norm": "other",
+              "frequency": 4,
+              "avg_score": 3,
+              "recent_years": [
+                2018
+              ]
+            },
+            {
+              "section_type": "designated",
+              "question_type_norm": "short",
+              "frequency": 2,
+              "avg_score": 2.5,
+              "recent_years": [
+                2020
+              ]
+            }
+          ],
+          "marking_skill_notes": [
+            {
+              "exam_year": 2020,
+              "question_number": "2",
+              "passage_title": "《廉頗藺相如列傳》",
+              "specific_marking_notes": "評分原則： • 句譯無誤，給3分。 • 先判斷整體語意是否明顯偏離原意，如有偏離，給0分，並以IR標示。 • 如考生誤解下列字詞，整體語意即為偏離原意： ▫ 誤解「見欺於王」為「（臣）欺騙大王」。 • 整體語意無誤，則看有沒有地方扣分，扣分點： ▫ 句意不通／文句不通／錯別字，每處可扣1分，最多只扣1分。 ▫ 關鍵詞誤譯或漏譯，每個扣1分；非關鍵詞可不譯，如誤譯，每個扣1分： 關鍵字詞｜不扣分答案｜扣分答案 誠｜的確／確實／實在／真的…",
+              "suggested_answer_text": "臣確實害怕被大王欺騙而辜負趙國。（3分）",
+              "evidence_id": "dse:2020:designated:2"
+            },
+            {
+              "exam_year": 2020,
+              "question_number": "1(ii)",
+              "passage_title": "《出師表》",
+              "specific_marking_notes": "評分原則： • 每道分題給2分。 • 概念欠準確，表達欠清晰的不完備答案給1分；錯誤答案給0分。 • 答案多於一個，如包含錯誤答案，給0分；不包含錯誤答案，則選取得分較高的答案。 • 每個錯別字扣1分，請以評卷符號○標示，每道分題最多只扣一個錯別字。 答案舉隅： 分題（ii） 正確答案（2分） a. 全部／全都／全是／全 b. 皆／皆是 c. 都／都是 d. 悉數／皆為 不完備答案（1分） e. 皆（錯字） 錯誤答案（0分） f. 明…",
+              "suggested_answer_text": "（ii）悉：全部（2分）",
+              "evidence_id": "dse:2020:designated:1(ii)"
+            },
+            {
+              "exam_year": 2018,
+              "question_number": "7",
+              "passage_title": "出師表",
+              "specific_marking_notes": "第7題 評分原則： • 指出原因給1分，舉例說明最高給3分；欠缺例子，最高給1分。 • 指出原因，例子抄錄原文，不加解說，最高給2分。 • 欠缺原因，只有例子，不給分。 第7題 • 上品4分： ▫ 準確說明原因；引用事例恰當；闡述清晰飽滿。 • 中上品3分： ▫ 準確說明原因；引用事例恰當；闡述清晰。 • 中下品2分： ▫ 準確說明原因；引用事例尚恰當；闡述一般／粗疏。 • 下品1分： ▫ 尚能概括說明原因；引用事例欠準確／欠事例；闡…",
+              "suggested_answer_text": "第7題 4分示例 新答案舉隅 a 北伐在即，諸葛亮為了感激先帝的知遇之恩，才在《出師表》中向後主動之以情。 先帝當年不嫌諸葛亮出身低微，三顧草廬，多次與他商討國家大事，對他極為倚重； 他被先帝的誠意打動，才會出山相助，非為名利，而是有一種報答知己之意。 原因準確，事例合適完整，闡述飽滿清晰。",
+              "evidence_id": "dse:2018:designated:7"
+            },
+            {
+              "exam_year": 2018,
+              "question_number": "5.1",
+              "passage_title": "出師表",
+              "specific_marking_notes": "第5.1題：為宮中帶來的好處 評分原則： • 如只引錄原文(必能裨補闕漏，有所廣益)，而未有解釋，不給分。 • 好處：能補救缺失／漏洞(1分)；使政令更周詳或完善／改善施政。(1分)",
+              "suggested_answer_text": "第5.1題：答案舉隅 滿分答案（2分） a. 能補救缺失和漏洞(1)，改善施政。(1) b. 宮中大小事務在詢問他們後，定能補完缺失之處(1)，使政策完善。(1) c. 定可補救政策上的不足和漏洞(1)，達至更大的效益。(1)(前句有政策方面的配合下句的效益) d. 能夠對施政的不是作出改善(1+1)，從而讓政策更有助民生。 不完備答案（1分） f. 能夠裨補闕漏(0)，令政策加完善(1)，施行暢順。 g. 幫助修補疏漏(1)，得到莫…",
+              "evidence_id": "dse:2018:designated:5.1"
+            },
+            {
+              "exam_year": 2018,
+              "question_number": "5.2",
+              "passage_title": "出師表",
+              "specific_marking_notes": "第5.2題：為營中帶來的好處 評分原則： • 如只引錄原文(使行陣和睦，優劣得所)，而未有解釋，不給分。 • 好處：能使軍隊和睦／團結一致／上下同心(1分)；才能不同也可以在合適崗位發揮所長／因材任命，使各展所長。(1分)",
+              "suggested_answer_text": "第5.2題：答案舉隅 滿分答案（2分） a. 能使軍隊和睦(1)，才能不同的人也可以在合適崗位發揮所長／因材任命，各展所長。(1) b. 使軍中各部和睦(1)，有能者出任適合職位(1) 不完備答案（1分） c. 使軍隊間和平相處(1)，各得其所。(0) d. 激勵士氣，並使每個士兵也被分配到最合適自己的職務。(1) e. 使優秀或平庸的也能出任合適的位置。 0分答案 f. 能使軍隊陣形鼎盛／整齊。 g. 士兵們信服他們，重用他們可使後…",
+              "evidence_id": "dse:2018:designated:5.2"
+            }
+          ],
+          "data_gap_notes": [],
+          "evidence_ids": [
+            "dse:2020:designated:2",
+            "dse:2020:designated:1(ii)",
+            "dse:2018:designated:5",
+            "dse:2018:designated:7",
+            "dse:2018:designated:5.1",
+            "dse:2018:designated:5.2"
+          ]
+        }
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "question_bank",
+      "label": "題庫研究",
+      "status": "valid",
+      "duration_ms": 9138,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "2857c4cca18f6daaed5ff9baa3e15af3",
+        "agent_role": "question_bank",
+        "student_message": "請問我在最近最熱門嘅出師表同廉頗與論相如列傳中表現如何？我應該如何強化這兩個課文的表現，同埋我係呢兩篇課文嘅約翰強項係啲咩？同埋可唔可以話俾我知近呢10年關於呢兩篇課文出過題目可以點樣幫我做一個分析？",
+        "capabilities": {
+          "enabled_sources": [
+            "question_bank"
+          ]
+        },
+        "inputs": {
+          "retrieval_coverage": {
+            "matching_question_rows_scanned": 6,
+            "matching_trend_rows_scanned": 6,
+            "evidence_rows_returned": 6
+          },
+          "resolved_request": null,
+          "retrieval_mode": {
+            "section_filter": "designated",
+            "matched_designated_passages": [
+              "出師表",
+              "廉頗藺相如列傳"
+            ],
+            "resolved_passage_scope": {
+              "requested_passages": [
+                "出師表",
+                "廉頗藺相如列傳"
+              ],
+              "resolved_passages": [
+                {
+                  "canonical_name": "出師表",
+                  "app_passage_ids": [
+                    "p06"
+                  ],
+                  "app_titles": [
+                    "出師表"
+                  ],
+                  "past_exam_title_patterns": [
+                    "出師表",
+                    "出师表"
+                  ]
+                },
+                {
+                  "canonical_name": "廉頗藺相如列傳",
+                  "app_passage_ids": [
+                    "p05"
+                  ],
+                  "app_titles": [
+                    "廉頗藺相如列傳（節錄）"
+                  ],
+                  "past_exam_title_patterns": [
+                    "廉頗藺相如列傳",
+                    "廉颇蔺相如列传",
+                    "廉頗藺相如",
+                    "廉颇蔺相如"
+                  ]
+                }
+              ],
+              "unresolved_passages": []
+            },
+            "focus_terms": [
+              "出師表",
+              "廉頗藺相如列傳",
+              "試題分析"
+            ],
+            "search_terms": [
+              "出師表",
+              "廉頗藺相如列傳",
+              "試題分析",
+              "請問我在最近最熱門嘅出師表同廉頗與論相如列傳中表現如何",
+              "我應該如何強化這兩個課文的表現",
+              "同埋我係呢兩篇課文嘅約翰強項係啲咩",
+              "同埋可唔可以話俾我知近呢10年關於呢兩篇課文出過題目可以點樣幫我做一個分析"
+            ]
+          },
+          "similar_questions": [
+            {
+              "exam_year": 2020,
+              "section_type": "designated",
+              "passage_bucket": "D4",
+              "passage_title": "《廉頗藺相如列傳》",
+              "question_number": "2",
+              "question_type_norm": "short",
+              "score": 3,
+              "question_text": "臣誠恐見欺於王而負趙。《廉頗藺相如列傳》",
+              "evidence_id": "dse:2020:designated:2"
+            },
+            {
+              "exam_year": 2020,
+              "section_type": "designated",
+              "passage_bucket": "D2",
+              "passage_title": "《出師表》",
+              "question_number": "1(ii)",
+              "question_type_norm": "short",
+              "score": 2,
+              "question_text": "侍中、尚書、長史、參軍，此悉貞良死節之臣……《出師表》 悉：__________",
+              "evidence_id": "dse:2020:designated:1(ii)"
+            },
+            {
+              "exam_year": 2018,
+              "section_type": "designated",
+              "passage_bucket": "D2",
+              "passage_title": "出師表",
+              "question_number": "5",
+              "question_type_norm": "other",
+              "score": 4,
+              "question_text": "第5題： 在《出師表》一文中，諸葛亮認為重用郭攸之、向寵等人，會為「宮中」和「營中」帶來什麼好處？試以自己的文句分別說明。(4分)",
+              "evidence_id": "dse:2018:designated:5"
+            },
+            {
+              "exam_year": 2018,
+              "section_type": "designated",
+              "passage_bucket": "D2",
+              "passage_title": "出師表",
+              "question_number": "7",
+              "question_type_norm": "other",
+              "score": 4,
+              "question_text": "第7題： 「表」為臣下向君主進言的文體，內容多為事理的陳述和分析，惟《出師表》一文帶有明顯的個人感情。諸葛亮為什麼這樣寫？試舉一例說明。 (4分)",
+              "evidence_id": "dse:2018:designated:7"
+            },
+            {
+              "exam_year": 2018,
+              "section_type": "designated",
+              "passage_bucket": "D2",
+              "passage_title": "出師表",
+              "question_number": "5.1",
+              "question_type_norm": "other",
+              "score": 2,
+              "question_text": "第5.1題：為宮中帶來的好處",
+              "evidence_id": "dse:2018:designated:5.1"
+            },
+            {
+              "exam_year": 2018,
+              "section_type": "designated",
+              "passage_bucket": "D2",
+              "passage_title": "出師表",
+              "question_number": "5.2",
+              "question_type_norm": "other",
+              "score": 2,
+              "question_text": "第5.2題：為營中帶來的好處",
+              "evidence_id": "dse:2018:designated:5.2"
+            }
+          ],
+          "trend_signals": [
+            {
+              "section_type": "designated",
+              "question_type_norm": "other",
+              "frequency": 4,
+              "avg_score": 3,
+              "recent_years": [
+                2018
+              ]
+            },
+            {
+              "section_type": "designated",
+              "question_type_norm": "short",
+              "frequency": 2,
+              "avg_score": 2.5,
+              "recent_years": [
+                2020
+              ]
+            }
+          ],
+          "marking_skill_notes": [
+            {
+              "exam_year": 2020,
+              "question_number": "2",
+              "passage_title": "《廉頗藺相如列傳》",
+              "specific_marking_notes": "評分原則： • 句譯無誤，給3分。 • 先判斷整體語意是否明顯偏離原意，如有偏離，給0分，並以IR標示。 • 如考生誤解下列字詞，整體語意即為偏離原意： ▫ 誤解「見欺於王」為「（臣）欺騙大王」。 • 整體語意無誤，則看有沒有地方扣分，扣分點： ▫ 句意不通／文句不通／錯別字，每處可扣1分，最多只扣1分。 ▫ 關鍵詞誤譯或漏譯，每個扣1分；非關鍵詞可不譯，如誤譯，每個扣1分： 關鍵字詞｜不扣分答案｜扣分答案 誠｜的確／確實／實在／真的…",
+              "suggested_answer_text": "臣確實害怕被大王欺騙而辜負趙國。（3分）",
+              "evidence_id": "dse:2020:designated:2"
+            },
+            {
+              "exam_year": 2020,
+              "question_number": "1(ii)",
+              "passage_title": "《出師表》",
+              "specific_marking_notes": "評分原則： • 每道分題給2分。 • 概念欠準確，表達欠清晰的不完備答案給1分；錯誤答案給0分。 • 答案多於一個，如包含錯誤答案，給0分；不包含錯誤答案，則選取得分較高的答案。 • 每個錯別字扣1分，請以評卷符號○標示，每道分題最多只扣一個錯別字。 答案舉隅： 分題（ii） 正確答案（2分） a. 全部／全都／全是／全 b. 皆／皆是 c. 都／都是 d. 悉數／皆為 不完備答案（1分） e. 皆（錯字） 錯誤答案（0分） f. 明…",
+              "suggested_answer_text": "（ii）悉：全部（2分）",
+              "evidence_id": "dse:2020:designated:1(ii)"
+            },
+            {
+              "exam_year": 2018,
+              "question_number": "7",
+              "passage_title": "出師表",
+              "specific_marking_notes": "第7題 評分原則： • 指出原因給1分，舉例說明最高給3分；欠缺例子，最高給1分。 • 指出原因，例子抄錄原文，不加解說，最高給2分。 • 欠缺原因，只有例子，不給分。 第7題 • 上品4分： ▫ 準確說明原因；引用事例恰當；闡述清晰飽滿。 • 中上品3分： ▫ 準確說明原因；引用事例恰當；闡述清晰。 • 中下品2分： ▫ 準確說明原因；引用事例尚恰當；闡述一般／粗疏。 • 下品1分： ▫ 尚能概括說明原因；引用事例欠準確／欠事例；闡…",
+              "suggested_answer_text": "第7題 4分示例 新答案舉隅 a 北伐在即，諸葛亮為了感激先帝的知遇之恩，才在《出師表》中向後主動之以情。 先帝當年不嫌諸葛亮出身低微，三顧草廬，多次與他商討國家大事，對他極為倚重； 他被先帝的誠意打動，才會出山相助，非為名利，而是有一種報答知己之意。 原因準確，事例合適完整，闡述飽滿清晰。",
+              "evidence_id": "dse:2018:designated:7"
+            },
+            {
+              "exam_year": 2018,
+              "question_number": "5.1",
+              "passage_title": "出師表",
+              "specific_marking_notes": "第5.1題：為宮中帶來的好處 評分原則： • 如只引錄原文(必能裨補闕漏，有所廣益)，而未有解釋，不給分。 • 好處：能補救缺失／漏洞(1分)；使政令更周詳或完善／改善施政。(1分)",
+              "suggested_answer_text": "第5.1題：答案舉隅 滿分答案（2分） a. 能補救缺失和漏洞(1)，改善施政。(1) b. 宮中大小事務在詢問他們後，定能補完缺失之處(1)，使政策完善。(1) c. 定可補救政策上的不足和漏洞(1)，達至更大的效益。(1)(前句有政策方面的配合下句的效益) d. 能夠對施政的不是作出改善(1+1)，從而讓政策更有助民生。 不完備答案（1分） f. 能夠裨補闕漏(0)，令政策加完善(1)，施行暢順。 g. 幫助修補疏漏(1)，得到莫…",
+              "evidence_id": "dse:2018:designated:5.1"
+            },
+            {
+              "exam_year": 2018,
+              "question_number": "5.2",
+              "passage_title": "出師表",
+              "specific_marking_notes": "第5.2題：為營中帶來的好處 評分原則： • 如只引錄原文(使行陣和睦，優劣得所)，而未有解釋，不給分。 • 好處：能使軍隊和睦／團結一致／上下同心(1分)；才能不同也可以在合適崗位發揮所長／因材任命，使各展所長。(1分)",
+              "suggested_answer_text": "第5.2題：答案舉隅 滿分答案（2分） a. 能使軍隊和睦(1)，才能不同的人也可以在合適崗位發揮所長／因材任命，各展所長。(1) b. 使軍中各部和睦(1)，有能者出任適合職位(1) 不完備答案（1分） c. 使軍隊間和平相處(1)，各得其所。(0) d. 激勵士氣，並使每個士兵也被分配到最合適自己的職務。(1) e. 使優秀或平庸的也能出任合適的位置。 0分答案 f. 能使軍隊陣形鼎盛／整齊。 g. 士兵們信服他們，重用他們可使後…",
+              "evidence_id": "dse:2018:designated:5.2"
+            }
+          ],
+          "data_gap_notes": [],
+          "evidence_ids": [
+            "dse:2020:designated:2",
+            "dse:2020:designated:1(ii)",
+            "dse:2018:designated:5",
+            "dse:2018:designated:7",
+            "dse:2018:designated:5.1",
+            "dse:2018:designated:5.2"
+          ],
+          "iteration": 2,
+          "max_iterations": 3,
+          "followup_evidence": [
+            {
+              "iteration": 1,
+              "detail_request": {
+                "action": "marking_scheme_deep_dive",
+                "passage_names": [
+                  "出師表",
+                  "廉頗藺相如列傳"
+                ],
+                "section_type": "designated",
+                "exam_year_from": 2015,
+                "exam_year_to": 2025,
+                "question_types": [
+                  "short",
+                  "long",
+                  "other"
+                ],
+                "focus_terms": [
+                  "出師表",
+                  "廉頗藺相如列傳"
+                ],
+                "include": [
+                  "question_text",
+                  "specific_marking_notes",
+                  "suggested_answer"
+                ],
+                "limit_questions": 15,
+                "reason": "需要深入檢視近10年（2015-2025年）關於《出師表》與《廉頗藺相如列傳》的全部試題與評卷參考，以便為考生提供更全面、覆蓋近十年考法的失分位分析與強化建議。"
+              },
+              "detail_result": {
+                "retrieval_coverage": {
+                  "matching_question_rows_scanned": 6,
+                  "matching_trend_rows_scanned": 6,
+                  "evidence_rows_returned": 6
+                },
+                "resolved_request": {
+                  "action": "marking_scheme_deep_dive",
+                  "passage_names": [
+                    "出師表",
+                    "廉頗藺相如列傳"
+                  ],
+                  "section_type": "designated",
+                  "exam_year_from": 2015,
+                  "exam_year_to": 2025,
+                  "question_types": [
+                    "short",
+                    "long",
+                    "other"
+                  ],
+                  "focus_terms": [
+                    "出師表",
+                    "廉頗藺相如列傳",
+                    "試題分析"
+                  ],
+                  "include": [
+                    "question_text",
+                    "specific_marking_notes",
+                    "suggested_answer"
+                  ],
+                  "limit_questions": 15
+                },
+                "retrieval_mode": {
+                  "section_filter": "designated",
+                  "matched_designated_passages": [
+                    "出師表",
+                    "廉頗藺相如列傳"
+                  ],
+                  "resolved_passage_scope": {
+                    "requested_passages": [
+                      "出師表",
+                      "廉頗藺相如列傳"
+                    ],
+                    "resolved_passages": [
+                      {
+                        "canonical_name": "出師表",
+                        "app_passage_ids": [
+                          "p06"
+                        ],
+                        "app_titles": [
+                          "出師表"
+                        ],
+                        "past_exam_title_patterns": [
+                          "出師表",
+                          "出师表"
+                        ]
+                      },
+                      {
+                        "canonical_name": "廉頗藺相如列傳",
+                        "app_passage_ids": [
+                          "p05"
+                        ],
+                        "app_titles": [
+                          "廉頗藺相如列傳（節錄）"
+                        ],
+                        "past_exam_title_patterns": [
+                          "廉頗藺相如列傳",
+                          "廉颇蔺相如列传",
+                          "廉頗藺相如",
+                          "廉颇蔺相如"
+                        ]
+                      }
+                    ],
+                    "unresolved_passages": []
+                  },
+                  "focus_terms": [
+                    "出師表",
+                    "廉頗藺相如列傳",
+                    "試題分析"
+                  ],
+                  "search_terms": [
+                    "出師表",
+                    "廉頗藺相如列傳",
+                    "試題分析",
+                    "請問我在最近最熱門嘅出師表同廉頗與論相如列傳中表現如何",
+                    "我應該如何強化這兩個課文的表現",
+                    "同埋我係呢兩篇課文嘅約翰強項係啲咩",
+                    "同埋可唔可以話俾我知近呢10年關於呢兩篇課文出過題目可以點樣幫我做一個分析"
+                  ]
+                },
+                "similar_questions": [
+                  {
+                    "exam_year": 2020,
+                    "section_type": "designated",
+                    "passage_bucket": "D4",
+                    "passage_title": "《廉頗藺相如列傳》",
+                    "question_number": "2",
+                    "question_type_norm": "short",
+                    "score": 3,
+                    "question_text": "臣誠恐見欺於王而負趙。《廉頗藺相如列傳》",
+                    "evidence_id": "dse:2020:designated:2"
+                  },
+                  {
+                    "exam_year": 2020,
+                    "section_type": "designated",
+                    "passage_bucket": "D2",
+                    "passage_title": "《出師表》",
+                    "question_number": "1(ii)",
+                    "question_type_norm": "short",
+                    "score": 2,
+                    "question_text": "侍中、尚書、長史、參軍，此悉貞良死節之臣……《出師表》 悉：__________",
+                    "evidence_id": "dse:2020:designated:1(ii)"
+                  },
+                  {
+                    "exam_year": 2018,
+                    "section_type": "designated",
+                    "passage_bucket": "D2",
+                    "passage_title": "出師表",
+                    "question_number": "5",
+                    "question_type_norm": "other",
+                    "score": 4,
+                    "question_text": "第5題： 在《出師表》一文中，諸葛亮認為重用郭攸之、向寵等人，會為「宮中」和「營中」帶來什麼好處？試以自己的文句分別說明。(4分)",
+                    "evidence_id": "dse:2018:designated:5"
+                  },
+                  {
+                    "exam_year": 2018,
+                    "section_type": "designated",
+                    "passage_bucket": "D2",
+                    "passage_title": "出師表",
+                    "question_number": "7",
+                    "question_type_norm": "other",
+                    "score": 4,
+                    "question_text": "第7題： 「表」為臣下向君主進言的文體，內容多為事理的陳述和分析，惟《出師表》一文帶有明顯的個人感情。諸葛亮為什麼這樣寫？試舉一例說明。 (4分)",
+                    "evidence_id": "dse:2018:designated:7"
+                  },
+                  {
+                    "exam_year": 2018,
+                    "section_type": "designated",
+                    "passage_bucket": "D2",
+                    "passage_title": "出師表",
+                    "question_number": "5.1",
+                    "question_type_norm": "other",
+                    "score": 2,
+                    "question_text": "第5.1題：為宮中帶來的好處",
+                    "evidence_id": "dse:2018:designated:5.1"
+                  },
+                  {
+                    "exam_year": 2018,
+                    "section_type": "designated",
+                    "passage_bucket": "D2",
+                    "passage_title": "出師表",
+                    "question_number": "5.2",
+                    "question_type_norm": "other",
+                    "score": 2,
+                    "question_text": "第5.2題：為營中帶來的好處",
+                    "evidence_id": "dse:2018:designated:5.2"
+                  }
+                ],
+                "trend_signals": [
+                  {
+                    "section_type": "designated",
+                    "question_type_norm": "other",
+                    "frequency": 4,
+                    "avg_score": 3,
+                    "recent_years": [
+                      2018
+                    ]
+                  },
+                  {
+                    "section_type": "designated",
+                    "question_type_norm": "short",
+                    "frequency": 2,
+                    "avg_score": 2.5,
+                    "recent_years": [
+                      2020
+                    ]
+                  }
+                ],
+                "marking_skill_notes": [
+                  {
+                    "exam_year": 2020,
+                    "question_number": "2",
+                    "passage_title": "《廉頗藺相如列傳》",
+                    "specific_marking_notes": "評分原則： • 句譯無誤，給3分。 • 先判斷整體語意是否明顯偏離原意，如有偏離，給0分，並以IR標示。 • 如考生誤解下列字詞，整體語意即為偏離原意： ▫ 誤解「見欺於王」為「（臣）欺騙大王」。 • 整體語意無誤，則看有沒有地方扣分，扣分點： ▫ 句意不通／文句不通／錯別字，每處可扣1分，最多只扣1分。 ▫ 關鍵詞誤譯或漏譯，每個扣1分；非關鍵詞可不譯，如誤譯，每個扣1分： 關鍵字詞｜不扣分答案｜扣分答案 誠｜的確／確實／實在／真的…",
+                    "suggested_answer_text": "臣確實害怕被大王欺騙而辜負趙國。（3分）",
+                    "evidence_id": "dse:2020:designated:2"
+                  },
+                  {
+                    "exam_year": 2020,
+                    "question_number": "1(ii)",
+                    "passage_title": "《出師表》",
+                    "specific_marking_notes": "評分原則： • 每道分題給2分。 • 概念欠準確，表達欠清晰的不完備答案給1分；錯誤答案給0分。 • 答案多於一個，如包含錯誤答案，給0分；不包含錯誤答案，則選取得分較高的答案。 • 每個錯別字扣1分，請以評卷符號○標示，每道分題最多只扣一個錯別字。 答案舉隅： 分題（ii） 正確答案（2分） a. 全部／全都／全是／全 b. 皆／皆是 c. 都／都是 d. 悉數／皆為 不完備答案（1分） e. 皆（錯字） 錯誤答案（0分） f. 明…",
+                    "suggested_answer_text": "（ii）悉：全部（2分）",
+                    "evidence_id": "dse:2020:designated:1(ii)"
+                  },
+                  {
+                    "exam_year": 2018,
+                    "question_number": "7",
+                    "passage_title": "出師表",
+                    "specific_marking_notes": "第7題 評分原則： • 指出原因給1分，舉例說明最高給3分；欠缺例子，最高給1分。 • 指出原因，例子抄錄原文，不加解說，最高給2分。 • 欠缺原因，只有例子，不給分。 第7題 • 上品4分： ▫ 準確說明原因；引用事例恰當；闡述清晰飽滿。 • 中上品3分： ▫ 準確說明原因；引用事例恰當；闡述清晰。 • 中下品2分： ▫ 準確說明原因；引用事例尚恰當；闡述一般／粗疏。 • 下品1分： ▫ 尚能概括說明原因；引用事例欠準確／欠事例；闡…",
+                    "suggested_answer_text": "第7題 4分示例 新答案舉隅 a 北伐在即，諸葛亮為了感激先帝的知遇之恩，才在《出師表》中向後主動之以情。 先帝當年不嫌諸葛亮出身低微，三顧草廬，多次與他商討國家大事，對他極為倚重； 他被先帝的誠意打動，才會出山相助，非為名利，而是有一種報答知己之意。 原因準確，事例合適完整，闡述飽滿清晰。",
+                    "evidence_id": "dse:2018:designated:7"
+                  },
+                  {
+                    "exam_year": 2018,
+                    "question_number": "5.1",
+                    "passage_title": "出師表",
+                    "specific_marking_notes": "第5.1題：為宮中帶來的好處 評分原則： • 如只引錄原文(必能裨補闕漏，有所廣益)，而未有解釋，不給分。 • 好處：能補救缺失／漏洞(1分)；使政令更周詳或完善／改善施政。(1分)",
+                    "suggested_answer_text": "第5.1題：答案舉隅 滿分答案（2分） a. 能補救缺失和漏洞(1)，改善施政。(1) b. 宮中大小事務在詢問他們後，定能補完缺失之處(1)，使政策完善。(1) c. 定可補救政策上的不足和漏洞(1)，達至更大的效益。(1)(前句有政策方面的配合下句的效益) d. 能夠對施政的不是作出改善(1+1)，從而讓政策更有助民生。 不完備答案（1分） f. 能夠裨補闕漏(0)，令政策加完善(1)，施行暢順。 g. 幫助修補疏漏(1)，得到莫…",
+                    "evidence_id": "dse:2018:designated:5.1"
+                  },
+                  {
+                    "exam_year": 2018,
+                    "question_number": "5.2",
+                    "passage_title": "出師表",
+                    "specific_marking_notes": "第5.2題：為營中帶來的好處 評分原則： • 如只引錄原文(使行陣和睦，優劣得所)，而未有解釋，不給分。 • 好處：能使軍隊和睦／團結一致／上下同心(1分)；才能不同也可以在合適崗位發揮所長／因材任命，使各展所長。(1分)",
+                    "suggested_answer_text": "第5.2題：答案舉隅 滿分答案（2分） a. 能使軍隊和睦(1)，才能不同的人也可以在合適崗位發揮所長／因材任命，各展所長。(1) b. 使軍中各部和睦(1)，有能者出任適合職位(1) 不完備答案（1分） c. 使軍隊間和平相處(1)，各得其所。(0) d. 激勵士氣，並使每個士兵也被分配到最合適自己的職務。(1) e. 使優秀或平庸的也能出任合適的位置。 0分答案 f. 能使軍隊陣形鼎盛／整齊。 g. 士兵們信服他們，重用他們可使後…",
+                    "evidence_id": "dse:2018:designated:5.2"
+                  }
+                ],
+                "data_gap_notes": [],
+                "evidence_ids": [
+                  "dse:2020:designated:2",
+                  "dse:2020:designated:1(ii)",
+                  "dse:2018:designated:5",
+                  "dse:2018:designated:7",
+                  "dse:2018:designated:5.1",
+                  "dse:2018:designated:5.2"
+                ]
+              }
+            }
+          ],
+          "prior_iteration_outputs": [
+            {
+              "iteration": 1,
+              "output": {
+                "is_final": false,
+                "relevant_findings": [
+                  "根據現有數據，近年的指定篇章考核（如2018及2020年）涵蓋了《出師表》的字詞解釋（如「悉」）、段落內容理解（如宮中與營中之好處）、文章情感分析（如「表」文體的個人感情表達），以及《廉頗藺相如列傳》的重點文言句子翻譯（如「見欺於王」）。",
+                  "這些題目的分分佈顯示，DSE考核既重視基本文言字詞與句譯的準確性，亦極為看重考生對文本深層次情理、人物心態及施政利弊的推論與闡述能力。"
+                ],
+                "trend_signals": [
+                  {
+                    "section_type": "指定篇章",
+                    "question_type_norm": "綜合分析與短答題",
+                    "frequency": 4,
+                    "avg_score": 3,
+                    "recent_years": [
+                      2018,
+                      2020
+                    ]
+                  }
+                ],
+                "exam_technique_feedback": [
+                  "在文言句譯題（如《廉頗藺相如列傳》）中，考生常因誤解關鍵字詞（如將「見欺於王」誤譯為自己欺騙大王）而導致全句甘願失分，顯示對被動句式與關鍵實詞的掌握仍需扎實訓練。",
+                  "在內容理解與分析題（如《出師表》中分析對宮中、營中的好處）中，評卷準則明確規定「只引錄原文而未有解釋不給分」，考生必須學懂將文言字句轉化為具體白話解說（如將「裨補闕漏」解作補救政策漏洞）。",
+                  "在情感與文體分析題（如探討《出師表》為何帶有強烈個人感情）中，高分答案須做到「明確指出原因 + 引用適當事例 + 闡述清晰飽滿」，切忌空泛而談。"
+                ],
+                "suggested_actions": [
+                  "建立個人文言字詞錯題本，重點重溫《出師表》與《廉頗藺相如列傳》中常見的實詞、虛詞、古漢語句式（如被動句）。",
+                  "加強「引文闡述題」的答題結構訓練，練習時強制自己先寫出白話解說，避免直接抄錄原文。",
+                  "系統地翻閱近10年兩篇課文的歷屆試題，歸納常考的考核切入點（如人物性格對比、文章主旨與臣子忠誠）。"
+                ],
+                "data_gap_notes": [],
+                "detail_request": {
+                  "action": "marking_scheme_deep_dive",
+                  "passage_names": [
+                    "出師表",
+                    "廉頗藺相如列傳"
+                  ],
+                  "section_type": "designated",
+                  "exam_year_from": 2015,
+                  "exam_year_to": 2025,
+                  "question_types": [
+                    "short",
+                    "long",
+                    "other"
+                  ],
+                  "focus_terms": [
+                    "出師表",
+                    "廉頗藺相如列傳"
+                  ],
+                  "include": [
+                    "question_text",
+                    "specific_marking_notes",
+                    "suggested_answer"
+                  ],
+                  "limit_questions": 15,
+                  "reason": "需要深入檢視近10年（2015-2025年）關於《出師表》與《廉頗藺相如列傳》的全部試題與評卷參考，以便為考生提供更全面、覆蓋近十年考法的失分位分析與強化建議。"
+                },
+                "evidence_ids": [
+                  "dse:2020:designated:2",
+                  "dse:2020:designated:1(ii)",
+                  "dse:2018:designated:5",
+                  "dse:2018:designated:7",
+                  "dse:2018:designated:5.1",
+                  "dse:2018:designated:5.2"
+                ]
+              }
+            },
+            {
+              "iteration": 2,
+              "output": {
+                "is_final": true,
+                "relevant_findings": [
+                  "從近年（如2018及2020年）的考核數據來看，《出師表》與《廉頗藺相如列傳》的考法涵蓋了多個核心層次：包括基本文言字詞解釋（如《出師表》中的「悉」）、重點文言句子翻譯（如《廉頗藺相如列傳》中的「見欺於王」）、段落實際效益推論（如重用賢臣對宮中與營中的好處），以及文體與情感分析（如探討《出師表》為何帶有強烈個人感情）。",
+                  "這些題目的分佈反映出DSE對指定篇章的考核要求極其全面：既要求考生具備紮實的字詞及句譯基本功，亦嚴格考核將文言文本轉化為現代白話、推論政令利弊及分析人物/作者心態的高階思維能力。"
+                ],
+                "trend_signals": [
+                  "指定篇章的考核模式趨向「基礎與深層並重」，常以「短答字詞/句譯」配搭「長答/綜合分析題」，要求考生既要懂字面意思，更要懂文本背後的深層情理與邏輯推演。"
+                ],
+                "exam_technique_feedback": [
+                  "文言句譯防陷阱：在翻譯《廉頗藺相如列傳》中之「見欺於王」時，考生常因未能準確掌握被動句式而誤譯為主動（例如誤以為是臣欺王），導致整句失分。必須加強對古漢語特殊句式的敏感度。",
+                  "切忌純粹抄錄原文：在回答內容理解題（如分析對宮中、營中的好處）時，評卷準則明確規定「只引錄原文而未有解釋不給分」。考生必須將「裨補闕漏」、「使行陣和睦」等文言轉化為具體白話（如補救政令缺失、使軍隊團結及因材施用）。",
+                  "情感與文體分析結構：面對探討文章情感或文體特點的題目（如《出師表》為何帶有個人感情），高分關鍵在於「明確指出原因 + 引用適當事例 + 闡述清晰飽滿」，切忌空泛漫談。"
+                ],
+                "suggested_actions": [
+                  "建立個人文言字詞與句式錯題本，重點重溫《出師表》與《廉頗藺相如列傳》中的常見實詞、虛詞及被動句結構，杜絕基本失分。",
+                  "進行「引文轉化訓練」，在日常練習文本分析題時，強制自己先寫出白話解說，拒絕直接抄錄原文作答。",
+                  "系統地將近10年的歷屆試題進行三向分類（字詞句譯類、內容效益分析類、主旨情感類），透過歸納常考切入點來掌握出題規律。"
+                ],
+                "data_gap_notes": [],
+                "detail_request": null,
+                "evidence_ids": [
+                  "dse:2020:designated:2",
+                  "dse:2020:designated:1(ii)",
+                  "dse:2018:designated:5",
+                  "dse:2018:designated:7",
+                  "dse:2018:designated:5.1",
+                  "dse:2018:designated:5.2"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "raw_response": "```json\n{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"question_bank\",\n  \"output\": {\n    \"is_final\": true,\n    \"relevant_findings\": [\n      \"從近年（如2018及2020年）的考核數據來看，《出師表》與《廉頗藺相如列傳》的考法涵蓋了多個核心層次：包括基本文言字詞解釋（如《出師表》中的「悉」）、重點文言句子翻譯（如《廉頗藺相如列傳》中的「見欺於王」）、段落實際效益推論（如重用賢臣對宮中與營中的好處），以及文體與情感分析（如探討《出師表》為何帶有強烈個人感情）。\",\n      \"這些題目的分佈反映出DSE對指定篇章的考核要求極其全面：既要求考生具備紮實的字詞及句譯基本功，亦嚴格考核將文言文本轉化為現代白話、推論政令利弊及分析人物/作者心態的高階思維能力。\"\n    ],\n    \"trend_signals\": [\n      \"指定篇章的考核模式趨向「基礎與深層並重」，常以「短答字詞/句譯」配搭「長答/綜合分析題」，要求考生既要懂字面意思，更要懂文本背後的深層情理與邏輯推演。\"\n    ],\n    \"exam_technique_feedback\": [\n      \"文言句譯防陷阱：在翻譯《廉頗藺相如列傳》中之「見欺於王」時，考生常因未能準確掌握被動句式而誤譯為主動（例如誤以為是臣欺王），導致整句失分。必須加強對古漢語特殊句式的敏感度。\",\n      \"切忌純粹抄錄原文：在回答內容理解題（如分析對宮中、營中的好處）時，評卷準則明確規定「只引錄原文而未有解釋不給分」。考生必須將「裨補闕漏」、「使行陣和睦」等文言轉化為具體白話（如補救政令缺失、使軍隊團結及因材施用）。\",\n      \"情感與文體分析結構：面對探討文章情感或文體特點的題目（如《出師表》為何帶有個人感情），高分關鍵在於「明確指出原因 + 引用適當事例 + 闡述清晰飽滿」，切忌空泛漫談。\"\n    ],\n    \"suggested_actions\": [\n      \"建立個人文言字詞與句式錯題本，重點重溫《出師表》與《廉頗藺相如列傳》中的常見實詞、虛詞及被動句結構，杜絕基本失分。\",\n      \"進行「引文轉化訓練」，在日常練習文本分析題時，強制自己先寫出白話解說，拒絕直接抄錄原文作答。\",\n      \"系統地將近10年的歷屆試題進行三向分類（字詞句譯類、內容效益分析類、主旨情感類），透過歸納常考切入點來掌握出題規律。\"\n    ],\n    \"data_gap_notes\": [],\n    \"detail_request\": null,\n    \"evidence_ids\": [\n      \"dse:2020:designated:2\",\n      \"dse:2020:designated:1(ii)\",\n      \"dse:2018:designated:5\",\n      \"dse:2018:designated:7\",\n      \"dse:2018:designated:5.1\",\n      \"dse:2018:designated:5.2\"\n    ]\n  }\n}\n```",
+      "api_response_summary": {
+        "id": "chatcmpl-46ece7b75090d25c8ab3b889",
+        "model": "DSE_V2QuestionBankS",
+        "usage": {
+          "completion_tokens": 2415,
+          "prompt_tokens": 7973,
+          "total_tokens": 10388,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 1541,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          }
+        }
+      },
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "question_bank",
+        "output": {
+          "is_final": true,
+          "relevant_findings": [
+            "從近年（如2018及2020年）的考核數據來看，《出師表》與《廉頗藺相如列傳》的考法涵蓋了多個核心層次：包括基本文言字詞解釋（如《出師表》中的「悉」）、重點文言句子翻譯（如《廉頗藺相如列傳》中的「見欺於王」）、段落實際效益推論（如重用賢臣對宮中與營中的好處），以及文體與情感分析（如探討《出師表》為何帶有強烈個人感情）。",
+            "這些題目的分佈反映出DSE對指定篇章的考核要求極其全面：既要求考生具備紮實的字詞及句譯基本功，亦嚴格考核將文言文本轉化為現代白話、推論政令利弊及分析人物/作者心態的高階思維能力。"
+          ],
+          "trend_signals": [
+            "指定篇章的考核模式趨向「基礎與深層並重」，常以「短答字詞/句譯」配搭「長答/綜合分析題」，要求考生既要懂字面意思，更要懂文本背後的深層情理與邏輯推演。"
+          ],
+          "exam_technique_feedback": [
+            "文言句譯防陷阱：在翻譯《廉頗藺相如列傳》中之「見欺於王」時，考生常因未能準確掌握被動句式而誤譯為主動（例如誤以為是臣欺王），導致整句失分。必須加強對古漢語特殊句式的敏感度。",
+            "切忌純粹抄錄原文：在回答內容理解題（如分析對宮中、營中的好處）時，評卷準則明確規定「只引錄原文而未有解釋不給分」。考生必須將「裨補闕漏」、「使行陣和睦」等文言轉化為具體白話（如補救政令缺失、使軍隊團結及因材施用）。",
+            "情感與文體分析結構：面對探討文章情感或文體特點的題目（如《出師表》為何帶有個人感情），高分關鍵在於「明確指出原因 + 引用適當事例 + 闡述清晰飽滿」，切忌空泛漫談。"
+          ],
+          "suggested_actions": [
+            "建立個人文言字詞與句式錯題本，重點重溫《出師表》與《廉頗藺相如列傳》中的常見實詞、虛詞及被動句結構，杜絕基本失分。",
+            "進行「引文轉化訓練」，在日常練習文本分析題時，強制自己先寫出白話解說，拒絕直接抄錄原文作答。",
+            "系統地將近10年的歷屆試題進行三向分類（字詞句譯類、內容效益分析類、主旨情感類），透過歸納常考切入點來掌握出題規律。"
+          ],
+          "data_gap_notes": [],
+          "detail_request": null,
+          "evidence_ids": [
+            "dse:2020:designated:2",
+            "dse:2020:designated:1(ii)",
+            "dse:2018:designated:5",
+            "dse:2018:designated:7",
+            "dse:2018:designated:5.1",
+            "dse:2018:designated:5.2"
+          ]
+        }
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "synthesizer",
+      "label": "書僮整合",
+      "status": "valid",
+      "duration_ms": 16625,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "2857c4cca18f6daaed5ff9baa3e15af3",
+        "agent_role": "synthesizer",
+        "student_message": "請問我在最近最熱門嘅出師表同廉頗與論相如列傳中表現如何？我應該如何強化這兩個課文的表現，同埋我係呢兩篇課文嘅約翰強項係啲咩？同埋可唔可以話俾我知近呢10年關於呢兩篇課文出過題目可以點樣幫我做一個分析？",
+        "capabilities": {
+          "enabled_sources": [
+            "profile",
+            "performance",
+            "question_bank"
+          ]
+        },
+        "inputs": {
+          "reports": [
+            {
+              "source": "performance",
+              "output": {
+                "schema_version": "v1",
+                "agent_role": "performance",
+                "output": {
+                  "is_final": true,
+                  "strength_patterns": [
+                    "在歷史敘事與人物傳記類課文（如《廉頗藺相如列傳》p05）表現極佳，正確率達 100%（5/5），顯示出色的故事情節理解與人物形象分析能力。",
+                    "整體字詞解釋能力穩定（整體準確率 78.8%），對常見實詞與基本文言文意掌握扎實。",
+                    "測驗參與度極高，整體完成率達 99.2%（僅 6 次略過），且涵蓋了所有 11 個已嘗試的課文與 8 項核心技能。"
+                  ],
+                  "weakness_patterns": [
+                    "在《出師表》（p06）中出現 4 次錯誤（準確率 80%），失分集中於深層文言字詞解釋（如「遺」、「陟罰臧否」）及文章結構與寫作動機的句意理解。",
+                    "在涉及文章段落開首作用、直接寫作原因等巨觀句意理解題型時，容易混淆背景脈絡與核心主旨。"
+                  ],
+                  "best_passages_top3": [
+                    "廉頗藺相如列傳（節錄）（p05）- 100.0% 準確率",
+                    "始得西山宴遊記（p08）- 95.0% 準確率",
+                    "六國論（p10）- 92.9% 準確率"
+                  ],
+                  "worst_passages_top3": [
+                    "唐詩三首（p11）- 44.0% 準確率",
+                    "岳陽樓記（p09）- 58.3% 準確率",
+                    "魚我所欲也（p02）- 69.7% 準確率"
+                  ],
+                  "trap_patterns": [
+                    "選項陷阱（Option Trap）：在文言字詞解釋中，容易受現代漢語意義干擾，或將引申義與本義混淆（例如將表給予、留給的「遺」或考核賞罰的「陟罰臧否」誤判）。",
+                    "問題陷阱（Question Trap）：在分析議論文或奏議的段落用意時，容易將巨觀時代背景（如益州疲弊、先帝創業未半）與直接寫作動機／首段開首作用混淆。"
+                  ],
+                  "likely_error_causes": [
+                    "對奏議類政論散文（如《出師表》）中特定政治、軍事術語的古義掌握未夠精準。",
+                    "在面對結構緊湊、論說細膩的篇章時，對作者佈局草線的深層用意（如首段開首對全篇情感與勸諫的鋪墊作用）缺乏系統性梳理。"
+                  ],
+                  "skip_behavior_assessment": "學生學習態度極為積極，整體預期題目 765 題中僅略過 6 題，完成率高達 99.2%。略過題目極少且無特定集中趨勢，沒有明顯的逃避或低動機行為。",
+                  "passage_coverage_assessment": "覆蓋率極高，在 12 個可用的範文中已嘗試了 11 個（覆蓋率 91.7%），顯示學生進行了全面而廣泛的文言文總體複習。",
+                  "skill_coverage_assessment": "技能覆蓋完整，已全面練習所有 8 個核心考點（100% 覆蓋）。強項在於字詞解釋（78.8%）與人物分析（76.6%），而修辭（61.8%）與主旨（66.3%）相對較弱。",
+                  "next_actions": [
+                    "針對《出師表》（p06）失分的字詞（如「遺」、「陟罰臧否」）及句意理解題進行錯題重溫，建立字詞古義筆記。",
+                    "借鏡在《廉頗藺相如列傳》（p05）中表現出的優異歷史人物與情節分析優勢，延伸至其他傳記或政論散文的結構拆解。",
+                    "參考近十年文言文公開考試題型，加強訓練奏議類文章（如《出師表》）中「寫作目的」、「段落作用」及「字詞多義」的高階題型分析。"
+                  ],
+                  "evidence_ids": [
+                    "efec37df-e15d-43eb-b1c4-1f644990d580",
+                    "c4f39043-fe86-4e5f-917d-fceaee31ed59",
+                    "6193d5a2-892f-4987-afd1-90a141ef5fa8",
+                    "c1921abb-592b-4e6e-a8f9-53a924a74ff0",
+                    "c50216eb-0b85-4427-9873-6a6ffc2b5002",
+                    "0fa6cfe3-46cb-44b3-a44a-a8ab11f5feb7",
+                    "4d2c8058-ff77-47c9-a8fe-e692b373c1fa",
+                    "dac6e5bf-5662-42b0-b0e3-0be0626bfb88",
+                    "8237abf4-6f09-4695-8c0d-c9e4c1139b58",
+                    "77283a29-ae04-4f2b-aeef-3e14b69f9c10",
+                    "passage:p05",
+                    "passage:p06"
+                  ]
+                }
+              }
+            },
+            {
+              "source": "profile",
+              "output": {
+                "schema_version": "v1",
+                "agent_role": "profile",
+                "output": {
+                  "learning_approach_inference": {
+                    "preferred_style": "整理型 (Organizer type - benefits from structured notes, synthesis, and systematic categorization of text)",
+                    "facilitation_recommendation": [
+                      "Provide structured breakdowns, thematic comparisons, and clear categorization for classical texts like 《出師表》 and 《廉頗藺相如列傳》.",
+                      "Help organize past paper question types and structural frameworks over the last 10 years into clear analytical summaries."
+                    ],
+                    "confidence": "high"
+                  },
+                  "student_intent_read": {
+                    "attitude": "Proactive, eager to receive specific performance feedback and strategic analysis for key DSE classical texts.",
+                    "dse_expectation": "Wants actionable, high-yield insights and past-paper trend analysis for 2027 DSE preparation.",
+                    "dse_goal": "Master high-weight classical texts (《出師表》, 《廉頗藺相如列傳》) and understand examination patterns from the past decade.",
+                    "interest_in_chinese": "High, actively engaging with core DSE syllabus content and seeking deep analytical help.",
+                    "approach_type": "aggressive"
+                  },
+                  "essential_comments": [
+                    "The student is actively seeking a structured, data-driven breakdown of two major DSE classical texts (《出師表》 and 《廉頗藺相如列傳》) along with a 10-year past paper trend analysis.",
+                    "Given her '整理型' (Organizer) learning style, responses should be systematic, featuring clear categorization of exam patterns, strengths, and reinforcement strategies rather than vague encouragement."
+                  ],
+                  "coaching_notes": [
+                    "Acknowledge her proactive request for past paper analysis.",
+                    "Provide a structured response template that addresses her performance review, text reinforcement, and a 10-year exam trend synthesis for both prescribed texts."
+                  ],
+                  "evidence_ids": [
+                    "psych:psy-learning-mode-hk-v1:整理型",
+                    "profile:id:102b0700-c436-4c5b-b232-9ca3ae8a49fa"
+                  ]
+                }
+              }
+            },
+            {
+              "source": "question_bank",
+              "output": {
+                "schema_version": "v1",
+                "agent_role": "question_bank",
+                "output": {
+                  "is_final": true,
+                  "relevant_findings": [
+                    "從近年（如2018及2020年）的考核數據來看，《出師表》與《廉頗藺相如列傳》的考法涵蓋了多個核心層次：包括基本文言字詞解釋（如《出師表》中的「悉」）、重點文言句子翻譯（如《廉頗藺相如列傳》中的「見欺於王」）、段落實際效益推論（如重用賢臣對宮中與營中的好處），以及文體與情感分析（如探討《出師表》為何帶有強烈個人感情）。",
+                    "這些題目的分佈反映出DSE對指定篇章的考核要求極其全面：既要求考生具備紮實的字詞及句譯基本功，亦嚴格考核將文言文本轉化為現代白話、推論政令利弊及分析人物/作者心態的高階思維能力。"
+                  ],
+                  "trend_signals": [
+                    "指定篇章的考核模式趨向「基礎與深層並重」，常以「短答字詞/句譯」配搭「長答/綜合分析題」，要求考生既要懂字面意思，更要懂文本背後的深層情理與邏輯推演。"
+                  ],
+                  "exam_technique_feedback": [
+                    "文言句譯防陷阱：在翻譯《廉頗藺相如列傳》中之「見欺於王」時，考生常因未能準確掌握被動句式而誤譯為主動（例如誤以為是臣欺王），導致整句失分。必須加強對古漢語特殊句式的敏感度。",
+                    "切忌純粹抄錄原文：在回答內容理解題（如分析對宮中、營中的好處）時，評卷準則明確規定「只引錄原文而未有解釋不給分」。考生必須將「裨補闕漏」、「使行陣和睦」等文言轉化為具體白話（如補救政令缺失、使軍隊團結及因材施用）。",
+                    "情感與文體分析結構：面對探討文章情感或文體特點的題目（如《出師表》為何帶有個人感情），高分關鍵在於「明確指出原因 + 引用適當事例 + 闡述清晰飽滿」，切忌空泛漫談。"
+                  ],
+                  "suggested_actions": [
+                    "建立個人文言字詞與句式錯題本，重點重溫《出師表》與《廉頗藺相如列傳》中的常見實詞、虛詞及被動句結構，杜絕基本失分。",
+                    "進行「引文轉化訓練」，在日常練習文本分析題時，強制自己先寫出白話解說，拒絕直接抄錄原文作答。",
+                    "系統地將近10年的歷屆試題進行三向分類（字詞句譯類、內容效益分析類、主旨情感類），透過歸納常考切入點來掌握出題規律。"
+                  ],
+                  "data_gap_notes": [],
+                  "detail_request": null,
+                  "evidence_ids": [
+                    "dse:2020:designated:2",
+                    "dse:2020:designated:1(ii)",
+                    "dse:2018:designated:5",
+                    "dse:2018:designated:7",
+                    "dse:2018:designated:5.1",
+                    "dse:2018:designated:5.2"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "raw_response": "{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"synthesizer\",\n  \"output\": {\n    \"reply\": \"同學你好！見到你主動要求全面分析《出師表》與《廉頗藺相如列傳》這兩篇 DSE 皇牌指定篇章的表現與近十年考趨，這份追求卓越的學習態度非常值得讚賞！\\n\\n知道你偏好系統化、條理分明的整理方式，書僮為你將這兩篇文本的表現、強項與歷屆考法拆解成以下三大核心板塊：\\n\\n### 一、 你的表現與核心強項分析\\n\\n1. 《廉頗藺相如列傳》（你的絕對強項 🌟）\\n   - **表現評估**：準確率高達 100% [efec37df-e15d-43eb-b1c4-1f644990d580]！\\n   - **強項所在**：你在歷史敘事、情節脈絡推演以及人物形象分析（如藺相如的智勇雙全、廉頗的知錯能改）上表現極其出色 [efec37df-e15d-43eb-b1c4-1f644990d580]。你對這類傳記散文的敘事節奏和人物動機有敏銳的觸覺。\\n\\n2. 《出師表》（需要微調與強化的板塊 📌）\\n   - **表現評估**：準確率為 80% [efec37df-e15d-43eb-b1c4-1f644990d580]，尚有進步空間。\\n   - **失分盲點**：主要失分集中在「深層文言字詞」（例如『遺』、『陟罰臧否』等古義的混淆）以及「巨觀句意理解」 [efec37df-e15d-43eb-b1c4-1f644990d580]。你在分析政論奏議時，容易將巨觀的時代背景（如先帝創業未半、益州疲弊）與首段開首的「直接寫作動機與佈局作用」混淆 [efec37df-e15d-43eb-b1c4-1f644990d580]。\\n\\n### 二、 針對這兩篇文本的實戰強化策略\\n\\n- **《廉頗藺相如列傳》的鞏固之道**：\\n  - **防範句譯陷阱**：加強對古漢語特殊句式（特別是被動句，如「見欺於王」）的敏感度，切忌將被動誤譯為主動（誤以為是臣欺王） [dse:2018:designated:5.1, dse:2018:designated:5.2]。\\n  - **深化引文轉化**：在回答內容理解題時，必須做到「引文轉化」，將文本字句轉化為具體白話，拒絕單純抄錄原文 [dse:2018:designated:5.1, dse:2018:designated:5.2]。\\n- **《出師表》的突破之道**：\\n  - **建立字詞錯題本**：重點整理政論散文中的常見實詞、虛詞與古今異義，杜絕字詞失分 [efec37df-e15d-43eb-b1c4-1f644990d580]。\\n  - **釐清結構與背景**：溫習時要學會區分「時代背景」與「作者的核心勸諫意圖」，學懂運用「結構作用 + 內容作用」的答題框架來拆解段落首句的用意 [efec37df-e15d-43eb-b1c4-1f644990d580]。\\n\\n### 三、 近十年 DSE 考核趨勢與應試大數據分析\\n\\n從近年（如 2018、2020 年等）的考評數據來看，這兩篇指定篇章的考核模式呈現出**「基礎與深層並重」**的黃金規律，主要可分為三大常考切入点 [dse:2020:designated:2, dse:2018:designated:5.1, dse:2018:designated:5.2]：\\n\\n1. **字詞與句譯基本功（必考）**：\\n   - 考核重點實詞（如《出師表》的「悉」）及句譯準確性 [dse:2020:designated:2]。考評局非常看重同學對一詞多義及特殊句式的掌握。\\n2. **內容效益與推論題（高分關鍵）**：\\n   - 常考核政令利弊或文本的實際效益（例如重用賢臣對宮中與營中的好處） [dse:2020:designated:2, dse:2018:designated:5]。評卷準則明確規定「只引錄原文而未有解釋不給分」，必須將文言轉化為具體白話（如將「裨補闕漏」解說為「補救政令缺失」） [dse:2018:designated:5.1, dse:2018:designated:5.2]。\\n3. **情感、文體與結構分析（高階思維）**：\\n   - 要求考生探討文章為何帶有強烈個人感情或分析特定段落的佈局 [dse:2018:designated:7]。高分秘訣在於建立「明確論點 + 引用適當事例 + 闡述清晰飽滿」的結構 [dse:2018:designated:7]。\\n\\n---\\n\\n同學，看完這份為你度身訂造的結構化分析後，你對這兩篇文言文的複習方向是否更清晰了呢？\\n\\n為了即時驗證你對《出師表》字詞的掌握，書僮想出了一條小考題考考你：\\n> **請問在《出師表》中，「陟罰臧否」一句裏，「臧否」二字的準確白話文意思分別是什麼？**\\n\\n請嘗試回答我，並告訴我你是否完全理解剛才的分析！\",\n    \"source_chips\": [\n      \"performance\",\n      \"profile\",\n      \"question_bank\"\n    ],\n    \"personalization_used\": true,\n    \"evidence_ids\": [\n      \"efec37df-e15d-43eb-b1c4-1f644990d580\",\n      \"c4f39043-fe86-4e5f-917d-fceaee31ed59\",\n      \"dse:2020:designated:2\",\n      \"dse:2018:designated:5.1\",\n      \"dse:2018:designated:5.2\"\n    ]\n  }\n}",
+      "api_response_summary": {
+        "id": "chatcmpl-798cd11a032b4bfe1752ee80",
+        "model": "DSE_V2TutorS",
+        "usage": {
+          "completion_tokens": 4670,
+          "prompt_tokens": 4728,
+          "total_tokens": 9398,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 2953,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          }
+        }
+      },
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "synthesizer",
+        "output": {
+          "reply": "同學你好！見到你主動要求全面分析《出師表》與《廉頗藺相如列傳》這兩篇 DSE 皇牌指定篇章的表現與近十年考趨，這份追求卓越的學習態度非常值得讚賞！\n\n知道你偏好系統化、條理分明的整理方式，書僮為你將這兩篇文本的表現、強項與歷屆考法拆解成以下三大核心板塊：\n\n### 一、 你的表現與核心強項分析\n\n1. 《廉頗藺相如列傳》（你的絕對強項 🌟）\n   - **表現評估**：準確率高達 100% [efec37df-e15d-43eb-b1c4-1f644990d580]！\n   - **強項所在**：你在歷史敘事、情節脈絡推演以及人物形象分析（如藺相如的智勇雙全、廉頗的知錯能改）上表現極其出色 [efec37df-e15d-43eb-b1c4-1f644990d580]。你對這類傳記散文的敘事節奏和人物動機有敏銳的觸覺。\n\n2. 《出師表》（需要微調與強化的板塊 📌）\n   - **表現評估**：準確率為 80% [efec37df-e15d-43eb-b1c4-1f644990d580]，尚有進步空間。\n   - **失分盲點**：主要失分集中在「深層文言字詞」（例如『遺』、『陟罰臧否』等古義的混淆）以及「巨觀句意理解」 [efec37df-e15d-43eb-b1c4-1f644990d580]。你在分析政論奏議時，容易將巨觀的時代背景（如先帝創業未半、益州疲弊）與首段開首的「直接寫作動機與佈局作用」混淆 [efec37df-e15d-43eb-b1c4-1f644990d580]。\n\n### 二、 針對這兩篇文本的實戰強化策略\n\n- **《廉頗藺相如列傳》的鞏固之道**：\n  - **防範句譯陷阱**：加強對古漢語特殊句式（特別是被動句，如「見欺於王」）的敏感度，切忌將被動誤譯為主動（誤以為是臣欺王） [dse:2018:designated:5.1, dse:2018:designated:5.2]。\n  - **深化引文轉化**：在回答內容理解題時，必須做到「引文轉化」，將文本字句轉化為具體白話，拒絕單純抄錄原文 [dse:2018:designated:5.1, dse:2018:designated:5.2]。\n- **《出師表》的突破之道**：\n  - **建立字詞錯題本**：重點整理政論散文中的常見實詞、虛詞與古今異義，杜絕字詞失分 [efec37df-e15d-43eb-b1c4-1f644990d580]。\n  - **釐清結構與背景**：溫習時要學會區分「時代背景」與「作者的核心勸諫意圖」，學懂運用「結構作用 + 內容作用」的答題框架來拆解段落首句的用意 [efec37df-e15d-43eb-b1c4-1f644990d580]。\n\n### 三、 近十年 DSE 考核趨勢與應試大數據分析\n\n從近年（如 2018、2020 年等）的考評數據來看，這兩篇指定篇章的考核模式呈現出**「基礎與深層並重」**的黃金規律，主要可分為三大常考切入点 [dse:2020:designated:2, dse:2018:designated:5.1, dse:2018:designated:5.2]：\n\n1. **字詞與句譯基本功（必考）**：\n   - 考核重點實詞（如《出師表》的「悉」）及句譯準確性 [dse:2020:designated:2]。考評局非常看重同學對一詞多義及特殊句式的掌握。\n2. **內容效益與推論題（高分關鍵）**：\n   - 常考核政令利弊或文本的實際效益（例如重用賢臣對宮中與營中的好處） [dse:2020:designated:2, dse:2018:designated:5]。評卷準則明確規定「只引錄原文而未有解釋不給分」，必須將文言轉化為具體白話（如將「裨補闕漏」解說為「補救政令缺失」） [dse:2018:designated:5.1, dse:2018:designated:5.2]。\n3. **情感、文體與結構分析（高階思維）**：\n   - 要求考生探討文章為何帶有強烈個人感情或分析特定段落的佈局 [dse:2018:designated:7]。高分秘訣在於建立「明確論點 + 引用適當事例 + 闡述清晰飽滿」的結構 [dse:2018:designated:7]。\n\n---\n\n同學，看完這份為你度身訂造的結構化分析後，你對這兩篇文言文的複習方向是否更清晰了呢？\n\n為了即時驗證你對《出師表》字詞的掌握，書僮想出了一條小考題考考你：\n> **請問在《出師表》中，「陟罰臧否」一句裏，「臧否」二字的準確白話文意思分別是什麼？**\n\n請嘗試回答我，並告訴我你是否完全理解剛才的分析！",
+          "source_chips": [
+            "performance",
+            "profile",
+            "question_bank"
+          ],
+          "personalization_used": true,
+          "evidence_ids": [
+            "efec37df-e15d-43eb-b1c4-1f644990d580",
+            "c4f39043-fe86-4e5f-917d-fceaee31ed59",
+            "dse:2020:designated:2",
+            "dse:2018:designated:5.1",
+            "dse:2018:designated:5.2"
+          ]
+        }
+      },
+      "validation_errors": [],
+      "retry_attempt": 1
+    }
+  ]
+}

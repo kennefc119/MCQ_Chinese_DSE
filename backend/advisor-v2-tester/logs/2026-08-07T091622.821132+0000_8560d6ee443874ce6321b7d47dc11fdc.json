@@ -1,0 +1,88 @@
+{
+  "request_id": "8560d6ee443874ce6321b7d47dc11fdc",
+  "started_at": "2026-08-07T09:16:22.821132+00:00",
+  "mode": "poe",
+  "student_message": "測試 live 模式",
+  "enabled_sources": [
+    "profile",
+    "performance",
+    "question_bank"
+  ],
+  "prompt_hashes": {
+    "orchestrator": "93b1e9fd9591",
+    "profile": "1ebf5df17d3c",
+    "performance": "65c36418a564",
+    "question_bank": "d347753651af",
+    "synthesizer": "bb34455545a7"
+  },
+  "traces": [
+    {
+      "role": "orchestrator",
+      "label": "規劃器",
+      "status": "valid",
+      "duration_ms": 1899,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "8560d6ee443874ce6321b7d47dc11fdc",
+        "agent_role": "orchestrator",
+        "student_message": "測試 live 模式",
+        "capabilities": {
+          "enabled_sources": [
+            "profile",
+            "performance",
+            "question_bank"
+          ]
+        },
+        "inputs": {}
+      },
+      "raw_response": "```json\n{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"orchestrator\",\n  \"route\": \"DIRECT\",\n  \"selected_sources\": [],\n  \"response_style\": \"concise_supportive\",\n  \"requires_review\": false,\n  \"question_query\": null,\n  \"reason\": \"Student is testing live mode with a general greeting/test message, requiring a direct, concise response without external sources.\"\n}\n```",
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "orchestrator",
+        "route": "DIRECT",
+        "selected_sources": [],
+        "response_style": "concise_supportive",
+        "requires_review": false,
+        "question_query": null,
+        "reason": "Student is testing live mode with a general greeting/test message, requiring a direct, concise response without external sources."
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "synthesizer",
+      "label": "書僮整合",
+      "status": "valid",
+      "duration_ms": 1367,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "8560d6ee443874ce6321b7d47dc11fdc",
+        "agent_role": "synthesizer",
+        "student_message": "測試 live 模式",
+        "capabilities": {
+          "enabled_sources": [
+            "profile",
+            "performance",
+            "question_bank"
+          ]
+        },
+        "inputs": {
+          "reports": []
+        }
+      },
+      "raw_response": "```json\n{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"synthesizer\",\n  \"output\": {\n    \"reply\": \"你好！我是你的 DSE 中文科學習助手。Live 模式運作正常，請問今天想溫習哪一篇指定篇章、練習綜合能力，還是重溫文憑試答題技巧呢？\",\n    \"source_chips\": [\"學習歷程\"],\n    \"personalization_used\": false,\n    \"evidence_ids\": []\n  }\n}\n```",
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "synthesizer",
+        "output": {
+          "reply": "你好！我是你的 DSE 中文科學習助手。Live 模式運作正常，請問今天想溫習哪一篇指定篇章、練習綜合能力，還是重溫文憑試答題技巧呢？",
+          "source_chips": [
+            "學習歷程"
+          ],
+          "personalization_used": false,
+          "evidence_ids": []
+        }
+      },
+      "validation_errors": []
+    }
+  ]
+}

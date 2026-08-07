@@ -1,0 +1,960 @@
+{
+  "request_id": "9203a018e55677be09844b4e3b6fed7e",
+  "started_at": "2026-08-07T10:31:04.550593+00:00",
+  "mode": "poe",
+  "data_mode": "supabase",
+  "student_id": "05c32959-d1b2-4787-832a-b6216e5bc7e6",
+  "student_message": "我最近閱讀理解總是失分，應該如何改善？",
+  "enabled_sources": [
+    "profile",
+    "performance"
+  ],
+  "prompt_hashes": {
+    "orchestrator": "17c9d73f6f40",
+    "profile": "55be16262ae5",
+    "performance": "1d8d77d1691b",
+    "question_bank": "180105404650",
+    "synthesizer": "383030fe114c"
+  },
+  "traces": [
+    {
+      "role": "orchestrator",
+      "label": "規劃器",
+      "status": "valid",
+      "duration_ms": 2770,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "9203a018e55677be09844b4e3b6fed7e",
+        "agent_role": "orchestrator",
+        "student_message": "我最近閱讀理解總是失分，應該如何改善？",
+        "capabilities": {
+          "enabled_sources": [
+            "profile",
+            "performance"
+          ]
+        },
+        "inputs": {}
+      },
+      "raw_response": "{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"orchestrator\",\n  \"route\": \"PERFORMANCE_DIAGNOSIS\",\n  \"selected_sources\": [\n    \"performance\",\n    \"profile\"\n  ],\n  \"response_style\": \"concise_supportive\",\n  \"requires_review\": false,\n  \"question_query\": null,\n  \"reason\": \"Analyze student performance and profile data to diagnose reading comprehension loss points.\",\n  \"task_breakdown\": [\n    {\n      \"source\": \"performance\",\n      \"task\": \"Analyze recent reading comprehension test scores and error types.\",\n      \"priority\": \"high\"\n    },\n    {\n      \"source\": \"profile\",\n      \"task\": \"Review student learning background and historical reading weaknesses.\",\n      \"priority\": \"medium\"\n    }\n  ]\n}",
+      "api_response_summary": {
+        "id": "chatcmpl-df915bfb6ad648a14a9579a6",
+        "model": "DSE_V2AdvisorO",
+        "usage": {
+          "completion_tokens": 706,
+          "prompt_tokens": 534,
+          "total_tokens": 1240,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 507,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          }
+        }
+      },
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "orchestrator",
+        "route": "PERFORMANCE_DIAGNOSIS",
+        "selected_sources": [
+          "performance",
+          "profile"
+        ],
+        "response_style": "concise_supportive",
+        "requires_review": false,
+        "question_query": null,
+        "reason": "Analyze student performance and profile data to diagnose reading comprehension loss points.",
+        "task_breakdown": [
+          {
+            "source": "performance",
+            "task": "Analyze recent reading comprehension test scores and error types.",
+            "priority": "high"
+          },
+          {
+            "source": "profile",
+            "task": "Review student learning background and historical reading weaknesses.",
+            "priority": "medium"
+          }
+        ]
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "performance",
+      "label": "表現分析",
+      "status": "valid",
+      "duration_ms": 5715,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "9203a018e55677be09844b4e3b6fed7e",
+        "agent_role": "performance",
+        "student_message": "我最近閱讀理解總是失分，應該如何改善？",
+        "capabilities": {
+          "enabled_sources": [
+            "performance"
+          ]
+        },
+        "inputs": {
+          "overall": {
+            "attempts": 34,
+            "correct": 20,
+            "total": 240,
+            "accuracy": 0.08333333333333333
+          },
+          "recent_attempts": [
+            {
+              "id": "37287720-e670-4844-884e-900ccfc78436",
+              "quiz_id": "quiz-ai-91e1ecce",
+              "score": 0,
+              "total": 10,
+              "submitted_at": "2026-08-07T08:13:27.097+00:00",
+              "time_spent_seconds": 5
+            },
+            {
+              "id": "bc323ecb-81ed-4f69-9dfc-c781d37b84f5",
+              "quiz_id": "quiz-ai-d5933106",
+              "score": 0,
+              "total": 10,
+              "submitted_at": "2026-08-07T06:24:02.604+00:00",
+              "time_spent_seconds": 6
+            },
+            {
+              "id": "79389a81-4da7-493b-beb3-ae03164cd9ae",
+              "quiz_id": "quiz-ai-c240cfcf",
+              "score": 0,
+              "total": 10,
+              "submitted_at": "2026-07-28T15:55:51.788+00:00",
+              "time_spent_seconds": 97
+            },
+            {
+              "id": "3d822048-3a68-472c-bd2b-a2fd1a9f0992",
+              "quiz_id": "quiz-ai-2a1f0b08",
+              "score": 0,
+              "total": 10,
+              "submitted_at": "2026-07-24T16:22:10.527+00:00",
+              "time_spent_seconds": 42
+            },
+            {
+              "id": "7779b210-d9cf-49a3-b189-acc804573657",
+              "quiz_id": "quiz-ai-6358bbec",
+              "score": 1,
+              "total": 5,
+              "submitted_at": "2026-07-23T18:24:17.677+00:00",
+              "time_spent_seconds": 9
+            },
+            {
+              "id": "6e107064-5679-4e2b-8946-78ff0ac3b01b",
+              "quiz_id": "quiz-ai-77641176",
+              "score": 1,
+              "total": 10,
+              "submitted_at": "2026-07-16T09:48:00.409+00:00",
+              "time_spent_seconds": 26
+            },
+            {
+              "id": "5966ed18-25ca-4869-8778-ba6c3339ae81",
+              "quiz_id": "quiz-ai-4be090ac",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-07-13T12:26:17.562+00:00",
+              "time_spent_seconds": 75
+            },
+            {
+              "id": "e2b016f2-1760-48e0-b3fa-19bd63942019",
+              "quiz_id": "quiz-ai-84b95897",
+              "score": 0,
+              "total": 20,
+              "submitted_at": "2026-07-10T13:55:24.541+00:00",
+              "time_spent_seconds": 35
+            },
+            {
+              "id": "c98660a2-4acd-4494-9c1a-2f5635842397",
+              "quiz_id": "quiz-ai-bae68764",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-07-05T15:31:07.593+00:00",
+              "time_spent_seconds": 43
+            },
+            {
+              "id": "08f4400c-79f5-46f0-a0c4-97f2801899be",
+              "quiz_id": "quiz-ai-efacc0ae",
+              "score": 2,
+              "total": 5,
+              "submitted_at": "2026-07-03T14:12:19.141+00:00",
+              "time_spent_seconds": 49
+            },
+            {
+              "id": "cf188a6a-0da0-4696-8242-209732c0401a",
+              "quiz_id": "quiz-ai-b0226528",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-26T16:22:26.123+00:00",
+              "time_spent_seconds": 4
+            },
+            {
+              "id": "8b6c480c-9620-463f-a6e8-1715a6d2092e",
+              "quiz_id": "quiz-ai-01a00070",
+              "score": 1,
+              "total": 5,
+              "submitted_at": "2026-06-26T10:37:01.883+00:00",
+              "time_spent_seconds": 80
+            },
+            {
+              "id": "b46ed5b5-cd7a-4fb4-9caf-026cd88a3ad8",
+              "quiz_id": "quiz-ai-b95afd5f",
+              "score": 0,
+              "total": 20,
+              "submitted_at": "2026-06-22T09:58:41.57+00:00",
+              "time_spent_seconds": 8
+            },
+            {
+              "id": "9ad4db89-ccba-442b-b565-0d2dbb36724f",
+              "quiz_id": "quiz-ai-0eda30fe",
+              "score": 2,
+              "total": 5,
+              "submitted_at": "2026-06-21T08:58:12.513+00:00",
+              "time_spent_seconds": 7
+            },
+            {
+              "id": "9425e19f-2283-4214-b706-70c6b5195d20",
+              "quiz_id": "quiz-ai-5288fa14",
+              "score": 3,
+              "total": 5,
+              "submitted_at": "2026-06-21T07:51:28.526+00:00",
+              "time_spent_seconds": 5
+            },
+            {
+              "id": "2d619a0b-e317-4b80-9a34-6f525b7eea2b",
+              "quiz_id": "quiz-ai-48493978",
+              "score": 1,
+              "total": 5,
+              "submitted_at": "2026-06-21T07:51:06.155+00:00",
+              "time_spent_seconds": 5
+            },
+            {
+              "id": "04fe29a8-816e-4650-8264-ea1051b298a9",
+              "quiz_id": "quiz-ai-0bdc8930",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-21T07:50:47.668+00:00",
+              "time_spent_seconds": 5
+            },
+            {
+              "id": "3f3a871d-229d-4733-9f99-829eb79b3876",
+              "quiz_id": "quiz-ai-064b85ab",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-21T07:36:32.565+00:00",
+              "time_spent_seconds": 4
+            },
+            {
+              "id": "59a51071-9967-498d-9d6f-3c84bec05cdb",
+              "quiz_id": "quiz-ai-66f38edc",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-13T16:12:56.586+00:00",
+              "time_spent_seconds": 6
+            },
+            {
+              "id": "e438df5c-9231-4254-b8dd-1210877919b3",
+              "quiz_id": "quiz-ai-ca93c0e1",
+              "score": 2,
+              "total": 5,
+              "submitted_at": "2026-06-13T09:51:29.455+00:00",
+              "time_spent_seconds": 7
+            },
+            {
+              "id": "487a0a29-69d8-479a-b6f1-05b50dfbd539",
+              "quiz_id": "quiz-ai-66f38edc",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-12T11:13:29.345+00:00",
+              "time_spent_seconds": 55
+            },
+            {
+              "id": "01ab7751-38c5-49ef-97d1-16bcfac46afe",
+              "quiz_id": "quiz-ai-489b6c5a",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-12T11:11:17.821+00:00",
+              "time_spent_seconds": 21
+            },
+            {
+              "id": "c01b8b9f-b991-41fe-8a0f-7f85e7021efb",
+              "quiz_id": "quiz-ai-ad187d5b",
+              "score": 0,
+              "total": 10,
+              "submitted_at": "2026-06-10T14:56:44.521+00:00",
+              "time_spent_seconds": 18
+            },
+            {
+              "id": "178abae4-eee2-4de3-8d33-e8cf23f0bad0",
+              "quiz_id": "quiz-ai-6c4f8448",
+              "score": 1,
+              "total": 5,
+              "submitted_at": "2026-06-08T11:05:48.343+00:00",
+              "time_spent_seconds": 5
+            },
+            {
+              "id": "7c50a4d9-ebe4-481d-965c-7520c6133aae",
+              "quiz_id": "quiz-ai-231d6f72",
+              "score": 2,
+              "total": 10,
+              "submitted_at": "2026-06-08T10:41:48.746+00:00",
+              "time_spent_seconds": 11
+            },
+            {
+              "id": "492f4db4-b0d3-44f1-96dc-70fdad7f7d8d",
+              "quiz_id": "quiz-ai-1f3edfed",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-08T10:41:27.558+00:00",
+              "time_spent_seconds": 6
+            },
+            {
+              "id": "e5d9beac-c164-4b99-89e0-af8071994648",
+              "quiz_id": "quiz-ai-5a47a09a",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-08T10:41:11.205+00:00",
+              "time_spent_seconds": 6
+            },
+            {
+              "id": "5f5fd027-5595-41f8-a41f-84294d97a822",
+              "quiz_id": "quiz-ai-61795629",
+              "score": 3,
+              "total": 5,
+              "submitted_at": "2026-06-08T10:40:53.668+00:00",
+              "time_spent_seconds": 5
+            },
+            {
+              "id": "8032791a-0a5d-4b28-bba9-6252dcc331bb",
+              "quiz_id": "quiz-ai-97b81fee",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-08T03:05:20.335+00:00",
+              "time_spent_seconds": 72
+            },
+            {
+              "id": "4475b699-69c9-443a-8182-5eae39898f69",
+              "quiz_id": "quiz-ai-97b81fee",
+              "score": 0,
+              "total": 5,
+              "submitted_at": "2026-06-08T03:02:19.04+00:00",
+              "time_spent_seconds": 17
+            }
+          ],
+          "skill_stats": [
+            {
+              "tag_id": "t-rhetoric",
+              "tag_label": "修辭",
+              "attempted": 1,
+              "correct": 0,
+              "accuracy": 0
+            },
+            {
+              "tag_id": "t-meaning",
+              "tag_label": "字詞解釋",
+              "attempted": 5,
+              "correct": 1,
+              "accuracy": 0.2
+            },
+            {
+              "tag_id": "t-comprehension",
+              "tag_label": "句意理解",
+              "attempted": 1,
+              "correct": 0,
+              "accuracy": 0
+            }
+          ],
+          "passage_stats": [
+            {
+              "passage_id": "p05",
+              "passage_title": "廉頗藺相如列傳（節錄）",
+              "attempted": 1,
+              "correct": 0,
+              "accuracy": 0
+            },
+            {
+              "passage_id": "p02",
+              "passage_title": "魚我所欲也",
+              "attempted": 5,
+              "correct": 1,
+              "accuracy": 0.2
+            },
+            {
+              "passage_id": "p03",
+              "passage_title": "逍遙遊（節錄）",
+              "attempted": 1,
+              "correct": 0,
+              "accuracy": 0
+            }
+          ],
+          "difficulty_stats": [
+            {
+              "difficulty": 1,
+              "attempted": 5,
+              "correct": 1,
+              "accuracy": 0.2
+            },
+            {
+              "difficulty": 2,
+              "attempted": 2,
+              "correct": 0,
+              "accuracy": 0
+            }
+          ],
+          "top_passages_best": [
+            {
+              "passage_id": "p02",
+              "passage_title": "魚我所欲也",
+              "attempted": 5,
+              "correct": 1,
+              "accuracy": 0.2
+            },
+            {
+              "passage_id": "p05",
+              "passage_title": "廉頗藺相如列傳（節錄）",
+              "attempted": 1,
+              "correct": 0,
+              "accuracy": 0
+            },
+            {
+              "passage_id": "p03",
+              "passage_title": "逍遙遊（節錄）",
+              "attempted": 1,
+              "correct": 0,
+              "accuracy": 0
+            }
+          ],
+          "top_passages_worst": [
+            {
+              "passage_id": "p05",
+              "passage_title": "廉頗藺相如列傳（節錄）",
+              "attempted": 1,
+              "correct": 0,
+              "accuracy": 0
+            },
+            {
+              "passage_id": "p03",
+              "passage_title": "逍遙遊（節錄）",
+              "attempted": 1,
+              "correct": 0,
+              "accuracy": 0
+            },
+            {
+              "passage_id": "p02",
+              "passage_title": "魚我所欲也",
+              "attempted": 5,
+              "correct": 1,
+              "accuracy": 0.2
+            }
+          ],
+          "skipped_attempts": 13,
+          "skipped_rate": 0.38235294117647056,
+          "coverage": {
+            "passages_attempted": 3,
+            "passages_total_available": 12,
+            "skills_attempted": 3,
+            "skills_total_available": 8
+          },
+          "evidence_ids": [
+            "37287720-e670-4844-884e-900ccfc78436",
+            "bc323ecb-81ed-4f69-9dfc-c781d37b84f5",
+            "79389a81-4da7-493b-beb3-ae03164cd9ae",
+            "3d822048-3a68-472c-bd2b-a2fd1a9f0992",
+            "7779b210-d9cf-49a3-b189-acc804573657",
+            "6e107064-5679-4e2b-8946-78ff0ac3b01b",
+            "5966ed18-25ca-4869-8778-ba6c3339ae81",
+            "e2b016f2-1760-48e0-b3fa-19bd63942019",
+            "c98660a2-4acd-4494-9c1a-2f5635842397",
+            "08f4400c-79f5-46f0-a0c4-97f2801899be",
+            "cf188a6a-0da0-4696-8242-209732c0401a",
+            "8b6c480c-9620-463f-a6e8-1715a6d2092e",
+            "b46ed5b5-cd7a-4fb4-9caf-026cd88a3ad8",
+            "9ad4db89-ccba-442b-b565-0d2dbb36724f",
+            "9425e19f-2283-4214-b706-70c6b5195d20",
+            "2d619a0b-e317-4b80-9a34-6f525b7eea2b",
+            "04fe29a8-816e-4650-8264-ea1051b298a9",
+            "3f3a871d-229d-4733-9f99-829eb79b3876",
+            "59a51071-9967-498d-9d6f-3c84bec05cdb",
+            "e438df5c-9231-4254-b8dd-1210877919b3",
+            "487a0a29-69d8-479a-b6f1-05b50dfbd539",
+            "01ab7751-38c5-49ef-97d1-16bcfac46afe",
+            "c01b8b9f-b991-41fe-8a0f-7f85e7021efb",
+            "178abae4-eee2-4de3-8d33-e8cf23f0bad0",
+            "7c50a4d9-ebe4-481d-965c-7520c6133aae",
+            "492f4db4-b0d3-44f1-96dc-70fdad7f7d8d",
+            "e5d9beac-c164-4b99-89e0-af8071994648",
+            "5f5fd027-5595-41f8-a41f-84294d97a822",
+            "8032791a-0a5d-4b28-bba9-6252dcc331bb",
+            "4475b699-69c9-443a-8182-5eae39898f69",
+            "tag:t-rhetoric",
+            "tag:t-meaning",
+            "tag:t-comprehension",
+            "passage:p05",
+            "passage:p02",
+            "passage:p03"
+          ],
+          "iteration": 1,
+          "max_iterations": 3,
+          "followup_evidence": []
+        }
+      },
+      "raw_response": "```json\n{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"performance\",\n  \"output\": {\n    \"is_final\": true,\n    \"strength_patterns\": [\n      \"嘗試挑戰多種不同題材與經典文本（如孟子、莊子、史記等古文經典）\"\n    ],\n    \"weakness_patterns\": [\n      \"整體正確率極低（整體準確率約 8.3%），在字詞解釋、句意理解與修辭等各項核心能力上表現均不理想\",\n      \"作答時間極短，許多測驗花費秒數在 5 至 10 秒之間，顯示有嚴重的高頻率亂猜或無效盲答（快思亂答）傾向\"\n    ],\n    \"best_passages_top3\": [\n      {\"passage_id\": \"p02\", \"passage_title\": \"魚我所欲也\", \"attempted\": 5, \"correct\": 1, \"accuracy\": 0.2},\n      {\"passage_id\": \"p05\", \"passage_title\": \"廉頗藺相如列傳（節錄）\", \"attempted\": 1, \"correct\": 0, \"accuracy\": 0},\n      {\"passage_id\": \"p03\", \"passage_title\": \"逍遙遊（節錄）\", \"attempted\": 1, \"correct\": 0, \"accuracy\": 0}\n    ],\n    \"worst_passages_top3\": [\n      {\"passage_id\": \"p05\", \"passage_title\": \"廉頗藺相如列傳（節錄）\", \"attempted\": 1, \"correct\": 0, \"accuracy\": 0},\n      {\"passage_id\": \"p03\", \"passage_title\": \"逍遙遊（節錄）\", \"attempted\": 1, \"correct\": 0, \"accuracy\": 0},\n      {\"passage_id\": \"p02\", \"passage_title\": \"魚我所欲也\", \"attempted\": 5, \"correct\": 1, \"accuracy\": 0.2}\n    ],\n    \"trap_patterns\": [\n      \"選項與題型陷阱受限於極端快速作答，學生多半未真正讀題便隨機選答案，無特定選項偏好，純粹因缺乏耐心或草率行事失分\"\n    ],\n    \"likely_error_causes\": [\n      \"作答態度草率，多次測驗時間僅 5 秒左右，根本未進行文本閱讀與思考\",\n      \"文言文基礎（如字詞解釋、句型結構與修辭手法）扎根不足，導致稍微遇到古典文句即放棄思考\"\n    ],\n    \"skip_behavior_assessment\": \"有顯著的快思與略過行為（skipped_rate 約 38% 且多數提交紀錄僅花費 5-10 秒），顯示學生在面對閱讀測驗時常放棄深度閱讀，直接盲猜送出。\",\n    \"passage_coverage_assessment\": \"文本覆蓋率極低（僅嘗試過 3 篇，總可用 12 篇），代表學生接觸面過窄且多數篇章完全未曾練習。\",\n    \"skill_coverage_assessment\": \"技能覆蓋率嚴重不足（僅涵蓋 3 項技能，總可用 8 項），對文言文核心能力如修辭、字詞、句意的掌握缺乏系統性訓練。\",\n    \"next_actions\": [\n      \"引導學生戒除「幾秒鐘快速盲猜」的壞習慣，規定每次作答必須保留劃線與思考時間（至少每題 30-60 秒）。\",\n      \"針對文言文字詞解釋與基本句意理解進行基礎重修，挑選如《魚我所欲也》等篇章進行逐句精讀訓練。\",\n      \"逐步擴大文本與題型覆蓋範圍，由淺入深重建閱讀信心。\"\n    ],\n    \"detail_request\": {\n      \"question_ids\": [],\n      \"passage_ids\": [],\n      \"tag_ids\": [],\n      \"lookback_attempts\": 80,\n      \"limit_questions\": 25,\n      \"reason\": \"\"\n    },\n    \"evidence_ids\": [\n      \"37287720-e670-4844-884e-900ccfc78436\",\n      \"bc323ecb-81ed-4f69-9dfc-c781d37b84f5\",\n      \"79389a81-4da7-493b-beb3-ae03164cd9ae\",\n      \"3d822048-3a68-472c-bd2b-a2fd1a9f0992\",\n      \"7779b210-d9cf-49a3-b189-acc804573657\",\n      \"tag:t-rhetoric\",\n      \"tag:t-meaning\",\n      \"tag:t-comprehension\",\n      \"passage:p05\",\n      \"passage:p02\",\n      \"passage:p03\"\n    ]\n  }\n}\n```",
+      "api_response_summary": {
+        "id": "chatcmpl-2dbd30ad027560cb2b89ef0e",
+        "model": "DSE_V2PerformanceS",
+        "usage": {
+          "completion_tokens": 1227,
+          "prompt_tokens": 5869,
+          "total_tokens": 7096,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          }
+        }
+      },
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "performance",
+        "output": {
+          "is_final": true,
+          "strength_patterns": [
+            "嘗試挑戰多種不同題材與經典文本（如孟子、莊子、史記等古文經典）"
+          ],
+          "weakness_patterns": [
+            "整體正確率極低（整體準確率約 8.3%），在字詞解釋、句意理解與修辭等各項核心能力上表現均不理想",
+            "作答時間極短，許多測驗花費秒數在 5 至 10 秒之間，顯示有嚴重的高頻率亂猜或無效盲答（快思亂答）傾向"
+          ],
+          "best_passages_top3": [
+            {
+              "passage_id": "p02",
+              "passage_title": "魚我所欲也",
+              "attempted": 5,
+              "correct": 1,
+              "accuracy": 0.2
+            },
+            {
+              "passage_id": "p05",
+              "passage_title": "廉頗藺相如列傳（節錄）",
+              "attempted": 1,
+              "correct": 0,
+              "accuracy": 0
+            },
+            {
+              "passage_id": "p03",
+              "passage_title": "逍遙遊（節錄）",
+              "attempted": 1,
+              "correct": 0,
+              "accuracy": 0
+            }
+          ],
+          "worst_passages_top3": [
+            {
+              "passage_id": "p05",
+              "passage_title": "廉頗藺相如列傳（節錄）",
+              "attempted": 1,
+              "correct": 0,
+              "accuracy": 0
+            },
+            {
+              "passage_id": "p03",
+              "passage_title": "逍遙遊（節錄）",
+              "attempted": 1,
+              "correct": 0,
+              "accuracy": 0
+            },
+            {
+              "passage_id": "p02",
+              "passage_title": "魚我所欲也",
+              "attempted": 5,
+              "correct": 1,
+              "accuracy": 0.2
+            }
+          ],
+          "trap_patterns": [
+            "選項與題型陷阱受限於極端快速作答，學生多半未真正讀題便隨機選答案，無特定選項偏好，純粹因缺乏耐心或草率行事失分"
+          ],
+          "likely_error_causes": [
+            "作答態度草率，多次測驗時間僅 5 秒左右，根本未進行文本閱讀與思考",
+            "文言文基礎（如字詞解釋、句型結構與修辭手法）扎根不足，導致稍微遇到古典文句即放棄思考"
+          ],
+          "skip_behavior_assessment": "有顯著的快思與略過行為（skipped_rate 約 38% 且多數提交紀錄僅花費 5-10 秒），顯示學生在面對閱讀測驗時常放棄深度閱讀，直接盲猜送出。",
+          "passage_coverage_assessment": "文本覆蓋率極低（僅嘗試過 3 篇，總可用 12 篇），代表學生接觸面過窄且多數篇章完全未曾練習。",
+          "skill_coverage_assessment": "技能覆蓋率嚴重不足（僅涵蓋 3 項技能，總可用 8 項），對文言文核心能力如修辭、字詞、句意的掌握缺乏系統性訓練。",
+          "next_actions": [
+            "引導學生戒除「幾秒鐘快速盲猜」的壞習慣，規定每次作答必須保留劃線與思考時間（至少每題 30-60 秒）。",
+            "針對文言文字詞解釋與基本句意理解進行基礎重修，挑選如《魚我所欲也》等篇章進行逐句精讀訓練。",
+            "逐步擴大文本與題型覆蓋範圍，由淺入深重建閱讀信心。"
+          ],
+          "detail_request": {
+            "question_ids": [],
+            "passage_ids": [],
+            "tag_ids": [],
+            "lookback_attempts": 80,
+            "limit_questions": 25,
+            "reason": ""
+          },
+          "evidence_ids": [
+            "37287720-e670-4844-884e-900ccfc78436",
+            "bc323ecb-81ed-4f69-9dfc-c781d37b84f5",
+            "79389a81-4da7-493b-beb3-ae03164cd9ae",
+            "3d822048-3a68-472c-bd2b-a2fd1a9f0992",
+            "7779b210-d9cf-49a3-b189-acc804573657",
+            "tag:t-rhetoric",
+            "tag:t-meaning",
+            "tag:t-comprehension",
+            "passage:p05",
+            "passage:p02",
+            "passage:p03"
+          ]
+        }
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "profile",
+      "label": "學生檔案",
+      "status": "valid",
+      "duration_ms": 3361,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "9203a018e55677be09844b4e3b6fed7e",
+        "agent_role": "profile",
+        "student_message": "我最近閱讀理解總是失分，應該如何改善？",
+        "capabilities": {
+          "enabled_sources": [
+            "profile"
+          ]
+        },
+        "inputs": {
+          "profile": {
+            "id": "05c32959-d1b2-4787-832a-b6216e5bc7e6",
+            "username": "少女",
+            "gender": "female",
+            "dse_year": 2027,
+            "subscription_tier": "premium",
+            "wenyuan_points": 310,
+            "created_at": "2026-05-08T11:01:38.94+00:00"
+          },
+          "psych_results": [
+            {
+              "test_id": "psy-dynasty-scholar-v1",
+              "result_code": "M",
+              "completed_at": "2026-06-27T10:37:48.569+00:00"
+            },
+            {
+              "test_id": "psy-writing-question-trap-v1",
+              "result_code": "關鍵詞忽略",
+              "completed_at": "2026-06-27T09:59:32.107+00:00"
+            },
+            {
+              "test_id": "psy-zuowen-potential-v1",
+              "result_code": "創意型",
+              "completed_at": "2026-06-26T17:26:02.848+00:00"
+            },
+            {
+              "test_id": "psy-dse-chinese-memorization-brain-v1",
+              "result_code": "A1",
+              "completed_at": "2026-06-26T17:25:46.08+00:00"
+            },
+            {
+              "test_id": "psy-dse-guzheng-like-v1",
+              "result_code": "taoqian",
+              "completed_at": "2026-06-13T07:06:15.862+00:00"
+            },
+            {
+              "test_id": "psy-learning-mode-hk-v1",
+              "result_code": "互動型",
+              "completed_at": "2026-05-17T07:09:30.883+00:00"
+            },
+            {
+              "test_id": "psy-dse-university-subject-fit-v1",
+              "result_code": "SCI",
+              "completed_at": "2026-05-17T07:08:52.409+00:00"
+            }
+          ],
+          "chat_history": [
+            {
+              "role": "user",
+              "text": "Hi can you analyze what is my prefernece in learning?",
+              "created_at": "2026-08-07T08:51:42.163522+00:00",
+              "request_id": "84ec50b6-fd52-4cff-a27b-2fac68162603"
+            }
+          ],
+          "evidence_ids": [
+            "psych:psy-dynasty-scholar-v1:M",
+            "psych:psy-writing-question-trap-v1:關鍵詞忽略",
+            "psych:psy-zuowen-potential-v1:創意型",
+            "psych:psy-dse-chinese-memorization-brain-v1:A1",
+            "psych:psy-dse-guzheng-like-v1:taoqian",
+            "psych:psy-learning-mode-hk-v1:互動型",
+            "psych:psy-dse-university-subject-fit-v1:SCI"
+          ]
+        }
+      },
+      "raw_response": "```json\n{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"profile\",\n  \"output\": {\n    \"learning_approach_inference\": {\n      \"preferred_style\": \"互動型 (Interactive)\",\n      \"facilitation_recommendation\": [\n        \"透過互動式問答幫助學生拆解閱讀理解題目\",\n        \"針對「關鍵詞忽略」的盲點進行針對性訓練，培養審題習慣\",\n        \"結合創意與邏輯分析，引 導學生從文本中提取核心信息\"\n      ],\n      \"confidence\": \"high\"\n    },\n    \"student_intent_read\": {\n      \"attitude\": \"主動求助，希望尋找具體改善閱讀理解失分的方法\",\n      \"dse_expectation\": \"目標在2027年DSE中文科取得理想成績，重視卷一閱讀能力的提升\",\n      \"dse_goal\": \"改善閱讀理解失分狀況，提升卷一答題準確度\",\n      \"interest_in_chinese\": \"中等偏高，願意主動針對弱項尋求改善方案\",\n      \"approach_type\": \"aggressive\"\n    },\n    \"essential_comments\": [\n      \"學生主動反映閱讀理解失分並詢問改善方法，展現積極的學習態度（aggressive）。\",\n      \"結合心理測驗結果，學生傾向「互動型」學習，且曾在「關鍵詞忽略」測驗中暴露審題盲點，這很可能是其閱讀理解失分的主因。\",\n      \"建議在指導時採用互動對話形式，重點訓練其審題與抓取關鍵詞的能力。\"\n    ],\n    \"coaching_notes\": [\n      \"避免單向講解，應透過引導式提問讓學生自行找出文章與題目的對應關鍵詞。\",\n      \"提醒學生注意題型陷阱，克服「關鍵詞忽略」的舊有盲點。\"\n    ],\n    \"evidence_ids\": [\n      \"psych:psy-learning-mode-hk-v1:互動型\",\n      \"psych:psy-writing-question-trap-v1:關鍵詞忽略\"\n    ]\n  }\n}\n```",
+      "api_response_summary": {
+        "id": "chatcmpl-0de7c3deb76357ed570ebf7d",
+        "model": "DSE_V2ProfileS",
+        "usage": {
+          "completion_tokens": 493,
+          "prompt_tokens": 1314,
+          "total_tokens": 1807,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          }
+        }
+      },
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "profile",
+        "output": {
+          "learning_approach_inference": {
+            "preferred_style": "互動型 (Interactive)",
+            "facilitation_recommendation": [
+              "透過互動式問答幫助學生拆解閱讀理解題目",
+              "針對「關鍵詞忽略」的盲點進行針對性訓練，培養審題習慣",
+              "結合創意與邏輯分析，引 導學生從文本中提取核心信息"
+            ],
+            "confidence": "high"
+          },
+          "student_intent_read": {
+            "attitude": "主動求助，希望尋找具體改善閱讀理解失分的方法",
+            "dse_expectation": "目標在2027年DSE中文科取得理想成績，重視卷一閱讀能力的提升",
+            "dse_goal": "改善閱讀理解失分狀況，提升卷一答題準確度",
+            "interest_in_chinese": "中等偏高，願意主動針對弱項尋求改善方案",
+            "approach_type": "aggressive"
+          },
+          "essential_comments": [
+            "學生主動反映閱讀理解失分並詢問改善方法，展現積極的學習態度（aggressive）。",
+            "結合心理測驗結果，學生傾向「互動型」學習，且曾在「關鍵詞忽略」測驗中暴露審題盲點，這很可能是其閱讀理解失分的主因。",
+            "建議在指導時採用互動對話形式，重點訓練其審題與抓取關鍵詞的能力。"
+          ],
+          "coaching_notes": [
+            "避免單向講解，應透過引導式提問讓學生自行找出文章與題目的對應關鍵詞。",
+            "提醒學生注意題型陷阱，克服「關鍵詞忽略」的舊有盲點。"
+          ],
+          "evidence_ids": [
+            "psych:psy-learning-mode-hk-v1:互動型",
+            "psych:psy-writing-question-trap-v1:關鍵詞忽略"
+          ]
+        }
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "synthesizer",
+      "label": "書僮整合",
+      "status": "valid",
+      "duration_ms": 10085,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "9203a018e55677be09844b4e3b6fed7e",
+        "agent_role": "synthesizer",
+        "student_message": "我最近閱讀理解總是失分，應該如何改善？",
+        "capabilities": {
+          "enabled_sources": [
+            "profile",
+            "performance"
+          ]
+        },
+        "inputs": {
+          "reports": [
+            {
+              "source": "performance",
+              "output": {
+                "schema_version": "v1",
+                "agent_role": "performance",
+                "output": {
+                  "is_final": true,
+                  "strength_patterns": [
+                    "嘗試挑戰多種不同題材與經典文本（如孟子、莊子、史記等古文經典）"
+                  ],
+                  "weakness_patterns": [
+                    "整體正確率極低（整體準確率約 8.3%），在字詞解釋、句意理解與修辭等各項核心能力上表現均不理想",
+                    "作答時間極短，許多測驗花費秒數在 5 至 10 秒之間，顯示有嚴重的高頻率亂猜或無效盲答（快思亂答）傾向"
+                  ],
+                  "best_passages_top3": [
+                    {
+                      "passage_id": "p02",
+                      "passage_title": "魚我所欲也",
+                      "attempted": 5,
+                      "correct": 1,
+                      "accuracy": 0.2
+                    },
+                    {
+                      "passage_id": "p05",
+                      "passage_title": "廉頗藺相如列傳（節錄）",
+                      "attempted": 1,
+                      "correct": 0,
+                      "accuracy": 0
+                    },
+                    {
+                      "passage_id": "p03",
+                      "passage_title": "逍遙遊（節錄）",
+                      "attempted": 1,
+                      "correct": 0,
+                      "accuracy": 0
+                    }
+                  ],
+                  "worst_passages_top3": [
+                    {
+                      "passage_id": "p05",
+                      "passage_title": "廉頗藺相如列傳（節錄）",
+                      "attempted": 1,
+                      "correct": 0,
+                      "accuracy": 0
+                    },
+                    {
+                      "passage_id": "p03",
+                      "passage_title": "逍遙遊（節錄）",
+                      "attempted": 1,
+                      "correct": 0,
+                      "accuracy": 0
+                    },
+                    {
+                      "passage_id": "p02",
+                      "passage_title": "魚我所欲也",
+                      "attempted": 5,
+                      "correct": 1,
+                      "accuracy": 0.2
+                    }
+                  ],
+                  "trap_patterns": [
+                    "選項與題型陷阱受限於極端快速作答，學生多半未真正讀題便隨機選答案，無特定選項偏好，純粹因缺乏耐心或草率行事失分"
+                  ],
+                  "likely_error_causes": [
+                    "作答態度草率，多次測驗時間僅 5 秒左右，根本未進行文本閱讀與思考",
+                    "文言文基礎（如字詞解釋、句型結構與修辭手法）扎根不足，導致稍微遇到古典文句即放棄思考"
+                  ],
+                  "skip_behavior_assessment": "有顯著的快思與略過行為（skipped_rate 約 38% 且多數提交紀錄僅花費 5-10 秒），顯示學生在面對閱讀測驗時常放棄深度閱讀，直接盲猜送出。",
+                  "passage_coverage_assessment": "文本覆蓋率極低（僅嘗試過 3 篇，總可用 12 篇），代表學生接觸面過窄且多數篇章完全未曾練習。",
+                  "skill_coverage_assessment": "技能覆蓋率嚴重不足（僅涵蓋 3 項技能，總可用 8 項），對文言文核心能力如修辭、字詞、句意的掌握缺乏系統性訓練。",
+                  "next_actions": [
+                    "引導學生戒除「幾秒鐘快速盲猜」的壞習慣，規定每次作答必須保留劃線與思考時間（至少每題 30-60 秒）。",
+                    "針對文言文字詞解釋與基本句意理解進行基礎重修，挑選如《魚我所欲也》等篇章進行逐句精讀訓練。",
+                    "逐步擴大文本與題型覆蓋範圍，由淺入深重建閱讀信心。"
+                  ],
+                  "detail_request": {
+                    "question_ids": [],
+                    "passage_ids": [],
+                    "tag_ids": [],
+                    "lookback_attempts": 80,
+                    "limit_questions": 25,
+                    "reason": ""
+                  },
+                  "evidence_ids": [
+                    "37287720-e670-4844-884e-900ccfc78436",
+                    "bc323ecb-81ed-4f69-9dfc-c781d37b84f5",
+                    "79389a81-4da7-493b-beb3-ae03164cd9ae",
+                    "3d822048-3a68-472c-bd2b-a2fd1a9f0992",
+                    "7779b210-d9cf-49a3-b189-acc804573657",
+                    "tag:t-rhetoric",
+                    "tag:t-meaning",
+                    "tag:t-comprehension",
+                    "passage:p05",
+                    "passage:p02",
+                    "passage:p03"
+                  ]
+                }
+              }
+            },
+            {
+              "source": "profile",
+              "output": {
+                "schema_version": "v1",
+                "agent_role": "profile",
+                "output": {
+                  "learning_approach_inference": {
+                    "preferred_style": "互動型 (Interactive)",
+                    "facilitation_recommendation": [
+                      "透過互動式問答幫助學生拆解閱讀理解題目",
+                      "針對「關鍵詞忽略」的盲點進行針對性訓練，培養審題習慣",
+                      "結合創意與邏輯分析，引 導學生從文本中提取核心信息"
+                    ],
+                    "confidence": "high"
+                  },
+                  "student_intent_read": {
+                    "attitude": "主動求助，希望尋找具體改善閱讀理解失分的方法",
+                    "dse_expectation": "目標在2027年DSE中文科取得理想成績，重視卷一閱讀能力的提升",
+                    "dse_goal": "改善閱讀理解失分狀況，提升卷一答題準確度",
+                    "interest_in_chinese": "中等偏高，願意主動針對弱項尋求改善方案",
+                    "approach_type": "aggressive"
+                  },
+                  "essential_comments": [
+                    "學生主動反映閱讀理解失分並詢問改善方法，展現積極的學習態度（aggressive）。",
+                    "結合心理測驗結果，學生傾向「互動型」學習，且曾在「關鍵詞忽略」測驗中暴露審題盲點，這很可能是其閱讀理解失分的主因。",
+                    "建議在指導時採用互動對話形式，重點訓練其審題與抓取關鍵詞的能力。"
+                  ],
+                  "coaching_notes": [
+                    "避免單向講解，應透過引導式提問讓學生自行找出文章與題目的對應關鍵詞。",
+                    "提醒學生注意題型陷阱，克服「關鍵詞忽略」的舊有盲點。"
+                  ],
+                  "evidence_ids": [
+                    "psych:psy-learning-mode-hk-v1:互動型",
+                    "psych:psy-writing-question-trap-v1:關鍵詞忽略"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "raw_response": "```json\n{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"synthesizer\",\n  \"output\": {\n    \"reply\": \"同學好！見到你主動尋求改善閱讀理解的方法，這份積極性非常值得肯定。面對DSE中文科卷一，有心改善就是成功的第一步！\\n\\n書僮翻查過你的練習軌跡與表現，發現你近期失分的核心原因，其實不在於你的語文潛能，而是敗在了幾個「習慣」上：\\n\\n1. **過度心急（「快思亂答」的陷阱）**：數據顯示，你有很多次練習在 5 至 10 秒內便極速提交，這等於沒有真正閱讀文本與思考，導致出現盲猜或略過的情況。\\n2. **審題時「關鍵詞忽略」**：在答題時，往往未有看清楚題幹的要求（例如究竟是問「原因」、「特點」還是「作者情感」），就憑第一感覺作答，容易答非所問。\\n3. **文言基礎與文本覆蓋度尚待建立**：目前接觸的篇章（如《魚我所欲也》、《廉頗藺相如列傳》等）相對有限，對文言字詞與句意的基本功仍需扎根。\\n\\n要扭轉這個局面，書僮建議你接下來嘗試以下三個具體步驟：\\n\\n* **第一步：戒除閃電交卷，落實「限時慢讀」**\\n  由今天開始，為自己立下一個死命令：**每道題目至少留白思考 30 至 60 秒**。做題時先不要急著看選項，先在文章中把相關段落找出來。\\n* **第二步：實行「圈字審題法」**\\n  看到題目時，先用筆圈出題目的核心關鍵詞（例如：問「何以見得」就要找具體行為；問「主旨」就要綜合全文結語），確保自己「問什麼、答什麼」。\\n* **第三步：逐句精讀經典**\\n  面對文言文時，切忌因畏難而放棄。先從落實文字解釋（如重點實詞、虛詞）開始，把課本或指定篇章的字義弄懂，閱讀信心自然會建立起來。\\n\\n同學，不如我們一起檢視一下：你覺得自己平時做閱讀理解時，是不是也經常因爲缺乏耐性而想快快了結呢？\\n\\n**延伸思考**：下一次做閱讀練習時，如果規定自己「每題必須在文本中用間尺劃出答案依據」才准填寫，你覺得這樣做會不會改變你過往失分的習慣？告訴書僮你的想法，我們一起把它修正過來！\",\n    \"source_chips\": [\"學習歷程\", \"表現評估\"],\n    \"personalization_used\": true,\n    \"evidence_ids\": [\n      \"37287720-e670-4844-884e-900ccfc78436\",\n      \"79389a81-4da7-493b-beb3-ae03164cd9ae\",\n      \"psych:psy-writing-question-trap-v1:關鍵詞忽略\"\n    ]\n  }\n}\n```",
+      "api_response_summary": {
+        "id": "chatcmpl-8a22ed0341aa828f46639cb2",
+        "model": "DSE_V2TutorS",
+        "usage": {
+          "completion_tokens": 2096,
+          "prompt_tokens": 2157,
+          "total_tokens": 4253,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 1318,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          }
+        }
+      },
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "synthesizer",
+        "output": {
+          "reply": "同學好！見到你主動尋求改善閱讀理解的方法，這份積極性非常值得肯定。面對DSE中文科卷一，有心改善就是成功的第一步！\n\n書僮翻查過你的練習軌跡與表現，發現你近期失分的核心原因，其實不在於你的語文潛能，而是敗在了幾個「習慣」上：\n\n1. **過度心急（「快思亂答」的陷阱）**：數據顯示，你有很多次練習在 5 至 10 秒內便極速提交，這等於沒有真正閱讀文本與思考，導致出現盲猜或略過的情況。\n2. **審題時「關鍵詞忽略」**：在答題時，往往未有看清楚題幹的要求（例如究竟是問「原因」、「特點」還是「作者情感」），就憑第一感覺作答，容易答非所問。\n3. **文言基礎與文本覆蓋度尚待建立**：目前接觸的篇章（如《魚我所欲也》、《廉頗藺相如列傳》等）相對有限，對文言字詞與句意的基本功仍需扎根。\n\n要扭轉這個局面，書僮建議你接下來嘗試以下三個具體步驟：\n\n* **第一步：戒除閃電交卷，落實「限時慢讀」**\n  由今天開始，為自己立下一個死命令：**每道題目至少留白思考 30 至 60 秒**。做題時先不要急著看選項，先在文章中把相關段落找出來。\n* **第二步：實行「圈字審題法」**\n  看到題目時，先用筆圈出題目的核心關鍵詞（例如：問「何以見得」就要找具體行為；問「主旨」就要綜合全文結語），確保自己「問什麼、答什麼」。\n* **第三步：逐句精讀經典**\n  面對文言文時，切忌因畏難而放棄。先從落實文字解釋（如重點實詞、虛詞）開始，把課本或指定篇章的字義弄懂，閱讀信心自然會建立起來。\n\n同學，不如我們一起檢視一下：你覺得自己平時做閱讀理解時，是不是也經常因爲缺乏耐性而想快快了結呢？\n\n**延伸思考**：下一次做閱讀練習時，如果規定自己「每題必須在文本中用間尺劃出答案依據」才准填寫，你覺得這樣做會不會改變你過往失分的習慣？告訴書僮你的想法，我們一起把它修正過來！",
+          "source_chips": [
+            "學習歷程",
+            "表現評估"
+          ],
+          "personalization_used": true,
+          "evidence_ids": [
+            "37287720-e670-4844-884e-900ccfc78436",
+            "79389a81-4da7-493b-beb3-ae03164cd9ae",
+            "psych:psy-writing-question-trap-v1:關鍵詞忽略"
+          ]
+        }
+      },
+      "validation_errors": []
+    }
+  ]
+}

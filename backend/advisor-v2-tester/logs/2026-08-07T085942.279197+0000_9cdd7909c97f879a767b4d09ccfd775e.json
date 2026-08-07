@@ -1,0 +1,256 @@
+{
+  "request_id": "9cdd7909c97f879a767b4d09ccfd775e",
+  "started_at": "2026-08-07T08:59:42.279197+00:00",
+  "mode": "fixture",
+  "student_message": "我應如何改善閱讀理解？",
+  "enabled_sources": [
+    "profile",
+    "performance",
+    "question_bank"
+  ],
+  "prompt_hashes": {
+    "orchestrator": "93b1e9fd9591",
+    "profile": "1ebf5df17d3c",
+    "performance": "65c36418a564",
+    "question_bank": "d347753651af",
+    "synthesizer": "bb34455545a7"
+  },
+  "traces": [
+    {
+      "role": "orchestrator",
+      "label": "規劃器",
+      "status": "valid",
+      "duration_ms": 0,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "9cdd7909c97f879a767b4d09ccfd775e",
+        "agent_role": "orchestrator",
+        "student_message": "我應如何改善閱讀理解？",
+        "capabilities": {
+          "enabled_sources": [
+            "profile",
+            "performance",
+            "question_bank"
+          ]
+        },
+        "inputs": {}
+      },
+      "raw_response": "{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"orchestrator\",\n  \"route\": \"PERSONAL_COACH\",\n  \"selected_sources\": [\n    \"profile\",\n    \"performance\",\n    \"question_bank\"\n  ],\n  \"response_style\": \"concise_supportive\",\n  \"requires_review\": false,\n  \"question_query\": null,\n  \"reason\": \"Fixture workflow trace\"\n}",
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "orchestrator",
+        "route": "PERSONAL_COACH",
+        "selected_sources": [
+          "profile",
+          "performance",
+          "question_bank"
+        ],
+        "response_style": "concise_supportive",
+        "requires_review": false,
+        "question_query": null,
+        "reason": "Fixture workflow trace"
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "profile",
+      "label": "學生檔案",
+      "status": "valid",
+      "duration_ms": 0,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "9cdd7909c97f879a767b4d09ccfd775e",
+        "agent_role": "profile",
+        "student_message": "我應如何改善閱讀理解？",
+        "capabilities": {
+          "enabled_sources": [
+            "profile"
+          ]
+        },
+        "inputs": {
+          "profile": {
+            "dse_year": 2026
+          },
+          "psych_results": [
+            {
+              "test_id": "study_habit",
+              "result_code": "reflective",
+              "completed_at": "2026-08-01T00:00:00Z"
+            }
+          ],
+          "evidence_ids": [
+            "profile:dse_year",
+            "psych:study_habit"
+          ]
+        }
+      },
+      "raw_response": "{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"profile\",\n  \"output\": {\n    \"fixture\": true,\n    \"evidence_ids\": []\n  }\n}",
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "profile",
+        "output": {
+          "fixture": true,
+          "evidence_ids": []
+        }
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "performance",
+      "label": "表現分析",
+      "status": "valid",
+      "duration_ms": 0,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "9cdd7909c97f879a767b4d09ccfd775e",
+        "agent_role": "performance",
+        "student_message": "我應如何改善閱讀理解？",
+        "capabilities": {
+          "enabled_sources": [
+            "performance"
+          ]
+        },
+        "inputs": {
+          "overall": {
+            "attempts": 12,
+            "correct": 78,
+            "total": 120,
+            "accuracy": 0.65
+          },
+          "recent_attempts": [
+            {
+              "id": "attempt-01",
+              "score": 7,
+              "total": 10,
+              "submitted_at": "2026-08-02T00:00:00Z"
+            }
+          ],
+          "evidence_ids": [
+            "attempt-01"
+          ]
+        }
+      },
+      "raw_response": "{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"performance\",\n  \"output\": {\n    \"fixture\": true,\n    \"evidence_ids\": []\n  }\n}",
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "performance",
+        "output": {
+          "fixture": true,
+          "evidence_ids": []
+        }
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "question_bank",
+      "label": "題庫研究",
+      "status": "valid",
+      "duration_ms": 0,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "9cdd7909c97f879a767b4d09ccfd775e",
+        "agent_role": "question_bank",
+        "student_message": "我應如何改善閱讀理解？",
+        "capabilities": {
+          "enabled_sources": [
+            "question_bank"
+          ]
+        },
+        "inputs": {
+          "questions": [
+            {
+              "id": "fixture-question-01",
+              "stem": "以下哪項最能說明作者的寫作手法？",
+              "explanation": "先找出語氣與結構線索。",
+              "difficulty": "medium",
+              "source": "fixture"
+            }
+          ],
+          "evidence_ids": [
+            "fixture-question-01"
+          ]
+        }
+      },
+      "raw_response": "{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"question_bank\",\n  \"output\": {\n    \"fixture\": true,\n    \"evidence_ids\": []\n  }\n}",
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "question_bank",
+        "output": {
+          "fixture": true,
+          "evidence_ids": []
+        }
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "synthesizer",
+      "label": "書僮整合",
+      "status": "valid",
+      "duration_ms": 0,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "9cdd7909c97f879a767b4d09ccfd775e",
+        "agent_role": "synthesizer",
+        "student_message": "我應如何改善閱讀理解？",
+        "capabilities": {
+          "enabled_sources": [
+            "profile",
+            "performance",
+            "question_bank"
+          ]
+        },
+        "inputs": {
+          "reports": [
+            {
+              "source": "profile",
+              "output": {
+                "schema_version": "v1",
+                "agent_role": "profile",
+                "output": {
+                  "fixture": true,
+                  "evidence_ids": []
+                }
+              }
+            },
+            {
+              "source": "performance",
+              "output": {
+                "schema_version": "v1",
+                "agent_role": "performance",
+                "output": {
+                  "fixture": true,
+                  "evidence_ids": []
+                }
+              }
+            },
+            {
+              "source": "question_bank",
+              "output": {
+                "schema_version": "v1",
+                "agent_role": "question_bank",
+                "output": {
+                  "fixture": true,
+                  "evidence_ids": []
+                }
+              }
+            }
+          ]
+        }
+      },
+      "raw_response": "{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"synthesizer\",\n  \"output\": {\n    \"reply\": \"這是本機測試流程的整合回覆。請在右側檢查每個注入資料與訊息。\",\n    \"source_chips\": [\n      \"測試資料\"\n    ],\n    \"personalization_used\": true,\n    \"evidence_ids\": []\n  }\n}",
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "synthesizer",
+        "output": {
+          "reply": "這是本機測試流程的整合回覆。請在右側檢查每個注入資料與訊息。",
+          "source_chips": [
+            "測試資料"
+          ],
+          "personalization_used": true,
+          "evidence_ids": []
+        }
+      },
+      "validation_errors": []
+    }
+  ]
+}

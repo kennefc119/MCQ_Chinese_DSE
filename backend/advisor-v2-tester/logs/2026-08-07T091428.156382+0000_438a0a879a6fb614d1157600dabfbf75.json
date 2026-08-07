@@ -1,0 +1,72 @@
+{
+  "request_id": "438a0a879a6fb614d1157600dabfbf75",
+  "started_at": "2026-08-07T09:14:28.156382+00:00",
+  "mode": "poe",
+  "student_message": "我最近閱讀理解總是失分，應該如何改善？",
+  "enabled_sources": [
+    "profile",
+    "performance",
+    "question_bank"
+  ],
+  "prompt_hashes": {
+    "orchestrator": "93b1e9fd9591",
+    "profile": "1ebf5df17d3c",
+    "performance": "65c36418a564",
+    "question_bank": "d347753651af",
+    "synthesizer": "bb34455545a7"
+  },
+  "traces": [
+    {
+      "role": "orchestrator",
+      "label": "規劃器",
+      "status": "error",
+      "duration_ms": 0,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "438a0a879a6fb614d1157600dabfbf75",
+        "agent_role": "orchestrator",
+        "student_message": "我最近閱讀理解總是失分，應該如何改善？",
+        "capabilities": {
+          "enabled_sources": [
+            "profile",
+            "performance",
+            "question_bank"
+          ]
+        },
+        "inputs": {}
+      },
+      "raw_response": "",
+      "parsed_response": null,
+      "validation_errors": [
+        "Missing POE_API_KEY or DSE_ADVISOR_BOT_ORCHESTRATOR in backend/advisor-v2-tester/.env"
+      ]
+    },
+    {
+      "role": "synthesizer",
+      "label": "書僮整合",
+      "status": "error",
+      "duration_ms": 0,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "438a0a879a6fb614d1157600dabfbf75",
+        "agent_role": "synthesizer",
+        "student_message": "我最近閱讀理解總是失分，應該如何改善？",
+        "capabilities": {
+          "enabled_sources": [
+            "profile",
+            "performance",
+            "question_bank"
+          ]
+        },
+        "inputs": {
+          "reports": []
+        }
+      },
+      "raw_response": "",
+      "parsed_response": null,
+      "validation_errors": [
+        "Missing POE_API_KEY or DSE_ADVISOR_BOT_SYNTHESIZER in backend/advisor-v2-tester/.env"
+      ]
+    }
+  ]
+}

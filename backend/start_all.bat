@@ -5,6 +5,7 @@ echo  ║  啟動所有後端伺服器                                      ║
 echo  ║  Prompt Editor:  http://localhost:5002                   ║
 echo  ║  MCQ Generator:  http://localhost:8765                   ║
 echo  ║  Tip Card Admin: http://localhost:8767                   ║
+echo  ║  DSE Exam Admin: http://localhost:8768                   ║
 echo  ╚══════════════════════════════════════════════════════════╝
 echo.
 
@@ -16,6 +17,9 @@ start "MCQ Generator (8765)" cmd /k "cd /d "%~dp0mcq_generator" && python -m uvi
 
 :: Start Tip Card Admin in a new window
 start "Tip Card Admin (8767)" cmd /k "cd /d "%~dp0tip_cards" && python -m uvicorn server:app --host 127.0.0.1 --port 8767 --reload"
+
+:: Start DSE Past Exam Admin in a new window
+start "DSE Past Exam Admin (8768)" cmd /k "cd /d "%~dp0dse_past_exam_admin" && python -m uvicorn server:app --host 127.0.0.1 --port 8768 --reload"
 
 echo All servers starting in separate windows...
 echo.

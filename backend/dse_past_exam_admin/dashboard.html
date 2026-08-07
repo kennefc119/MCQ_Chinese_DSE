@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DSE Past Exam JSON Uploader</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --surface: #fffdf9;
+      --surface-alt: #f7f0e4;
+      --ink: #2a2015;
+      --muted: #7f6d58;
+      --line: #d8c6ab;
+      --accent: #b2521f;
+      --accent-2: #d6722f;
+      --ok: #2f7f53;
+      --err: #a53b2b;
+      --warn: #8d6b16;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(182,82,31,0.16), transparent 24%),
+        linear-gradient(180deg, #fbf8f3 0%, var(--bg) 100%);
+      font-family: "Noto Serif TC", "PingFang TC", "Microsoft JhengHei", serif;
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 26px;
+    }
+
+    .hero {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 14px 40px rgba(59, 38, 19, 0.08);
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+      letter-spacing: 0.01em;
+    }
+
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface-alt);
+      color: var(--muted);
+      font-size: 12px;
+      padding: 7px 11px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--warn);
+    }
+
+    .dot.ok { background: var(--ok); }
+    .dot.err { background: var(--err); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 10px 28px rgba(59, 38, 19, 0.06);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #fff7ec 0%, #f9f0e1 100%);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .panel-body {
+      padding: 16px;
+    }
+
+    .field { margin-bottom: 12px; }
+
+    .field label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    input[type="file"],
+    input[type="text"],
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 340px;
+      resize: vertical;
+      font-family: "Cascadia Code", Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .hint {
+      margin-top: 5px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 16px;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      transition: transform 0.14s ease, opacity 0.14s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.6; cursor: wait; transform: none; }
+
+    .btn-preview {
+      color: #fff9f2;
+      background: linear-gradient(135deg, #7a5328, #98693a);
+    }
+
+    .btn-import {
+      color: #fff9f2;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    }
+
+    .btn-clear {
+      color: var(--ink);
+      border: 1px solid var(--line);
+      background: var(--surface-alt);
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: "Cascadia Code", Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .result-box {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      padding: 12px;
+      min-height: 180px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--surface-alt);
+      padding: 10px;
+    }
+
+    .metric .k {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .metric .v {
+      font-size: 21px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 980px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>DSE Past Exam JSON Uploader</h1>
+      <p class="sub">Upload one or many yearly JSON files in the existing DSE format (for example, 2026). The tool flattens each file to one row per question and upserts into the unified Supabase table.</p>
+      <div class="status-pill" id="healthPill"><span class="dot" id="healthDot"></span><span id="healthText">Checking database connection...</span></div>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <div class="panel-head">Upload</div>
+        <div class="panel-body">
+          <div class="field">
+            <label>JSON File(s)</label>
+            <input id="fileInput" type="file" accept=".json,application/json" multiple />
+            <div class="hint">Select one or multiple files. For multiple files, batch preview/import is used automatically.</div>
+          </div>
+
+          <div class="field">
+            <label>Source File Name Override (Single-file only, optional)</label>
+            <input id="sourceFileName" type="text" placeholder="2026_DSE_exam_question.json" />
+            <div class="hint">Only applied when importing one file via the JSON editor.</div>
+          </div>
+
+          <div class="actions">
+            <button class="btn-preview" id="previewBtn">Preview Mapping</button>
+            <button class="btn-import" id="importBtn">Import To Supabase</button>
+            <button class="btn-clear" id="clearBtn">Clear</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">Result</div>
+        <div class="panel-body">
+          <div class="summary-grid">
+            <div class="metric"><div class="k">Files</div><div class="v" id="mYear">0</div></div>
+            <div class="metric"><div class="k">Rows</div><div class="v" id="mRows">0</div></div>
+            <div class="metric"><div class="k">Anomalies</div><div class="v" id="mAnom">0</div></div>
+          </div>
+          <div class="result-box"><pre id="resultText">No action yet.</pre></div>
+          <div class="field" style="margin-top:12px;">
+            <label>Loaded JSON (editable for single-file)</label>
+            <textarea id="jsonEditor" spellcheck="false" placeholder="Upload one file and edit JSON here if needed. For multiple files, content is managed from selected files."></textarea>
+          </div>
+        </div>
+      </article>
+    </section>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const sourceFileNameInput = document.getElementById("sourceFileName");
+    const previewBtn = document.getElementById("previewBtn");
+    const importBtn = document.getElementById("importBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const jsonEditor = document.getElementById("jsonEditor");
+    const resultText = document.getElementById("resultText");
+
+    const mYear = document.getElementById("mYear");
+    const mRows = document.getElementById("mRows");
+    const mAnom = document.getElementById("mAnom");
+
+    const healthDot = document.getElementById("healthDot");
+    const healthText = document.getElementById("healthText");
+
+    function setBusy(isBusy) {
+      previewBtn.disabled = isBusy;
+      importBtn.disabled = isBusy;
+      clearBtn.disabled = isBusy;
+      fileInput.disabled = isBusy;
+      sourceFileNameInput.disabled = isBusy;
+      jsonEditor.disabled = isBusy;
+    }
+
+    async function refreshHealth() {
+      try {
+        const res = await fetch("/api/health");
+        const data = await res.json();
+        if (data.status === "ok") {
+          healthDot.className = "dot ok";
+          healthText.textContent = "Connected to Supabase table: " + data.table;
+        } else {
+          healthDot.className = "dot err";
+          healthText.textContent = "Connection issue: " + (data.detail || "unknown error");
+        }
+      } catch (err) {
+        healthDot.className = "dot err";
+        healthText.textContent = "Health check failed: " + err.message;
+      }
+    }
+
+    function safeJsonParse(text) {
+      try {
+        return { ok: true, value: JSON.parse(text) };
+      } catch (err) {
+        return { ok: false, error: err.message };
+      }
+    }
+
+    let loadedDocuments = [];
+
+    function getSourceFileName() {
+      const override = sourceFileNameInput.value.trim();
+      if (override) return override;
+      if (fileInput.files && fileInput.files[0]) return fileInput.files[0].name;
+      return "uploaded_dse_exam_question.json";
+    }
+
+    function renderSummary(data) {
+      if (data.batch_summary) {
+        mYear.textContent = String(data.batch_summary.files_count || 0);
+        mRows.textContent = String(data.batch_summary.total_rows || 0);
+        mAnom.textContent = String(data.batch_summary.total_anomalies || 0);
+        return;
+      }
+
+      const summary = data.summary || {};
+      mYear.textContent = "1";
+      mRows.textContent = String(summary.total_rows || 0);
+      mAnom.textContent = String((summary.anomalies || []).length);
+    }
+
+    function safeJsonStringify(value) {
+      try {
+        return JSON.stringify(value, null, 2);
+      } catch {
+        return "{}";
+      }
+    }
+
+    function getBatchPayloadFromLoadedFiles() {
+      return {
+        documents: loadedDocuments,
+        dry_run: false,
+      };
+    }
+
+    async function postJson(url, payload) {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const detail = data.detail || JSON.stringify(data);
+        throw new Error(detail);
+      }
+      return data;
+    }
+
+    previewBtn.addEventListener("click", async () => {
+      setBusy(true);
+      resultText.textContent = "Previewing...";
+      try {
+        let data;
+        if (loadedDocuments.length > 1) {
+          const payload = getBatchPayloadFromLoadedFiles();
+          payload.dry_run = true;
+          data = await postJson("/api/preview-batch", payload);
+        } else {
+          const parsed = safeJsonParse(jsonEditor.value);
+          if (!parsed.ok) {
+            resultText.textContent = "Invalid JSON: " + parsed.error;
+            return;
+          }
+
+          const payload = {
+            source_file_name: getSourceFileName(),
+            payload: parsed.value,
+            dry_run: true,
+          };
+          data = await postJson("/api/preview", payload);
+        }
+
+        renderSummary(data);
+        resultText.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        resultText.textContent = "Preview failed: " + err.message;
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    importBtn.addEventListener("click", async () => {
+      if (!confirm("Import selected JSON data into Supabase now?")) return;
+
+      setBusy(true);
+      resultText.textContent = "Importing...";
+      try {
+        let data;
+        if (loadedDocuments.length > 1) {
+          const payload = getBatchPayloadFromLoadedFiles();
+          payload.dry_run = false;
+          data = await postJson("/api/import-batch", payload);
+        } else {
+          const parsed = safeJsonParse(jsonEditor.value);
+          if (!parsed.ok) {
+            resultText.textContent = "Invalid JSON: " + parsed.error;
+            return;
+          }
+
+          const payload = {
+            source_file_name: getSourceFileName(),
+            payload: parsed.value,
+            dry_run: false,
+          };
+          data = await postJson("/api/import", payload);
+        }
+
+        renderSummary(data);
+        resultText.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        resultText.textContent = "Import failed: " + err.message;
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    clearBtn.addEventListener("click", () => {
+      fileInput.value = "";
+      sourceFileNameInput.value = "";
+      jsonEditor.value = "";
+      loadedDocuments = [];
+      resultText.textContent = "No action yet.";
+      mYear.textContent = "0";
+      mRows.textContent = "0";
+      mAnom.textContent = "0";
+    });
+
+    fileInput.addEventListener("change", async (event) => {
+      const files = event.target.files ? Array.from(event.target.files) : [];
+      if (!files.length) return;
+
+      setBusy(true);
+      try {
+        const docs = await Promise.all(
+          files.map(async (file) => {
+            const text = await file.text();
+            let payload;
+            try {
+              payload = JSON.parse(text);
+            } catch (err) {
+              throw new Error(`Invalid JSON in ${file.name}: ${err.message}`);
+            }
+            return {
+              source_file_name: file.name,
+              payload,
+            };
+          })
+        );
+
+        loadedDocuments = docs;
+        if (docs.length === 1) {
+          sourceFileNameInput.value = sourceFileNameInput.value.trim() || docs[0].source_file_name;
+          jsonEditor.value = safeJsonStringify(docs[0].payload);
+          resultText.textContent = "1 file loaded. You can edit JSON, then preview/import.";
+        } else {
+          sourceFileNameInput.value = "";
+          jsonEditor.value = "";
+          resultText.textContent = `${docs.length} files loaded for batch processing. Click 'Preview Mapping' to validate all files.`;
+        }
+      } catch (err) {
+        loadedDocuments = [];
+        jsonEditor.value = "";
+        resultText.textContent = "File load failed: " + err.message;
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    refreshHealth();
+  </script>
+</body>
+</html>

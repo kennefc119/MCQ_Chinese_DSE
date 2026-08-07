@@ -57,6 +57,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supabaseUrl: process.env.SUPABASE_URL ?? "",
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? "",
     advisorBotName: process.env.DSE_ADVISOR_BOT_NAME ?? "文淵書僮",
+    advisorV2DevEnabled: process.env.EXPO_PUBLIC_ADVISOR_V2_DEV !== "false",
     // Optional: direct FastAPI base URL (only used if you bypass the Edge Function).
     // Production should leave this empty and rely on the dsemcq-mcq-proxy edge function.
     generatorUrl: process.env.EXPO_PUBLIC_GENERATOR_URL ?? "",

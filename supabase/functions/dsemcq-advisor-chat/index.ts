@@ -9,16 +9,11 @@
 //   SUPABASE_SERVICE_ROLE_KEY — auto-injected by Supabase
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getAdvisorMonthlyQuota, type AdvisorQuotaSnapshot } from "../_shared/advisor_quota.ts";
 
 const POE_CHAT_URL  = "https://api.poe.com/v1/chat/completions";
 const DEFAULT_BOT   = "DSEChatConsultant";
 const MAX_REPLY_CHARS = 1200; // hard-cap to stay within ~200 Chinese chars
-
-interface QuotaSnapshot {
-  used: number;
-  limit: number;
-  remaining: number;
-}
 
 // ── CORS headers for Expo / React Native fetch ────────────────────────────
 const CORS = {
@@ -71,7 +66,7 @@ Deno.serve(async (req: Request) => {
   if (body.quotaOnly) {
     if (!userId) return json({ error: "Unauthorised" }, 401);
     try {
-      return json({ quota: await getMonthlyQuota(supabase, userId, lifecycleEnabled) });
+      return json({ quota: await getAdvisorMonthlyQuota(supabase, userId) });
     } catch (error) {
       console.error("Quota lookup error:", error);
       return json({ error: "Unable to load chat quota" }, 500);
@@ -110,10 +105,10 @@ Deno.serve(async (req: Request) => {
   }
 
   // ── 4. Monthly limit check for authenticated users ─────────────────────
-  let quotaBefore: QuotaSnapshot | null = null;
+  let quotaBefore: AdvisorQuotaSnapshot | null = null;
   if (userId) {
     try {
-      quotaBefore = await getMonthlyQuota(supabase, userId, lifecycleEnabled);
+      quotaBefore = await getAdvisorMonthlyQuota(supabase, userId);
     } catch (error) {
       console.error("Quota enforcement lookup error:", error);
       return json({ error: "Unable to verify chat quota" }, 500);
@@ -240,10 +235,10 @@ Deno.serve(async (req: Request) => {
   }
 
   // ── 7. Return reply for guest-mode fallback ─────────────────────────────
-  let quota: QuotaSnapshot | undefined;
+  let quota: AdvisorQuotaSnapshot | undefined;
   if (userId) {
     try {
-      quota = await getMonthlyQuota(supabase, userId, lifecycleEnabled);
+      quota = await getAdvisorMonthlyQuota(supabase, userId);
     } catch (error) {
       console.error("Post-chat quota lookup error:", error);
     }
@@ -291,50 +286,4 @@ async function hasAdvisorLifecycleColumns(
   return (data?.length ?? 0) >= 5;
 }
 
-async function getMonthlyQuota(
-  supabase: ReturnType<typeof createClient>,
-  userId: string,
-  lifecycleEnabled: boolean,
-): Promise<QuotaSnapshot> {
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
-
-  const countQuery = supabase
-    .from("dsemcq_advisor_messages")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .gte("created_at", startOfMonth.toISOString());
-  const countResponse = lifecycleEnabled
-    ? await countQuery.in("status", ["processing", "completed"])
-    : await countQuery;
-  if (countResponse.error) throw countResponse.error;
-
-  const { data: profile, error: profileError } = await supabase
-    .from("dsemcq_profiles")
-    .select("subscription_tier, bonus_ai_chat")
-    .eq("id", userId)
-    .single();
-  if (profileError) throw profileError;
-
-  let freeMonthlyLimit = 20;
-  let premiumMonthlyLimit = 300;
-  const { data: settingsRows, error: settingsError } = await supabase
-    .from("dsemcq_app_settings")
-    .select("key, value")
-    .in("key", ["max_ai_chat_basic", "max_ai_chat_premium"]);
-  if (settingsError) throw settingsError;
-  for (const row of (settingsRows ?? []) as { key: string; value: unknown }[]) {
-    const value = typeof row.value === "number" ? row.value : parseInt(String(row.value), 10);
-    if (!Number.isFinite(value)) continue;
-    if (row.key === "max_ai_chat_basic") freeMonthlyLimit = value;
-    if (row.key === "max_ai_chat_premium") premiumMonthlyLimit = value;
-  }
-
-  const tier = (profile as { subscription_tier?: string } | null)?.subscription_tier ?? "free";
-  const bonus = (profile as { bonus_ai_chat?: number } | null)?.bonus_ai_chat ?? 0;
-  const limit = (tier === "premium" ? premiumMonthlyLimit : freeMonthlyLimit) + bonus;
-  const used = countResponse.count ?? 0;
-  return { used, limit, remaining: Math.max(0, limit - used) };
-}
 

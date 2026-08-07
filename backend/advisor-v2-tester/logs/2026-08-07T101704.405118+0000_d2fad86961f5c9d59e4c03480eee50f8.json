@@ -1,0 +1,325 @@
+{
+  "request_id": "d2fad86961f5c9d59e4c03480eee50f8",
+  "started_at": "2026-08-07T10:17:04.405118+00:00",
+  "mode": "fixture",
+  "data_mode": "fixture",
+  "student_id": "05c32959-d1b2-4787-832a-b6216e5bc7e6",
+  "student_message": "請分析我中文弱點",
+  "enabled_sources": [
+    "profile",
+    "performance",
+    "question_bank"
+  ],
+  "prompt_hashes": {
+    "orchestrator": "93b1e9fd9591",
+    "profile": "55be16262ae5",
+    "performance": "1d8d77d1691b",
+    "question_bank": "180105404650",
+    "synthesizer": "bb34455545a7"
+  },
+  "traces": [
+    {
+      "role": "orchestrator",
+      "label": "規劃器",
+      "status": "valid",
+      "duration_ms": 0,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "d2fad86961f5c9d59e4c03480eee50f8",
+        "agent_role": "orchestrator",
+        "student_message": "請分析我中文弱點",
+        "capabilities": {
+          "enabled_sources": [
+            "profile",
+            "performance",
+            "question_bank"
+          ]
+        },
+        "inputs": {}
+      },
+      "raw_response": "{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"orchestrator\",\n  \"route\": \"PERSONAL_COACH\",\n  \"selected_sources\": [\n    \"profile\",\n    \"performance\",\n    \"question_bank\"\n  ],\n  \"response_style\": \"concise_supportive\",\n  \"requires_review\": false,\n  \"question_query\": null,\n  \"reason\": \"Fixture workflow trace\"\n}",
+      "api_response_summary": null,
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "orchestrator",
+        "route": "PERSONAL_COACH",
+        "selected_sources": [
+          "profile",
+          "performance",
+          "question_bank"
+        ],
+        "response_style": "concise_supportive",
+        "requires_review": false,
+        "question_query": null,
+        "reason": "Fixture workflow trace"
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "profile",
+      "label": "學生檔案",
+      "status": "valid",
+      "duration_ms": 0,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "d2fad86961f5c9d59e4c03480eee50f8",
+        "agent_role": "profile",
+        "student_message": "請分析我中文弱點",
+        "capabilities": {
+          "enabled_sources": [
+            "profile"
+          ]
+        },
+        "inputs": {
+          "profile": {
+            "id": "05c32959-d1b2-4787-832a-b6216e5bc7e6",
+            "username": "fixture_student",
+            "dse_year": 2026,
+            "subscription_tier": "free"
+          },
+          "psych_results": [
+            {
+              "test_id": "study_habit",
+              "result_code": "reflective",
+              "completed_at": "2026-08-01T00:00:00Z"
+            }
+          ],
+          "chat_history": [
+            {
+              "role": "user",
+              "text": "我想考好 DSE 中文",
+              "created_at": "2026-08-01T00:00:00Z",
+              "request_id": "fixture-1"
+            },
+            {
+              "role": "assistant",
+              "text": "好，我們先從閱讀理解入手。",
+              "created_at": "2026-08-01T00:00:01Z",
+              "request_id": "fixture-1"
+            }
+          ],
+          "evidence_ids": [
+            "profile:dse_year",
+            "psych:study_habit"
+          ]
+        }
+      },
+      "raw_response": "{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"profile\",\n  \"output\": {\n    \"fixture\": true,\n    \"evidence_ids\": []\n  }\n}",
+      "api_response_summary": null,
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "profile",
+        "output": {
+          "fixture": true,
+          "evidence_ids": []
+        }
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "performance",
+      "label": "表現分析",
+      "status": "valid",
+      "duration_ms": 0,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "d2fad86961f5c9d59e4c03480eee50f8",
+        "agent_role": "performance",
+        "student_message": "請分析我中文弱點",
+        "capabilities": {
+          "enabled_sources": [
+            "performance"
+          ]
+        },
+        "inputs": {
+          "overall": {
+            "attempts": 12,
+            "correct": 78,
+            "total": 120,
+            "accuracy": 0.65
+          },
+          "recent_attempts": [
+            {
+              "id": "attempt-01",
+              "score": 7,
+              "total": 10,
+              "submitted_at": "2026-08-02T00:00:00Z"
+            }
+          ],
+          "skill_stats": [
+            {
+              "tag_id": "閱讀",
+              "tag_label": "閱讀",
+              "attempted": 30,
+              "correct": 18,
+              "accuracy": 0.6
+            }
+          ],
+          "passage_stats": [
+            {
+              "passage_id": "p1",
+              "passage_title": "岳陽樓記",
+              "attempted": 10,
+              "correct": 8,
+              "accuracy": 0.8
+            }
+          ],
+          "difficulty_stats": [
+            {
+              "difficulty": 3,
+              "attempted": 35,
+              "correct": 21,
+              "accuracy": 0.6
+            }
+          ],
+          "top_passages_best": [
+            {
+              "passage_id": "p1",
+              "passage_title": "岳陽樓記",
+              "attempted": 10,
+              "correct": 8,
+              "accuracy": 0.8
+            }
+          ],
+          "top_passages_worst": [
+            {
+              "passage_id": "p2",
+              "passage_title": "師說",
+              "attempted": 10,
+              "correct": 3,
+              "accuracy": 0.3
+            }
+          ],
+          "skipped_attempts": 1,
+          "skipped_rate": 0.08,
+          "coverage": {
+            "passages_attempted": 7,
+            "passages_total_available": 12,
+            "skills_attempted": 5,
+            "skills_total_available": 8
+          },
+          "evidence_ids": [
+            "attempt-01"
+          ],
+          "iteration": 1,
+          "max_iterations": 3,
+          "followup_evidence": []
+        }
+      },
+      "raw_response": "{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"performance\",\n  \"output\": {\n    \"fixture\": true,\n    \"evidence_ids\": []\n  }\n}",
+      "api_response_summary": null,
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "performance",
+        "output": {
+          "fixture": true,
+          "evidence_ids": []
+        }
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "question_bank",
+      "label": "題庫研究",
+      "status": "valid",
+      "duration_ms": 0,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "d2fad86961f5c9d59e4c03480eee50f8",
+        "agent_role": "question_bank",
+        "student_message": "請分析我中文弱點",
+        "capabilities": {
+          "enabled_sources": [
+            "question_bank"
+          ]
+        },
+        "inputs": {
+          "questions": [],
+          "evidence_ids": []
+        }
+      },
+      "raw_response": "{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"question_bank\",\n  \"output\": {\n    \"fixture\": true,\n    \"evidence_ids\": []\n  }\n}",
+      "api_response_summary": null,
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "question_bank",
+        "output": {
+          "fixture": true,
+          "evidence_ids": []
+        }
+      },
+      "validation_errors": []
+    },
+    {
+      "role": "synthesizer",
+      "label": "書僮整合",
+      "status": "valid",
+      "duration_ms": 0,
+      "request": {
+        "schema_version": "v1",
+        "request_id": "d2fad86961f5c9d59e4c03480eee50f8",
+        "agent_role": "synthesizer",
+        "student_message": "請分析我中文弱點",
+        "capabilities": {
+          "enabled_sources": [
+            "profile",
+            "performance",
+            "question_bank"
+          ]
+        },
+        "inputs": {
+          "reports": [
+            {
+              "source": "profile",
+              "output": {
+                "schema_version": "v1",
+                "agent_role": "profile",
+                "output": {
+                  "fixture": true,
+                  "evidence_ids": []
+                }
+              }
+            },
+            {
+              "source": "performance",
+              "output": {
+                "schema_version": "v1",
+                "agent_role": "performance",
+                "output": {
+                  "fixture": true,
+                  "evidence_ids": []
+                }
+              }
+            },
+            {
+              "source": "question_bank",
+              "output": {
+                "schema_version": "v1",
+                "agent_role": "question_bank",
+                "output": {
+                  "fixture": true,
+                  "evidence_ids": []
+                }
+              }
+            }
+          ]
+        }
+      },
+      "raw_response": "{\n  \"schema_version\": \"v1\",\n  \"agent_role\": \"synthesizer\",\n  \"output\": {\n    \"reply\": \"這是本機測試流程的整合回覆。請在右側檢查每個注入資料與訊息。\",\n    \"source_chips\": [\n      \"測試資料\"\n    ],\n    \"personalization_used\": true,\n    \"evidence_ids\": []\n  }\n}",
+      "api_response_summary": null,
+      "parsed_response": {
+        "schema_version": "v1",
+        "agent_role": "synthesizer",
+        "output": {
+          "reply": "這是本機測試流程的整合回覆。請在右側檢查每個注入資料與訊息。",
+          "source_chips": [
+            "測試資料"
+          ],
+          "personalization_used": true,
+          "evidence_ids": []
+        }
+      },
+      "validation_errors": []
+    }
+  ]
+}
