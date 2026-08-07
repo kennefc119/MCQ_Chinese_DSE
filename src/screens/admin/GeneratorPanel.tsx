@@ -10,7 +10,7 @@
  * The backend itself does the heavy lifting (LLM calls, DB writes). This panel
  * is a thin UI wrapper that talks to the dsemcq-mcq-proxy edge function.
  */
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Switch } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { colors, spacing, typography } from "../../theme";
@@ -60,31 +60,37 @@ export default function GeneratorPanel() {
   const [generating, setGenerating] = useState(false);
   const [assembling, setAssembling] = useState(false);
   const [output, setOutput] = useState<string>("");
+  const loadVersion = useRef(0);
 
   const refreshLookups = useCallback(async () => {
     if (!GENERATOR_ENABLED || !isSupabaseReady) return;
+    const version = ++loadVersion.current;
     setLoading(true);
-    const [p, s, st] = await reliableLoad({
-      task: () => Promise.all([
-        generatorListPassages(),
-        generatorListSkills(),
-        generatorFetchStats(),
-      ]),
-      timeoutMs: TIMEOUT_MS.adminPanelLoad,
-      label: "admin_generator_refresh",
-      fallback: [
-        { ok: false, error: "請求逾時" },
-        { ok: false, error: "請求逾時" },
-        { ok: false, error: "請求逾時" },
-      ] as any,
-    });
-    if (p.ok) setPassages(p.data);
-    if (s.ok) setSkills(s.data);
-    if (st.ok) setStats(st.data);
-    setLoading(false);
-    if (!p.ok) setOutput((o) => o + `\n[載入篇章失敗] ${p.error}`);
-    if (!s.ok) setOutput((o) => o + `\n[載入技能失敗] ${s.error}`);
-    if (!st.ok) setOutput((o) => o + `\n[載入統計失敗] ${st.error}`);
+    try {
+      const [p, s, st] = await reliableLoad({
+        task: () => Promise.all([
+          generatorListPassages(),
+          generatorListSkills(),
+          generatorFetchStats(),
+        ]),
+        timeoutMs: TIMEOUT_MS.adminPanelLoad,
+        label: "admin_generator_refresh",
+        fallback: [
+          { ok: false, error: "請求逾時" },
+          { ok: false, error: "請求逾時" },
+          { ok: false, error: "請求逾時" },
+        ] as any,
+      });
+      if (version !== loadVersion.current) return;
+      if (p.ok) setPassages(p.data);
+      if (s.ok) setSkills(s.data);
+      if (st.ok) setStats(st.data);
+      if (!p.ok) setOutput((o) => o + `\n[載入篇章失敗] ${p.error}`);
+      if (!s.ok) setOutput((o) => o + `\n[載入技能失敗] ${s.error}`);
+      if (!st.ok) setOutput((o) => o + `\n[載入統計失敗] ${st.error}`);
+    } finally {
+      if (version === loadVersion.current) setLoading(false);
+    }
   }, [isSupabaseReady]);
 
   useEffect(() => {

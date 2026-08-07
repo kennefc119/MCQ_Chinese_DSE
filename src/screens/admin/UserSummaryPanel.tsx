@@ -2,7 +2,7 @@
  * UserSummaryPanel — Collapsible aggregate user statistics.
  * Order: overview → performance → subscription → gender → DSE year → psych → edu emails
  */
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -34,10 +34,11 @@ export default function UserSummaryPanel() {
   const [eduDomains, setEduDomains] = useState<EduDomainStat[]>([]);
   const [eduMonthly, setEduMonthly] = useState<EduDomainMonthly[]>([]);
   const [loading, setLoading] = useState(true);
+  const loadVersion = useRef(0);
 
   const loadData = useCallback(async () => {
     if (!isSupabaseReady) return;
-    let cancelled = false;
+    const version = ++loadVersion.current;
     try {
       setLoading(true);
       const [s, edu] = await reliableLoad({
@@ -49,14 +50,13 @@ export default function UserSummaryPanel() {
         label: "admin_user_summary_load",
         fallback: [null, { domains: [], monthly: [] }] as [UserSummaryStats | null, { domains: EduDomainStat[]; monthly: EduDomainMonthly[] }],
       });
-      if (!cancelled) {
+      if (version === loadVersion.current) {
         setStats(s);
         setEduDomains(edu.domains);
         setEduMonthly(edu.monthly);
-        setLoading(false);
       }
     } finally {
-      cancelled = true;
+      if (version === loadVersion.current) setLoading(false);
     }
   }, [isSupabaseReady]);
 

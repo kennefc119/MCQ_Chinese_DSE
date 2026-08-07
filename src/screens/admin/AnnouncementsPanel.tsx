@@ -12,7 +12,7 @@
  *
  * Below the form, recent announcements are listed (most recent first).
  */
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity, RefreshControl } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { colors, spacing, typography } from "../../theme";
@@ -45,18 +45,23 @@ export default function AnnouncementsPanel() {
   const [submitting, setSubmitting] = useState(false);
   const [items, setItems] = useState<Announcement[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const loadVersion = useRef(0);
 
   const load = useCallback(async () => {
     if (!isSupabaseReady) return;
+    const version = ++loadVersion.current;
     setRefreshing(true);
-    const list = await reliableLoad({
-      task: () => listAnnouncements(),
-      timeoutMs: TIMEOUT_MS.adminPanelLoad,
-      label: "admin_announcements_load",
-      fallback: [] as Announcement[],
-    });
-    setItems(list);
-    setRefreshing(false);
+    try {
+      const list = await reliableLoad({
+        task: () => listAnnouncements(),
+        timeoutMs: TIMEOUT_MS.adminPanelLoad,
+        label: "admin_announcements_load",
+        fallback: [] as Announcement[],
+      });
+      if (version === loadVersion.current) setItems(list);
+    } finally {
+      if (version === loadVersion.current) setRefreshing(false);
+    }
   }, [isSupabaseReady]);
 
   useEffect(() => {

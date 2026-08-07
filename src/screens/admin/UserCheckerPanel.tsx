@@ -5,7 +5,7 @@
  * adminService.searchUsers. Empty query lists the 50 most-recently-created
  * users. Tapping a row navigates to AdminUserDetailScreen.
  */
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useFocusEffect } from "@react-navigation/native";
@@ -27,39 +27,31 @@ export default function UserCheckerPanel() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
+  const searchVersion = useRef(0);
 
   const runSearch = useCallback(async (nextQuery: string) => {
     if (!isSupabaseReady) return;
+    const version = ++searchVersion.current;
     setLoading(true);
-    const list = await reliableLoad({
-      task: () => searchUsers(nextQuery, 50),
-      timeoutMs: TIMEOUT_MS.adminUserSearch,
-      label: "admin_user_search",
-      fallback: [] as Profile[],
-    });
-    setResults(list);
-    setLoading(false);
+    try {
+      const list = await reliableLoad({
+        task: () => searchUsers(nextQuery, 50),
+        timeoutMs: TIMEOUT_MS.adminUserSearch,
+        label: "admin_user_search",
+        fallback: [] as Profile[],
+      });
+      if (version === searchVersion.current) setResults(list);
+    } finally {
+      if (version === searchVersion.current) setLoading(false);
+    }
   }, [isSupabaseReady]);
 
   // Debounced search
   useEffect(() => {
     if (authLoading || !isSupabaseReady) return;
-    let cancelled = false;
-    const t = setTimeout(async () => {
-      setLoading(true);
-      const list = await reliableLoad({
-        task: () => searchUsers(query, 50),
-        timeoutMs: TIMEOUT_MS.adminUserSearch,
-        label: "admin_user_search",
-        fallback: [] as Profile[],
-      });
-      if (!cancelled) {
-        setResults(list);
-        setLoading(false);
-      }
-    }, 250);
-    return () => { cancelled = true; clearTimeout(t); };
-  }, [authLoading, isSupabaseReady, query]);
+    const timer = setTimeout(() => { void runSearch(query); }, 250);
+    return () => clearTimeout(timer);
+  }, [authLoading, isSupabaseReady, query, runSearch]);
 
   useFocusEffect(useCallback(() => {
     if (authLoading || !isSupabaseReady) return;

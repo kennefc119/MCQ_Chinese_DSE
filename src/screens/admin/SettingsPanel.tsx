@@ -2,7 +2,7 @@
  * SettingsPanel — Collapsible admin settings + inventory summary.
  * Order: Save → AI limits → exempt passages → inventory overview → by passage → by difficulty → by skill
  */
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -53,36 +53,42 @@ export default function SettingsPanel() {
 
   const [inventory, setInventory] = useState<InventorySummary | null>(null);
   const [allPassages, setAllPassages] = useState<Passage[]>([]);
+  const loadVersion = useRef(0);
 
   const loadData = useCallback(async () => {
     if (!isSupabaseReady) return;
+    const version = ++loadVersion.current;
     setLoading(true);
-    const [settings, passages, inv, status] = await reliableLoad({
-      task: () => Promise.all([
-        fetchAppSettings(),
-        listPassages(),
-        fetchInventorySummary(),
-        fetchPeerBaselineSnapshotStatus(),
-      ]),
-      timeoutMs: TIMEOUT_MS.adminPanelLoad,
-      label: "admin_settings_load",
-      fallback: [[], [], null, null] as [AppSetting[], Passage[], InventorySummary | null, AdminPeerBaselineSnapshotStatus | null],
-    });
-    const settingsMap: Record<string, unknown> = {};
-    for (const s of settings) settingsMap[s.key] = s.value;
-    if (settingsMap.max_ai_chat_guest != null) setMaxAIChatGuest(String(settingsMap.max_ai_chat_guest));
-    if (settingsMap.max_ai_chat_basic != null) setMaxAIChatBasic(String(settingsMap.max_ai_chat_basic));
-    if (settingsMap.max_ai_chat_premium != null) setMaxAIChatPremium(String(settingsMap.max_ai_chat_premium));
-    if (settingsMap.bonus_ai_chat_cost != null) setBonusCost(String(settingsMap.bonus_ai_chat_cost));
-    if (settingsMap.bonus_ai_chat_max != null) setBonusMax(String(settingsMap.bonus_ai_chat_max));
-    if (Array.isArray(settingsMap.exempt_passage_ids)) setExemptPassageIds(new Set(settingsMap.exempt_passage_ids as string[]));
-    if (typeof settingsMap.explore_banner_message === "string") setExploreBannerMessage(settingsMap.explore_banner_message);
-    if (settingsMap.explore_banner_pause != null) setExploreBannerPause(String(settingsMap.explore_banner_pause));
-    if (typeof settingsMap.min_app_version === "string") setMinAppVersion(settingsMap.min_app_version);
-    setAllPassages(passages);
-    setInventory(inv);
-    setBaselineStatus(status ?? null);
-    setLoading(false);
+    try {
+      const [settings, passages, inv, status] = await reliableLoad({
+        task: () => Promise.all([
+          fetchAppSettings(),
+          listPassages(),
+          fetchInventorySummary(),
+          fetchPeerBaselineSnapshotStatus(),
+        ]),
+        timeoutMs: TIMEOUT_MS.adminPanelLoad,
+        label: "admin_settings_load",
+        fallback: [[], [], null, null] as [AppSetting[], Passage[], InventorySummary | null, AdminPeerBaselineSnapshotStatus | null],
+      });
+      if (version !== loadVersion.current) return;
+      const settingsMap: Record<string, unknown> = {};
+      for (const s of settings) settingsMap[s.key] = s.value;
+      if (settingsMap.max_ai_chat_guest != null) setMaxAIChatGuest(String(settingsMap.max_ai_chat_guest));
+      if (settingsMap.max_ai_chat_basic != null) setMaxAIChatBasic(String(settingsMap.max_ai_chat_basic));
+      if (settingsMap.max_ai_chat_premium != null) setMaxAIChatPremium(String(settingsMap.max_ai_chat_premium));
+      if (settingsMap.bonus_ai_chat_cost != null) setBonusCost(String(settingsMap.bonus_ai_chat_cost));
+      if (settingsMap.bonus_ai_chat_max != null) setBonusMax(String(settingsMap.bonus_ai_chat_max));
+      if (Array.isArray(settingsMap.exempt_passage_ids)) setExemptPassageIds(new Set(settingsMap.exempt_passage_ids as string[]));
+      if (typeof settingsMap.explore_banner_message === "string") setExploreBannerMessage(settingsMap.explore_banner_message);
+      if (settingsMap.explore_banner_pause != null) setExploreBannerPause(String(settingsMap.explore_banner_pause));
+      if (typeof settingsMap.min_app_version === "string") setMinAppVersion(settingsMap.min_app_version);
+      setAllPassages(passages);
+      setInventory(inv);
+      setBaselineStatus(status ?? null);
+    } finally {
+      if (version === loadVersion.current) setLoading(false);
+    }
   }, [isSupabaseReady]);
 
   const handleRefreshPeerBaselines = async () => {

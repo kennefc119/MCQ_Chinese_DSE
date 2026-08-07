@@ -2,7 +2,7 @@
  * UsageInsightsPanel — Dashboard with collapsible sections.
  * Order: summary → trends → AI → skipping → passages → difficulty → exercises → students
  */
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -82,10 +82,12 @@ export default function UsageInsightsPanel() {
   const [studentPointStats, setStudentPointStats] = useState<StudentPointStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [sectionLoading, setSectionLoading] = useState(true);
+  const primaryLoadVersion = useRef(0);
+  const sectionLoadVersion = useRef(0);
 
   const loadPrimary = useCallback(async () => {
     if (!isSupabaseReady) return;
-    let cancelled = false;
+    const version = ++primaryLoadVersion.current;
     try {
       setLoading(true);
       const [d, t, ai] = await reliableLoad({
@@ -98,19 +100,18 @@ export default function UsageInsightsPanel() {
         label: "admin_usage_primary_load",
         fallback: [[], null, null] as [DailyUsageMetric[], UsageWindowMetrics | null, AIUsageStats | null],
       });
-      if (cancelled) return;
+      if (version !== primaryLoadVersion.current) return;
       setDaily(d);
       setTotals(t);
       setAIStats(ai);
-      setLoading(false);
     } finally {
-      cancelled = true;
+      if (version === primaryLoadVersion.current) setLoading(false);
     }
   }, [days, isSupabaseReady]);
 
   const loadSections = useCallback(async () => {
     if (!isSupabaseReady) return;
-    let cancelled = false;
+    const version = ++sectionLoadVersion.current;
     try {
       setSectionLoading(true);
       const [pr, dr, sk, ed, sc, sp] = await reliableLoad({
@@ -140,16 +141,15 @@ export default function UsageInsightsPanel() {
           StudentPointStat[],
         ],
       });
-      if (cancelled) return;
+      if (version !== sectionLoadVersion.current) return;
       setPassageRates(pr);
       setDiffRates(dr);
       setSkipping(sk);
       setExerciseDist(ed);
       setStudentCounts(sc);
       setStudentPointStats(sp);
-      setSectionLoading(false);
     } finally {
-      cancelled = true;
+      if (version === sectionLoadVersion.current) setSectionLoading(false);
     }
   }, [isSupabaseReady]);
 
