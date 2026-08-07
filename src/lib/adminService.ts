@@ -97,12 +97,21 @@ export async function fetchUsageMetrics(windowDays: number): Promise<UsageWindow
 // ── Visit / login event logging (called from AuthContext) ───────────────────
 
 export async function logVisit(deviceId: string, userId: string | null, platform: string | null) {
+  await logVisitEvent({ deviceId, userId, platform, eventType: "open" });
+}
+
+export async function logVisitEvent(args: {
+  deviceId: string;
+  userId: string | null;
+  platform: string | null;
+  eventType: string;
+}) {
   if (!isSupabaseConfigured) return;
   await supabase.from("dsemcq_visit_events").insert({
-    device_id: deviceId,
-    user_id: userId,
-    event_type: "open",
-    platform,
+    device_id: args.deviceId,
+    user_id: args.userId,
+    event_type: args.eventType,
+    platform: args.platform,
   });
 }
 

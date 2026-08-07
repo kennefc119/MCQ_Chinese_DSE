@@ -9,7 +9,7 @@ import AdvisorChatScreen from "../screens/AdvisorChatScreen";
 import DiscoverSelfScreen from "../screens/DiscoverSelfScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import AdminHubScreen from "../screens/AdminHubScreen";
-import CustomNotesScreen from "../screens/CustomNotesScreen";
+import AiNotesComingSoonScreen from "../screens/AiNotesComingSoonScreen";
 import { useAuth } from "../context/AuthContext";
 
 const Tab = createBottomTabNavigator<MainTabsParamList>();
@@ -59,7 +59,7 @@ export default function MainTabs() {
       />
       <Tab.Screen
         name="Notes"
-        component={CustomNotesScreen}
+        component={AiNotesComingSoonScreen}
         options={{ title: "AI筆記", tabBarIcon: tabIcon("document-text-outline", "document-text") }}
       />
       <Tab.Screen
