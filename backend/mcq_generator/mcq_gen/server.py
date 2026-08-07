@@ -104,6 +104,7 @@ class ConfirmCorrectionRequest(BaseModel):
     stem: str
     options: list[dict]
     score: int
+    allow_low_score_override: bool = False
 
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
@@ -551,6 +552,11 @@ def confirm_correction(req: ConfirmCorrectionRequest) -> dict[str, Any]:
     from .db.writer import update_question
     from .schemas import DraftOption
     try:
+        if req.score < 7 and not req.allow_low_score_override:
+            raise HTTPException(
+                status_code=400,
+                detail="Low-score corrections require an explicit admin override",
+            )
         options = [DraftOption(**o) for o in req.options]
         success = update_question(
             question_id=req.question_id,
@@ -560,7 +566,12 @@ def confirm_correction(req: ConfirmCorrectionRequest) -> dict[str, Any]:
         )
         if not success:
             raise HTTPException(status_code=404, detail=f"Question {req.question_id} not found")
-        log.info("correction_confirmed_written", question_id=req.question_id, score=req.score)
+        log.info(
+            "correction_confirmed_written",
+            question_id=req.question_id,
+            score=req.score,
+            low_score_override=req.score < 7,
+        )
         return {"success": True, "question_id": req.question_id}
     except HTTPException:
         raise

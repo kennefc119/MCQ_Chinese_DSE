@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import Markdown from "react-native-markdown-display";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { colors, spacing, typography } from "../theme";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
@@ -12,7 +13,29 @@ import ContentContainer from "../components/ContentContainer";
 import { withTimeout, isTimeoutError } from "../lib/asyncTimeout";
 import { TIMEOUT_MS } from "../lib/timeoutConfig";
 
-interface Msg { id: string; role: "user" | "assistant"; text: string }
+interface Msg {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  requestId?: string;
+  waiting?: boolean;
+  typing?: boolean;
+}
+
+interface AdvisorRow {
+  id: string;
+  request_id: string | null;
+  user_text: string;
+  bot_reply: string | null;
+  status: "pending" | "processing" | "completed" | "failed";
+  error_message: string | null;
+}
+
+interface AdvisorQuota {
+  used: number;
+  limit: number;
+  remaining: number;
+}
 
 // Bot display name from .env (via app.config.ts extra.advisorBotName)
 const BOT_NAME = "文淵書僮";
@@ -48,6 +71,85 @@ let _persistedMessages: Msg[] = [INTRO_MSG];
 const DEFAULT_GUEST_LIMIT = 10;
 const DEFAULT_FREE_MONTHLY_LIMIT = 20;
 const DEFAULT_PREMIUM_MONTHLY_LIMIT = 300;
+const WAITING_HINTS = [
+  "正在思考你的問題…",
+  "正在整理相關資料…",
+  "正在翻查對話記錄…",
+  "正在組織答案…",
+  "正在搜尋網上資料…",
+];
+const POLL_INTERVAL_MS = 2_000;
+const CHAT_CACHE_PREFIX = "advisor-chat-v1";
+
+function isLegacySchemaMissingColumnError(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return normalized.includes("request_id")
+    || normalized.includes("status")
+    || normalized.includes("error_message")
+    || normalized.includes("processing_at")
+    || normalized.includes("completed_at")
+    || (normalized.includes("column") && normalized.includes("does not exist"));
+}
+
+function isAdvisorQuota(value: unknown): value is AdvisorQuota {
+  if (!value || typeof value !== "object") return false;
+  const quota = value as Record<string, unknown>;
+  return typeof quota.used === "number"
+    && typeof quota.limit === "number"
+    && typeof quota.remaining === "number";
+}
+
+function createRequestId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
+    const value = Math.floor(Math.random() * 16);
+    return (char === "x" ? value : (value & 0x3) | 0x8).toString(16);
+  });
+}
+
+function typingDelay(lastChar: string): number {
+  if (/[。！？]/.test(lastChar)) return 130;
+  if (/[，、；：]/.test(lastChar)) return 55;
+  return 20;
+}
+
+function dedupeMessagesById(messages: Msg[]): Msg[] {
+  const seen = new Set<string>();
+  const out: Msg[] = [];
+  for (const msg of messages) {
+    if (seen.has(msg.id)) continue;
+    seen.add(msg.id);
+    out.push(msg);
+  }
+  return out;
+}
+
+function normalizeStoredMessages(raw: unknown): Msg[] {
+  if (!Array.isArray(raw)) return [INTRO_MSG];
+  const parsed = raw
+    .filter((item) => item && typeof item === "object")
+    .map((item) => {
+      const row = item as Record<string, unknown>;
+      const role = row.role === "user" ? "user" : row.role === "assistant" ? "assistant" : null;
+      if (!role || typeof row.id !== "string" || typeof row.text !== "string") return null;
+      return {
+        id: row.id,
+        role,
+        text: row.text,
+        requestId: typeof row.requestId === "string" ? row.requestId : undefined,
+        waiting: typeof row.waiting === "boolean" ? row.waiting : undefined,
+        typing: typeof row.typing === "boolean" ? row.typing : undefined,
+      } as Msg;
+    })
+    .filter((item): item is Msg => item !== null);
+
+  if (!parsed.some((m) => m.id === "intro")) {
+    parsed.unshift(INTRO_MSG);
+  }
+  return dedupeMessagesById(parsed);
+}
 
 export default function AdvisorChatScreen() {
   const routeParams = useRoute<RouteProp<MainTabsParamList, "Advisor">>().params;
@@ -64,11 +166,16 @@ export default function AdvisorChatScreen() {
   const [bonusMax, setBonusMax] = useState(20);       // max bonus any user can have
   const [showBonusModal, setShowBonusModal] = useState(false);
   const [bonusQty, setBonusQty] = useState(1);
+  const [historyHydrated, setHistoryHydrated] = useState(false);
   const listRef = useRef<FlatList<Msg>>(null);
   const autoSentRef = useRef<typeof routeParams>(undefined);
   const sendRef = useRef<(text: string) => Promise<void>>(async () => {});
+  const pendingRequestIds = useRef(new Set<string>());
+  const pendingSinceMs = useRef(new Map<string, number>());
+  const typingTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
   const userBonus = user?.bonus_ai_chat ?? 0;
+  const storageKey = `${CHAT_CACHE_PREFIX}:${isGuest ? "guest" : (user?.id ?? "anon")}`;
 
   // Fetch chat limits + bonus config from app settings
   useEffect(() => {
@@ -98,13 +205,15 @@ export default function AdvisorChatScreen() {
   // Fetch this month's message count for logged-in users
   const fetchMonthlyUsed = useCallback(async () => {
     if (!user || isGuest || !isSupabaseConfigured) return;
-    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-    const { count } = await supabase
-      .from("dsemcq_advisor_messages")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .gte("created_at", startOfMonth);
-    setMonthlyUsed(count ?? 0);
+    const { data, error } = await supabase.functions.invoke("dsemcq-advisor-chat", {
+      body: { quotaOnly: true },
+    });
+    const response = data as { quota?: unknown; error?: string } | null;
+    if (error || response?.error || !isAdvisorQuota(response?.quota)) {
+      console.log("[AdvisorChat] quota load error:", response?.error ?? error?.message ?? "Invalid quota response");
+      return;
+    }
+    setMonthlyUsed(response.quota.used);
   }, [user, isGuest]);
 
   useEffect(() => { fetchMonthlyUsed(); }, [fetchMonthlyUsed]);
@@ -117,6 +226,246 @@ export default function AdvisorChatScreen() {
       return next;
     });
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    const hydrateHistory = async () => {
+      try {
+        const cached = await AsyncStorage.getItem(storageKey);
+        if (cancelled) return;
+        if (!cached) {
+          setHistoryHydrated(true);
+          return;
+        }
+        const parsed = normalizeStoredMessages(JSON.parse(cached));
+        _persistedMessages = parsed;
+        setMessages(parsed);
+      } catch (error) {
+        console.log("[AdvisorChat] history hydrate error:", String((error as Error)?.message ?? error));
+      } finally {
+        if (!cancelled) setHistoryHydrated(true);
+      }
+    };
+    void hydrateHistory();
+    return () => { cancelled = true; };
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (!historyHydrated) return;
+    void AsyncStorage.setItem(storageKey, JSON.stringify(messages)).catch((error) => {
+      console.log("[AdvisorChat] history persist error:", String((error as Error)?.message ?? error));
+    });
+  }, [historyHydrated, messages, storageKey]);
+
+  const showWaitingHint = useCallback((requestId: string, hintIndex: number) => {
+    updateMessages((previous) => previous.map((message) => (
+      message.requestId === requestId && message.role === "assistant" && message.waiting
+        ? { ...message, text: WAITING_HINTS[hintIndex % WAITING_HINTS.length] }
+        : message
+    )));
+  }, []);
+
+  const formatAdvisorError = useCallback((error: unknown): string => {
+    if (typeof error === "object" && error !== null && "message" in error) {
+      const message = String((error as { message?: unknown }).message ?? "未知錯誤");
+      return `（顧問服務異常：${message}）`;
+    }
+    return `（顧問服務異常：${String(error ?? "未知錯誤")}）`;
+  }, []);
+
+  const resolvePendingWithError = useCallback((requestId: string, errorText: string) => {
+    pendingRequestIds.current.delete(requestId);
+    pendingSinceMs.current.delete(requestId);
+    updateMessages((previous) => {
+      let matched = false;
+      const next = previous.map((message) => {
+        if (message.requestId === requestId && message.role === "assistant") {
+          matched = true;
+          return { ...message, text: errorText, waiting: false, typing: false };
+        }
+        return message;
+      });
+      if (!matched) {
+        next.push({ id: `a-${requestId}-err`, role: "assistant", text: errorText, requestId });
+      }
+      return next;
+    });
+  }, []);
+
+  const typeReply = useCallback((requestId: string, reply: string) => {
+    const timer = typingTimers.current.get(requestId);
+    if (timer) clearTimeout(timer);
+
+    let position = 0;
+    const tick = () => {
+      position = Math.min(position + 1, reply.length);
+      updateMessages((previous) => previous.map((message) => (
+        message.requestId === requestId && message.role === "assistant"
+          ? {
+            ...message,
+            text: reply.slice(0, position),
+            waiting: false,
+            typing: position < reply.length,
+          }
+          : message
+      )));
+      if (position < reply.length) {
+        typingTimers.current.set(requestId, setTimeout(tick, typingDelay(reply[position - 1] ?? "")));
+      } else {
+        typingTimers.current.delete(requestId);
+        updateMessages((previous) => previous.map((message) => (
+          message.requestId === requestId && message.role === "assistant"
+            ? { ...message, text: reply, waiting: false, typing: false }
+            : message
+        )));
+      }
+    };
+    tick();
+  }, []);
+
+  const applyAdvisorRow = useCallback((row: AdvisorRow, animateReply: boolean) => {
+    const requestId = row.request_id;
+    if (!requestId) return;
+
+    if (row.status === "completed" && row.bot_reply) {
+      pendingRequestIds.current.delete(requestId);
+      pendingSinceMs.current.delete(requestId);
+      const hasAssistant = _persistedMessages.some((message) => (
+        message.requestId === requestId && message.role === "assistant"
+      ));
+      if (!hasAssistant) {
+        updateMessages((previous) => [...previous,
+          { id: `u-${requestId}`, role: "user", text: row.user_text, requestId },
+          { id: `a-${requestId}`, role: "assistant", text: animateReply ? "" : row.bot_reply!, requestId, typing: animateReply },
+        ]);
+      }
+      if (animateReply) typeReply(requestId, row.bot_reply);
+      return;
+    }
+
+    if (row.status === "completed" && !row.bot_reply) {
+      resolvePendingWithError(requestId, "（顧問未有返回內容，請稍後再試。）");
+      return;
+    }
+
+    if (row.status === "failed") {
+      pendingRequestIds.current.delete(requestId);
+      pendingSinceMs.current.delete(requestId);
+      updateMessages((previous) => previous.map((message) => (
+        message.requestId === requestId && message.role === "assistant"
+          ? { ...message, text: `（顧問服務異常：${row.error_message ?? "未知錯誤"}）`, waiting: false, typing: false }
+          : message
+      )));
+    }
+  }, [resolvePendingWithError, typeReply]);
+
+  const pollAdvisorReplies = useCallback(async () => {
+    if (!user || isGuest || !isSupabaseConfigured || pendingRequestIds.current.size === 0) return;
+    const requestIds = [...pendingRequestIds.current].filter((id) => !id.startsWith("local-"));
+    if (requestIds.length === 0) return;
+    const { data, error } = await supabase
+      .from("dsemcq_advisor_messages")
+      .select("id, request_id, user_text, bot_reply, status, error_message")
+      .eq("user_id", user.id)
+      .in("request_id", requestIds);
+    if (error) {
+      console.log("[AdvisorChat] polling error:", error.message);
+      return;
+    }
+    for (const row of (data ?? []) as AdvisorRow[]) applyAdvisorRow(row, true);
+  }, [applyAdvisorRow, isGuest, user]);
+
+  useEffect(() => {
+    if (!historyHydrated || !user || isGuest || !isSupabaseConfigured) return;
+    let active = true;
+    const loadHistory = async () => {
+      const { data, error } = await supabase
+        .from("dsemcq_advisor_messages")
+        .select("id, request_id, user_text, bot_reply, status, error_message")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(50);
+
+      if (error && isLegacySchemaMissingColumnError(error.message)) {
+        const { data: legacyData, error: legacyError } = await supabase
+          .from("dsemcq_advisor_messages")
+          .select("id, user_text, bot_reply")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: true })
+          .limit(50);
+        if (legacyError) {
+          console.log("[AdvisorChat] load legacy history error:", legacyError.message);
+          return;
+        }
+        if (!active || !legacyData) return;
+        const legacyMessages = (legacyData as Array<{ id: string; user_text: string; bot_reply: string | null }>).flatMap((row) => {
+          const pairs: Msg[] = [{ id: `u-db-${row.id}`, role: "user", text: row.user_text }];
+          if (row.bot_reply) pairs.push({ id: `a-db-${row.id}`, role: "assistant", text: row.bot_reply });
+          return pairs;
+        });
+        if (legacyMessages.length === 0) return;
+        updateMessages((previous) => dedupeMessagesById([...previous, ...legacyMessages]));
+        return;
+      }
+
+      if (error) {
+        console.log("[AdvisorChat] load history error:", error.message);
+        return;
+      }
+      if (!active || !data) return;
+      const rows = data as AdvisorRow[];
+      for (const row of rows) {
+        if (row.status === "pending" || row.status === "processing") {
+          if (row.request_id) pendingRequestIds.current.add(row.request_id);
+          if (row.request_id && !pendingSinceMs.current.has(row.request_id)) {
+            pendingSinceMs.current.set(row.request_id, Date.now());
+          }
+          updateMessages((previous) => previous.some((message) => message.requestId === row.request_id)
+            ? previous
+            : [...previous,
+              { id: `u-${row.request_id}`, role: "user", text: row.user_text, requestId: row.request_id! },
+              { id: `a-${row.request_id}`, role: "assistant", text: WAITING_HINTS[0], requestId: row.request_id!, waiting: true, typing: false },
+            ]);
+        } else {
+          applyAdvisorRow(row, false);
+        }
+      }
+    };
+    void loadHistory();
+    return () => { active = false; };
+  }, [applyAdvisorRow, historyHydrated, isGuest, user]);
+
+  useEffect(() => {
+    const poll = setInterval(() => { void pollAdvisorReplies(); }, POLL_INTERVAL_MS);
+    return () => clearInterval(poll);
+  }, [pollAdvisorReplies]);
+
+  useEffect(() => {
+    if (pendingRequestIds.current.size === 0) return;
+    let hintIndex = 0;
+    const hints = setInterval(() => {
+      hintIndex += 1;
+      for (const requestId of pendingRequestIds.current) showWaitingHint(requestId, hintIndex);
+    }, 3_500);
+    return () => clearInterval(hints);
+  }, [messages, showWaitingHint]);
+
+  useEffect(() => {
+    const staleWatcher = setInterval(() => {
+      const now = Date.now();
+      for (const requestId of pendingRequestIds.current) {
+        const startedAt = pendingSinceMs.current.get(requestId) ?? now;
+        if (now - startedAt > TIMEOUT_MS.chatInvoke + 5_000) {
+          resolvePendingWithError(requestId, "（顧問回應逾時，請稍後再試。）");
+        }
+      }
+    }, 5_000);
+    return () => clearInterval(staleWatcher);
+  }, [resolvePendingWithError]);
+
+  useEffect(() => () => {
+    for (const timer of typingTimers.current.values()) clearTimeout(timer);
+  }, []);
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || loading) return;
@@ -151,49 +500,137 @@ export default function AdvisorChatScreen() {
       }
     }
 
-    const userMsg: Msg = { id: `u-${Date.now()}`, role: "user", text: text.trim() };
-    updateMessages((p) => [...p, userMsg]);
+    const cleanText = text.trim();
+    // Capture previous turns before adding this question, so Poe does not receive it twice.
+    const historyToSend = _persistedMessages
+      .filter((message) => message.id !== "intro" && !message.waiting)
+      .slice(-12);
     setLoading(true);
+    let hasRenderedUserMessage = false;
+    let activeRequestId: string | null = null;
+
+    const startDirectWaitingFlow = (requestId: string) => {
+      pendingRequestIds.current.add(requestId);
+      pendingSinceMs.current.set(requestId, Date.now());
+      updateMessages((previous) => [...previous,
+        { id: `u-${requestId}`, role: "user", text: cleanText, requestId },
+        { id: `a-${requestId}`, role: "assistant", text: WAITING_HINTS[0], requestId, waiting: true, typing: false },
+      ]);
+      hasRenderedUserMessage = true;
+    };
+
+    const finishDirectWaitingFlow = (requestId: string, replyText: string) => {
+      pendingRequestIds.current.delete(requestId);
+      pendingSinceMs.current.delete(requestId);
+      typeReply(requestId, replyText);
+    };
+
+    const invokeAdvisorDirect = async (): Promise<string> => {
+      try {
+        const { data, error } = await withTimeout(
+          supabase.functions.invoke("dsemcq-advisor-chat", {
+            body: {
+              message: cleanText,
+              system: SYSTEM_PROMPT,
+              history: historyToSend,
+            },
+          }),
+          TIMEOUT_MS.chatInvoke,
+          "advisor_chat_invoke",
+        );
+        if (error || data?.error) {
+          const errMsg = data?.error ?? error?.message ?? "未知錯誤";
+          if (data?.code === "MONTHLY_LIMIT") {
+            Alert.alert("本月對話已達上限", errMsg);
+            return `（${errMsg}）`;
+          }
+          console.log("[AdvisorChat] error:", error, "data.error:", data?.error);
+          return `（顧問服務異常：${errMsg}）`;
+        }
+        if (!isGuest && isAdvisorQuota(data?.quota)) setMonthlyUsed(data.quota.used);
+        return data?.reply ?? "（無回覆）";
+      } catch (e) {
+        if (isTimeoutError(e)) return "（顧問回應逾時，請稍後再試。）";
+        return `（顧問服務異常：${String((e as Error)?.message ?? "未知錯誤")}）`;
+      }
+    };
 
     try {
       let reply = "";
       if (!isSupabaseConfigured) {
+        updateMessages((previous) => [...previous, { id: `u-${Date.now()}`, role: "user", text: cleanText }]);
         await new Promise((r) => setTimeout(r, 600));
         reply = getDemoReply(text);
       } else {
-        // Send up to 6 full rounds (12 messages) of prior history, excluding intro
-        const historyToSend = _persistedMessages
-          .filter((m) => m.id !== "intro")
-          .slice(-12);
-        try {
-          const { data, error } = await withTimeout(
-            supabase.functions.invoke("dsemcq-advisor-chat", {
-              body: { message: text, system: SYSTEM_PROMPT, history: historyToSend },
-            }),
-            TIMEOUT_MS.chatInvoke,
-            "advisor_chat_invoke",
-          );
-          if (error || data?.error) {
-            const errMsg = data?.error ?? error?.message ?? "未知錯誤";
-            if (data?.code === "MONTHLY_LIMIT") {
-              Alert.alert("本月對話已達上限", errMsg);
+        if (!isGuest && user) {
+          const requestId = createRequestId();
+          activeRequestId = requestId;
+          console.log("[AdvisorChat] insert pending request:", requestId);
+          const { error } = await supabase.from("dsemcq_advisor_messages").insert({
+            user_id: user.id,
+            request_id: requestId,
+            user_text: cleanText,
+            status: "pending",
+          });
+          if (error) {
+            console.log("[AdvisorChat] insert pending failed:", error.message);
+            if (isLegacySchemaMissingColumnError(error.message)) {
+              console.log("[AdvisorChat] detected legacy advisor schema, using direct invoke fallback");
+              const directRequestId = `local-${createRequestId()}`;
+              startDirectWaitingFlow(directRequestId);
+              reply = await invokeAdvisorDirect();
+              finishDirectWaitingFlow(directRequestId, reply);
+              return;
             }
-            console.log("[AdvisorChat] error:", error, "data.error:", data?.error);
-            reply = data?.code === "MONTHLY_LIMIT" ? "" : `（顧問服務異常：${errMsg}）`;
-          } else {
-            reply = data?.reply ?? "（無回覆）";
-            // Increment local monthly counter on success
-            if (!isGuest && monthlyUsed !== null) setMonthlyUsed(monthlyUsed + 1);
+            throw error;
           }
-        } catch (e) {
-          if (isTimeoutError(e)) {
-            reply = "（顧問回應逾時，請稍後再試。）";
-          } else {
-            reply = `（顧問服務異常：${String((e as Error)?.message ?? "未知錯誤")}）`;
-          }
+
+          pendingRequestIds.current.add(requestId);
+          pendingSinceMs.current.set(requestId, Date.now());
+          updateMessages((previous) => [...previous,
+            { id: `u-${requestId}`, role: "user", text: cleanText, requestId },
+            { id: `a-${requestId}`, role: "assistant", text: WAITING_HINTS[0], requestId, waiting: true, typing: false },
+          ]);
+          hasRenderedUserMessage = true;
+          void supabase.functions.invoke("dsemcq-advisor-chat", {
+            body: { message: cleanText, system: SYSTEM_PROMPT, history: historyToSend, requestId },
+          }).then(({ data, error }) => {
+            if (error) {
+              console.log("[AdvisorChat] background invocation error:", error);
+              resolvePendingWithError(requestId, formatAdvisorError(error));
+              return;
+            }
+            if (isAdvisorQuota(data?.quota)) setMonthlyUsed(data.quota.used);
+            else void fetchMonthlyUsed();
+          }).catch((error) => {
+            console.log("[AdvisorChat] background invocation error:", error);
+            resolvePendingWithError(requestId, formatAdvisorError(error));
+          });
+          return;
         }
+
+        // Guest mode has no protected row to poll, so it keeps the direct fallback.
+        const directRequestId = `local-${createRequestId()}`;
+        startDirectWaitingFlow(directRequestId);
+        reply = await invokeAdvisorDirect();
+        finishDirectWaitingFlow(directRequestId, reply);
+        return;
       }
       updateMessages((p) => [...p, { id: `a-${Date.now()}`, role: "assistant", text: reply }]);
+    } catch (error) {
+      if (!hasRenderedUserMessage) {
+        updateMessages((previous) => [...previous, {
+          id: activeRequestId ? `u-${activeRequestId}` : `u-${Date.now()}`,
+          role: "user",
+          text: cleanText,
+          requestId: activeRequestId ?? undefined,
+        }]);
+      }
+      if (activeRequestId) {
+        resolvePendingWithError(activeRequestId, formatAdvisorError(error));
+      } else {
+        updateMessages((previous) => [...previous, { id: `a-${Date.now()}`, role: "assistant", text: formatAdvisorError(error) }]);
+      }
     } finally {
       setLoading(false);
       setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
@@ -338,9 +775,19 @@ export default function AdvisorChatScreen() {
           keyExtractor={(m) => m.id}
           contentContainerStyle={{ padding: spacing.md }}
           renderItem={({ item }) => (
-            <View style={[styles.bubble, item.role === "user" ? styles.userBubble : styles.aiBubble]}>
+            <View
+              style={[
+                styles.bubble,
+                item.role === "user" ? styles.userBubble : styles.aiBubble,
+                item.role === "assistant" && item.waiting ? styles.aiWaitingBubble : null,
+              ]}
+            >
               {item.role === "user" ? (
                 <Text style={styles.userText}>{item.text}</Text>
+              ) : item.waiting ? (
+                <Text style={styles.aiWaitingText}>{item.text}</Text>
+              ) : item.typing ? (
+                <Text style={styles.aiTypingText}>{item.text}</Text>
               ) : (
                 <Markdown style={mdStyles}>{item.text}</Markdown>
               )}
@@ -378,8 +825,19 @@ const styles = StyleSheet.create({
   bubble: { padding: spacing.md, borderRadius: 14, marginBottom: spacing.sm, maxWidth: "85%" },
   userBubble: { backgroundColor: colors.primary, alignSelf: "flex-end" },
   aiBubble: { backgroundColor: colors.surface, alignSelf: "flex-start", borderWidth: 1, borderColor: colors.border },
+  aiWaitingBubble: {
+    opacity: 0.78,
+    backgroundColor: colors.surfaceAlt,
+    borderColor: colors.border,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    maxWidth: "72%",
+  },
   userText: { color: "#FFFFFF", lineHeight: 22 },
   aiText: { color: colors.textPrimary, lineHeight: 22 },
+  aiWaitingText: { color: colors.textMuted, lineHeight: 20, fontSize: 13 },
+  aiTypingText: { color: colors.textPrimary, lineHeight: 22 },
   inputRow: { flexDirection: "row", padding: spacing.sm, borderTopWidth: 1, borderColor: colors.border, alignItems: "flex-end" },
   input: { flex: 1, color: colors.textPrimary, backgroundColor: colors.surface, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, maxHeight: 120, marginRight: spacing.sm },
   sendBtn: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20 },

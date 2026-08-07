@@ -13,6 +13,7 @@ export type MainTabsParamList = {
   Explore: undefined;
   Calendar: undefined;
   Advisor: { initialMessage?: string } | undefined;
+  Notes: undefined;
   Discover: undefined;
   Profile: undefined;
   Admin: undefined;
@@ -32,6 +33,7 @@ export type AppStackParamList = {
   AdminUserDetail: { userId: string };
   PointHistory: undefined;
   StudyHistory: undefined;
+  CustomNoteDetail: { noteId: string };
   Legal: { type: "terms" | "privacy" };
   SchoolPartner: undefined;
 };

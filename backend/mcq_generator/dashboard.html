@@ -1855,10 +1855,16 @@ function renderCorrCard(r, idx) {
         </div>
       ` : ''}
       ${r.dry_run ? '<div style="font-size:10px;color:var(--yellow);margin-top:6px;">⚠️ Dry Run — 未寫入資料庫</div>' : ''}
-      ${r.status === 'corrected' && !r.dry_run ? `
+      ${r.corrected_stem && (r.corrected_options || []).length && !r.dry_run ? `
         <div style="margin-top:10px;padding:8px;background:rgba(46,160,67,.1);border-radius:6px;border:1px solid var(--green);">
-          <div style="font-size:11px;color:var(--green);margin-bottom:6px;">✅ 修正分數達標（${r.score}/10）— 尚未寫入資料庫</div>
-          <button class="gen-btn" style="background:var(--green);font-size:12px;" onclick="confirmWrite('${id}')">✅ 確認寫入資料庫</button>
+          <div style="font-size:11px;color:${r.score >= 7 ? 'var(--green)' : 'var(--orange)'};margin-bottom:6px;">
+            ${r.score >= 7
+              ? `✅ 修正分數達標（${r.score}/10）— 尚未寫入資料庫`
+              : `⚠️ 修正分數未達標（${r.score}/10）— 可由管理員確認後強制寫入資料庫`}
+          </div>
+          <button class="gen-btn" style="background:${r.score >= 7 ? 'var(--green)' : 'var(--orange)'};font-size:12px;" onclick="confirmWrite('${id}')">
+            ${r.score >= 7 ? '✅ 確認寫入資料庫' : '⚠️ 強制寫入資料庫'}
+          </button>
           <span id="cw-status-${id}" style="font-size:11px;color:var(--muted);margin-left:8px;"></span>
         </div>
       ` : ''}
@@ -1984,7 +1990,11 @@ async function confirmWrite(cardId) {
   const r = _corrResultStore[cardId];
   if (!r) return;
   const statusEl = document.getElementById(`cw-status-${cardId}`);
-  if (!confirm(`確認將修正後的題目寫入資料庫並重置投訴紀錄？\n題目 ID: ${r.question_id}\n評分: ${r.score}/10`)) return;
+  const isLowScore = r.score < 7;
+  const prompt = isLowScore
+    ? `此修正分數為 ${r.score}/10，未達 7 分標準。\n\n確認後仍會寫入資料庫、重置投訴紀錄，並保留低分審題紀錄。\n\n題目 ID: ${r.question_id}\n\n確定強制寫入嗎？`
+    : `確認將修正後的題目寫入資料庫並重置投訴紀錄？\n題目 ID: ${r.question_id}\n評分: ${r.score}/10`;
+  if (!confirm(prompt)) return;
   if (statusEl) { statusEl.textContent = '寫入中...'; statusEl.style.color = 'var(--muted)'; }
   try {
     const resp = await fetch(`${API}/api/confirm-correction`, {
@@ -1995,6 +2005,7 @@ async function confirmWrite(cardId) {
         stem: r.corrected_stem,
         options: r.corrected_options,
         score: r.score,
+        allow_low_score_override: isLowScore,
       }),
     });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${await resp.text()}`);

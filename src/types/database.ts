@@ -186,6 +186,44 @@ export interface AdvisorMessageRecord {
   created_at: string;
 }
 
+export type CustomNoteVerificationStatus = "approved" | "unverified";
+
+export interface CustomNoteEligibility {
+  passage_id: string;
+  answered_question_count: number;
+  required_question_count: number;
+  is_premium: boolean;
+  eligible: boolean;
+  reason: "PREMIUM_REQUIRED" | "MORE_PASSAGE_QUESTIONS_REQUIRED" | null;
+}
+
+export interface CustomNoteJob {
+  id: string;
+  passage_id: string;
+  status: "queued" | "running" | "completed" | "completed_unverified" | "failed";
+  current_stage: string;
+  review_round: number;
+  error_code?: string | null;
+  error_message?: string | null;
+  completed_at?: string | null;
+}
+
+export interface CustomNoteSummary {
+  id: string;
+  passage_id: string;
+  title: string;
+  verification_status: CustomNoteVerificationStatus;
+  fact_check_score: number;
+  pedagogy_score: number;
+  created_at: string;
+}
+
+export interface CustomNote extends CustomNoteSummary {
+  semantic_content: Record<string, unknown>;
+  layout_metadata: Record<string, unknown>;
+  source_refs: unknown[];
+}
+
 // ─── Admin feature types ────────────────────────────────────────────────────
 
 export type AnnouncementType = "info" | "warning" | "success";

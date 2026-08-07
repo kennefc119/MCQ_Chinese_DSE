@@ -1,6 +1,6 @@
 // Supabase Edge Function: dsemcq-advisor-chat
-// Calls the Poe OpenAI-compatible API, returns { reply: string }.
-// Persists each exchange to dsemcq_advisor_messages via service-role key.
+// Calls the Poe OpenAI-compatible API and updates an idempotent request row.
+// The app reads that row so a reply survives an interrupted HTTP response.
 //
 // Required env vars (set in Supabase Dashboard → Edge Functions → Secrets):
 //   POE_API_KEY            — Poe API key (poe.com/api_key)
@@ -13,6 +13,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const POE_CHAT_URL  = "https://api.poe.com/v1/chat/completions";
 const DEFAULT_BOT   = "DSEChatConsultant";
 const MAX_REPLY_CHARS = 1200; // hard-cap to stay within ~200 Chinese chars
+
+interface QuotaSnapshot {
+  used: number;
+  limit: number;
+  remaining: number;
+}
 
 // ── CORS headers for Expo / React Native fetch ────────────────────────────
 const CORS = {
@@ -40,70 +46,20 @@ Deno.serve(async (req: Request) => {
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
+  const lifecycleEnabled = await hasAdvisorLifecycleColumns(supabase);
 
   // getUser returns null for guests (anon key ≠ user JWT) — that's ok.
   const { data: userData } = await supabase.auth.getUser(jwt);
   const userId: string | null = userData?.user?.id ?? null;
 
-  // ── 2. Monthly limit check for authenticated users ─────────────────────
-  if (userId) {
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const [countResp, profileResp] = await Promise.all([
-      supabase
-        .from("dsemcq_advisor_messages")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .gte("created_at", startOfMonth.toISOString()),
-      supabase
-        .from("dsemcq_profiles")
-        .select("subscription_tier, bonus_ai_chat")
-        .eq("id", userId)
-        .single(),
-    ]);
-
-    const used = countResp.count ?? 0;
-    const profile = profileResp.data as { subscription_tier?: string; bonus_ai_chat?: number } | null;
-    const tier = profile?.subscription_tier ?? "free";
-    const bonusChat = profile?.bonus_ai_chat ?? 0;
-
-    // Read limits from app settings (fall back to defaults if not found)
-    let freeMonthlyLimit = 20;
-    let premiumMonthlyLimit = 300;
-    try {
-      const { data: settingsRows } = await supabase
-        .from("dsemcq_app_settings")
-        .select("key, value")
-        .in("key", ["max_ai_chat_basic", "max_ai_chat_premium"]);
-      if (settingsRows) {
-        for (const row of settingsRows as { key: string; value: unknown }[]) {
-          const v = typeof row.value === "number" ? row.value : parseInt(String(row.value), 10);
-          if (!Number.isFinite(v)) continue;
-          if (row.key === "max_ai_chat_basic") freeMonthlyLimit = v;
-          if (row.key === "max_ai_chat_premium") premiumMonthlyLimit = v;
-        }
-      }
-    } catch {
-      // Settings table unavailable — use defaults
-    }
-
-    const baseLimit = tier === "premium" ? premiumMonthlyLimit : freeMonthlyLimit;
-    const monthlyLimit = baseLimit + bonusChat;
-
-    if (used >= monthlyLimit) {
-      return json({
-        error: tier === "premium"
-          ? `學士版每月 ${baseLimit}${bonusChat > 0 ? ` + ${bonusChat} 額外` : ""} 次已用盡。如需更多請聯絡客服。`
-          : `庶民版每月限 ${baseLimit}${bonusChat > 0 ? ` + ${bonusChat} 額外` : ""} 次，升級至學士版可享每月 ${premiumMonthlyLimit} 次。`,
-        code: "MONTHLY_LIMIT",
-      }, 200);
-    }
-  }
-
-  // ── 3. Parse body ──────────────────────────────────────────────────────
-  let body: { message?: string; system?: string; history?: Array<{ role: string; text: string }> };
+  // ── 2. Parse body ──────────────────────────────────────────────────────
+  let body: {
+    message?: string;
+    system?: string;
+    history?: Array<{ role: string; text: string }>;
+    requestId?: string;
+    quotaOnly?: boolean;
+  };
   try {
     body = await req.json();
   } catch {
@@ -111,7 +67,76 @@ Deno.serve(async (req: Request) => {
   }
 
   const userMessage = (body.message ?? "").trim();
+  const requestId = (body.requestId ?? "").trim();
+  if (body.quotaOnly) {
+    if (!userId) return json({ error: "Unauthorised" }, 401);
+    try {
+      return json({ quota: await getMonthlyQuota(supabase, userId, lifecycleEnabled) });
+    } catch (error) {
+      console.error("Quota lookup error:", error);
+      return json({ error: "Unable to load chat quota" }, 500);
+    }
+  }
   if (!userMessage) return json({ error: "message is required" }, 400);
+  if (userId && lifecycleEnabled && !requestId) return json({ error: "requestId is required" }, 400);
+
+  // ── 3. Claim the authenticated request row ─────────────────────────────
+  let requestRowId: string | null = null;
+  if (userId && lifecycleEnabled) {
+    const { data: existing } = await supabase
+      .from("dsemcq_advisor_messages")
+      .select("id, status, bot_reply, error_message")
+      .eq("user_id", userId)
+      .eq("request_id", requestId)
+      .maybeSingle();
+
+    if (!existing) {
+      return json({ error: "Advisor request was not prepared" }, 409);
+    }
+
+    requestRowId = existing.id;
+    if (existing.status === "completed") return json({ status: "completed", reply: existing.bot_reply }, 200);
+    if (existing.status === "failed") return json({ status: "failed", error: existing.error_message ?? "AI service failed" }, 200);
+    if (existing.status === "processing") return json({ status: "processing" }, 202);
+
+    const { data: claimed } = await supabase
+      .from("dsemcq_advisor_messages")
+      .update({ status: "processing", processing_at: new Date().toISOString() })
+      .eq("id", requestRowId)
+      .eq("status", "pending")
+      .select("id")
+      .maybeSingle();
+    if (!claimed) return json({ status: "processing" }, 202);
+  }
+
+  // ── 4. Monthly limit check for authenticated users ─────────────────────
+  let quotaBefore: QuotaSnapshot | null = null;
+  if (userId) {
+    try {
+      quotaBefore = await getMonthlyQuota(supabase, userId, lifecycleEnabled);
+    } catch (error) {
+      console.error("Quota enforcement lookup error:", error);
+      return json({ error: "Unable to verify chat quota" }, 500);
+    }
+
+    // Lifecycle requests are already in the processing count; legacy requests are inserted after Poe responds.
+    const atLimit = lifecycleEnabled
+      ? quotaBefore.used > quotaBefore.limit
+      : quotaBefore.used >= quotaBefore.limit;
+    if (atLimit) {
+      if (lifecycleEnabled && requestRowId) {
+        await supabase
+          .from("dsemcq_advisor_messages")
+          .update({ status: "failed", error_message: "MONTHLY_LIMIT", completed_at: new Date().toISOString() })
+          .eq("id", requestRowId);
+      }
+      return json({
+        error: "本月對話已達上限。",
+        code: "MONTHLY_LIMIT",
+        quota: quotaBefore,
+      }, 200);
+    }
+  }
 
   const systemPrompt = body.system ?? "";
   const history      = Array.isArray(body.history) ? body.history : [];
@@ -137,12 +162,13 @@ Deno.serve(async (req: Request) => {
   // Current user turn
   messages.push({ role: "user", content: userMessage });
 
-  // ── 4. Call Poe OpenAI-compatible API ─────────────────────────────────
+  // ── 5. Call Poe OpenAI-compatible API ─────────────────────────────────
   const poeApiKey = Deno.env.get("POE_API_KEY") ?? "";
   const botName   = Deno.env.get("DSE_ADVISOR_BOT_NAME") ?? DEFAULT_BOT;
 
   if (!poeApiKey) {
     console.error("POE_API_KEY not set");
+    await failRequest(supabase, requestRowId, "AI service not configured");
     return json({ error: "AI service not configured — POE_API_KEY missing" }, 503);
   }
 
@@ -161,12 +187,14 @@ Deno.serve(async (req: Request) => {
     });
   } catch (e) {
     console.error("Poe fetch error:", e);
+    await failRequest(supabase, requestRowId, "Failed to reach AI service");
     return json({ error: "Failed to reach AI service" }, 502);
   }
 
   if (!poeResp.ok) {
     const errText = await poeResp.text().catch(() => "");
     console.error(`Poe API error ${poeResp.status}:`, errText);
+    await failRequest(supabase, requestRowId, `AI service error (${poeResp.status})`);
     return json({ error: `AI service error (${poeResp.status}): ${errText.slice(0, 200)}` }, 502);
   }
 
@@ -175,29 +203,52 @@ Deno.serve(async (req: Request) => {
   try {
     poeJson = await poeResp.json();
   } catch {
+    await failRequest(supabase, requestRowId, "Invalid JSON from AI service");
     return json({ error: "Invalid JSON from AI service" }, 502);
   }
 
   const reply = (poeJson.choices?.[0]?.message?.content ?? "").slice(0, MAX_REPLY_CHARS);
 
   if (!reply) {
+    await failRequest(supabase, requestRowId, "Empty reply from AI service");
     return json({ error: "Empty reply from AI service" }, 502);
   }
 
-  // ── 6. Persist exchange (authenticated users only — guests not tracked) ──
-  if (userId) {
-    const { error: dbErr } = await supabase.from("dsemcq_advisor_messages").insert({
-      user_id:   userId,
-      user_text: userMessage,
+  // ── 6. Complete exchange (authenticated users only — guests not tracked) ─
+  if (lifecycleEnabled && requestRowId) {
+    const { error: dbErr } = await supabase.from("dsemcq_advisor_messages").update({
+      status: "completed",
       bot_reply: reply,
-    });
+      error_message: null,
+      completed_at: new Date().toISOString(),
+    }).eq("id", requestRowId);
     if (dbErr) {
-      console.error("DB insert error:", dbErr.message);
+      console.error("DB completion error:", dbErr.message);
+    }
+  } else if (userId) {
+    const { error: legacyInsertErr } = await supabase
+      .from("dsemcq_advisor_messages")
+      .insert({
+        user_id: userId,
+        user_text: userMessage,
+        bot_reply: reply,
+      });
+    if (legacyInsertErr) {
+      console.error("DB legacy insert error:", legacyInsertErr.message);
+      return json({ error: "Unable to record chat usage" }, 500);
     }
   }
 
-  // ── 7. Return reply ────────────────────────────────────────────────────
-  return json({ reply }, 200);
+  // ── 7. Return reply for guest-mode fallback ─────────────────────────────
+  let quota: QuotaSnapshot | undefined;
+  if (userId) {
+    try {
+      quota = await getMonthlyQuota(supabase, userId, lifecycleEnabled);
+    } catch (error) {
+      console.error("Post-chat quota lookup error:", error);
+    }
+  }
+  return json({ status: "completed", reply, quota }, 200);
 });
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -207,5 +258,83 @@ function json(data: unknown, status = 200): Response {
     status,
     headers: { ...CORS, "Content-Type": "application/json" },
   });
+}
+
+async function failRequest(
+  supabase: ReturnType<typeof createClient>,
+  requestRowId: string | null,
+  errorMessage: string,
+) {
+  if (!requestRowId) return;
+  const { error } = await supabase.from("dsemcq_advisor_messages").update({
+    status: "failed",
+    error_message: errorMessage,
+    completed_at: new Date().toISOString(),
+  }).eq("id", requestRowId);
+  if (error) console.error("DB failure update error:", error.message);
+}
+
+async function hasAdvisorLifecycleColumns(
+  supabase: ReturnType<typeof createClient>,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("information_schema.columns")
+    .select("column_name")
+    .eq("table_schema", "public")
+    .eq("table_name", "dsemcq_advisor_messages")
+    .in("column_name", ["request_id", "status", "error_message", "processing_at", "completed_at"]);
+
+  if (error) {
+    console.error("Schema check failed:", error.message);
+    return false;
+  }
+  return (data?.length ?? 0) >= 5;
+}
+
+async function getMonthlyQuota(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  lifecycleEnabled: boolean,
+): Promise<QuotaSnapshot> {
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const countQuery = supabase
+    .from("dsemcq_advisor_messages")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .gte("created_at", startOfMonth.toISOString());
+  const countResponse = lifecycleEnabled
+    ? await countQuery.in("status", ["processing", "completed"])
+    : await countQuery;
+  if (countResponse.error) throw countResponse.error;
+
+  const { data: profile, error: profileError } = await supabase
+    .from("dsemcq_profiles")
+    .select("subscription_tier, bonus_ai_chat")
+    .eq("id", userId)
+    .single();
+  if (profileError) throw profileError;
+
+  let freeMonthlyLimit = 20;
+  let premiumMonthlyLimit = 300;
+  const { data: settingsRows, error: settingsError } = await supabase
+    .from("dsemcq_app_settings")
+    .select("key, value")
+    .in("key", ["max_ai_chat_basic", "max_ai_chat_premium"]);
+  if (settingsError) throw settingsError;
+  for (const row of (settingsRows ?? []) as { key: string; value: unknown }[]) {
+    const value = typeof row.value === "number" ? row.value : parseInt(String(row.value), 10);
+    if (!Number.isFinite(value)) continue;
+    if (row.key === "max_ai_chat_basic") freeMonthlyLimit = value;
+    if (row.key === "max_ai_chat_premium") premiumMonthlyLimit = value;
+  }
+
+  const tier = (profile as { subscription_tier?: string } | null)?.subscription_tier ?? "free";
+  const bonus = (profile as { bonus_ai_chat?: number } | null)?.bonus_ai_chat ?? 0;
+  const limit = (tier === "premium" ? premiumMonthlyLimit : freeMonthlyLimit) + bonus;
+  const used = countResponse.count ?? 0;
+  return { used, limit, remaining: Math.max(0, limit - used) };
 }
 

@@ -21,11 +21,14 @@ const ExpoSecureStoreAdapter = {
   removeItem: (key: string) => SecureStore.deleteItemAsync(key),
 };
 
-// Wrap fetch with a 10 s timeout so dead sockets after background resume
-// don't block indefinitely.
+// Keep ordinary requests short after background resume, but allow the advisor
+// worker enough time to finish writing its durable reply row.
 const fetchWithTimeout: typeof fetch = (url, init) => {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10_000);
+  const timeoutMs = String(url).includes("/functions/v1/dsemcq-advisor-chat")
+    ? 90_000
+    : 10_000;
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   return fetch(url, { ...init, signal: controller.signal }).finally(() =>
     clearTimeout(timeout)
   );

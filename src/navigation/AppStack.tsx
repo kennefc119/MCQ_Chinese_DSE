@@ -15,6 +15,7 @@ import StudyHistoryScreen from "../screens/StudyHistoryScreen";
 import LegalScreen from "../screens/LegalScreen";
 import SchoolPartnerScreen from "../screens/SchoolPartnerScreen";
 import AdminUserDetailScreen from "../screens/AdminUserDetailScreen";
+import CustomNoteDetailScreen from "../screens/CustomNoteDetailScreen";
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -33,6 +34,7 @@ export default function AppStack() {
       <Stack.Screen name="AdminUserDetail" component={AdminUserDetailScreen} />
       <Stack.Screen name="PointHistory" component={PointHistoryScreen} />
       <Stack.Screen name="StudyHistory" component={StudyHistoryScreen} />
+      <Stack.Screen name="CustomNoteDetail" component={CustomNoteDetailScreen} />
       <Stack.Screen name="Legal" component={LegalScreen} />
       <Stack.Screen name="SchoolPartner" component={SchoolPartnerScreen} />
     </Stack.Navigator>
