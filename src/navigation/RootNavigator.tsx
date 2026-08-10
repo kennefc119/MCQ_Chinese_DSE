@@ -22,8 +22,10 @@ const navTheme = {
 };
 
 export default function RootNavigator() {
-  const { user, loading, isGuest } = useAuth();
-  const { checking, required, currentVersion, minVersion } = useForceUpdate();
+  const { user, loading, isGuest, isSupabaseReady } = useAuth();
+  const { checking, required, currentVersion, minVersion } = useForceUpdate(
+    !loading && isSupabaseReady,
+  );
 
   if (loading || checking) return <LoadingScreen />;
   if (required) {

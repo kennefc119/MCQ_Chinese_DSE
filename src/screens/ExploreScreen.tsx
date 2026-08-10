@@ -632,49 +632,49 @@ export default function ExploreScreen() {
   );
 
   const load = useCallback(async () => {
-    const deadline = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("load_timeout")), 8000)
-    );
-    try {
-      const [quizzes, tips, passageList, userAttempts] = await Promise.race([
-        Promise.all([
-          listQuizzes(),
-          listTipCards(),
-          listPassages(),
-          user ? listUserAttempts(user.id) : Promise.resolve([]),
-        ]),
-        deadline,
+    type LoadResult = [Quiz[], TipCard[], Passage[], Attempt[]];
+
+    const loadOnce = (): Promise<LoadResult> => new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => reject(new Error("load_timeout")), 12_000);
+      const request = Promise.all([
+        listQuizzes(),
+        listTipCards(),
+        listPassages(),
+        user ? listUserAttempts(user.id) : Promise.resolve<Attempt[]>([]),
       ]);
-      const feed: ExploreFeedCache = {
-        quizzes,
-        tips,
-        passages: passageList,
-        attempts: userAttempts,
-        quizOrder: quizOrderRef.current,
-      };
-      const ordered = orderQuizzes(quizzes, quizOrderRef.current);
-      quizOrderRef.current = ordered.quizOrder;
-      setAttempts(userAttempts);
-      setItems(interleave(ordered.quizzes, tips));
-      setPassages(passageList);
-      AsyncStorage.setItem(
-        CACHE_KEY_EXPLORE_FEED,
-        JSON.stringify({ ...feed, quizOrder: ordered.quizOrder })
-      ).catch(() => {});
-    } catch {
-      // Timed out or network error — keep the last rendered state.
+      request.then(resolve, reject).finally(() => clearTimeout(timeoutId));
+    });
+
+    for (let attemptIndex = 0; attemptIndex < 2; attemptIndex += 1) {
+      try {
+        const [quizzes, tips, passageList, userAttempts] = await loadOnce();
+        const feed: ExploreFeedCache = {
+          quizzes,
+          tips,
+          passages: passageList,
+          attempts: userAttempts,
+          quizOrder: quizOrderRef.current,
+        };
+        const ordered = orderQuizzes(quizzes, quizOrderRef.current);
+        quizOrderRef.current = ordered.quizOrder;
+        setAttempts(userAttempts);
+        setItems(interleave(ordered.quizzes, tips));
+        setPassages(passageList);
+        AsyncStorage.setItem(
+          CACHE_KEY_EXPLORE_FEED,
+          JSON.stringify({ ...feed, quizOrder: ordered.quizOrder })
+        ).catch(() => {});
+        return;
+      } catch (error) {
+        if (attemptIndex === 0) continue;
+        console.warn("[explore] initial load failed after retry:", error);
+      }
     }
   }, [user]);
 
   useEffect(() => {
     if (authLoading || !isSupabaseReady) return;
-    let mounted = true;
-    const run = async () => {
-      await load();
-      if (!mounted) setItems([]);
-    };
-    void run();
-    return () => { mounted = false; };
+    void load();
   }, [authLoading, isSupabaseReady, load]);
 
   useAppResume(() => {

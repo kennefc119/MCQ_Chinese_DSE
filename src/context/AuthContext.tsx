@@ -102,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let settled = false;
     let authSettled = false;
+    let disposed = false;
 
     const settle = () => {
       if (!settled) {
@@ -138,23 +139,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {});
 
-    // INITIAL_SESSION is the readiness boundary for authenticated queries.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const hydrateProfile = async (userId: string, syncEntitlement: boolean) => {
+      try {
+        const { data: profile } = await supabase
+          .from("dsemcq_profiles")
+          .select("*")
+          .eq("id", userId)
+          .maybeSingle();
+        if (disposed || !profile) return;
+        await persist(profile as Profile);
+        if (syncEntitlement) void syncSubscription(userId, profile as Profile);
+      } catch {
+        // Keep the cached profile if network/profile lookup fails.
+      }
+    };
+
+    // Supabase serializes auth events, so return from this callback before
+    // issuing database requests through the same client.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "INITIAL_SESSION") {
         if (session?.user) {
-          try {
-            const { data: profile } = await supabase
-              .from("dsemcq_profiles")
-              .select("*")
-              .eq("id", session.user.id)
-              .maybeSingle();
-            if (profile) {
-              await persist(profile as Profile);
-              void syncSubscription(session.user.id, profile as Profile);
-            }
-          } catch {
-            // Keep cached profile if network/profile lookup fails.
-          }
+          setTimeout(() => {
+            void hydrateProfile(session.user.id, true);
+          }, 0);
         } else {
           setIsGuest((g) => {
             if (!g) setUser(null);
@@ -169,18 +176,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (event === "TOKEN_REFRESHED" && session?.user) {
-        try {
-          const { data: profile } = await supabase
-            .from("dsemcq_profiles")
-            .select("*")
-            .eq("id", session.user.id)
-            .maybeSingle();
-          if (profile) {
-            await persist(profile as Profile);
-          }
-        } catch {
-          // Ignore refresh/profile failures silently.
-        }
+        setTimeout(() => {
+          void hydrateProfile(session.user.id, false);
+        }, 0);
       }
 
       if (event === "SIGNED_OUT") {
@@ -193,6 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => {
+      disposed = true;
       clearTimeout(deadline);
       subscription.unsubscribe();
     };

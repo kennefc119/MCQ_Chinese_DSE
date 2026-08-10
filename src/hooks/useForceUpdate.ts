@@ -9,7 +9,7 @@
  * A previously verified minimum version is cached so transient network
  * failures cannot incorrectly block current users at launch.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Application from "expo-application";
 import Constants from "expo-constants";
@@ -43,7 +43,7 @@ export interface ForceUpdateState {
   minVersion: string;
 }
 
-export function useForceUpdate(): ForceUpdateState {
+export function useForceUpdate(enabled: boolean): ForceUpdateState {
   const currentVersion: string =
     Application.nativeApplicationVersion ??
     (Constants.expoConfig?.version as string | undefined) ??
@@ -55,9 +55,18 @@ export function useForceUpdate(): ForceUpdateState {
     currentVersion,
     minVersion: "0.0.0",
   });
+  const isCheckingRef = useRef(false);
+  const recheckPendingRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
+
+    if (!enabled) {
+      setState((previous) => ({ ...previous, checking: false }));
+      return () => {
+        cancelled = true;
+      };
+    }
 
     const applyVersion = (minVersion: string) => {
       if (cancelled) return;
@@ -70,23 +79,46 @@ export function useForceUpdate(): ForceUpdateState {
       });
     };
 
-    const checkVersion = async () => {
+    const checkVersionOnce = async () => {
       const cachedVersion = await AsyncStorage.getItem(MIN_VERSION_CACHE_KEY).catch(() => null);
+      if (cancelled) return;
       if (isValidSemver(cachedVersion)) {
         applyVersion(cachedVersion);
-      } else if (!cancelled) {
+      } else {
         // No verified cache: do not make a network failure look like an update requirement.
         setState((previous) => ({ ...previous, checking: false }));
       }
 
-      const minVersion = await fetchMinAppVersion();
-      if (!isValidSemver(minVersion)) {
-        console.warn("[force-update] version check unavailable or returned an invalid version");
+      try {
+        const minVersion = await fetchMinAppVersion();
+        if (!isValidSemver(minVersion)) {
+          console.warn("[force-update] version check unavailable or returned an invalid version");
+          return;
+        }
+        if (cancelled) return;
+
+        await AsyncStorage.setItem(MIN_VERSION_CACHE_KEY, minVersion).catch(() => undefined);
+        applyVersion(minVersion);
+      } catch {
+        console.warn("[force-update] version check failed");
+      }
+    };
+
+    const checkVersion = async () => {
+      if (isCheckingRef.current) {
+        recheckPendingRef.current = true;
         return;
       }
 
-      await AsyncStorage.setItem(MIN_VERSION_CACHE_KEY, minVersion).catch(() => undefined);
-      applyVersion(minVersion);
+      isCheckingRef.current = true;
+      try {
+        do {
+          recheckPendingRef.current = false;
+          await checkVersionOnce();
+        } while (!cancelled && recheckPendingRef.current);
+      } finally {
+        isCheckingRef.current = false;
+      }
     };
 
     void checkVersion();
@@ -98,7 +130,7 @@ export function useForceUpdate(): ForceUpdateState {
       cancelled = true;
       subscription.remove();
     };
-  }, [currentVersion]);
+  }, [currentVersion, enabled]);
 
   return state;
 }
