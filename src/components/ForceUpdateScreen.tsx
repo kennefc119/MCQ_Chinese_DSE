@@ -17,22 +17,19 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, spacing, typography } from "../theme";
-import type { ForceUpdateReason } from "../hooks/useForceUpdate";
 
 // ── Store URLs ───────────────────────────────────────────────────────────────
 // Update these once you have the live store listings.
-const IOS_STORE_URL = "https://apps.apple.com/app/id6746878669";
+const IOS_STORE_URL = "https://apps.apple.com/hk/app/%E6%96%87%E6%B7%B5-dse/id6768325290?l=en-GB";
 const ANDROID_STORE_URL = "https://play.google.com/store/apps/details?id=com.wenyan.dsemcq";
 
 interface Props {
   currentVersion: string;
   minVersion: string;
-  reason?: ForceUpdateReason | null;
 }
 
-export default function ForceUpdateScreen({ currentVersion, minVersion, reason }: Props) {
+export default function ForceUpdateScreen({ currentVersion, minVersion }: Props) {
   const storeUrl = Platform.OS === "ios" ? IOS_STORE_URL : ANDROID_STORE_URL;
-  const isCheckFailed = reason === "check_failed";
 
   const openStore = () => {
     Linking.openURL(storeUrl).catch(() => {
@@ -55,11 +52,9 @@ export default function ForceUpdateScreen({ currentVersion, minVersion, reason }
         />
 
         <Text style={styles.emoji}>🔄</Text>
-        <Text style={styles.title}>{isCheckFailed ? "需要驗證版本" : "需要更新應用程式"}</Text>
+        <Text style={styles.title}>需要更新應用程式</Text>
         <Text style={styles.body}>
-          {isCheckFailed
-            ? `目前無法驗證版本狀態。\n為確保安全，請更新到商店最新版本後重試。\n（目前版本：${currentVersion}）`
-            : `您目前使用的版本（${currentVersion}）已過期。\n請更新至最新版本（${minVersion} 或以上）\n以繼續使用文淵 DSE。`}
+          {`您目前使用的版本（${currentVersion}）已過期。\n請更新至最新版本（${minVersion} 或以上）\n以繼續使用文淵 DSE。`}
         </Text>
 
         <TouchableOpacity style={styles.btn} onPress={openStore} activeOpacity={0.85}>

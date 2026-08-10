@@ -273,19 +273,19 @@ export async function listPassages(): Promise<Passage[]> {
 /**
  * Fetch the minimum required app version from dsemcq_app_settings.
  * Uses anon key — works before the user has signed in.
- * Returns "1.0.0" as a safe fallback if the setting is missing.
+ * Returns null when the setting cannot be verified.
  */
-export async function fetchMinAppVersion(): Promise<string> {
-  if (!isSupabaseConfigured) return "1.0.0";
+export async function fetchMinAppVersion(): Promise<string | null> {
+  if (!isSupabaseConfigured) return null;
   const { data, error } = await supabase
     .from("dsemcq_app_settings")
     .select("value")
     .eq("key", "min_app_version")
     .maybeSingle();
-  if (error || !data) return "1.0.0";
+  if (error || !data) return null;
   // value is JSONB — stored as a quoted string e.g. '"1.3.0"'
   const raw = (data as { value: unknown }).value;
-  return typeof raw === "string" ? raw : "1.0.0";
+  return typeof raw === "string" ? raw : null;
 }
 
 export async function getPassagesByIds(ids: string[]): Promise<Passage[]> {

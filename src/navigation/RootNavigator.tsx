@@ -23,7 +23,7 @@ const navTheme = {
 
 export default function RootNavigator() {
   const { user, loading, isGuest } = useAuth();
-  const { checking, required, currentVersion, minVersion, reason } = useForceUpdate();
+  const { checking, required, currentVersion, minVersion } = useForceUpdate();
 
   if (loading || checking) return <LoadingScreen />;
   if (required) {
@@ -31,7 +31,6 @@ export default function RootNavigator() {
       <ForceUpdateScreen
         currentVersion={currentVersion}
         minVersion={minVersion}
-        reason={reason}
       />
     );
   }

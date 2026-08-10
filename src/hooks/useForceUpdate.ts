@@ -6,18 +6,26 @@
  *   checking  — true while the async check is in flight
  *   required  — true when the user must update before proceeding
  *
- * Strict mode (fail-closed): timeout/network/parse failures are treated as
- * blocked until version verification succeeds.
+ * A previously verified minimum version is cached so transient network
+ * failures cannot incorrectly block current users at launch.
  */
 import { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Application from "expo-application";
 import Constants from "expo-constants";
+import { AppState } from "react-native";
 import { fetchMinAppVersion } from "../lib/dataService";
 
-export type ForceUpdateReason = "outdated" | "check_failed";
+const MIN_VERSION_CACHE_KEY = "dsemcq.min_app_version";
+const SEMVER_PATTERN = /^\d+\.\d+\.\d+$/;
 
-function parseSemver(v: string): [number, number, number] {
-  const parts = (v ?? "0.0.0").split(".").map((p) => parseInt(p, 10) || 0);
+function parseSemver(version: string): [number, number, number] {
+  const parts = version.split(".").map((part) => parseInt(part, 10));
   return [parts[0] ?? 0, parts[1] ?? 0, parts[2] ?? 0];
+}
+
+function isValidSemver(version: string | null): version is string {
+  return typeof version === "string" && SEMVER_PATTERN.test(version);
 }
 
 function isOutdated(current: string, required: string): boolean {
@@ -33,82 +41,62 @@ export interface ForceUpdateState {
   required: boolean;
   currentVersion: string;
   minVersion: string;
-  reason: ForceUpdateReason | null;
 }
 
 export function useForceUpdate(): ForceUpdateState {
   const currentVersion: string =
-    (Constants.expoConfig?.version as string | undefined) ?? "0.0.0";
+    Application.nativeApplicationVersion ??
+    (Constants.expoConfig?.version as string | undefined) ??
+    "0.0.0";
 
   const [state, setState] = useState<ForceUpdateState>({
     checking: true,
     required: false,
     currentVersion,
     minVersion: "0.0.0",
-    reason: null,
   });
 
   useEffect(() => {
     let cancelled = false;
-    let settled = false;
-    let timedOut = false;
 
-    const applyResult = (
-      minVersion: string,
-      required: boolean,
-      reason: ForceUpdateReason | null,
-    ) => {
+    const applyVersion = (minVersion: string) => {
       if (cancelled) return;
-      setState({ checking: false, required, currentVersion, minVersion, reason });
+      const required = isOutdated(currentVersion, minVersion);
+      setState({
+        checking: false,
+        required,
+        currentVersion,
+        minVersion,
+      });
     };
 
-    const timeoutId = setTimeout(() => {
-      if (cancelled || settled) return;
-      timedOut = true;
-      console.warn("[force-update] initial check timed out after 3s; strict mode blocks until verified");
-      applyResult("未知", true, "check_failed");
-    }, 3000);
+    const checkVersion = async () => {
+      const cachedVersion = await AsyncStorage.getItem(MIN_VERSION_CACHE_KEY).catch(() => null);
+      if (isValidSemver(cachedVersion)) {
+        applyVersion(cachedVersion);
+      } else if (!cancelled) {
+        // No verified cache: do not make a network failure look like an update requirement.
+        setState((previous) => ({ ...previous, checking: false }));
+      }
 
-    fetchMinAppVersion()
-      .then((minVersion) => {
-        if (cancelled || settled) return;
-        settled = true;
-        clearTimeout(timeoutId);
-        const required = isOutdated(currentVersion, minVersion);
-        applyResult(minVersion, required, required ? "outdated" : null);
-      })
-      .catch(() => {
-        // Strict mode: network error blocks until verification succeeds.
-        if (cancelled || settled) return;
-        settled = true;
-        clearTimeout(timeoutId);
-        applyResult("未知", true, "check_failed");
-      });
+      const minVersion = await fetchMinAppVersion();
+      if (!isValidSemver(minVersion)) {
+        console.warn("[force-update] version check unavailable or returned an invalid version");
+        return;
+      }
 
-    // If initial check timed out, try one non-blocking recheck.
-    const recheckId = setTimeout(() => {
-      if (cancelled || !timedOut) return;
-      fetchMinAppVersion()
-        .then((minVersion) => {
-          if (cancelled) return;
-          const required = isOutdated(currentVersion, minVersion);
-          if (required) console.warn("[force-update] background recheck requires update; enforcing now");
-          setState((prev) => ({
-            ...prev,
-            required,
-            minVersion,
-            reason: required ? "outdated" : null,
-          }));
-        })
-        .catch(() => {
-          // Keep strict blocked state if recheck still fails.
-        });
-    }, 1200);
+      await AsyncStorage.setItem(MIN_VERSION_CACHE_KEY, minVersion).catch(() => undefined);
+      applyVersion(minVersion);
+    };
+
+    void checkVersion();
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") void checkVersion();
+    });
 
     return () => {
       cancelled = true;
-      clearTimeout(timeoutId);
-      clearTimeout(recheckId);
+      subscription.remove();
     };
   }, [currentVersion]);
 
