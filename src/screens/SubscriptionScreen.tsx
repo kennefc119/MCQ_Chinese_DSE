@@ -22,6 +22,7 @@ import {
   restorePurchases,
   getPremiumEntitlementStatus,
   presentOfferCodeRedemptionSheet,
+  rcLogIn,
 } from "../lib/revenueCat";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import type { PurchasesPackage } from "react-native-purchases";
@@ -32,8 +33,8 @@ const EULA_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeu
 const THREADS_URL = "https://www.threads.com/@dse.manyuen?invite=0";
 
 export default function SubscriptionScreen() {
-  const { user, updateProfile } = useAuth();
-  const isPremium = user?.subscription_tier === "premium";
+  const { user, refreshProfile } = useAuth();
+  const isPremium = user?.subscription_tier === "premium" && user.subscription_status === "active";
 
   const [monthlyPkg, setMonthlyPkg] = useState<PurchasesPackage | null>(null);
   const [loadingOffering, setLoadingOffering] = useState(true);
@@ -44,11 +45,15 @@ export default function SubscriptionScreen() {
   const [freeLimit, setFreeLimit] = useState(20);
   const [premiumLimit, setPremiumLimit] = useState(300);
 
-  const applyTier = async (premium: boolean) => {
-    await updateProfile({
-      subscription_tier: premium ? "premium" : "free",
-      subscription_status: premium ? "active" : "inactive",
-    });
+  const refreshPurchasedTier = async (): Promise<boolean> => {
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const profile = await refreshProfile();
+      if (profile?.subscription_tier === "premium" && profile.subscription_status === "active") {
+        return true;
+      }
+      if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    return false;
   };
 
   useEffect(() => {
@@ -89,26 +94,32 @@ export default function SubscriptionScreen() {
       : rawPrice;
 
   const handlePurchase = async () => {
-    if (!monthlyPkg) return;
+    if (!monthlyPkg || !user) return;
     setPurchasing(true);
+    await rcLogIn(user.id);
     const result = await purchasePkg(monthlyPkg);
     setPurchasing(false);
     if (result.cancelled) return;
     if (result.success) {
-      await applyTier(true);
-      Alert.alert("升級成功 🎉", "已成功升級至學士版！感謝你的支持。");
+      const synced = await refreshPurchasedTier();
+      Alert.alert(
+        "升級成功 🎉",
+        synced ? "已成功升級至學士版！感謝你的支持。" : "購買已確認，會員狀態正在同步，請稍後重新開啟此頁。",
+      );
     } else if (result.error) {
       Alert.alert("購買失敗", result.error);
     }
   };
 
   const handleRestore = async () => {
+    if (!user) return;
     setRestoring(true);
+    await rcLogIn(user.id);
     const result = await restorePurchases();
     setRestoring(false);
     if (result.isPremium) {
-      await applyTier(true);
-      Alert.alert("已恢復", "學士版訂閱已成功恢復！");
+      const synced = await refreshPurchasedTier();
+      Alert.alert("已恢復", synced ? "學士版訂閱已成功恢復！" : "訂閱已恢復，會員狀態正在同步，請稍後重新開啟此頁。");
     } else {
       Alert.alert(
         "未找到訂閱",
@@ -118,7 +129,9 @@ export default function SubscriptionScreen() {
   };
 
   const handleRedeemCode = async () => {
+    if (!user) return;
     setRedeeming(true);
+    await rcLogIn(user.id);
     const opened = await presentOfferCodeRedemptionSheet();
     if (!opened.opened) {
       setRedeeming(false);
@@ -135,8 +148,8 @@ export default function SubscriptionScreen() {
     }
 
     if (entitlement.isPremium) {
-      await applyTier(true);
-      Alert.alert("優惠碼已生效", "已成功啟用學士版訂閱。");
+      const synced = await refreshPurchasedTier();
+      Alert.alert("優惠碼已生效", synced ? "已成功啟用學士版訂閱。" : "優惠碼已生效，會員狀態正在同步，請稍後重新開啟此頁。");
       return;
     }
 

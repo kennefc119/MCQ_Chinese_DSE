@@ -38,7 +38,7 @@ export async function getAdvisorMonthlyQuota(
       .in("status", ["processing", "completed"]),
     supabase
       .from("dsemcq_profiles")
-      .select("subscription_tier, bonus_ai_chat")
+      .select("subscription_tier, subscription_status, subscription_expires_at, bonus_ai_chat")
       .eq("id", userId)
       .single(),
     supabase
@@ -60,8 +60,19 @@ export async function getAdvisorMonthlyQuota(
     if (row.key === "max_ai_chat_premium") premiumMonthlyLimit = value;
   }
 
-  const profile = profileResult.data as { subscription_tier?: string; bonus_ai_chat?: number } | null;
-  const baseLimit = profile?.subscription_tier === "premium" ? premiumMonthlyLimit : freeMonthlyLimit;
+  const profile = profileResult.data as {
+    subscription_tier?: string;
+    subscription_status?: string;
+    subscription_expires_at?: string | null;
+    bonus_ai_chat?: number;
+  } | null;
+  const expirationTime = profile?.subscription_expires_at
+    ? new Date(profile.subscription_expires_at).getTime()
+    : null;
+  const hasActivePremium = profile?.subscription_tier === "premium"
+    && profile.subscription_status === "active"
+    && (expirationTime === null || expirationTime > Date.now());
+  const baseLimit = hasActivePremium ? premiumMonthlyLimit : freeMonthlyLimit;
   const limit = baseLimit + Number(profile?.bonus_ai_chat ?? 0);
   const used = (v1Count.count ?? 0) + (v2Count.count ?? 0);
   return { used, limit, remaining: Math.max(0, limit - used) };

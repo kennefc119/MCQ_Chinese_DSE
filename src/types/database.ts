@@ -14,6 +14,10 @@ export interface Profile {
   role: Role;
   subscription_tier: "free" | "premium";
   subscription_status: "active" | "inactive";
+  subscription_event_at?: string | null;
+  subscription_expires_at?: string | null;
+  subscription_will_renew?: boolean | null;
+  subscription_product_id?: string | null;
   bonus_ai_chat: number;       // permanent bonus monthly AI chat quota
   created_at: string;
 }

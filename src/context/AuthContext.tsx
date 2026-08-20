@@ -6,7 +6,8 @@ import { Profile, Gender } from "../types/database";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
 import { logLogin, logVisit, getDeviceId, getPlatform } from "../lib/adminService";
 import { registerForPushNotifications } from "../lib/pushNotifications";
-import { rcLogIn, rcLogOut, checkPremiumEntitlement } from "../lib/revenueCat";
+import { rcLogIn, rcLogOut } from "../lib/revenueCat";
+import { useAppResume } from "../hooks/useAppResume";
 
 const PROFILE_KEY = "dsemcq_profile";
 
@@ -44,13 +45,19 @@ interface AuthContextValue {
   verifyOtp: (email: string, code: string) => Promise<{ ok: boolean; needsRegister: boolean; error?: string }>;
   registerProfile: (data: { username: string; gender: Gender; dse_year: number }) => Promise<{ ok: boolean; error?: string }>;
   signOut: () => Promise<void>;
-  updateProfile: (patch: Partial<Profile>) => Promise<void>;
+  updateProfile: (patch: UserProfilePatch) => Promise<void>;
+  refreshProfile: () => Promise<Profile | null>;
   signInWithApple: () => Promise<{ ok: boolean; needsRegister: boolean; appleFullName?: string; appleEmail?: string; error?: string }>;
   /** demo mode flag for offline preview */
   demoMode: boolean;
   enterDemo: () => Promise<void>;
   enterGuest: () => void;
 }
+
+type UserProfilePatch = Partial<Pick<
+  Profile,
+  "username" | "gender" | "dse_year" | "wenyuan_points" | "bonus_ai_chat"
+>>;
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -64,6 +71,7 @@ const DEMO_PROFILE: Profile = {
   role: "user",
   subscription_tier: "free",
   subscription_status: "active",
+  bonus_ai_chat: 0,
   created_at: new Date().toISOString(),
 };
 
@@ -77,6 +85,7 @@ const GUEST_PROFILE: Profile = {
   role: "user",
   subscription_tier: "free",
   subscription_status: "active",
+  bonus_ai_chat: 0,
   created_at: new Date().toISOString(),
 };
 
@@ -203,36 +212,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     else await SecureStore.deleteItemAsync(PROFILE_KEY);
   };
 
+  const refreshProfile = async (): Promise<Profile | null> => {
+    if (!isSupabaseConfigured) return user;
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) return null;
+    const { data, error } = await supabase
+      .from("dsemcq_profiles")
+      .select("*")
+      .eq("id", authData.user.id)
+      .maybeSingle();
+    if (error || !data) return null;
+    await persist(data as Profile);
+    return data as Profile;
+  };
+
+  useAppResume(() => {
+    if (user && user.id !== "demo-user" && user.id !== "guest-user") {
+      void refreshProfile();
+    }
+  }, isSupabaseReady);
+
+  useEffect(() => {
+    if (!isSupabaseReady || !user || user.id === "demo-user" || user.id === "guest-user") return;
+    const intervalId = setInterval(() => {
+      void refreshProfile();
+    }, 60_000);
+    return () => clearInterval(intervalId);
+  }, [isSupabaseReady, user?.id]);
+
   /**
-   * Checks the user's Apple subscription status via RevenueCat and syncs it
-   * back to Supabase + local state when we can positively confirm premium.
-   *
-   * IMPORTANT:
-   * - Do NOT auto-downgrade in app on login/reinstall.
-   * - Downgrade/reset should only happen via server-side unsubscribe handling
-   *   (Apple/RevenueCat webhook) or manual admin operation.
+   * Identifies the Supabase UUID to RevenueCat. Subscription fields remain
+   * server-owned and are synchronized by the RevenueCat webhook.
    */
-  const syncSubscription = async (userId: string, currentProfile: Profile) => {
+  const syncSubscription = async (userId: string, _currentProfile: Profile) => {
     try {
       await rcLogIn(userId);
-      const isPremium = await checkPremiumEntitlement();
-
-      // Only upgrade/activate when entitlement is positively present.
-      // Never downgrade here.
-      if (!isPremium) return;
-
-      if (currentProfile.subscription_tier !== "premium" || currentProfile.subscription_status !== "active") {
-        const patch = {
-          subscription_tier: "premium" as const,
-          subscription_status: "active" as Profile["subscription_status"],
-        };
-        if (isSupabaseConfigured) {
-          await supabase.from("dsemcq_profiles").update(patch).eq("id", userId);
-        }
-        await persist({ ...currentProfile, ...patch });
-      }
     } catch {
-      // Never block login flow or force tier changes on transient RC/network errors.
+      // Never block login on RevenueCat/network errors.
     }
   };
 
@@ -292,6 +308,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: "user",
       subscription_tier: "free",
       subscription_status: "active",
+      bonus_ai_chat: 0,
       created_at: new Date().toISOString(),
     };
     const { error } = await supabase.from("dsemcq_profiles").insert(profile);
@@ -307,7 +324,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await persist(null);
   };
 
-  const updateProfile = async (patch: Partial<Profile>) => {
+  const updateProfile = async (patch: UserProfilePatch) => {
     if (!user) return;
     const next = { ...user, ...patch };
     if (isSupabaseConfigured) {
@@ -448,6 +465,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         registerProfile,
         signOut,
         updateProfile,
+        refreshProfile,
         demoMode: !isSupabaseConfigured,
         enterDemo,
         enterGuest,

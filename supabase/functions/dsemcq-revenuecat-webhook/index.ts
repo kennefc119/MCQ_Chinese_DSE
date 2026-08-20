@@ -6,20 +6,6 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const ACTIVE_EVENT_TYPES = new Set<string>([
-  "INITIAL_PURCHASE",
-  "RENEWAL",
-  "PRODUCT_CHANGE",
-  "UNCANCELLATION",
-  "NON_RENEWING_PURCHASE",
-]);
-
-const INACTIVE_EVENT_TYPES = new Set<string>([
-  "EXPIRATION",
-  "REFUND",
-  "SUBSCRIPTION_PAUSED",
-]);
-
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ ok: false, error: "Method not allowed" }, 405);
@@ -64,88 +50,34 @@ Deno.serve(async (req: Request) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  const insertResp = await supabase
-    .from("dsemcq_subscription_events")
-    .insert({
-      provider: "revenuecat",
-      provider_event_id: providerEventId,
-      app_user_id: appUserId,
-      event_type: eventType,
-      event_time: eventTime.toISOString(),
-      outcome: "received",
-      raw_payload: payload,
-    });
+  const expirationAt = pickOptionalDate(event.expiration_at_ms, event.expiration_at);
+  const productId = String(event.product_id ?? "").trim() || null;
+  const willRenew = eventType === "CANCELLATION"
+    || eventType === "EXPIRATION"
+    || eventType === "REFUND"
+    || eventType === "SUBSCRIPTION_PAUSED"
+    || eventType === "NON_RENEWING_PURCHASE"
+      ? false
+      : eventType === "INITIAL_PURCHASE"
+        || eventType === "RENEWAL"
+        || eventType === "PRODUCT_CHANGE"
+        || eventType === "UNCANCELLATION"
+        ? true
+        : null;
 
-  if (insertResp.error) {
-    if (insertResp.error.code === "23505") {
-      return json({ ok: true, duplicate: true }, 200);
-    }
-    return json({ ok: false, error: insertResp.error.message }, 500);
-  }
+  const { data, error } = await supabase.rpc("apply_revenuecat_subscription_event", {
+    p_provider_event_id: providerEventId,
+    p_app_user_id: appUserId,
+    p_event_type: eventType,
+    p_event_time: eventTime.toISOString(),
+    p_expiration_at: expirationAt?.toISOString() ?? null,
+    p_product_id: productId,
+    p_will_renew: willRenew,
+    p_raw_payload: payload,
+  });
 
-  if (!appUserId) {
-    await markOutcome(supabase, providerEventId, "ignored_invalid_user", null);
-    return json({ ok: true, ignored: "invalid_app_user_id" }, 200);
-  }
-
-  const profileResp = await supabase
-    .from("dsemcq_profiles")
-    .select("id, subscription_event_at")
-    .eq("id", appUserId)
-    .maybeSingle();
-
-  if (profileResp.error) {
-    await markOutcome(supabase, providerEventId, "error_profile_lookup", profileResp.error.message);
-    return json({ ok: false, error: profileResp.error.message }, 500);
-  }
-
-  if (!profileResp.data) {
-    await markOutcome(supabase, providerEventId, "ignored_profile_not_found", null);
-    return json({ ok: true, ignored: "profile_not_found" }, 200);
-  }
-
-  const lastEventAt = profileResp.data.subscription_event_at
-    ? new Date(profileResp.data.subscription_event_at)
-    : null;
-
-  if (lastEventAt && eventTime.getTime() < lastEventAt.getTime()) {
-    await markOutcome(supabase, providerEventId, "ignored_stale_event", null);
-    return json({ ok: true, ignored: "stale_event" }, 200);
-  }
-
-  if (ACTIVE_EVENT_TYPES.has(eventType)) {
-    const patch = {
-      subscription_tier: "premium",
-      subscription_status: "active",
-      subscription_event_at: eventTime.toISOString(),
-    };
-    const upd = await supabase.from("dsemcq_profiles").update(patch).eq("id", appUserId);
-    if (upd.error) {
-      await markOutcome(supabase, providerEventId, "error_profile_update_active", upd.error.message);
-      return json({ ok: false, error: upd.error.message }, 500);
-    }
-    await markOutcome(supabase, providerEventId, "applied_active", null);
-    return json({ ok: true, applied: "active" }, 200);
-  }
-
-  if (INACTIVE_EVENT_TYPES.has(eventType)) {
-    const patch = {
-      subscription_tier: "free",
-      subscription_status: "inactive",
-      subscription_event_at: eventTime.toISOString(),
-    };
-    const upd = await supabase.from("dsemcq_profiles").update(patch).eq("id", appUserId);
-    if (upd.error) {
-      await markOutcome(supabase, providerEventId, "error_profile_update_inactive", upd.error.message);
-      return json({ ok: false, error: upd.error.message }, 500);
-    }
-    await markOutcome(supabase, providerEventId, "applied_inactive", null);
-    return json({ ok: true, applied: "inactive" }, 200);
-  }
-
-  // For cancellation intent and other non-state-final events, keep current state.
-  await markOutcome(supabase, providerEventId, "ignored_no_state_change", null);
-  return json({ ok: true, ignored: "no_state_change" }, 200);
+  if (error) return json({ ok: false, error: error.message }, 500);
+  return json(data ?? { ok: true }, 200);
 });
 
 function pickEventTime(event: any): Date {
@@ -178,18 +110,17 @@ function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
-async function markOutcome(
-  supabase: ReturnType<typeof createClient>,
-  providerEventId: string,
-  outcome: string,
-  error: string | null,
-) {
-  const details = error ? { outcome: `${outcome}:${error}`.slice(0, 2000) } : { outcome };
-  await supabase
-    .from("dsemcq_subscription_events")
-    .update({ ...details, processed_at: new Date().toISOString() })
-    .eq("provider", "revenuecat")
-    .eq("provider_event_id", providerEventId);
+function pickOptionalDate(msValue: unknown, isoValue: unknown): Date | null {
+  const milliseconds = Number(msValue ?? 0);
+  if (Number.isFinite(milliseconds) && milliseconds > 0) {
+    const parsed = new Date(milliseconds);
+    if (!Number.isNaN(parsed.getTime())) return parsed;
+  }
+
+  const iso = String(isoValue ?? "").trim();
+  if (!iso) return null;
+  const parsed = new Date(iso);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
 function json(body: unknown, status = 200): Response {
