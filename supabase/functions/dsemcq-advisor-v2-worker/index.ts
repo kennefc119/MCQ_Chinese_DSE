@@ -1,12 +1,15 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildSynthesizerHistoryPayload } from "../_shared/advisor_history_contract.ts";
 import {
   retrieveSource,
   normalizePerformanceDetailRequest,
   normalizeQuestionBankDetailRequest,
   normalizeRetrievalHints,
   resolvePassageScope,
+  retrieveRecentChatContext,
   type ResolvedPassageScope,
   type RetrievalHints,
+  type RecentChatContext,
   type Source,
 } from "../_shared/advisor_v2_context.ts";
 
@@ -76,6 +79,7 @@ async function processWorkflow(supabase: ReturnType<typeof createClient>, workfl
     heartbeat_at: new Date().toISOString(),
   });
   const capabilities = enabledSources(workflow.preference_snapshot);
+  const conversationHistoryEnabled = workflow.preference_snapshot.conversation_history_enabled !== false;
   const plan = await callPoe("ORCHESTRATOR", {
     schema_version: "v1",
     request_id: workflow.request_id,
@@ -101,9 +105,16 @@ async function processWorkflow(supabase: ReturnType<typeof createClient>, workfl
       message.user_text,
       retrievalHints,
       resolvedPassageScope,
+      conversationHistoryEnabled,
     )),
   );
   const reports = settled.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
+  const recentChatContext = await retrieveRecentChatContext(
+    supabase,
+    workflow.user_id,
+    workflow.request_id,
+    conversationHistoryEnabled,
+  );
 
   await updateWorkflow(supabase, workflow.id, {
     current_stage: "synthesis",
@@ -114,6 +125,8 @@ async function processWorkflow(supabase: ReturnType<typeof createClient>, workfl
     message.user_text,
     capabilities,
     reports as Array<Record<string, unknown>>,
+    recentChatContext,
+    conversationHistoryEnabled,
   );
   const reply = synthesisResult.reply;
   const sourceChips = synthesisResult.sourceChips;
@@ -143,6 +156,7 @@ async function runSource(
   studentMessage: string,
   retrievalHints: RetrievalHints | undefined,
   resolvedPassageScope: ResolvedPassageScope,
+  conversationHistoryEnabled: boolean,
 ) {
   if (source === "performance") {
     return await runPerformanceSource(supabase, workflow, studentMessage, retrievalHints, resolvedPassageScope);
@@ -154,6 +168,7 @@ async function runSource(
   const input = await retrieveSource(supabase, workflow.user_id, source, studentMessage, {
     retrievalHints,
     resolvedPassageScope,
+    conversationHistoryEnabled,
   });
   const role = source === "question_bank" ? "QUESTION_BANK" : source.toUpperCase();
   const run = await createAgentRun(supabase, workflow.id, source, input);
@@ -454,18 +469,22 @@ async function runSynthesizerWithSingleRetry(
   studentMessage: string,
   capabilities: Source[],
   reports: Array<Record<string, unknown>>,
+  recentChatContext: RecentChatContext,
+  historyEnabled: boolean,
 ) {
+  const synthesizerPayload = buildSynthesizerHistoryPayload({
+    requestId,
+    studentMessage,
+    capabilities,
+    reports,
+    recentChatContext,
+    historyEnabled,
+  });
+
   let lastError: unknown = null;
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      const synthesis = await callPoe("SYNTHESIZER", {
-        schema_version: "v1",
-        request_id: requestId,
-        agent_role: "synthesizer",
-        student_message: studentMessage,
-        capabilities: { enabled_sources: capabilities },
-        inputs: { reports },
-      });
+      const synthesis = await callPoe("SYNTHESIZER", synthesizerPayload);
       const output = objectOf(synthesis.output);
       const reply = typeof output.reply === "string" ? output.reply.trim() : "";
       if (!reply) throw new Error("Synthesizer returned no reply");

@@ -76,9 +76,13 @@ export async function fetchUsageMetrics(windowDays: number): Promise<UsageWindow
   );
   const visitorDevices = new Set(visitRows.map((r) => r.device_id)).size;
 
-  // Chatbot: distinct users + total exchanges in window
+  // Chatbot V2: distinct users + completed conversations in window
   const chatRows = await fetchAllRows<{ user_id: string }>(
-    () => supabase.from("dsemcq_advisor_messages").select("user_id").gte("created_at", since)
+    () => supabase
+      .from("dsemcq_advisor_v2_messages")
+      .select("user_id")
+      .eq("status", "completed")
+      .gte("created_at", since)
   );
   const chatUsers = new Set(chatRows.map((r) => r.user_id)).size;
   const chatMessages = chatRows.length;
@@ -542,12 +546,17 @@ export async function fetchDailyUsageMetrics(windowDays: number): Promise<DailyU
 
 // ── AI usage stats ──────────────────────────────────────────────────────────
 
-/** AI advisor usage: unique users, total conversations, avg output length. */
+/** AI advisor V2 usage: unique users, completed conversations, avg output length. */
 export async function fetchAIUsageStats(windowDays: number): Promise<AIUsageStats> {
   if (!isSupabaseConfigured) return { uniqueUsers: 0, totalConversations: 0, avgOutputLength: 0 };
   const since = isoDaysAgo(windowDays);
   const rows = await fetchAllRows<{ user_id: string; bot_reply: string }>(
-    () => supabase.from("dsemcq_advisor_messages").select("user_id, bot_reply").gte("created_at", since)
+    () => supabase
+      .from("dsemcq_advisor_v2_messages")
+      .select("user_id, bot_reply")
+      .eq("status", "completed")
+      .not("bot_reply", "is", null)
+      .gte("created_at", since)
   );
   const uniqueUsers = new Set(rows.map((r) => r.user_id)).size;
   const totalConversations = rows.length;

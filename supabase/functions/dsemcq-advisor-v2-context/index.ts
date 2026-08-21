@@ -41,6 +41,7 @@ Deno.serve(async (req: Request) => {
     performanceDetailRequest?: unknown;
     questionBankDetailRequest?: unknown;
     retrievalHints?: unknown;
+    conversationHistoryEnabled?: boolean;
   };
   try {
     body = await req.json();
@@ -73,6 +74,7 @@ Deno.serve(async (req: Request) => {
           resolvedPassageScope,
           performanceDetailRequest: source === "performance" ? performanceDetailRequest ?? undefined : undefined,
           questionBankDetailRequest: source === "question_bank" ? questionBankDetailRequest ?? undefined : undefined,
+          conversationHistoryEnabled: body.conversationHistoryEnabled,
         },
       );
     }

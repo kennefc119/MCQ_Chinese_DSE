@@ -134,7 +134,19 @@ Deno.serve(async (req: Request) => {
   }
 
   const systemPrompt = body.system ?? "";
-  const history      = Array.isArray(body.history) ? body.history : [];
+  const history = (Array.isArray(body.history) ? body.history : [])
+    .filter((item): item is { role: string; text: string } => (
+      Boolean(item)
+      && typeof item === "object"
+      && (item.role === "user" || item.role === "assistant")
+      && typeof item.text === "string"
+    ))
+    .map((item) => ({
+      role: item.role as "user" | "assistant",
+      text: item.text.trim(),
+    }))
+    .filter((item) => item.text.length > 0)
+    .slice(-10);
 
   // ── 3. Build OpenAI-compatible messages array ──────────────────────────
   // Poe's OpenAI-compatible endpoint accepts: system / user / assistant roles

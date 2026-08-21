@@ -88,6 +88,17 @@ type RetrieveOptions = {
   questionBankDetailRequest?: QuestionBankDetailRequest;
   retrievalHints?: RetrievalHints;
   resolvedPassageScope?: ResolvedPassageScope;
+  conversationHistoryEnabled?: boolean;
+};
+
+export type RecentChatBubble = {
+  role: "user" | "assistant";
+  text: string;
+};
+
+export type RecentChatContext = {
+  bubbles: RecentChatBubble[];
+  truncated: boolean;
 };
 
 type PastExamQuestionRow = {
@@ -1127,6 +1138,62 @@ export async function loadPerformanceDetail(
   };
 }
 
+export async function retrieveRecentChatContext(
+  supabase: SupabaseClient,
+  userId: string,
+  excludedRequestId?: string,
+  enabled = true,
+): Promise<RecentChatContext> {
+  if (!enabled) return { bubbles: [], truncated: false };
+
+  let query = supabase
+    .from("dsemcq_advisor_v2_messages")
+    .select("request_id, user_text, bot_reply, status, created_at")
+    .eq("user_id", userId)
+    .eq("status", "completed")
+    .not("bot_reply", "is", null)
+    .order("created_at", { ascending: false })
+    .order("request_id", { ascending: false })
+    .limit(6);
+
+  if (excludedRequestId) query = query.neq("request_id", excludedRequestId);
+
+  const { data, error } = await query;
+  if (error) {
+    console.warn("Advisor V2 recent chat history unavailable", { userId, error: error.message });
+    return { bubbles: [], truncated: false };
+  }
+
+  const validRows = (data as Array<{
+    request_id: string | null;
+    user_text: string | null;
+    bot_reply: string | null;
+    created_at: string | null;
+  }> ?? [])
+    .filter((row) => Boolean(row.user_text?.trim()) && Boolean(row.bot_reply?.trim()));
+  const truncated = validRows.length > 5;
+  const selectedRows = validRows.slice(0, 5);
+  const bubbles = selectedRows
+    .sort((a, b) => (a.created_at ?? "").localeCompare(b.created_at ?? ""))
+    .flatMap((row) => {
+      return [
+        { role: "user" as const, text: row.user_text!.trim() },
+        { role: "assistant" as const, text: row.bot_reply!.trim() },
+      ];
+    });
+  return { bubbles, truncated };
+}
+
+export async function retrieveRecentChatBubbles(
+  supabase: SupabaseClient,
+  userId: string,
+  excludedRequestId?: string,
+  enabled = true,
+): Promise<RecentChatBubble[]> {
+  const context = await retrieveRecentChatContext(supabase, userId, excludedRequestId, enabled);
+  return context.bubbles;
+}
+
 export async function retrieveSource(
   supabase: SupabaseClient,
   userId: string,
@@ -1135,6 +1202,21 @@ export async function retrieveSource(
   options: RetrieveOptions = {},
 ) {
   if (source === "profile") {
+    const historyRowsPromise = options.conversationHistoryEnabled === false
+      ? Promise.resolve([])
+      : supabase
+        .from("dsemcq_advisor_v2_messages")
+        .select("request_id, user_text, bot_reply, status, created_at")
+        .eq("user_id", userId)
+        .eq("status", "completed")
+        .not("bot_reply", "is", null)
+        .order("created_at", { ascending: false })
+        .order("request_id", { ascending: false })
+        .limit(5)
+        .then(({ data, error }) => {
+          if (error) throw error;
+          return data ?? [];
+        });
     const [profileData, psychData, historyRows] = await Promise.all([
       supabase
         .from("dsemcq_profiles")
@@ -1155,22 +1237,14 @@ export async function retrieveSource(
           if (error) throw error;
           return data ?? [];
         }),
-      supabase
-        .from("dsemcq_advisor_v2_messages")
-        .select("request_id, user_text, bot_reply, status, created_at")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(10)
-        .then(({ data, error }) => {
-          if (error) throw error;
-          return data ?? [];
-        }),
+      historyRowsPromise,
     ]);
 
     const psychEvidence = psychData.map((row) => `psych:${row.test_id}:${row.result_code}`);
     const chatBubbles = (historyRows as Array<
-      { request_id: string; user_text: string; bot_reply: string | null; status: string; created_at: string }
+      { request_id: string; user_text: string; bot_reply: string | null; created_at: string }
     >)
+      .filter((row) => Boolean(row.user_text?.trim()) && Boolean(row.bot_reply?.trim()))
       .sort((a, b) => a.created_at.localeCompare(b.created_at))
       .flatMap((row) => {
         const bubbles = [{ role: "user", text: row.user_text, created_at: row.created_at, request_id: row.request_id }];

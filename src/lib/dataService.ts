@@ -1,4 +1,5 @@
-import { Quiz, Question, QuestionOption, Attempt, QuizSignup, InboxMessage, TipCard, PsychTest, PsychQuestion, PsychResultMapping, PsychUserResult, Passage, PremiumUserComparison, PremiumGlobalStats, QuizPercentileFeedback } from "../types/database";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AdvisorSuggestion, AdvisorSuggestionCategory, Quiz, Question, QuestionOption, Attempt, QuizSignup, InboxMessage, TipCard, PsychTest, PsychQuestion, PsychResultMapping, PsychUserResult, Passage, PremiumUserComparison, PremiumGlobalStats, QuizPercentileFeedback, ExploreQuizStats, ExploreStats } from "../types/database";
 import { isSupabaseConfigured, supabase } from "./supabase";
 import { SEED_QUIZZES } from "../data/seedQuizzes";
 import { SEED_QUESTIONS } from "../data/seedQuestions";
@@ -270,6 +271,115 @@ export async function listPassages(): Promise<Passage[]> {
   return (data as Passage[]) ?? SEED_PASSAGES;
 }
 
+const EMPTY_EXPLORE_STATS: ExploreStats = { passageQuestionCounts: {}, passageQuestionIncreases14d: {}, passageSkillQuestionCounts: {}, skillQuestionCounts: {}, freeAvailableQuestionCount: null, quizStats: {} };
+
+function getLocalExploreStats(): ExploreStats {
+  const passageQuestionCounts: Record<string, number> = {};
+  const passageSkillQuestionCounts: Record<string, Record<string, number>> = {};
+  const skillQuestionCounts: Record<string, number> = {};
+  for (const question of SEED_QUESTIONS) {
+    if (!question.is_active) continue;
+    const questionSkills = question.tag_ids ?? [];
+    if (questionSkills.length === 0) {
+      skillQuestionCounts.unclassified = (skillQuestionCounts.unclassified ?? 0) + 1;
+    } else {
+      for (const skillId of questionSkills) skillQuestionCounts[skillId] = (skillQuestionCounts[skillId] ?? 0) + 1;
+    }
+    const passageIds = [...new Set([question.passage_id, question.cross_passage_id].filter((id): id is string => Boolean(id)))];
+    for (const passageId of passageIds) {
+      passageQuestionCounts[passageId] = (passageQuestionCounts[passageId] ?? 0) + 1;
+      const skillCounts = passageSkillQuestionCounts[passageId] ?? {};
+      for (const tagId of question.tag_ids ?? []) skillCounts[tagId] = (skillCounts[tagId] ?? 0) + 1;
+      passageSkillQuestionCounts[passageId] = skillCounts;
+    }
+  }
+  const freeQuestionIds = new Set(
+    SEED_QUIZZES
+      .filter((quiz) => quiz.is_published && quiz.type === "exercise" && quiz.min_points_required <= 0)
+      .flatMap((quiz) => quiz.question_ids),
+  );
+  return {
+    passageQuestionCounts,
+    passageQuestionIncreases14d: {},
+    passageSkillQuestionCounts,
+    skillQuestionCounts,
+    freeAvailableQuestionCount: freeQuestionIds.size,
+    quizStats: {},
+  };
+}
+
+export async function fetchExploreStats(): Promise<ExploreStats> {
+  if (!isSupabaseConfigured) return getLocalExploreStats();
+  const [{ data, error }, { data: skillData, error: skillError }, { data: skillTotalsData, error: skillTotalsError }, { data: freeQuestionData, error: freeQuestionError }] = await Promise.all([
+    supabase.rpc("get_public_explore_stats"),
+    supabase.rpc("get_public_explore_skill_breakdown"),
+    supabase.rpc("get_public_explore_skill_totals"),
+    supabase.rpc("get_public_explore_free_question_count"),
+  ]);
+  if (error || !data || typeof data !== "object") {
+    console.warn("[dsemcq] fetchExploreStats error:", error?.message ?? "Invalid response");
+    return EMPTY_EXPLORE_STATS;
+  }
+  if (skillError) console.warn("[dsemcq] fetchExploreStats skill breakdown error:", skillError.message);
+  if (skillTotalsError) console.warn("[dsemcq] fetchExploreStats skill totals error:", skillTotalsError.message);
+  if (freeQuestionError) console.warn("[dsemcq] fetchExploreStats free question count error:", freeQuestionError.message);
+
+  const payload = data as {
+    passage_question_counts?: unknown;
+    passage_question_increases_14d?: unknown;
+    quiz_stats?: unknown;
+  };
+  const passageQuestionCounts: Record<string, number> = {};
+  const passageQuestionIncreases14d: Record<string, number> = {};
+  const parseCountMap = (value: unknown): Record<string, number> => {
+    const result: Record<string, number> = {};
+    if (!value || typeof value !== "object") return result;
+    for (const [passageId, count] of Object.entries(value)) {
+      if (typeof count === "number" && Number.isFinite(count)) result[passageId] = Math.max(0, Math.round(count));
+    }
+    return result;
+  };
+  Object.assign(passageQuestionCounts, parseCountMap(payload.passage_question_counts));
+  Object.assign(passageQuestionIncreases14d, parseCountMap(payload.passage_question_increases_14d));
+
+  const passageSkillQuestionCounts: Record<string, Record<string, number>> = {};
+  if (skillData && typeof skillData === "object") {
+    for (const [passageId, skillCounts] of Object.entries(skillData)) {
+      passageSkillQuestionCounts[passageId] = parseCountMap(skillCounts);
+    }
+  }
+  const skillQuestionCounts = skillTotalsData && typeof skillTotalsData === "object"
+    ? parseCountMap(skillTotalsData)
+    : Object.values(passageSkillQuestionCounts).reduce<Record<string, number>>((totals, counts) => {
+      for (const [skillId, count] of Object.entries(counts)) totals[skillId] = (totals[skillId] ?? 0) + count;
+      return totals;
+    }, {});
+
+  const quizStats: Record<string, ExploreQuizStats> = {};
+  if (Array.isArray(payload.quiz_stats)) {
+    for (const raw of payload.quiz_stats) {
+      if (!raw || typeof raw !== "object") continue;
+      const row = raw as Record<string, unknown>;
+      if (typeof row.quiz_id !== "string") continue;
+      const asNumber = (value: unknown): number => typeof value === "number" && Number.isFinite(value) ? value : 0;
+      const nullableNumber = (value: unknown): number | null => typeof value === "number" && Number.isFinite(value) ? value : null;
+      quizStats[row.quiz_id] = {
+        quiz_id: row.quiz_id,
+        submitted_attempt_count: Math.max(0, Math.round(asNumber(row.submitted_attempt_count))),
+        distinct_participant_count: Math.max(0, Math.round(asNumber(row.distinct_participant_count))),
+        average_score_pct: nullableNumber(row.average_score_pct),
+        eligible_global_average_pct: nullableNumber(row.eligible_global_average_pct),
+        top_10_percent_hit: row.top_10_percent_hit === true,
+        low_performance: row.low_performance === true,
+      };
+    }
+  }
+  const freeAvailableQuestionCount = typeof freeQuestionData === "number" && Number.isFinite(freeQuestionData)
+    ? Math.max(0, Math.round(freeQuestionData))
+    : null;
+  return { passageQuestionCounts, passageQuestionIncreases14d, passageSkillQuestionCounts, skillQuestionCounts, freeAvailableQuestionCount, quizStats };
+}
+
 /**
  * Fetch the minimum required app version from dsemcq_app_settings.
  * Uses anon key — works before the user has signed in.
@@ -311,6 +421,101 @@ export async function listTipCards(): Promise<TipCard[]> {
   }
   if (!data || data.length === 0) return SEED_TIP_CARDS;
   return data as TipCard[];
+}
+
+const ADVISOR_SUGGESTIONS_CACHE_KEY = "dsemcq_cache_advisor_suggestions_v1";
+const ADVISOR_SUGGESTION_CATEGORIES = new Set<AdvisorSuggestionCategory>([
+  "history_analysis",
+  "emotional_control",
+  "exam_strategy",
+  "study_method",
+  "skill",
+  "study_hint",
+  "stress_relief",
+]);
+
+function chineseCharacterCount(value: string): number {
+  return value.replace(/[^\u4e00-\u9fff]/g, "").length;
+}
+
+function normalizeAdvisorSuggestions(raw: unknown): AdvisorSuggestion[] {
+  if (!Array.isArray(raw)) return [];
+  const seenIds = new Set<string>();
+  const seenPrompts = new Set<string>();
+  return raw
+    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+    .map((item) => {
+      const category = item.category;
+      const prompt = item.prompt_text;
+      if (
+        typeof item.id !== "string"
+        || typeof category !== "string"
+        || !ADVISOR_SUGGESTION_CATEGORIES.has(category as AdvisorSuggestionCategory)
+        || typeof prompt !== "string"
+        || chineseCharacterCount(prompt) < 10
+        || chineseCharacterCount(prompt) > 20
+        || typeof item.display_order !== "number"
+        || item.is_active !== true
+      ) return null;
+      const suggestion: AdvisorSuggestion = {
+        id: item.id,
+        category: category as AdvisorSuggestionCategory,
+        prompt_text: prompt.trim(),
+        display_order: item.display_order,
+        is_active: true,
+      };
+      if (!suggestion.prompt_text || seenIds.has(suggestion.id) || seenPrompts.has(suggestion.prompt_text)) return null;
+      seenIds.add(suggestion.id);
+      seenPrompts.add(suggestion.prompt_text);
+      return suggestion;
+    })
+    .filter((item): item is AdvisorSuggestion => item !== null)
+    .sort((a, b) => a.display_order - b.display_order || a.id.localeCompare(b.id));
+}
+
+async function getCachedAdvisorSuggestions(): Promise<AdvisorSuggestion[]> {
+  try {
+    const cached = await AsyncStorage.getItem(ADVISOR_SUGGESTIONS_CACHE_KEY);
+    return cached ? normalizeAdvisorSuggestions(JSON.parse(cached)) : [];
+  } catch (error) {
+    console.warn("[dsemcq] advisor suggestions cache error:", String((error as Error)?.message ?? error));
+    return [];
+  }
+}
+
+export async function listAdvisorSuggestions(): Promise<AdvisorSuggestion[]> {
+  if (!isSupabaseConfigured) return getCachedAdvisorSuggestions();
+  const { data, error } = await supabase
+    .from("dsemcq_advisor_suggestions")
+    .select("id, category, prompt_text, display_order, is_active")
+    .eq("is_active", true)
+    .order("display_order", { ascending: true });
+  const suggestions = normalizeAdvisorSuggestions(data);
+  if (!error && suggestions.length > 0) {
+    await AsyncStorage.setItem(ADVISOR_SUGGESTIONS_CACHE_KEY, JSON.stringify(suggestions)).catch((cacheError) => {
+      console.warn("[dsemcq] advisor suggestions cache write error:", String((cacheError as Error)?.message ?? cacheError));
+    });
+    return suggestions;
+  }
+  if (error) console.warn("[dsemcq] listAdvisorSuggestions error:", error.message);
+  return getCachedAdvisorSuggestions();
+}
+
+export function pickRandomAdvisorSuggestions(
+  suggestions: AdvisorSuggestion[],
+  count = 2,
+  excludedIds: string[] = [],
+): AdvisorSuggestion[] {
+  if (count <= 0 || suggestions.length === 0) return [];
+  const excluded = new Set(excludedIds);
+  const preferred = suggestions.filter((suggestion) => !excluded.has(suggestion.id));
+  const pool = preferred.length >= count ? preferred : suggestions;
+  const shuffled = [...pool];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled.slice(0, count);
 }
 
 /**

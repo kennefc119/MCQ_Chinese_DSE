@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, FlatList, KeyboardAvoidingView, Plat
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRoute, useFocusEffect, RouteProp } from "@react-navigation/native";
 import Markdown from "react-native-markdown-display";
+import EmojiPicker from "rn-emoji-keyboard";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
@@ -13,12 +14,15 @@ import { MainTabsParamList } from "../navigation/types";
 import ContentContainer from "../components/ContentContainer";
 import { withTimeout, isTimeoutError } from "../lib/asyncTimeout";
 import { TIMEOUT_MS } from "../lib/timeoutConfig";
+import type { AdvisorSuggestion } from "../types/database";
+import { listAdvisorSuggestions, pickRandomAdvisorSuggestions } from "../lib/dataService";
 
 interface Msg {
   id: string;
   role: "user" | "assistant";
   text: string;
   requestId?: string;
+  createdAt?: string;
   waiting?: boolean;
   typing?: boolean;
 }
@@ -30,6 +34,7 @@ interface AdvisorRow {
   bot_reply: string | null;
   status: "pending" | "processing" | "completed" | "failed";
   error_message: string | null;
+  created_at?: string | null;
 }
 
 interface AdvisorQuota {
@@ -45,6 +50,21 @@ interface AdvisorV2Preferences {
   performance_enabled: boolean;
   question_bank_enabled: boolean;
 }
+
+interface AdvisorV2WorkflowProgress {
+  id: string;
+  request_id: string;
+  current_stage: string | null;
+  validated_plan: unknown;
+}
+
+interface AdvisorV2AgentProgress {
+  workflow_id: string;
+  agent_role: string;
+  status: string;
+}
+
+type ChatHistoryBubble = { role: "user" | "assistant"; text: string };
 
 // Bot display name from .env (via app.config.ts extra.advisorBotName)
 const BOT_NAME = "文淵書僮";
@@ -75,21 +95,28 @@ function getDemoReply(input: string): string {
 // Stored outside the component so chat history survives tab re-mounts and
 // navigation from "Ask AI" buttons in result screens.
 let _persistedMessages: Msg[] = [INTRO_MSG];
+const _persistedMessagesByScope = new Map<string, Msg[]>();
+let _modelContextScope = "";
+let _modelContextMessages: Msg[] = [];
 
 // Fallback defaults — overridden by dsemcq_app_settings when Supabase is configured
 const DEFAULT_GUEST_LIMIT = 10;
 const DEFAULT_FREE_MONTHLY_LIMIT = 20;
 const DEFAULT_PREMIUM_MONTHLY_LIMIT = 300;
 const WAITING_HINTS = [
-  "正在思考你的問題…",
-  "正在整理相關資料…",
-  "正在翻查對話記錄…",
+  "正在整理你的問題…",
+  "正在翻查相關資料…",
   "正在組織答案…",
-  "正在搜尋網上資料…",
 ];
+const V2_SOURCE_HINTS: Record<string, string> = {
+  profile: "正在整理你的學習背景…",
+  performance: "正在分析你的答題表現…",
+  question_bank: "正在查找相關題目與篇章資料…",
+};
 const POLL_INTERVAL_MS = 2_000;
 const BOTTOM_THRESHOLD_PX = 48;
 const CHAT_CACHE_PREFIX = "advisor-chat-v2";
+const MODEL_CONTEXT_LIMIT = 50;
 const ADVISOR_V2_DEV_ENABLED = Constants.expoConfig?.extra?.advisorV2DevEnabled === true;
 const DEFAULT_V2_PREFERENCES: AdvisorV2Preferences = {
   v2_opt_in: true,
@@ -158,6 +185,7 @@ function normalizeStoredMessages(raw: unknown): Msg[] {
         text: row.text,
         requestId: typeof row.requestId === "string" ? row.requestId : undefined,
         waiting: typeof row.waiting === "boolean" ? row.waiting : undefined,
+          createdAt: typeof row.createdAt === "string" ? row.createdAt : undefined,
         typing: typeof row.typing === "boolean" ? row.typing : undefined,
       } as Msg;
     })
@@ -169,10 +197,98 @@ function normalizeStoredMessages(raw: unknown): Msg[] {
   return dedupeMessagesById(parsed);
 }
 
+function getPersistedMessagesForScope(scope: string): Msg[] {
+  return _persistedMessagesByScope.get(scope) ?? [INTRO_MSG];
+}
+
+function setPersistedMessagesForScope(scope: string, messages: Msg[]): void {
+  _persistedMessages = messages;
+  _persistedMessagesByScope.set(scope, messages);
+}
+
+function isModelContextMessage(message: Msg): boolean {
+  const text = message.text.trim();
+  if (message.id === "intro" || message.waiting || message.typing || !text) return false;
+  return !/^（(?:顧問服務異常|顧問未有返回內容|連線暫時中斷|顧問回應逾時|無回覆)/.test(text);
+}
+
+function mergeModelContextMessages(scope: string, messages: Msg[]): Msg[] {
+  if (_modelContextScope !== scope) {
+    _modelContextScope = scope;
+    _modelContextMessages = [];
+  }
+  const merged = new Map<string, Msg>();
+  for (const message of [..._modelContextMessages, ...messages]) {
+    if (isModelContextMessage(message)) merged.set(`${message.requestId ?? message.id}:${message.role}`, message);
+  }
+  _modelContextMessages = [...merged.values()].slice(-MODEL_CONTEXT_LIMIT);
+  return _modelContextMessages;
+}
+
+function getRecentChatHistory(messages: Msg[]): ChatHistoryBubble[] {
+  return messages
+    .filter(isModelContextMessage)
+    .map((message) => ({ role: message.role, text: message.text }))
+    .slice(-10);
+}
+
+function stringList(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
+function getV2LoadingHint(
+  workflow: AdvisorV2WorkflowProgress,
+  runningSources: string[],
+  hintIndex: number,
+): string {
+  const plan = workflow.validated_plan && typeof workflow.validated_plan === "object"
+    ? workflow.validated_plan as Record<string, unknown>
+    : {};
+  const selectedSources = stringList(plan.selected_sources);
+  const stage = workflow.current_stage;
+
+  if (stage === "queued" || stage === "planning") return "正在理解你的問題…";
+  if (stage === "synthesis") return "正在整合資料，整理答案…";
+  if (stage === "parallel_branches") {
+    const sources = runningSources.length > 0 ? runningSources : selectedSources;
+    const source = sources.length > 0 ? sources[hintIndex % sources.length] : "";
+    return V2_SOURCE_HINTS[source] ?? "正在整理相關資料…";
+  }
+  return "正在整理相關資料…";
+}
+
+function filterMessagesAfterCutoff(messages: Msg[], cutoff: string | null): Msg[] {
+  if (!cutoff) return messages;
+  return messages.filter((message) => message.id === "intro" || Boolean(message.createdAt && message.createdAt > cutoff));
+}
+
+function rowMessages(row: AdvisorRow): Msg[] {
+  const createdAt = row.created_at ?? undefined;
+  const messages: Msg[] = [];
+  if (row.user_text?.trim()) {
+    messages.push({ id: `u-${row.request_id ?? row.id}`, role: "user", text: row.user_text, requestId: row.request_id ?? undefined, createdAt });
+  }
+  if (row.bot_reply?.trim()) {
+    messages.push({ id: `a-${row.request_id ?? row.id}`, role: "assistant", text: row.bot_reply, requestId: row.request_id ?? undefined, createdAt });
+  }
+  return messages;
+}
+
 export default function AdvisorChatScreen() {
   const routeParams = useRoute<RouteProp<MainTabsParamList, "Advisor">>().params;
   const { user, isGuest, signOut, updateProfile } = useAuth();
-  const [messages, setMessages] = useState<Msg[]>(_persistedMessages);
+  const chatIdentity = isGuest ? "guest" : (user?.id ?? "anon");
+  const useAdvisorV2 = ADVISOR_V2_DEV_ENABLED && !isGuest && Boolean(user);
+  const chatScope = `${chatIdentity}:${useAdvisorV2 ? "v2" : "v1"}`;
+  const storageKey = `${CHAT_CACHE_PREFIX}:visible:${chatScope}`;
+  const contextStorageKey = `${CHAT_CACHE_PREFIX}:context:${chatScope}`;
+  const clearMarkerKey = `${CHAT_CACHE_PREFIX}:cleared:${chatScope}`;
+  const legacyStorageKey = `${CHAT_CACHE_PREFIX}:${chatIdentity}`;
+  const [messages, setMessages] = useState<Msg[]>(() => {
+    const initial = getPersistedMessagesForScope(chatScope);
+    setPersistedMessagesForScope(chatScope, initial);
+    return initial;
+  });
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [monthlyQuota, setMonthlyQuota] = useState<AdvisorQuota | null>(null);
@@ -185,6 +301,9 @@ export default function AdvisorChatScreen() {
   const [showBonusModal, setShowBonusModal] = useState(false);
   const [bonusQty, setBonusQty] = useState(1);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [visibleSuggestions, setVisibleSuggestions] = useState<AdvisorSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [v2Preferences, setV2Preferences] = useState<AdvisorV2Preferences>(DEFAULT_V2_PREFERENCES);
   const [historyHydrated, setHistoryHydrated] = useState(false);
   const [showJumpToLatest, setShowJumpToLatest] = useState(false);
@@ -196,10 +315,14 @@ export default function AdvisorChatScreen() {
   const v2RequestIds = useRef(new Set<string>());
   const pendingSinceMs = useRef(new Map<string, number>());
   const typingTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const v2LoadingHints = useRef(new Map<string, string>());
+  const clearedAtRef = useRef<string | null>(null);
+  const advisorFocusedRef = useRef(false);
+  const suggestionsDismissedRef = useRef(false);
+  const suggestionBankRef = useRef<AdvisorSuggestion[]>([]);
+  const previousSuggestionIdsRef = useRef<string[]>([]);
 
   const userBonus = user?.bonus_ai_chat ?? 0;
-  const storageKey = `${CHAT_CACHE_PREFIX}:${isGuest ? "guest" : (user?.id ?? "anon")}`;
-  const useAdvisorV2 = ADVISOR_V2_DEV_ENABLED && !isGuest && Boolean(user);
 
   // Fetch chat limits + bonus config from app settings
   useEffect(() => {
@@ -291,11 +414,35 @@ export default function AdvisorChatScreen() {
 
   useEffect(() => { fetchMonthlyUsed(); }, [fetchMonthlyUsed]);
 
+  const showRandomSuggestions = useCallback((suggestions: AdvisorSuggestion[]) => {
+    const selected = pickRandomAdvisorSuggestions(suggestions, 2, previousSuggestionIdsRef.current);
+    previousSuggestionIdsRef.current = selected.map((suggestion) => suggestion.id);
+    setVisibleSuggestions(selected);
+    setShowSuggestions(selected.length === 2);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void listAdvisorSuggestions().then((suggestions) => {
+      if (!active) return;
+      suggestionBankRef.current = suggestions;
+      if (
+        advisorFocusedRef.current
+        && !suggestionsDismissedRef.current
+        && !routeParams?.initialMessage
+      ) {
+        showRandomSuggestions(suggestions);
+      }
+    });
+    return () => { active = false; };
+  }, [routeParams, showRandomSuggestions]);
+
   // Keep persisted store in sync whenever messages change
   const updateMessages = (updater: (prev: Msg[]) => Msg[]) => {
     setMessages((prev) => {
       const next = updater(prev);
-      _persistedMessages = next;
+      setPersistedMessagesForScope(chatScope, next);
+      mergeModelContextMessages(chatScope, next);
       return next;
     });
   };
@@ -320,22 +467,47 @@ export default function AdvisorChatScreen() {
   }, [scrollToLatest]);
 
   useFocusEffect(useCallback(() => {
+    advisorFocusedRef.current = true;
+    suggestionsDismissedRef.current = false;
+    const hasPendingInitialMessage = Boolean(routeParams?.initialMessage && routeParams !== autoSentRef.current);
+    if (hasPendingInitialMessage) {
+      setVisibleSuggestions([]);
+      setShowSuggestions(false);
+    } else {
+      showRandomSuggestions(suggestionBankRef.current);
+    }
     scrollToLatest(false);
-  }, [scrollToLatest]));
+
+    return () => {
+      advisorFocusedRef.current = false;
+      setVisibleSuggestions([]);
+      setShowSuggestions(false);
+    };
+  }, [routeParams, scrollToLatest, showRandomSuggestions]));
 
   useEffect(() => {
     let cancelled = false;
     const hydrateHistory = async () => {
+      setHistoryHydrated(false);
+      setPersistedMessagesForScope(chatScope, [INTRO_MSG]);
+      setMessages([INTRO_MSG]);
       try {
-        const cached = await AsyncStorage.getItem(storageKey);
+        const entries = await AsyncStorage.multiGet([storageKey, contextStorageKey, clearMarkerKey, legacyStorageKey]);
+        const values = new Map(entries);
+        const cached = values.get(storageKey) ?? (!useAdvisorV2 ? values.get(legacyStorageKey) : null);
+        const contextCached = values.get(contextStorageKey);
+        const cutoff = values.get(clearMarkerKey) ?? null;
+        clearedAtRef.current = cutoff;
+        const visibleMessages = cached ? normalizeStoredMessages(JSON.parse(cached)) : [INTRO_MSG];
+        const contextMessages = contextCached
+          ? normalizeStoredMessages(JSON.parse(contextCached))
+          : visibleMessages;
         if (cancelled) return;
-        if (!cached) {
-          setHistoryHydrated(true);
-          return;
-        }
-        const parsed = normalizeStoredMessages(JSON.parse(cached));
-        _persistedMessages = parsed;
-        setMessages(parsed);
+        mergeModelContextMessages(chatScope, contextMessages);
+        const visibleAfterCutoff = filterMessagesAfterCutoff(visibleMessages, cutoff);
+        const next = visibleAfterCutoff.length > 0 ? visibleAfterCutoff : [INTRO_MSG];
+        setPersistedMessagesForScope(chatScope, next);
+        setMessages(next);
       } catch (error) {
         console.log("[AdvisorChat] history hydrate error:", String((error as Error)?.message ?? error));
       } finally {
@@ -344,19 +516,23 @@ export default function AdvisorChatScreen() {
     };
     void hydrateHistory();
     return () => { cancelled = true; };
-  }, [storageKey]);
+  }, [chatScope, clearMarkerKey, contextStorageKey, legacyStorageKey, storageKey]);
 
   useEffect(() => {
     if (!historyHydrated) return;
-    void AsyncStorage.setItem(storageKey, JSON.stringify(messages)).catch((error) => {
+    const contextMessages = _modelContextScope === chatScope ? _modelContextMessages : mergeModelContextMessages(chatScope, messages);
+    void AsyncStorage.multiSet([
+      [storageKey, JSON.stringify(messages)],
+      [contextStorageKey, JSON.stringify(contextMessages)],
+    ]).catch((error) => {
       console.log("[AdvisorChat] history persist error:", String((error as Error)?.message ?? error));
     });
-  }, [historyHydrated, messages, storageKey]);
+  }, [chatScope, contextStorageKey, historyHydrated, messages, storageKey]);
 
   const showWaitingHint = useCallback((requestId: string, hintIndex: number) => {
     updateMessages((previous) => previous.map((message) => (
       message.requestId === requestId && message.role === "assistant" && message.waiting
-        ? { ...message, text: WAITING_HINTS[hintIndex % WAITING_HINTS.length] }
+        ? { ...message, text: v2LoadingHints.current.get(requestId) ?? WAITING_HINTS[hintIndex % WAITING_HINTS.length] }
         : message
     )));
   }, []);
@@ -382,7 +558,7 @@ export default function AdvisorChatScreen() {
         return message;
       });
       if (!matched) {
-        next.push({ id: `a-${requestId}-err`, role: "assistant", text: errorText, requestId });
+        next.push({ id: `a-${requestId}-err`, role: "assistant", text: errorText, requestId, createdAt: new Date().toISOString() });
       }
       return next;
     });
@@ -434,13 +610,15 @@ export default function AdvisorChatScreen() {
     if (row.status === "completed" && row.bot_reply) {
       pendingRequestIds.current.delete(requestId);
       pendingSinceMs.current.delete(requestId);
+      v2LoadingHints.current.delete(requestId);
+      const createdAt = row.created_at ?? new Date().toISOString();
       const hasAssistant = _persistedMessages.some((message) => (
         message.requestId === requestId && message.role === "assistant"
       ));
       if (!hasAssistant) {
         updateMessages((previous) => [...previous,
-          { id: `u-${requestId}`, role: "user", text: row.user_text, requestId },
-          { id: `a-${requestId}`, role: "assistant", text: animateReply ? "" : row.bot_reply!, requestId, typing: animateReply },
+          { id: `u-${requestId}`, role: "user", text: row.user_text, requestId, createdAt },
+          { id: `a-${requestId}`, role: "assistant", text: animateReply ? "" : row.bot_reply!, requestId, createdAt, typing: animateReply },
         ]);
       }
       if (animateReply) typeReply(requestId, row.bot_reply);
@@ -448,6 +626,7 @@ export default function AdvisorChatScreen() {
     }
 
     if (row.status === "completed" && !row.bot_reply) {
+      v2LoadingHints.current.delete(requestId);
       resolvePendingWithError(requestId, "（顧問未有返回內容，請稍後再試。）");
       return;
     }
@@ -455,6 +634,7 @@ export default function AdvisorChatScreen() {
     if (row.status === "failed") {
       pendingRequestIds.current.delete(requestId);
       pendingSinceMs.current.delete(requestId);
+      v2LoadingHints.current.delete(requestId);
       const errorText = `（顧問服務異常：${row.error_message ?? "未知錯誤"}）`;
       updateMessages((previous) => {
         let matched = false;
@@ -467,8 +647,8 @@ export default function AdvisorChatScreen() {
         });
         if (!matched) {
           next.push(
-            { id: `u-${requestId}`, role: "user", text: row.user_text, requestId },
-            { id: `a-${requestId}-err`, role: "assistant", text: errorText, requestId },
+            { id: `u-${requestId}`, role: "user", text: row.user_text, requestId, createdAt: row.created_at ?? new Date().toISOString() },
+            { id: `a-${requestId}-err`, role: "assistant", text: errorText, requestId, createdAt: row.created_at ?? new Date().toISOString() },
           );
         }
         return dedupeMessagesById(next);
@@ -482,7 +662,7 @@ export default function AdvisorChatScreen() {
     if (requestIds.length > 0) {
       const { data, error } = await supabase
         .from("dsemcq_advisor_messages")
-        .select("id, request_id, user_text, bot_reply, status, error_message")
+        .select("id, request_id, user_text, bot_reply, status, error_message, created_at")
         .eq("user_id", user.id)
         .in("request_id", requestIds);
       if (error) {
@@ -495,13 +675,49 @@ export default function AdvisorChatScreen() {
     if (v2Ids.length === 0) return;
     const { data: v2Data, error: v2Error } = await supabase
       .from("dsemcq_advisor_v2_messages")
-      .select("id, request_id, user_text, bot_reply, status, error_message")
+      .select("id, request_id, user_text, bot_reply, status, error_message, created_at")
       .eq("user_id", user.id)
       .in("request_id", v2Ids);
     if (v2Error) {
       console.log("[AdvisorChat] V2 polling error:", v2Error.message);
       return;
     }
+
+    const { data: workflowData, error: workflowError } = await supabase
+      .from("dsemcq_advisor_v2_workflow_runs")
+      .select("id, request_id, current_stage, validated_plan")
+      .eq("user_id", user.id)
+      .in("request_id", v2Ids);
+    if (workflowError) {
+      console.log("[AdvisorChat] V2 progress polling error:", workflowError.message);
+    } else {
+      const workflows = (workflowData ?? []) as AdvisorV2WorkflowProgress[];
+      const workflowIds = workflows.map((workflow) => workflow.id);
+      const { data: agentData, error: agentError } = workflowIds.length > 0
+        ? await supabase
+          .from("dsemcq_advisor_v2_agent_runs")
+          .select("workflow_id, agent_role, status")
+          .in("workflow_id", workflowIds)
+          .eq("status", "running")
+        : { data: [], error: null };
+      if (agentError) {
+        console.log("[AdvisorChat] V2 source progress polling error:", agentError.message);
+      }
+
+      const runningSourcesByWorkflow = new Map<string, string[]>();
+      for (const agent of (agentData ?? []) as AdvisorV2AgentProgress[]) {
+        const sources = runningSourcesByWorkflow.get(agent.workflow_id) ?? [];
+        if (!sources.includes(agent.agent_role)) sources.push(agent.agent_role);
+        runningSourcesByWorkflow.set(agent.workflow_id, sources);
+      }
+      for (const workflow of workflows) {
+        v2LoadingHints.current.set(
+          workflow.request_id,
+          getV2LoadingHint(workflow, runningSourcesByWorkflow.get(workflow.id) ?? [], 0),
+        );
+      }
+    }
+
     for (const row of (v2Data ?? []) as AdvisorRow[]) {
       if (row.status === "completed" || row.status === "failed") v2RequestIds.current.delete(row.request_id ?? "");
       applyAdvisorRow(row, true);
@@ -515,7 +731,7 @@ export default function AdvisorChatScreen() {
       const messageTable = useAdvisorV2 ? "dsemcq_advisor_v2_messages" : "dsemcq_advisor_messages";
       const { data, error } = await supabase
         .from(messageTable)
-        .select("id, request_id, user_text, bot_reply, status, error_message")
+        .select("id, request_id, user_text, bot_reply, status, error_message, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: true })
         .limit(50);
@@ -523,7 +739,7 @@ export default function AdvisorChatScreen() {
       if (error && isLegacySchemaMissingColumnError(error.message)) {
         const { data: legacyData, error: legacyError } = await supabase
           .from("dsemcq_advisor_messages")
-          .select("id, user_text, bot_reply")
+          .select("id, user_text, bot_reply, created_at")
           .eq("user_id", user.id)
           .order("created_at", { ascending: true })
           .limit(50);
@@ -532,13 +748,15 @@ export default function AdvisorChatScreen() {
           return;
         }
         if (!active || !legacyData) return;
-        const legacyMessages = (legacyData as Array<{ id: string; user_text: string; bot_reply: string | null }>).flatMap((row) => {
-          const pairs: Msg[] = [{ id: `u-db-${row.id}`, role: "user", text: row.user_text }];
-          if (row.bot_reply) pairs.push({ id: `a-db-${row.id}`, role: "assistant", text: row.bot_reply });
+        const legacyMessages = (legacyData as Array<{ id: string; user_text: string; bot_reply: string | null; created_at?: string | null }>).flatMap((row) => {
+          const pairs: Msg[] = [{ id: `u-db-${row.id}`, role: "user", text: row.user_text, createdAt: row.created_at ?? undefined }];
+          if (row.bot_reply) pairs.push({ id: `a-db-${row.id}`, role: "assistant", text: row.bot_reply, createdAt: row.created_at ?? undefined });
           return pairs;
         });
-        if (legacyMessages.length === 0) return;
-        updateMessages((previous) => dedupeMessagesById([...previous, ...legacyMessages]));
+        mergeModelContextMessages(chatScope, legacyMessages);
+        const visibleLegacyMessages = filterMessagesAfterCutoff(legacyMessages, clearedAtRef.current);
+        if (visibleLegacyMessages.length === 0) return;
+        updateMessages((previous) => dedupeMessagesById([...previous, ...visibleLegacyMessages]));
         return;
       }
 
@@ -549,16 +767,24 @@ export default function AdvisorChatScreen() {
       if (!active || !data) return;
       const rows = data as AdvisorRow[];
       for (const row of rows) {
+        if (row.status === "completed" && row.bot_reply) {
+          mergeModelContextMessages(chatScope, rowMessages(row));
+        }
+        if (clearedAtRef.current && (!row.created_at || row.created_at <= clearedAtRef.current)) continue;
         if (row.status === "pending" || row.status === "processing") {
           if (row.request_id) pendingRequestIds.current.add(row.request_id);
+          if (useAdvisorV2 && row.request_id) {
+            v2RequestIds.current.add(row.request_id);
+            v2LoadingHints.current.set(row.request_id, "正在理解你的問題…");
+          }
           if (row.request_id && !pendingSinceMs.current.has(row.request_id)) {
             pendingSinceMs.current.set(row.request_id, Date.now());
           }
           updateMessages((previous) => previous.some((message) => message.requestId === row.request_id)
             ? previous
             : [...previous,
-              { id: `u-${row.request_id}`, role: "user", text: row.user_text, requestId: row.request_id! },
-              { id: `a-${row.request_id}`, role: "assistant", text: WAITING_HINTS[0], requestId: row.request_id!, waiting: true, typing: false },
+              { id: `u-${row.request_id}`, role: "user", text: row.user_text, requestId: row.request_id!, createdAt: row.created_at ?? undefined },
+              { id: `a-${row.request_id}`, role: "assistant", text: WAITING_HINTS[0], requestId: row.request_id!, createdAt: row.created_at ?? undefined, waiting: true, typing: false },
             ]);
         } else {
           applyAdvisorRow(row, false);
@@ -605,7 +831,7 @@ export default function AdvisorChatScreen() {
     if (!text.trim() || loading) return;
 
     // Guest session limit
-    const currentUserMsgCount = _persistedMessages.filter(m => m.role === "user").length;
+    const currentUserMsgCount = _modelContextMessages.filter((message) => isModelContextMessage(message) && message.role === "user").length;
     if (isGuest && currentUserMsgCount >= guestLimit) {
       Alert.alert(
         "已達免費使用上限",
@@ -632,10 +858,13 @@ export default function AdvisorChatScreen() {
     }
 
     const cleanText = text.trim();
+    suggestionsDismissedRef.current = true;
+    setVisibleSuggestions([]);
+    setShowSuggestions(false);
     // Capture previous turns before adding this question, so Poe does not receive it twice.
-    const historyToSend = _persistedMessages
-      .filter((message) => message.id !== "intro" && !message.waiting)
-      .slice(-12);
+    const contextMessages = mergeModelContextMessages(chatScope, _persistedMessages);
+    const historyToSend = getRecentChatHistory(contextMessages);
+    const createdAt = new Date().toISOString();
     setLoading(true);
     let hasRenderedUserMessage = false;
     let activeRequestId: string | null = null;
@@ -645,8 +874,8 @@ export default function AdvisorChatScreen() {
       pendingSinceMs.current.set(requestId, Date.now());
       scrollToLatest(false);
       updateMessages((previous) => [...previous,
-        { id: `u-${requestId}`, role: "user", text: cleanText, requestId },
-        { id: `a-${requestId}`, role: "assistant", text: WAITING_HINTS[0], requestId, waiting: true, typing: false },
+        { id: `u-${requestId}`, role: "user", text: cleanText, requestId, createdAt },
+        { id: `a-${requestId}`, role: "assistant", text: WAITING_HINTS[0], requestId, createdAt, waiting: true, typing: false },
       ]);
       hasRenderedUserMessage = true;
     };
@@ -690,7 +919,7 @@ export default function AdvisorChatScreen() {
     try {
       let reply = "";
       if (!isSupabaseConfigured) {
-        updateMessages((previous) => [...previous, { id: `u-${Date.now()}`, role: "user", text: cleanText }]);
+        updateMessages((previous) => [...previous, { id: `u-${Date.now()}`, role: "user", text: cleanText, createdAt }]);
         await new Promise((r) => setTimeout(r, 600));
         reply = getDemoReply(text);
       } else {
@@ -721,11 +950,14 @@ export default function AdvisorChatScreen() {
           pendingSinceMs.current.set(requestId, Date.now());
           scrollToLatest(false);
           updateMessages((previous) => [...previous,
-            { id: `u-${requestId}`, role: "user", text: cleanText, requestId },
-            { id: `a-${requestId}`, role: "assistant", text: WAITING_HINTS[0], requestId, waiting: true, typing: false },
+            { id: `u-${requestId}`, role: "user", text: cleanText, requestId, createdAt },
+            { id: `a-${requestId}`, role: "assistant", text: WAITING_HINTS[0], requestId, createdAt, waiting: true, typing: false },
           ]);
           hasRenderedUserMessage = true;
-          if (useAdvisorV2) v2RequestIds.current.add(requestId);
+          if (useAdvisorV2) {
+            v2RequestIds.current.add(requestId);
+            v2LoadingHints.current.set(requestId, "正在理解你的問題…");
+          }
           void supabase.functions.invoke(useAdvisorV2 ? "dsemcq-advisor-v2-start" : "dsemcq-advisor-chat", {
             body: useAdvisorV2
               ? { requestId }
@@ -739,6 +971,7 @@ export default function AdvisorChatScreen() {
             if (isAdvisorQuota(data?.quota)) setMonthlyQuota(data.quota);
             if (data?.code === "MONTHLY_LIMIT") {
               v2RequestIds.current.delete(requestId);
+              v2LoadingHints.current.delete(requestId);
               resolvePendingWithError(requestId, "（本月對話已達上限。）");
               return;
             }
@@ -765,12 +998,13 @@ export default function AdvisorChatScreen() {
           role: "user",
           text: cleanText,
           requestId: activeRequestId ?? undefined,
+          createdAt,
         }]);
       }
       if (activeRequestId) {
         resolvePendingWithError(activeRequestId, formatAdvisorError(error));
       } else {
-        updateMessages((previous) => [...previous, { id: `a-${Date.now()}`, role: "assistant", text: formatAdvisorError(error) }]);
+        updateMessages((previous) => [...previous, { id: `a-${Date.now()}`, role: "assistant", text: formatAdvisorError(error), createdAt }]);
       }
     } finally {
       setLoading(false);
@@ -796,6 +1030,46 @@ export default function AdvisorChatScreen() {
     if (!text) return;
     setInput("");
     await sendMessage(text);
+  };
+
+  const clearVisibleHistory = () => {
+    Alert.alert(
+      "清除畫面紀錄",
+      "只會隱藏本機畫面上的舊對話，不會刪除資料庫紀錄；之後回答仍可參考這段對話。",
+      [
+        { text: "取消", style: "cancel" },
+        {
+          text: "清除",
+          style: "destructive",
+          onPress: () => {
+            const cutoff = new Date().toISOString();
+            const contextMessages = _modelContextScope === chatScope
+              ? _modelContextMessages
+              : mergeModelContextMessages(chatScope, _persistedMessages);
+            clearedAtRef.current = cutoff;
+            for (const timer of typingTimers.current.values()) clearTimeout(timer);
+            typingTimers.current.clear();
+            pendingRequestIds.current.clear();
+            v2RequestIds.current.clear();
+            pendingSinceMs.current.clear();
+            v2LoadingHints.current.clear();
+            setLoading(false);
+            setInput("");
+            setShowEmojiPicker(false);
+            setShowJumpToLatest(false);
+            setPersistedMessagesForScope(chatScope, [INTRO_MSG]);
+            setMessages([INTRO_MSG]);
+            void AsyncStorage.multiSet([
+              [storageKey, JSON.stringify([INTRO_MSG])],
+              [contextStorageKey, JSON.stringify(contextMessages)],
+              [clearMarkerKey, cutoff],
+            ]).catch((error) => {
+              console.log("[AdvisorChat] clear history persist error:", String((error as Error)?.message ?? error));
+            });
+          },
+        },
+      ],
+    );
   };
 
   // Bonus purchase handler
@@ -838,6 +1112,15 @@ export default function AdvisorChatScreen() {
             <Text style={styles.title}>{BOT_NAME}</Text>
             <Text style={styles.subtitle}>文言文溫習・應試策略・情緒調節</Text>
           </View>
+          <TouchableOpacity
+            style={styles.headerIconBtn}
+            onPress={clearVisibleHistory}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="清除畫面紀錄"
+          >
+            <Ionicons name="trash-outline" size={17} color={colors.textSecondary} />
+          </TouchableOpacity>
           {ADVISOR_V2_DEV_ENABLED && !isGuest && user && (
             <TouchableOpacity style={styles.analysisBtn} onPress={() => setShowAnalysisModal(true)} activeOpacity={0.7}>
               <Ionicons name="options-outline" size={16} color={colors.primary} />
@@ -851,7 +1134,7 @@ export default function AdvisorChatScreen() {
           )}
         </View>
         {isGuest && (() => {
-          const used = messages.filter(m => m.role === "user").length;
+          const used = _modelContextMessages.filter((message) => isModelContextMessage(message) && message.role === "user").length;
           const remaining = Math.max(0, guestLimit - used);
           return (
             <Text style={styles.guestLimit}>
@@ -928,6 +1211,17 @@ export default function AdvisorChatScreen() {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+      <EmojiPicker
+        open={showEmojiPicker}
+        onClose={() => setShowEmojiPicker(false)}
+        onEmojiSelected={({ emoji }) => {
+          setInput((previous) => previous + emoji);
+          setShowEmojiPicker(false);
+        }}
+        enableSearchBar
+        enableRecentlyUsed
+        allowMultipleSelections={false}
+      />
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }} keyboardVerticalOffset={80}>
         <FlatList
           ref={listRef}
@@ -957,9 +1251,32 @@ export default function AdvisorChatScreen() {
             </View>
           )}
         />
+        {showSuggestions && visibleSuggestions.length === 2 && (
+          <View style={styles.suggestionPanel}>
+            <Text style={styles.suggestionLabel}>不知從何問起？</Text>
+            <View style={styles.suggestionRow}>
+              {visibleSuggestions.map((suggestion) => (
+                <TouchableOpacity
+                  key={suggestion.id}
+                  style={[styles.suggestionBubble, loading && styles.suggestionBubbleDisabled]}
+                  onPress={() => {
+                    setInput("");
+                    void sendRef.current(suggestion.prompt_text);
+                  }}
+                  disabled={loading}
+                  activeOpacity={0.75}
+                  accessibilityRole="button"
+                  accessibilityLabel={`送出建議問題：${suggestion.prompt_text}`}
+                >
+                  <Text style={styles.suggestionText} numberOfLines={2}>{suggestion.prompt_text}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
         {showJumpToLatest && (
           <TouchableOpacity
-            style={styles.jumpToLatestButton}
+            style={[styles.jumpToLatestButton, showSuggestions && styles.jumpAboveSuggestions]}
             onPress={() => scrollToLatest(true)}
             accessibilityRole="button"
             accessibilityLabel="跳到最新訊息"
@@ -977,6 +1294,16 @@ export default function AdvisorChatScreen() {
             onFocus={() => { if (isNearBottomRef.current) scrollToLatest(false); }}
             multiline
           />
+          <TouchableOpacity
+            style={styles.emojiBtn}
+            onPress={() => setShowEmojiPicker(true)}
+            disabled={loading}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="開啟表情符號鍵盤"
+          >
+            <Ionicons name="happy-outline" size={23} color={colors.primary} />
+          </TouchableOpacity>
           <TouchableOpacity style={styles.sendBtn} onPress={send} disabled={loading || !input.trim()}>
             <Text style={styles.sendText}>{loading ? "…" : "送出"}</Text>
           </TouchableOpacity>
@@ -996,6 +1323,7 @@ const styles = StyleSheet.create({
   guestLimit: { ...typography.caption, color: colors.warning, marginTop: 4 },
   bonusBtn: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surfaceAlt, borderRadius: 8, paddingVertical: 6, paddingHorizontal: 10, gap: 4 },
   bonusBtnText: { ...typography.caption, color: colors.gold, fontWeight: "600" },
+  headerIconBtn: { width: 32, height: 32, alignItems: "center", justifyContent: "center", marginRight: spacing.xs },
   analysisBtn: { width: 32, height: 32, alignItems: "center", justifyContent: "center", marginRight: spacing.sm },
   bubble: { padding: spacing.md, borderRadius: 14, marginBottom: spacing.sm, maxWidth: "85%" },
   userBubble: { backgroundColor: colors.primary, alignSelf: "flex-end" },
@@ -1014,8 +1342,16 @@ const styles = StyleSheet.create({
   aiWaitingText: { color: colors.textMuted, lineHeight: 20, fontSize: 13 },
   aiTypingText: { color: colors.textPrimary, lineHeight: 22 },
   jumpToLatestButton: { position: "absolute", right: spacing.md, bottom: 76, width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center", elevation: 5, shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
+  jumpAboveSuggestions: { bottom: 144 },
+  suggestionPanel: { paddingHorizontal: spacing.sm, paddingTop: 5, paddingBottom: 7, borderTopWidth: 1, borderColor: colors.border, backgroundColor: colors.background },
+  suggestionLabel: { color: colors.textMuted, fontSize: 11, marginBottom: 5, paddingHorizontal: 2 },
+  suggestionRow: { flexDirection: "row", gap: spacing.xs },
+  suggestionBubble: { flex: 1, minHeight: 44, justifyContent: "center", borderWidth: 1, borderColor: colors.primary, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: colors.surface },
+  suggestionBubbleDisabled: { opacity: 0.45 },
+  suggestionText: { color: colors.primary, fontSize: 12, lineHeight: 18, textAlign: "center" },
   inputRow: { flexDirection: "row", padding: spacing.sm, borderTopWidth: 1, borderColor: colors.border, alignItems: "flex-end" },
-  input: { flex: 1, color: colors.textPrimary, backgroundColor: colors.surface, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, maxHeight: 120, marginRight: spacing.sm },
+  input: { flex: 1, color: colors.textPrimary, backgroundColor: colors.surface, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, maxHeight: 120, marginRight: spacing.xs },
+  emojiBtn: { width: 42, height: 42, alignItems: "center", justifyContent: "center", marginRight: spacing.xs },
   sendBtn: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20 },
   sendText: { color: "#FFFFFF", fontWeight: "700" },
   // Bonus modal

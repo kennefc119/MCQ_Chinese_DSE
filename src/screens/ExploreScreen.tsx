@@ -19,8 +19,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, spacing, typography, QUIZ_TYPE_COLORS, QUIZ_TYPE_LABEL } from "../theme";
-import { Quiz, TipCard, Passage, Attempt } from "../types/database";
-import { listQuizzes, listTipCards, listPassages, signUpForQuiz, startAttempt, listUserAttempts } from "../lib/dataService";
+import { Quiz, TipCard, Passage, Attempt, ExploreQuizStats, ExploreStats } from "../types/database";
+import { listQuizzes, listTipCards, listPassages, signUpForQuiz, startAttempt, listUserAttempts, fetchExploreStats } from "../lib/dataService";
 import { useAuth } from "../context/AuthContext";
 import { AppStackParamList } from "../navigation/types";
 import { extractSkillFromTitle, getQuizTypeSuffix, SKILL_LABELS, SkillLabel } from "../lib/quizDisplayUtils";
@@ -38,6 +38,17 @@ const PHONE_COLS = 3;
 const TABLET_COLS = 5;
 const TABLET_BREAKPOINT = 768;
 
+const EXPLORE_SKILLS = [
+  { id: "t-meaning", label: "字詞解釋" },
+  { id: "t-comprehension", label: "內容理解" },
+  { id: "t-theme", label: "主旨歸納" },
+  { id: "t-rhetoric", label: "修辭手法" },
+  { id: "t-character", label: "人物分析" },
+  { id: "t-grammar", label: "句式語法" },
+  { id: "t-context", label: "背景知識" },
+  { id: "t-comparison", label: "跨篇章比較" },
+] as const;
+
 const CACHE_KEY_EXPLORE_FEED = "dsemcq_cache_explore_feed_v1";
 const CACHE_KEY_EXPLORE_SETTINGS = "dsemcq_cache_explore_settings_v1";
 
@@ -46,8 +57,11 @@ type ExploreFeedCache = {
   tips: TipCard[];
   passages: Passage[];
   attempts: Attempt[];
+  stats?: ExploreStats;
   quizOrder: string[];
 };
+
+const EMPTY_EXPLORE_STATS: ExploreStats = { passageQuestionCounts: {}, passageQuestionIncreases14d: {}, passageSkillQuestionCounts: {}, skillQuestionCounts: {}, freeAvailableQuestionCount: null, quizStats: {} };
 
 type ExploreSettingsCache = {
   exemptIds: string[];
@@ -224,7 +238,7 @@ function VerticalTileInfo({
 /** Set of passage IDs exempt from premium lock for basic users. */
 const ExemptContext = createContext<Set<string>>(new Set());
 
-function QuizTile({ item, onPress, passageName, status, tileWidth, tileHeight }: { item: Quiz; onPress: () => void; passageName?: string; status?: "passed" | "failed"; tileWidth: number; tileHeight: number }) {
+function QuizTile({ item, onPress, passageName, status, tileWidth, tileHeight, stats }: { item: Quiz; onPress: () => void; passageName?: string; status?: "passed" | "failed"; tileWidth: number; tileHeight: number; stats?: ExploreQuizStats }) {
   const { user, isGuest } = useAuth();
   const exemptIds = useContext(ExemptContext);
   const pointsLocked = item.min_points_required > (user?.wenyuan_points ?? 0);
@@ -235,6 +249,8 @@ function QuizTile({ item, onPress, passageName, status, tileWidth, tileHeight }:
   const heroText = passageName ?? skillName;
   const displayTitle = stripParens(heroText ?? item.title);
   const [tileImgFailed, setTileImgFailed] = useState(false);
+  const showHitBadge = stats?.top_10_percent_hit === true;
+  const showLowBadge = stats?.low_performance === true && (stats.distinct_participant_count ?? 0) >= 5;
 
   return (
     <TouchableOpacity
@@ -280,6 +296,22 @@ function QuizTile({ item, onPress, passageName, status, tileWidth, tileHeight }:
         difficulty={item.difficulty}
         locked={locked}
       />
+      {(showHitBadge || showLowBadge) && (
+        <View style={styles.tileSignalStack} pointerEvents="none">
+          {showHitBadge && (
+            <View style={[styles.tileSignal, styles.tileSignalHit]}>
+              <Ionicons name="trending-up" size={10} color="#FFF" />
+              <Text style={styles.tileSignalText}>熱門 10%</Text>
+            </View>
+          )}
+          {showLowBadge && (
+            <View style={[styles.tileSignal, styles.tileSignalLow]}>
+              <Ionicons name="alert-circle-outline" size={10} color="#FFF" />
+              <Text style={styles.tileSignalText}>平均偏低</Text>
+            </View>
+          )}
+        </View>
+      )}
       {/* Variation pill — only shown when title_id is set (duplicate title exists) */}
       {item.title_id != null && (
         <View style={styles.titleIdPill}>
@@ -325,7 +357,7 @@ function TipTile({ item, onPress, tileWidth, tileHeight }: { item: TipCard; onPr
   );
 }
 
-function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () => void; passageName?: string }) {
+function QuizFeedPage({ item, onClose, passageName, stats }: { item: Quiz; onClose: () => void; passageName?: string; stats?: ExploreQuizStats }) {
   const { width, height } = useWindowDimensions();
   const { feedPageHeight, feedImageHeight } = computeGridMetrics(width, height);
   const { user, isGuest } = useAuth();
@@ -341,6 +373,7 @@ function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () 
   const skillName = !passageName ? extractSkillFromTitle(item.title) : undefined;
   const heroText = passageName ?? skillName;
   const feedDisplayTitle = stripParens(heroText ? getQuizTypeSuffix(item.title, heroText) : item.title);
+  const showLowBadge = stats?.low_performance === true && (stats.distinct_participant_count ?? 0) >= 5;
 
   const onJoin = async () => {
     if (!user) return;
@@ -445,6 +478,17 @@ function QuizFeedPage({ item, onClose, passageName }: { item: Quiz; onClose: () 
             <Text style={styles.feedStatLabel}>文淵點</Text>
           </View>
         </View>
+        {stats && (stats.submitted_attempt_count > 0 || stats.distinct_participant_count > 0) ? (
+          <View style={styles.feedInsightRow}>
+            <Ionicons name="people-outline" size={14} color={colors.muted} />
+            <Text style={styles.feedInsightText}>
+              {stats.distinct_participant_count > 0 ? `學生 ${stats.distinct_participant_count} 人` : `完成 ${stats.submitted_attempt_count} 次`}
+              {stats.average_score_pct !== null ? `　平均 ${Math.round(stats.average_score_pct)}%` : ""}
+            </Text>
+            {stats.top_10_percent_hit && <Text style={[styles.feedInsightTag, styles.feedInsightHit]}>熱門 10%</Text>}
+            {showLowBadge && <Text style={[styles.feedInsightTag, styles.feedInsightLow]}>平均偏低</Text>}
+          </View>
+        ) : null}
 
         {/* Detail rows */}
         <View style={styles.feedDetailList}>
@@ -543,6 +587,7 @@ export default function ExploreScreen() {
   const [items, setItems] = useState<FeedItem[]>([]);
   const [passages, setPassages] = useState<Passage[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
+  const [exploreStats, setExploreStats] = useState<ExploreStats>(EMPTY_EXPLORE_STATS);
   const [feedVisible, setFeedVisible] = useState(false);
   const [feedIndex, setFeedIndex] = useState(0);
   const feedRef = useRef<FlatList<FeedItem>>(null);
@@ -556,6 +601,7 @@ export default function ExploreScreen() {
   const [filterSkill, setFilterSkill] = useState<SkillLabel | null>(null);
   const [filterCompletion, setFilterCompletion] = useState<"passed" | "failed" | null>(null);
   const [filterExpanded, setFilterExpanded] = useState(false);
+  const [passageStatsExpanded, setPassageStatsExpanded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [exemptIds, setExemptIds] = useState<Set<string>>(new Set());
   const [bannerMessage, setBannerMessage] = useState("");
@@ -572,6 +618,16 @@ export default function ExploreScreen() {
     const ordered = orderQuizzes(feed.quizzes, feed.quizOrder);
     quizOrderRef.current = ordered.quizOrder;
     setAttempts(feed.attempts);
+    setExploreStats(feed.stats
+      ? {
+        ...EMPTY_EXPLORE_STATS,
+        ...feed.stats,
+        passageQuestionIncreases14d: feed.stats.passageQuestionIncreases14d ?? {},
+        passageSkillQuestionCounts: feed.stats.passageSkillQuestionCounts ?? {},
+        skillQuestionCounts: feed.stats.skillQuestionCounts ?? {},
+        freeAvailableQuestionCount: feed.stats.freeAvailableQuestionCount ?? null,
+      }
+      : EMPTY_EXPLORE_STATS);
     setItems(interleave(ordered.quizzes, feed.tips));
     setPassages(feed.passages);
   }, []);
@@ -632,7 +688,7 @@ export default function ExploreScreen() {
   );
 
   const load = useCallback(async () => {
-    type LoadResult = [Quiz[], TipCard[], Passage[], Attempt[]];
+    type LoadResult = [Quiz[], TipCard[], Passage[], Attempt[], ExploreStats];
 
     const loadOnce = (): Promise<LoadResult> => new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => reject(new Error("load_timeout")), 12_000);
@@ -641,23 +697,26 @@ export default function ExploreScreen() {
         listTipCards(),
         listPassages(),
         user ? listUserAttempts(user.id) : Promise.resolve<Attempt[]>([]),
+        fetchExploreStats(),
       ]);
       request.then(resolve, reject).finally(() => clearTimeout(timeoutId));
     });
 
     for (let attemptIndex = 0; attemptIndex < 2; attemptIndex += 1) {
       try {
-        const [quizzes, tips, passageList, userAttempts] = await loadOnce();
+        const [quizzes, tips, passageList, userAttempts, stats] = await loadOnce();
         const feed: ExploreFeedCache = {
           quizzes,
           tips,
           passages: passageList,
           attempts: userAttempts,
+          stats,
           quizOrder: quizOrderRef.current,
         };
         const ordered = orderQuizzes(quizzes, quizOrderRef.current);
         quizOrderRef.current = ordered.quizOrder;
         setAttempts(userAttempts);
+        setExploreStats(stats);
         setItems(interleave(ordered.quizzes, tips));
         setPassages(passageList);
         AsyncStorage.setItem(
@@ -690,6 +749,44 @@ export default function ExploreScreen() {
     () => passages.reduce<Record<string, Passage>>((m, p) => ({ ...m, [p.id]: p }), {}),
     [passages],
   );
+
+  const hasRecentQuestionGrowth = useMemo(
+    () => passages.some((passage) => (exploreStats.passageQuestionIncreases14d[passage.id] ?? 0) > 0),
+    [exploreStats.passageQuestionIncreases14d, passages],
+  );
+
+  const maxPassageQuestionCount = useMemo(
+    () => Math.max(1, ...passages.map((passage) => exploreStats.passageQuestionCounts[passage.id] ?? 0)),
+    [exploreStats.passageQuestionCounts, passages],
+  );
+
+  const totalPassageQuestionCount = useMemo(
+    () => passages.reduce((total, passage) => total + (exploreStats.passageQuestionCounts[passage.id] ?? 0), 0),
+    [exploreStats.passageQuestionCounts, passages],
+  );
+
+  const totalRecentQuestionIncrease = useMemo(
+    () => passages.reduce((total, passage) => total + (exploreStats.passageQuestionIncreases14d[passage.id] ?? 0), 0),
+    [exploreStats.passageQuestionIncreases14d, passages],
+  );
+
+  const clientFreeAvailableQuestionCount = useMemo(() => {
+    const questionIds = new Set<string>();
+    for (const item of items) {
+      if (item.kind !== "quiz") continue;
+      const quiz = item.data;
+      const freeTierAvailable = quiz.min_points_required <= 0
+        && (quiz.type === "exercise" || (quiz.passage_id !== null && exemptIds.has(quiz.passage_id)));
+      if (!freeTierAvailable) continue;
+      for (const questionId of quiz.question_ids) questionIds.add(questionId);
+    }
+    return questionIds.size;
+  }, [exemptIds, items]);
+
+  const freeAvailableQuestionCount = exploreStats.freeAvailableQuestionCount ?? clientFreeAvailableQuestionCount;
+
+  const allSkillCounts = exploreStats.skillQuestionCounts;
+  const maxSkillCount = Math.max(1, ...EXPLORE_SKILLS.map((skill) => allSkillCounts[skill.id] ?? 0));
 
   const allFiltersCleared = filterType === "all" && filterDifficulty === null && filterPassageId === null && filterMinPoints === null && filterSkill === null && filterCompletion === null;
 
@@ -763,14 +860,14 @@ export default function ExploreScreen() {
   const renderGridItem = ({ item, index }: { item: FeedItem; index: number }) => {
     const passageName = item.kind === "quiz" ? getPassageName((item.data as any).passage_id) : undefined;
     if (item.kind === "quiz") {
-      return <QuizTile item={item.data} onPress={() => openFeed(index)} passageName={passageName} status={quizStatusMap[item.data.id]} tileWidth={tileWidth} tileHeight={tileHeight} />;
+      return <QuizTile item={item.data} onPress={() => openFeed(index)} passageName={passageName} status={quizStatusMap[item.data.id]} stats={exploreStats.quizStats[item.data.id]} tileWidth={tileWidth} tileHeight={tileHeight} />;
     }
     return <TipTile item={item.data} onPress={() => openFeed(index)} tileWidth={tileWidth} tileHeight={tileHeight} />;
   };
 
   const renderFeedPage = ({ item }: { item: FeedItem }) => {
     const passageName = item.kind === "quiz" ? getPassageName((item.data as any).passage_id) : undefined;
-    if (item.kind === "quiz") return <QuizFeedPage item={item.data} onClose={closeFeed} passageName={passageName} />;
+    if (item.kind === "quiz") return <QuizFeedPage item={item.data} onClose={closeFeed} passageName={passageName} stats={exploreStats.quizStats[item.data.id]} />;
     return <TipFeedPage item={item.data} />;
   };
 
@@ -793,6 +890,119 @@ export default function ExploreScreen() {
 
       {/* Scrolling announcement banner */}
       {bannerMessage ? <ScrollingBanner message={bannerMessage} pauseSeconds={bannerPause} /> : null}
+
+      {passages.length > 0 && (
+        <View style={[styles.passageStatsBar, !passageStatsExpanded && styles.passageStatsBarCollapsed]}>
+          <TouchableOpacity
+            style={[styles.passageStatsHeader, !passageStatsExpanded && styles.passageStatsHeaderCollapsed]}
+            onPress={() => setPassageStatsExpanded((expanded) => !expanded)}
+            activeOpacity={0.75}
+            accessibilityRole="button"
+            accessibilityLabel={passageStatsExpanded ? "收起篇章題目統計" : "展開篇章題目統計"}
+            accessibilityState={{ expanded: passageStatsExpanded }}
+          >
+            <View style={styles.passageStatsTitleWrap}>
+              <Ionicons name="library-outline" size={14} color={colors.primary} />
+              <View style={styles.passageStatsSummaryText}>
+                <View style={styles.passageStatsSummaryRow}>
+                  <Text style={styles.passageStatsTitle}>題目庫</Text>
+                  <Text style={styles.passageStatsTotal}>學仕版共 {totalPassageQuestionCount} 題</Text>
+                  <Text style={styles.passageStatsFreeTotal}> | 庶民版共 {freeAvailableQuestionCount} 題</Text>
+                </View>
+                {passageStatsExpanded && <Text style={styles.passageStatsDescription}>AI定期新增及改善題庫題目</Text>}
+              </View>
+            </View>
+            <View style={styles.passageStatsHeaderRight}>
+              {hasRecentQuestionGrowth && (
+                <Text style={styles.passageStatsGrowthLabel}>
+                  {passageStatsExpanded ? "過去兩週新增" : `過去兩週 (+${totalRecentQuestionIncrease})`}
+                </Text>
+              )}
+              <Ionicons
+                name={passageStatsExpanded ? "chevron-up" : "chevron-down"}
+                size={15}
+                color={colors.textMuted}
+              />
+            </View>
+          </TouchableOpacity>
+          {passageStatsExpanded && <View style={styles.passageStatsGrid}>
+            {passages.map((passage) => (
+              (() => {
+                const questionCount = exploreStats.passageQuestionCounts[passage.id] ?? 0;
+                const recentIncrease = exploreStats.passageQuestionIncreases14d[passage.id] ?? 0;
+                const totalWidth = `${Math.round((questionCount / maxPassageQuestionCount) * 100)}%` as `${number}%`;
+                const growthWidth = questionCount > 0
+                  ? `${Math.min(100, Math.round((recentIncrease / questionCount) * 100))}%` as `${number}%`
+                  : "0%";
+                return (
+                  <View
+                    key={passage.id}
+                    style={[styles.passageStatsCell, { width: `${100 / (screenWidth >= TABLET_BREAKPOINT ? 4 : 3)}%` }]}
+                  >
+                    <View style={styles.passageStatsCellHeader}>
+                      <Text style={styles.passageStatsName} numberOfLines={1}>{getPassageName(passage.id) ?? passage.title}</Text>
+                      <Text style={styles.passageStatsCount}>{questionCount}</Text>
+                      {recentIncrease > 0 && <Text style={styles.passageStatsGrowth}>(+{recentIncrease})</Text>}
+                    </View>
+                    <View style={styles.passageStatsTrack}>
+                      <View style={[styles.passageStatsBarFill, { width: totalWidth }]}>
+                        {recentIncrease > 0 && <View style={[styles.passageStatsBarGrowth, { width: growthWidth }]} />}
+                      </View>
+                    </View>
+                  </View>
+                );
+              })()
+            ))}
+          </View>}
+          {passageStatsExpanded && (
+            <View style={styles.passageSkillBreakdown}>
+              <View style={styles.passageSkillHeader}>
+                <Text style={styles.passageSkillTitle}>能力分布</Text>
+                <Text style={styles.passageSkillPassageName}>全題庫</Text>
+              </View>
+              <Text style={styles.passageSkillCaption}>全篇章合計；一題可涵蓋多項能力。</Text>
+              <View style={styles.passageSkillGrid}>
+                {EXPLORE_SKILLS.map((skill) => {
+                  const count = allSkillCounts[skill.id] ?? 0;
+                  const width = `${Math.round((count / maxSkillCount) * 100)}%` as `${number}%`;
+                  return (
+                    <View key={skill.id} style={styles.passageSkillCell}>
+                      <View style={styles.passageSkillCellHeader}>
+                        <Text style={styles.passageSkillLabel} numberOfLines={1}>{skill.label}</Text>
+                        <Text style={styles.passageSkillCount}>{count}</Text>
+                      </View>
+                      <View style={styles.passageSkillTrack}>
+                        <View style={[styles.passageSkillFill, { width }]} />
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+          {passageStatsExpanded && (
+            <View style={styles.passageStatsNotes}>
+              <Text style={styles.passageStatsNotesTitle}>題庫更新</Text>
+              <View style={styles.passageStatsNoteRow}>
+                <Ionicons name="sparkles-outline" size={13} color={colors.primary} />
+                <Text style={styles.passageStatsNoteText}>題目會持續檢視及優化，更貼近 DSE 同學需要。</Text>
+              </View>
+              <View style={styles.passageStatsNoteRow}>
+                <Ionicons name="flag-outline" size={13} color={colors.primary} />
+                <Text style={styles.passageStatsNoteText}>發現問題可舉報並留言，參與題目改進。</Text>
+              </View>
+              <View style={styles.passageStatsNoteRow}>
+                <Ionicons name="shuffle-outline" size={13} color={colors.primary} />
+                <Text style={styles.passageStatsNoteText}>題目組合會不時重新編排，保持練習新鮮。</Text>
+              </View>
+              <View style={styles.passageStatsNoteRow}>
+                <Ionicons name="add-circle-outline" size={13} color={colors.primary} />
+                <Text style={styles.passageStatsNoteText}>題庫會定期加入新題目。</Text>
+              </View>
+            </View>
+          )}
+        </View>
+      )}
 
       {/* Filter section: chips row + optional expanded panel */}
       <View>
@@ -1157,6 +1367,24 @@ const styles = StyleSheet.create({
     lineHeight: 11,
     includeFontPadding: false,
   },
+  tileSignalStack: {
+    position: "absolute",
+    top: 6,
+    left: 6,
+    alignItems: "flex-start",
+    gap: 3,
+  },
+  tileSignal: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 3,
+  },
+  tileSignalHit: { backgroundColor: "rgba(182,138,62,0.94)" },
+  tileSignalLow: { backgroundColor: "rgba(178,58,46,0.94)" },
+  tileSignalText: { color: "#FFFFFF", fontSize: 8, fontWeight: "800", lineHeight: 10, includeFontPadding: false },
   // ── centered card title ────────────────────────────────────────────────
   tileCenteredWrap: {
     position: "absolute",
@@ -1217,6 +1445,11 @@ const styles = StyleSheet.create({
   },
   feedStatNum: { color: colors.primary, fontSize: 16, fontWeight: "700" },
   feedStatLabel: { color: colors.textMuted, fontSize: 10, marginTop: 2 },
+  feedInsightRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6, marginBottom: spacing.md },
+  feedInsightText: { color: colors.textSecondary, fontSize: 12 },
+  feedInsightTag: { borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2, color: "#FFFFFF", fontSize: 10, fontWeight: "700" },
+  feedInsightHit: { backgroundColor: colors.gold },
+  feedInsightLow: { backgroundColor: colors.warning },
   feedDetailList: { marginBottom: spacing.md, gap: 8 },
   feedDetailRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   feedDetailText: { color: colors.textSecondary, fontSize: 13, flex: 1 },
@@ -1261,6 +1494,56 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
   },
   feedCounter: { color: "#FFFFFF", fontSize: 14, fontWeight: "600" },
+
+  // Compact question inventory strip
+  passageStatsBar: {
+    paddingHorizontal: GRID_PADDING - 4,
+    paddingTop: 7,
+    paddingBottom: 5,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceAlt,
+  },
+  passageStatsBarCollapsed: { paddingTop: 0, paddingBottom: 0 },
+  passageStatsHeader: { minHeight: 28, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 4, marginBottom: 4 },
+  passageStatsHeaderCollapsed: { minHeight: 28, marginBottom: 0 },
+  passageStatsTitleWrap: { flex: 1, minWidth: 0, flexDirection: "row", alignItems: "center", gap: 4 },
+  passageStatsSummaryText: { flex: 1, minWidth: 0 },
+  passageStatsSummaryRow: { flexDirection: "row", alignItems: "center", gap: 5, minWidth: 0 },
+  passageStatsTitle: { color: colors.primary, fontSize: 11, fontWeight: "700", lineHeight: 13 },
+  passageStatsTotal: { color: colors.textSecondary, fontSize: 10, fontWeight: "700", lineHeight: 13 },
+  passageStatsFreeTotal: { color: colors.textSecondary, fontSize: 10, fontWeight: "700", lineHeight: 13 },
+  passageStatsDescription: { color: colors.textMuted, fontSize: 8, lineHeight: 10, marginTop: 1 },
+  passageStatsHeaderRight: { flexDirection: "row", alignItems: "center", gap: 7 },
+  passageStatsLegend: { flexDirection: "row", alignItems: "center", gap: 4 },
+  passageStatsLegendDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.success },
+  passageStatsGrowthLabel: { color: colors.success, fontSize: 9, fontWeight: "700", lineHeight: 11 },
+  passageStatsGrid: { flexDirection: "row", flexWrap: "wrap" },
+  passageStatsCell: { paddingHorizontal: 4, marginBottom: 6 },
+  passageStatsCellHeader: { flexDirection: "row", alignItems: "baseline", minHeight: 16, gap: 3 },
+  passageStatsName: { flex: 1, color: colors.textSecondary, fontSize: 10, lineHeight: 13 },
+  passageStatsCount: { color: colors.primary, fontSize: 11, fontWeight: "800", lineHeight: 13 },
+  passageStatsGrowth: { color: colors.success, fontSize: 9, fontWeight: "800", lineHeight: 12 },
+  passageStatsTrack: { height: 5, marginTop: 3, borderRadius: 3, overflow: "hidden", backgroundColor: colors.border },
+  passageStatsBarFill: { height: "100%", alignItems: "flex-end", borderRadius: 3, overflow: "hidden", backgroundColor: colors.primary },
+  passageStatsBarGrowth: { height: "100%", backgroundColor: colors.success },
+  passageSkillBreakdown: { marginTop: 2, paddingTop: 7, borderTopWidth: 1, borderColor: colors.border },
+  passageSkillHeader: { flexDirection: "row", alignItems: "baseline", gap: 6, paddingHorizontal: 4, marginBottom: 5 },
+  passageSkillTitle: { color: colors.primary, fontSize: 10, fontWeight: "800" },
+  passageSkillPassageName: { flex: 1, color: colors.textSecondary, fontSize: 10, fontWeight: "700" },
+  passageSkillCaption: { color: colors.textMuted, fontSize: 8, lineHeight: 10, paddingHorizontal: 4, marginBottom: 5 },
+  passageSkillGrid: { flexDirection: "row", flexWrap: "wrap" },
+  passageSkillCell: { width: "50%", paddingHorizontal: 4, marginBottom: 6 },
+  passageSkillCellHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 4 },
+  passageSkillLabel: { flex: 1, color: colors.textMuted, fontSize: 9, lineHeight: 12 },
+  passageSkillCount: { color: colors.primary, fontSize: 10, fontWeight: "800", lineHeight: 12 },
+  passageSkillTrack: { height: 4, marginTop: 2, borderRadius: 2, overflow: "hidden", backgroundColor: colors.border },
+  passageSkillFill: { height: "100%", borderRadius: 2, backgroundColor: colors.gold },
+  passageStatsNotes: { marginTop: 2, paddingTop: 6, borderTopWidth: 1, borderColor: colors.border },
+  passageStatsNotesTitle: { color: colors.textSecondary, fontSize: 9, fontWeight: "800", marginBottom: 3 },
+  passageStatsNoteRow: { flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 2 },
+  passageStatsNoteText: { flex: 1, color: colors.textMuted, fontSize: 9, lineHeight: 13 },
 
   // variation pill
   titleIdPill: {

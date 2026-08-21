@@ -296,6 +296,23 @@ export interface AIUsageStats {
   avgOutputLength: number;  // average bot_reply character count
 }
 
+export type AdvisorSuggestionCategory =
+  | "history_analysis"
+  | "emotional_control"
+  | "exam_strategy"
+  | "study_method"
+  | "skill"
+  | "study_hint"
+  | "stress_relief";
+
+export interface AdvisorSuggestion {
+  id: string;
+  category: AdvisorSuggestionCategory;
+  prompt_text: string;
+  display_order: number;
+  is_active: boolean;
+}
+
 /** Success rate per passage across all students. */
 export interface PassageSuccessRate {
   passage_id: string;
@@ -397,6 +414,25 @@ export interface QuizPercentileFeedback {
   allowed: boolean;
   participant_count?: number;
   percentile?: number | null;
+}
+
+export interface ExploreQuizStats {
+  quiz_id: string;
+  submitted_attempt_count: number;
+  distinct_participant_count: number;
+  average_score_pct: number | null;
+  eligible_global_average_pct: number | null;
+  top_10_percent_hit: boolean;
+  low_performance: boolean;
+}
+
+export interface ExploreStats {
+  passageQuestionCounts: Record<string, number>;
+  passageQuestionIncreases14d: Record<string, number>;
+  passageSkillQuestionCounts: Record<string, Record<string, number>>;
+  skillQuestionCounts: Record<string, number>;
+  freeAvailableQuestionCount: number | null;
+  quizStats: Record<string, ExploreQuizStats>;
 }
 
 /** Aggregate user demographics & performance summary. */
