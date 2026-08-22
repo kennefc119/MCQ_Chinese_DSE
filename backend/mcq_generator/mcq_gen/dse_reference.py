@@ -1,5 +1,6 @@
 """
-DSE Reference Loader — reads past DSE exam questions (2015–2025) from source/
+DSE Reference Loader — reads past DSE exam questions (2015–2025) from
+input_knowledge/dse source/
 and returns relevant questions for a given passage_id.
 
 All question types are included (MC, Short Answer, Essay, etc.).
@@ -23,7 +24,9 @@ log = structlog.get_logger(__name__)
 
 # Root of the repo relative to this file's location:
 #   mcq_gen/dse_reference.py → mcq_generator/ → backend/ → repo_root/
-_SOURCE_DIR = Path(__file__).parent.parent.parent.parent / "source"
+_SOURCE_DIR = (
+    Path(__file__).parent.parent.parent.parent / "input_knowledge" / "dse source"
+)
 
 # Years to include (2015–2025)
 _REFERENCE_YEARS = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]

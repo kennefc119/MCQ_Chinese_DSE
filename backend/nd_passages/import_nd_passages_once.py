@@ -11,7 +11,7 @@ from supabase import create_client
 from config import settings
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE_MD = ROOT / "non-detinated_passages" / "nd_passages.md"
+SOURCE_MD = ROOT / "input_knowledge" / "non-detinated_passages" / "nd_passages.md"
 TABLE = "dsemcq_nd_passages"
 ALLOWED_REPRESENTATIONS = {"文言文", "白話文"}
 
@@ -128,7 +128,7 @@ def build_rows(passages: list[dict[str, str]]) -> list[dict[str, Any]]:
             "representation": representation,
             "type": type_value,
             "source": source_value,
-            "generation_prompt": "One-time import from non-detinated_passages/nd_passages.md",
+            "generation_prompt": "One-time import from input_knowledge/non-detinated_passages/nd_passages.md",
             "is_active": True,
         }
         rows.append(row)

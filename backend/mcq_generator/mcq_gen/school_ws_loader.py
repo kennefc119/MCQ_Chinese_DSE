@@ -1,5 +1,5 @@
 """
-School Worksheet Loader — dynamically scans school_ws/ directory and
+School Worksheet Loader — dynamically scans input_knowledge/school_ws/ and
 finds .md files whose filename contains passage title keywords.
 
 Used by both drafter.py and critic.py to ground question generation and critique
@@ -15,15 +15,15 @@ from .dse_reference import _PASSAGE_KEYWORDS
 
 log = structlog.get_logger(__name__)
 
-# school_ws/ is at repo_root/school_ws/
+# Worksheets are at repo_root/input_knowledge/school_ws/
 # This file lives at repo_root/backend/mcq_generator/mcq_gen/school_ws_loader.py
 _REPO_ROOT = Path(__file__).parent.parent.parent.parent
-_SCHOOL_WS_DIR = _REPO_ROOT / "school_ws"
+_SCHOOL_WS_DIR = _REPO_ROOT / "input_knowledge" / "school_ws"
 
 
 def _find_worksheet_files(passage_id: str) -> list[Path]:
     """
-    Scan school_ws/ directory and return all .md files whose filename
+    Scan input_knowledge/school_ws/ and return all .md files whose filename
     contains any keyword for the given passage_id.
 
     Matching is a simple substring check (case-sensitive, as passage titles

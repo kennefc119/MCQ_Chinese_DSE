@@ -229,7 +229,7 @@ result = sb.table("dsemcq_questions") \
 ### 6.3 避開 DSE 已考過的概念
 
 系統已內建 `dse_reference.py`，會自動載入 2015–2025 年的真題作為參考。  
-手動出題時，應先翻閱 `source/` 目錄下的歷屆試題 JSON，確保不重複真題角度。
+手動出題時，應先翻閱 `input_knowledge/dse source/` 目錄下的歷屆試題 JSON，確保不重複真題角度。
 
 ---
 
@@ -407,10 +407,10 @@ QUESTIONS: list[dict] = [
 | 資源 | 路徑 |
 |---|---|
 | 篇章原文 | Supabase `dsemcq_passages` 表 |
-| 教師版工作紙 | `school_ws/*.md` |
-| 篇章總結 | `school_ws/summary.md` |
-| DSE 歷屆試題 | `source/20XX_DSE_exam_question.json` |
-| 品質準則 | `school_ws/mc_question_criteria.md` |
+| 教師版工作紙 | `input_knowledge/school_ws/*.md` |
+| 篇章總結 | `input_knowledge/school_ws/summary.md` |
+| DSE 歷屆試題 | `input_knowledge/dse source/20XX_DSE_exam_question.json` |
+| 品質準則 | `input_knowledge/school_ws/mc_question_criteria.md` |
 | 三角色 Prompt | `backend/mcq_generator/mcq_gen/prompts/` |
 | DB Client | `backend/mcq_generator/mcq_gen/db/client.py` |
 | 批量寫入腳本 | `backend/mcq_generator/batch_questions.py` |

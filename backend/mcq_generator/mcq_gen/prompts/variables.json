@@ -33,7 +33,7 @@
   },
   "reference_block": {
     "label": "DSE 真題參考",
-    "description": "近年 DSE 考試中針對本篇章的真實 MC 題目，從 source/ 目錄讀取。若無對應真題則為空字符串。",
+    "description": "近年 DSE 考試中針對本篇章的真實 MC 題目，從 input_knowledge/dse source/ 目錄讀取。若無對應真題則為空字符串。",
     "agents": ["drafter", "critic"],
     "source_type": "file_path",
     "editable": false,
@@ -41,7 +41,7 @@
   },
   "school_ws_block": {
     "label": "教師版工作紙",
-    "description": "本篇章的學校官方工作紙摘要，包含詞語解釋、篇章結構、重點問答及歷屆題目。來源：school_ws/ 目錄。",
+    "description": "本篇章的學校官方工作紙摘要，包含詞語解釋、篇章結構、重點問答及歷屆題目。來源：input_knowledge/school_ws/ 目錄。",
     "agents": ["drafter", "critic"],
     "source_type": "file_path",
     "editable": false,

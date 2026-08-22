@@ -1,5 +1,5 @@
 // 12 篇 DSE 文言文指定篇章 — 種子資料
-// 完整原文已於 Source/文言文指定篇章.md，此處只儲存重點/節錄供測驗使用
+// 完整原文已於 input_knowledge/dse source/文言文指定篇章.md，此處只儲存重點/節錄供測驗使用
 
 import { Passage } from "../types/database";
 

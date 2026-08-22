@@ -4,7 +4,7 @@ Local admin dashboard for uploading yearly DSE past-exam JSON files and upsertin
 
 ## What it does
 
-- Accepts one or multiple JSON files in the same format as files in `source/`.
+- Accepts one or multiple JSON files in the same format as files in `input_knowledge/dse source/`.
 - Flattens data to **one row per question**.
 - Upserts rows into `dsemcq_dse_past_exam_questions`.
 - Supports future files (for example `2026_DSE_exam_question.json`) without schema changes.
